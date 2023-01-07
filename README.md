@@ -43,3 +43,4 @@ TDP最大：15 W  GPU频率：200-1600 Mhz
 [decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)  
 [vibrantDeck](https://github.com/libvibrant/vibrantDeck)  
 [decky-plugin-template](https://github.com/SteamDeckHomebrew/decky-plugin-template)  
+[RyzenAdj](https://github.com/FlyGoat/RyzenAdj)  
