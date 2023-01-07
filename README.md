@@ -1,6 +1,6 @@
 # PowerControl
-用于[decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)的插件
-为安装了[holoiso](https://github.com/theVakhovskeIsTaken/holoiso)的手持设备提供性能设置调整
+用于[decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)的插件  
+为安装了[holoiso](https://github.com/theVakhovskeIsTaken/holoiso)的手持设备提供性能设置调整  
 
 ## 安装
 
@@ -40,6 +40,6 @@ TDP最大：15 W  GPU频率：200-1600 Mhz
    可以加入我们的qq群:487945399反馈问题，或者在[issuse](https://github.com/Gawah/PowerControl/issues)提交
 
 ## Reference
-[decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)
-[vibrantDeck](https://github.com/libvibrant/vibrantDeck)
-[decky-plugin-template](https://github.com/SteamDeckHomebrew/decky-plugin-template)
+[decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)  
+[vibrantDeck](https://github.com/libvibrant/vibrantDeck)  
+[decky-plugin-template](https://github.com/SteamDeckHomebrew/decky-plugin-template)  
