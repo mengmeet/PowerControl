@@ -48,7 +48,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
   const [currentTargetCpuNum, setCurrentTargetCpuNum] = useState<number>(backend.data.getCpuMaxNum());
   const [currentTargetTDPEnable, setCurrentTargetTDPEnable] = useState<boolean>(false);
   const [currentTargetTDP, setCurrentTargetTDP] = useState<number>(backend.data.getTDPMax());
-  const [currentTargetGPUManual, setCurrentTargetGPUManual] = useState<boolean>(false);
+  const [currentTargetGPUMode, setCurrentTargetGPUMode] = useState<number>(0);
   const [currentTargetGPUFreq, setCurrentTargetGPUFreq] = useState<number>(backend.data.getGPUFreqMax());
   const refresh = () => {
     // prevent updates while we are reloading
@@ -67,7 +67,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
     setCurrentTargetCpuBoost(settings.appCpuboost(activeApp));
     setCurrentTargetTDP(settings.appTDP(activeApp));
     setCurrentTargetTDPEnable(settings.appTDPEnable(activeApp));
-    setCurrentTargetGPUManual(settings.appGPUManual(activeApp));
+    setCurrentTargetGPUMode(settings.appGPUMode(activeApp));
     setCurrentTargetGPUFreq(settings.appGPUFreq(activeApp));
     setInitialized(true);
   }
@@ -88,12 +88,12 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
     settings.ensureApp(activeApp).cpuboost = currentTargetCpuBoost;
     settings.ensureApp(activeApp).tdp = currentTargetTDP;
     settings.ensureApp(activeApp).tdpEnable = currentTargetTDPEnable;
-    settings.ensureApp(activeApp).gpuManual = currentTargetGPUManual;
+    settings.ensureApp(activeApp).gpuMode = currentTargetGPUMode;
     settings.ensureApp(activeApp).gpuFreq = currentTargetGPUFreq;
     applyFn(RunningApps.active());
 
     saveSettingsToLocalStorage(settings);
-  }, [currentTargetSmt,currentTargetCpuNum, currentTargetCpuBoost, currentTargetTDP, currentTargetTDPEnable, currentTargetGPUManual, currentTargetGPUFreq, currentEnabled, initialized]);
+  }, [currentTargetSmt,currentTargetCpuNum, currentTargetCpuBoost, currentTargetTDP, currentTargetTDPEnable, currentTargetGPUMode, currentTargetGPUFreq, currentEnabled, initialized]);
 
   useEffect(() => {
     if (!initialized || !currentEnabled)
@@ -111,14 +111,14 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
       settings.ensureApp(activeApp).cpuboost = undefined;
       settings.ensureApp(activeApp).tdp = undefined;
       settings.ensureApp(activeApp).tdpEnable = undefined;
-      settings.ensureApp(activeApp).gpuManual = undefined;
+      settings.ensureApp(activeApp).gpuMode = undefined;
       settings.ensureApp(activeApp).gpuFreq = undefined;
       setCurrentTargetSmt(settings.appSmt(DEFAULT_APP));
       setCurrentTargetCpuNum(settings.appCpuNum(DEFAULT_APP));
       setCurrentTargetCpuBoost(settings.appCpuboost(DEFAULT_APP));
       setCurrentTargetTDP(settings.appTDP(DEFAULT_APP));
       setCurrentTargetTDPEnable(settings.appTDPEnable(DEFAULT_APP));
-      setCurrentTargetGPUManual(settings.appGPUManual(DEFAULT_APP));
+      setCurrentTargetGPUMode(settings.appGPUMode(DEFAULT_APP));
       setCurrentTargetGPUFreq(settings.appGPUFreq(DEFAULT_APP));
     }
     saveSettingsToLocalStorage(settings);
@@ -237,18 +237,36 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
         </PanelSection>
       }
       {currentEnabled&&<PanelSection title="GPU">
-        <PanelSectionRow>
-          <ToggleField
-            label="GPU 频率手动控制"
-            description={"将GPU设置为固定频率"}
-            checked={currentTargetGPUManual}
-            disabled={!backend.data.HasGPUFreqMax()}
-            onChange={(value) => {
-              setCurrentTargetGPUManual(value);
+      {<PanelSectionRow>
+          <SliderField
+            label="GPU 频率模式"
+            value={currentTargetGPUMode}
+            step={1}
+            max={2}
+            min={0}
+            notchCount={3}
+            notchLabels={
+              [{
+                notchIndex: 0,
+                label: "不限制",
+                value:0,
+              },{
+                notchIndex: 1,
+                label: "固定频率",
+                value:1,
+              },{
+                notchIndex: 2,
+                label: "自动频率",
+                value:2,
+              }]
+            }
+            onChange={(value: number) => {
+              setCurrentTargetGPUMode(value);
+              console.log("GPUMode value = ",value);
             }}
           />
-        </PanelSectionRow>
-        {currentTargetGPUManual&&<PanelSectionRow>
+        </PanelSectionRow>}
+        {currentTargetGPUMode==1&&<PanelSectionRow>
           <SliderField
             label="GPU 频率"
             value={currentTargetGPUFreq}
@@ -281,7 +299,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
     const cpuBoost = settings.appCpuboost(appId);
     const tdp = settings.appTDP(appId);
     const tdpEnable = settings.appTDPEnable(appId);
-    const gpuManual = settings.appGPUManual(appId);
+    const gpuMode = settings.appGPUMode(appId);
     const gpuFreq = settings.appGPUFreq(appId);
     backend.applySmt(smt);
     backend.applyCpuNum(cpuNum);
@@ -292,10 +310,17 @@ export default definePlugin((serverAPI: ServerAPI) => {
     else{
       backend.applyTDP(backend.data.getTDPMax());
     }
-    if(gpuManual){
-      backend.applyGPUFreq(gpuFreq);
-    }else{
+    if(gpuMode == 0){
       backend.applyGPUFreq(0);
+    }else if(gpuMode == 1){
+        backend.applyGPUFreq(gpuFreq);
+    }else if(gpuMode == 2){
+        console.log(`开始自动优化GPU频率`)
+        backend.applyGPUAuto(true,gpuFreq);
+    }
+    else{
+        console.log(`出现意外的GPUmode = ${gpuMode}`)
+        backend.applyGPUFreq(0);
     }
   };
 

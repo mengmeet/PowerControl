@@ -18,7 +18,7 @@ export class AppSetting {
   @JsonProperty()
   tdpEnable?:boolean
   @JsonProperty()
-  gpuManual?:boolean
+  gpuMode?:number
   @JsonProperty()
   gpuFreq?:number
 
@@ -33,7 +33,7 @@ export class AppSetting {
       return true;
     if (this.tdpEnable != undefined)
       return true;
-    if (this.gpuManual != undefined)
+    if (this.gpuMode != undefined)
       return true;
     if (this.gpuFreq != undefined)
       return true;
@@ -95,12 +95,12 @@ export class Settings {
     return false;
   }
 
-  appGPUManual(appId: string){
-    if (this.perApp[appId]?.gpuManual != undefined)
-      return this.perApp[appId].gpuManual!!;
-    if (this.perApp[DEFAULT_APP]?.gpuManual != undefined)
-      return this.perApp[DEFAULT_APP].gpuManual!!;
-    return false;
+  appGPUMode(appId: string){
+    if (this.perApp[appId]?.gpuMode != undefined)
+      return this.perApp[appId].gpuMode!!;
+    if (this.perApp[DEFAULT_APP]?.gpuMode != undefined)
+      return this.perApp[DEFAULT_APP].gpuMode!!;
+    return 0;
   }
 
   appGPUFreq(appId: string){

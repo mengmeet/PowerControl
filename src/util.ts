@@ -169,7 +169,13 @@ export class Backend {
   }
   
   applyGPUFreq(freq: number){
-    console.log("Applying tdp " + freq.toString());
+    this.applyGPUAuto(false,0);
+    console.log("Applying gpuFreq " + freq.toString());
     this.serverAPI!.callPluginMethod("set_gpuFreq", {"value":freq});
+  }
+
+  applyGPUAuto(auto: boolean, startFreq:number){
+    console.log("Applying gpuAuto" + auto.toString());
+    this.serverAPI!.callPluginMethod("set_gpuAuto", {"value":auto, "value2":startFreq});
   }
 }

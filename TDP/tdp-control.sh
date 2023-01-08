@@ -32,7 +32,7 @@ function set_clock_limits()
         sudo echo "s 1 ${max}" > /sys/class/drm/card0/device/pp_od_clk_voltage
         sudo echo "c" > /sys/class/drm/card0/device/pp_od_clk_voltage
     fi
-    sudo echo "gpu_clock_limit "$1 $2 >> /tmp/powertools-sh.log
+    sudo echo "gpu_clock_limit "$1 $2 >> /tmp/powerControl-sh.log
 }
 
 function set_gpu_flk()
@@ -47,7 +47,7 @@ function set_gpu_flk()
     else
         sudo echo "$index" > /sys/class/drm/card0/device/pp_dpm_fclk
     fi
-    sudo echo "gpu_flk_limit " $index >> /tmp/powertools-sh.log
+    sudo echo "gpu_flk_limit " $index >> /tmp/powerControl-sh.log
 }
 
 
@@ -88,6 +88,6 @@ function set_cpu_boost()
     check_clock_limits)check_clock_limits $2 $3 $4;;
     set_gpu_flk)set_gpu_flk $2;;
     get_cpuID)get_cpuID;;
-    *)sudo echo $1 $2 $3 $4>>  /tmp/powertools-sh.log;;
+    *)sudo echo $1 $2 $3 $4>>  /tmp/powerControl-sh.log;;
     esac
 fi
