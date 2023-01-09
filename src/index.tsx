@@ -50,6 +50,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
   const [currentTargetTDP, setCurrentTargetTDP] = useState<number>(backend.data.getTDPMax());
   const [currentTargetGPUMode, setCurrentTargetGPUMode] = useState<number>(0);
   const [currentTargetGPUFreq, setCurrentTargetGPUFreq] = useState<number>(backend.data.getGPUFreqMax());
+  const [currentTargetCPUFreqIndex, setCurrentTargetCPUFreqIndex] = useState<number>(backend.data.HasCPUFreqList()?backend.data.getCPUFreqList().length -1:0);
   const refresh = () => {
     // prevent updates while we are reloading
     setInitialized(false);
@@ -69,6 +70,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
     setCurrentTargetTDPEnable(settings.appTDPEnable(activeApp));
     setCurrentTargetGPUMode(settings.appGPUMode(activeApp));
     setCurrentTargetGPUFreq(settings.appGPUFreq(activeApp));
+    setCurrentTargetCPUFreqIndex(settings.appCPUFreqIndex(activeApp));
     setInitialized(true);
   }
 
@@ -90,10 +92,11 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
     settings.ensureApp(activeApp).tdpEnable = currentTargetTDPEnable;
     settings.ensureApp(activeApp).gpuMode = currentTargetGPUMode;
     settings.ensureApp(activeApp).gpuFreq = currentTargetGPUFreq;
+    settings.ensureApp(activeApp).cpuFreqIndex = currentTargetCPUFreqIndex;
     applyFn(RunningApps.active());
 
     saveSettingsToLocalStorage(settings);
-  }, [currentTargetSmt,currentTargetCpuNum, currentTargetCpuBoost, currentTargetTDP, currentTargetTDPEnable, currentTargetGPUMode, currentTargetGPUFreq, currentEnabled, initialized]);
+  }, [currentTargetSmt,currentTargetCpuNum, currentTargetCpuBoost, currentTargetTDP, currentTargetTDPEnable, currentTargetGPUMode, currentTargetGPUFreq, currentTargetCPUFreqIndex, currentEnabled, initialized]);
 
   useEffect(() => {
     if (!initialized || !currentEnabled)
@@ -113,6 +116,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
       settings.ensureApp(activeApp).tdpEnable = undefined;
       settings.ensureApp(activeApp).gpuMode = undefined;
       settings.ensureApp(activeApp).gpuFreq = undefined;
+      settings.ensureApp(activeApp).cpuFreqIndex = undefined;
       setCurrentTargetSmt(settings.appSmt(DEFAULT_APP));
       setCurrentTargetCpuNum(settings.appCpuNum(DEFAULT_APP));
       setCurrentTargetCpuBoost(settings.appCpuboost(DEFAULT_APP));
@@ -120,6 +124,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
       setCurrentTargetTDPEnable(settings.appTDPEnable(DEFAULT_APP));
       setCurrentTargetGPUMode(settings.appGPUMode(DEFAULT_APP));
       setCurrentTargetGPUFreq(settings.appGPUFreq(DEFAULT_APP));
+      setCurrentTargetCPUFreqIndex(settings.appCPUFreqIndex(DEFAULT_APP));
     }
     saveSettingsToLocalStorage(settings);
   }, [currentAppOverride, currentEnabled, initialized]);
@@ -155,7 +160,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
            {currentEnabled&&
             <PanelSectionRow>
             <ToggleField
-              label={currentAppOverridable ?`使用『${RunningApps.active_app()?.display_name}』配置文件`:"使用配置文件"}
+              label={"使用按游戏设置的配置文件"}
               description={
                   <div style={{ display: "flex", justifyContent: "left" }}>
                   <img src={ RunningApps.active_app()?.icon_data? "data:image/" +RunningApps.active_app()?.icon_data_format +";base64," +RunningApps.active_app()?.icon_data: "/assets/" + RunningApps.active_app()?.appid + "_icon.jpg?v=" + RunningApps.active_app()?.icon_hash} width={18} height={18}
@@ -184,6 +189,29 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
               }}
             />
           </PanelSectionRow>
+          {!currentTargetCpuBoost&&<PanelSectionRow>
+          <SliderField
+            label="CPU最大频率限制"
+            value={currentTargetCPUFreqIndex}
+            step={1}
+            max={backend.data.getCPUFreqMaxIndex()}
+            min={0}
+            description={backend.data.HasCPUFreqList()?"":"未检测到可用的CPU频率限制列表"}
+            disabled={!backend.data.HasCPUFreqList()}
+            notchCount={backend.data.getCPUFreqList()?.length}
+            notchLabels={backend.data.getCPUFreqList()?.map((value, index) => (
+              {
+                notchIndex: index,
+                label: `${value/1000000}Ghz`,
+                value: index,
+              }))
+            }
+            onChange={(index: number) => {
+              setCurrentTargetCPUFreqIndex(index)
+              console.log("CPUFreq index = ",index);
+            }}
+          />
+        </PanelSectionRow>}
           <PanelSectionRow>
             <ToggleField
               label="SMT"
@@ -297,6 +325,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
     const smt = settings.appSmt(appId);
     const cpuNum = settings.appCpuNum(appId);
     const cpuBoost = settings.appCpuboost(appId);
+    const cpuFreqIndex = settings.appCPUFreqIndex(appId);
     const tdp = settings.appTDP(appId);
     const tdpEnable = settings.appTDPEnable(appId);
     const gpuMode = settings.appGPUMode(appId);
@@ -304,6 +333,11 @@ export default definePlugin((serverAPI: ServerAPI) => {
     backend.applySmt(smt);
     backend.applyCpuNum(cpuNum);
     backend.applyCpuBoost(cpuBoost);
+    if(!cpuBoost&&backend.data.HasCPUFreqList()){
+      backend.applyCPUFreq(backend.data.getCPUFreqList()[cpuFreqIndex]);
+    }else if(cpuBoost&&backend.data.HasCPUFreqList()){
+        backend.applyCPUFreq(backend.data.getCPUFreqList()[backend.data.getCPUFreqMaxIndex()]);
+    }
     if (tdpEnable){
       backend.applyTDP(tdp);
     }
@@ -316,7 +350,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
         backend.applyGPUFreq(gpuFreq);
     }else if(gpuMode == 2){
         console.log(`开始自动优化GPU频率`)
-        backend.applyGPUAuto(true,gpuFreq);
+        backend.applyGPUAuto(true);
     }
     else{
         console.log(`出现意外的GPUmode = ${gpuMode}`)
@@ -357,6 +391,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
   suspendEndHook=SteamClient.System.RegisterForOnResumeFromSuspend(async () => {
     console.log("休眠结束，重新应用设置")
     if (settings.enabled){
+      backend.throwSuspendEvt()
       applySettings(RunningApps.active());
     }else{
       resetSettings();

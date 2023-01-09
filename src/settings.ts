@@ -21,6 +21,8 @@ export class AppSetting {
   gpuMode?:number
   @JsonProperty()
   gpuFreq?:number
+  @JsonProperty()
+  cpuFreqIndex?:number
 
   hasSettings(): boolean {
     if (this.smt != undefined)
@@ -36,6 +38,8 @@ export class AppSetting {
     if (this.gpuMode != undefined)
       return true;
     if (this.gpuFreq != undefined)
+      return true;
+    if (this.cpuFreqIndex != undefined)
       return true;
     return false;
   }
@@ -109,6 +113,14 @@ export class Settings {
     if (this.perApp[DEFAULT_APP]?.gpuFreq != undefined)
       return this.perApp[DEFAULT_APP].gpuFreq!!;
     return 1600;
+  }
+
+  appCPUFreqIndex(appId: string){
+    if (this.perApp[appId]?.cpuFreqIndex != undefined)
+      return this.perApp[appId].cpuFreqIndex!!;
+    if (this.perApp[DEFAULT_APP]?.cpuFreqIndex != undefined)
+      return this.perApp[DEFAULT_APP].cpuFreqIndex!!;
+    return 0;
   }
 }
 

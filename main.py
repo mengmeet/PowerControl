@@ -28,30 +28,29 @@ cpu_smt=True
 cpu_num=4
 cpu_maxNum=0
 cpu_tdpMax=15
+cpu_avaFreq=[]
+cpu_avaMaxFreq=1600000
+cpu_avaMinFreq=1600000
+cpu_nowLimitFreq=0
 
 gpu_freqMax=1600
 gpu_freqMin=200
+gpu_nowFreq=0
 gpu_autofreqManager = None
 gpu_minBusyPercent = 75
-gpu_maxBusyPercent = 85
+gpu_maxBusyPercent = 90
+
 
 sh_path="../plugins/PowerControl/TDP/tdp-control.sh"
-
-
-def min(a,b):
-    return b if a > b else a
-
-def max(a,b):
-    return a if a > b else b
  
 class GPU_AutoFreqManager (threading.Thread):
 
     def __init__(self):
         self._gpu_enableAutoFreq = False
         self._gpu_autoFreqCheckInterval = 0.5
-        self._gpu_adjustFreqInterval = 2
+        self._gpu_adjustFreqInterval = 1.5
         self._gpu_busyPercentQueue = collections.deque()
-        self._gpu_busyPercentMaxNum = 10
+        self._gpu_busyPercentMaxNum = 6
         self._gpu_busyPercentNum = 0
         self._gpu_busyPercentSum = 0
         self._gpu_nowFreq=1600
@@ -69,19 +68,17 @@ class GPU_AutoFreqManager (threading.Thread):
         except:
             return False
 
-    def GPU_enableAutoFreq(self,enable,nowFreq):
+    def GPU_enableAutoFreq(self,enable):
+        global gpu_nowFreq
+        global gpu_freqMax
         self._gpu_enableAutoFreq = enable
         self._gpu_busyPercentQueue.clear()
         self._gpu_busyPercentSum = 0
         self._gpu_busyPercentNum = 0
-        self._gpu_nowFreq = nowFreq
-        global gpu_freqMax
-        if not enable and nowFreq == -1:
-            self.Set_gpuFreq(0)
-        elif nowFreq == 0:
+        if gpu_nowFreq == 0:
             self._gpu_nowFreq = gpu_freqMax/2
         else:
-            self._gpu_nowFreq = nowFreq
+            self._gpu_nowFreq = gpu_nowFreq
 
     def Get_gpuBusyPercent(self):
         try:
@@ -92,7 +89,8 @@ class GPU_AutoFreqManager (threading.Thread):
                 return int(gpu_busy_percent)
             else:
                 logging.info("未找到gpu_busy_percent文件")
-                self.GPU_enableAutoFreq(False,-1)
+                self.GPU_enableAutoFreq(False)
+                self.Set_gpuFreq(0)
                 return 0
             return int(gpu_busy_percent)
         except Exception as e:
@@ -128,32 +126,33 @@ class GPU_AutoFreqManager (threading.Thread):
         global gpu_maxBusyPercent
         global gpu_freqMax
         global gpu_freqMin
+        global gpu_nowFreq
         gpu_Avg = self.Get_gpuBusyPercentAvg()
         gpu_addFreqOnce = self._gpu_addFreqBase
         if gpu_Avg >= gpu_maxBusyPercent:
-            gpu_addFreqOnce = min(gpu_freqMax - self._gpu_nowFreq,int((gpu_Avg - gpu_maxBusyPercent)/5)*self._gpu_addFreqBase)
-            if self._gpu_nowFreq + gpu_addFreqOnce > gpu_freqMax:
+            gpu_addFreqOnce = min(gpu_freqMax - gpu_nowFreq,int((gpu_Avg - gpu_maxBusyPercent)/5)*self._gpu_addFreqBase)
+            if gpu_nowFreq + gpu_addFreqOnce > gpu_freqMax:
                 logging.info(f"当前平均GPU使用率::{gpu_Avg}% 大于目标范围最大值:{gpu_maxBusyPercent}% 已达到GPU最大频率{gpu_freqMax}mhz,无法继续增加")
-                logging.info(f"当前的GPU频率:{self._gpu_nowFreq} 当前GPU使用率标记队列: {self._gpu_busyPercentQueue}")
+                logging.info(f"当前的GPU频率:{gpu_nowFreq} 当前GPU使用率标记队列: {self._gpu_busyPercentQueue}")
             else:
-                self._gpu_nowFreq = self._gpu_nowFreq + gpu_addFreqOnce
-                self.Set_gpuFreq(self._gpu_nowFreq)
+                gpu_nowFreq = gpu_nowFreq + gpu_addFreqOnce
+                self.Set_gpuFreq(gpu_nowFreq)
                 logging.info(f"当前平均GPU使用率::{gpu_Avg}% 大于目标范围最大值:{gpu_maxBusyPercent}% 增加{gpu_addFreqOnce}mhz GPU频率")
-                logging.info(f"增加后的GPU频率:{self._gpu_nowFreq} 当前GPU使用率标记队列: {self._gpu_busyPercentQueue}")
+                logging.info(f"增加后的GPU频率:{gpu_nowFreq} 当前GPU使用率标记队列: {self._gpu_busyPercentQueue}")
         elif gpu_Avg <= gpu_minBusyPercent:
             #gpu_addFreqOnce = min(self._gpu_nowFreq - gpu_freqMin,int((gpu_maxBusyPercent - gpu_Avg)*self._gpu_addFreqBase/10))
-            gpu_addFreqOnce = min(self._gpu_nowFreq - gpu_freqMin,self._gpu_addFreqBase)
-            if self._gpu_nowFreq - gpu_addFreqOnce < gpu_freqMin:
+            gpu_addFreqOnce = min(gpu_nowFreq - gpu_freqMin,self._gpu_addFreqBase)
+            if gpu_nowFreq - gpu_addFreqOnce < gpu_freqMin:
                 logging.info(f"当前平均GPU使用率::{gpu_Avg}% 小于目标范围最小值:{gpu_minBusyPercent}% 已达到GPU最小频率，无法继续降低")
-                logging.info(f"当前的GPU频率:{self._gpu_nowFreq} 当前GPU使用率标记队列: {self._gpu_busyPercentQueue}")
+                logging.info(f"当前的GPU频率:{gpu_nowFreq} 当前GPU使用率标记队列: {self._gpu_busyPercentQueue}")
             else:
-                self._gpu_nowFreq = self._gpu_nowFreq - gpu_addFreqOnce
-                self.Set_gpuFreq(self._gpu_nowFreq)
+                gpu_nowFreq = gpu_nowFreq - gpu_addFreqOnce
+                self.Set_gpuFreq(gpu_nowFreq)
                 logging.info(f"当前平均GPU使用率::{gpu_Avg}% 小于目标范围最小值:{gpu_minBusyPercent}% 降低{gpu_addFreqOnce}mhz GPU频率")
-                logging.info(f"降低后的GPU频率:{self._gpu_nowFreq} 当前GPU使用率标记队列: {self._gpu_busyPercentQueue}")
+                logging.info(f"降低后的GPU频率:{gpu_nowFreq} 当前GPU使用率标记队列: {self._gpu_busyPercentQueue}")
         else:
             logging.info(f"当前平均GPU使用率::{gpu_Avg}% 处于目标范围{gpu_minBusyPercent}%-{gpu_maxBusyPercent}% 无需修改GPU频率")
-            logging.info(f"当前的GPU频率:{self._gpu_nowFreq} 当前GPU使用率标记队列: {self._gpu_busyPercentQueue}")
+            logging.info(f"当前的GPU频率:{gpu_nowFreq} 当前GPU使用率标记队列: {self._gpu_busyPercentQueue}")
 
     def run(self):
         logging.info("开始自动优化频率:" + self.name)
@@ -265,24 +264,46 @@ class Plugin:
         except:
             return 0
 
-
-    def set_gpuAuto(self, value:bool, value2:int):
+    async def get_cpu_AvailableFreq(self):
         try:
-            logging.info(f"set_gpuAuto  value: {value} value2: {value2}")
+            global cpu_avaFreq
+            global cpu_avaMaxFreq
+            global cpu_avaMinFreq
+            if len(cpu_avaFreq) > 0:
+                return cpu_avaFreq
+            command="sudo sh {} get_cpu_AvailableFreq ".format(sh_path)
+            cpu_avaFreqRes=subprocess.getoutput(command)
+            cpu_avaFreqStr=cpu_avaFreqRes.split()
+            for index in cpu_avaFreqStr:
+                cpu_avaFreq.append(int(index))
+            if len(cpu_avaFreq) >= 1 :
+                cpu_avaFreq.sort()
+                cpu_avaMinFreq = cpu_avaFreq[0]
+                cpu_avaMaxFreq = cpu_avaFreq[len(cpu_avaFreq)-1]
+            logger.info(f"cpu_avaFreqData={[cpu_avaFreq,cpu_avaMinFreq,cpu_avaMaxFreq]}")
+            return cpu_avaFreq
+        except Exception as e:
+            logger.info(e)
+            return []
+
+
+    def set_gpuAuto(self, value:bool):
+        try:
+            logging.info(f"set_gpuAuto  isAuto: {value}")
             global gpu_autofreqManager
             if gpu_autofreqManager is None:
                 if value:
                     gpu_autofreqManager = GPU_AutoFreqManager()
-                    gpu_autofreqManager.GPU_enableAutoFreq(value,value2)
+                    gpu_autofreqManager.GPU_enableAutoFreq(value)
                     gpu_autofreqManager.start()
             else:
                 if value:
-                    gpu_autofreqManager.GPU_enableAutoFreq(False,0)
+                    gpu_autofreqManager.GPU_enableAutoFreq(False)
                     gpu_autofreqManager = GPU_AutoFreqManager()
-                    gpu_autofreqManager.GPU_enableAutoFreq(value,value2)
+                    gpu_autofreqManager.GPU_enableAutoFreq(value)
                     gpu_autofreqManager.start()
                 else:
-                    gpu_autofreqManager.GPU_enableAutoFreq(False,0)
+                    gpu_autofreqManager.GPU_enableAutoFreq(False)
                     gpu_autofreqManager = None
         except Exception as e:
             logging.info(e)
@@ -291,6 +312,8 @@ class Plugin:
     def set_gpuFreq(self, value: int):
         try:
             if value >= 0:
+                global gpu_nowFreq
+                gpu_nowFreq = value
                 command="sudo sh {} set_clock_limits {} {}".format(sh_path,value,value)
                 os.system(command)
                 return True
@@ -353,4 +376,37 @@ class Plugin:
             os.system(command)
             return True
         except:
+            return False
+
+    def set_cpuFreq(self, value: int):
+        try:
+            global cpu_nowLimitFreq
+            logging.info(f"set_cpuFreq cpu_nowLimitFreq = {cpu_nowLimitFreq} value ={value}")
+            cpu_nowLimitFreq = value
+            need_set=False
+            for cpu in range(0, cpu_num*2):
+                if cpu_smt or cpu%2==0:
+                    command="sudo sh {} get_cpu_nowFreq {}".format(sh_path, cpu)
+                    cpu_freq=int(subprocess.getoutput(command))
+                    if cpu_freq > cpu_nowLimitFreq:
+                        need_set=True
+                        break
+            if need_set:
+                command="sudo sh {} set_cpuFreq {}".format(sh_path,value)
+                os.system(command)
+                for cpu in range(0,cpu_maxNum*2):
+                    command="sudo sh {} set_cpu_Freq {} {}".format(sh_path,cpu,cpu_nowLimitFreq)
+                    os.system(command)
+                return True
+            else:
+                return False
+        except Exception as e:
+            logging.info(e)
+            return False
+    
+    def receive_suspendEvent(self):
+        try:
+            return True
+        except Exception as e:
+            logging.info(e)
             return False

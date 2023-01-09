@@ -1,5 +1,46 @@
  #!/bin/bash
 
+function set_cpu_Freq()
+{
+    cpu_index=$1
+    let cpu_freq=$2
+    if(($cpu_index==0));then
+        cpu_isOnLine=1
+    else
+        cpu_isOnLine=$(cat /sys/devices/system/cpu/cpu${cpu_index}/online)
+    fi
+    if(($cpu_freq==0));then
+        if((cpu_isOnLine==0));then
+            sudo echo 1 > "/sys/devices/system/cpu/cpu${cpu_index}/online"
+            sudo echo "schedutil" > "/sys/devices/system/cpu/cpu${cpu_index}/cpufreq/scaling_governor"
+            sudo echo 0 > "/sys/devices/system/cpu/cpu${cpu_index}/online"
+        else
+            sudo echo "schedutil" > "/sys/devices/system/cpu/cpu${cpu_index}/cpufreq/scaling_governor"
+        fi
+    else
+        if((cpu_isOnLine==0));then
+            sudo echo 1 > "/sys/devices/system/cpu/cpu${cpu_index}/online"
+            sudo echo "userspace" > "/sys/devices/system/cpu/cpu${cpu_index}/cpufreq/scaling_governor"
+            sudo echo $cpu_freq > "/sys/devices/system/cpu/cpu${cpu_index}/cpufreq/scaling_max_freq"
+            sudo echo 0 > "/sys/devices/system/cpu/cpu${cpu_index}/online"
+        else
+            sudo echo "userspace" > "/sys/devices/system/cpu/cpu${cpu_index}/cpufreq/scaling_governor"
+            sudo echo $cpu_freq > "/sys/devices/system/cpu/cpu${cpu_index}/cpufreq/scaling_max_freq"
+        fi
+    fi
+}
+
+function get_cpu_nowFreq()
+{
+    cpu_index=$1
+    echo $(cat /sys/devices/system/cpu/cpufreq/policy${cpu_index}/scaling_cur_freq)
+}
+
+function get_cpu_AvailableFreq()
+{
+    echo $(cat /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies)
+}
+
 function set_cpu_online()
 {
     cpu_index=$1
@@ -82,6 +123,9 @@ function set_cpu_boost()
  if [ -n "$1" ]; then
     case "$1" in
     set_cpu_online)set_cpu_online $2 $3;;
+    set_cpu_Freq)set_cpu_Freq $2 $3;;
+    get_cpu_nowFreq)get_cpu_nowFreq $2;;
+    get_cpu_AvailableFreq)get_cpu_AvailableFreq $2 $3;;
     set_cpu_tdp)set_cpu_tdp $2 $3 ;;
     set_clock_limits)set_clock_limits $2 $3;;
     set_cpu_boost)set_cpu_boost $2;;
