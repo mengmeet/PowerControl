@@ -178,7 +178,7 @@ class GPU_AutoFreqManager (threading.Thread):
 class Plugin:
     async def _main(self):
         while True:
-            await asyncio.sleep(1)
+                await asyncio.sleep(3)
 
     async def get_hasRyzenadj(self):
         try:
@@ -378,11 +378,11 @@ class Plugin:
         except:
             return False
 
-    def set_cpuFreq(self, value: int):
+    def check_cpuFreq(self):
         try:
-            global cpu_nowLimitFreq
-            logging.info(f"set_cpuFreq cpu_nowLimitFreq = {cpu_nowLimitFreq} value ={value}")
-            cpu_nowLimitFreq = value
+            logging.info(f"check_cpuFreq cpu_nowLimitFreq = {cpu_nowLimitFreq}")
+            if cpu_nowLimitFreq == 0:
+                return False
             need_set=False
             for cpu in range(0, cpu_num*2):
                 if cpu_smt or cpu%2==0:
@@ -390,7 +390,21 @@ class Plugin:
                     cpu_freq=int(subprocess.getoutput(command))
                     if cpu_freq > cpu_nowLimitFreq:
                         need_set=True
-                        break
+                        return True
+            return False
+        except Exception as e:
+            logging.info(e)
+            return False
+
+    def set_cpuFreq(self, value: int):
+        try:
+            global cpu_nowLimitFreq
+            logging.info(f"set_cpuFreq cpu_nowLimitFreq = {cpu_nowLimitFreq} value ={value}")
+            if cpu_nowLimitFreq != value:
+                need_set = True
+                cpu_nowLimitFreq = value
+            else:
+                need_set=self.check_cpuFreq(self)
             if need_set:
                 command="sudo sh {} set_cpuFreq {}".format(sh_path,value)
                 os.system(command)
