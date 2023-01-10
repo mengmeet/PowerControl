@@ -372,7 +372,6 @@ class Plugin:
             logging.info("set_smt {}".format(value))
             global cpu_smt
             cpu_smt=value
-            set_cpu_online(cpu_num)
             return True
         except Exception as e:
             logging.info(e)

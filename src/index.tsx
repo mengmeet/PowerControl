@@ -50,7 +50,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
   const [currentTargetTDP, setCurrentTargetTDP] = useState<number>(backend.data.getTDPMax());
   const [currentTargetGPUMode, setCurrentTargetGPUMode] = useState<number>(0);
   const [currentTargetGPUFreq, setCurrentTargetGPUFreq] = useState<number>(backend.data.getGPUFreqMax());
-  const [currentTargetCPUFreqIndex, setCurrentTargetCPUFreqIndex] = useState<number>(backend.data.HasCPUFreqList()?backend.data.getCPUFreqList().length -1:0);
+  const [currentTargetCPUFreq, setCurrentTargetCPUFreq] = useState<number>(backend.data.getCPUFreqMax());
   const refresh = () => {
     // prevent updates while we are reloading
     setInitialized(false);
@@ -70,7 +70,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
     setCurrentTargetTDPEnable(settings.appTDPEnable(activeApp));
     setCurrentTargetGPUMode(settings.appGPUMode(activeApp));
     setCurrentTargetGPUFreq(settings.appGPUFreq(activeApp));
-    setCurrentTargetCPUFreqIndex(settings.appCPUFreqIndex(activeApp));
+    setCurrentTargetCPUFreq(settings.appCPUFreq(activeApp));
     setInitialized(true);
   }
 
@@ -92,11 +92,11 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
     settings.ensureApp(activeApp).tdpEnable = currentTargetTDPEnable;
     settings.ensureApp(activeApp).gpuMode = currentTargetGPUMode;
     settings.ensureApp(activeApp).gpuFreq = currentTargetGPUFreq;
-    settings.ensureApp(activeApp).cpuFreqIndex = currentTargetCPUFreqIndex;
+    settings.ensureApp(activeApp).cpuFreq = currentTargetCPUFreq;
     applyFn(RunningApps.active());
 
     saveSettingsToLocalStorage(settings);
-  }, [currentTargetSmt,currentTargetCpuNum, currentTargetCpuBoost, currentTargetTDP, currentTargetTDPEnable, currentTargetGPUMode, currentTargetGPUFreq, currentTargetCPUFreqIndex, currentEnabled, initialized]);
+  }, [currentTargetSmt,currentTargetCpuNum, currentTargetCpuBoost, currentTargetTDP, currentTargetTDPEnable, currentTargetGPUMode, currentTargetGPUFreq, currentTargetCPUFreq, currentEnabled, initialized]);
 
   useEffect(() => {
     if (!initialized || !currentEnabled)
@@ -116,7 +116,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
       settings.ensureApp(activeApp).tdpEnable = undefined;
       settings.ensureApp(activeApp).gpuMode = undefined;
       settings.ensureApp(activeApp).gpuFreq = undefined;
-      settings.ensureApp(activeApp).cpuFreqIndex = undefined;
+      settings.ensureApp(activeApp).cpuFreq = undefined;
       setCurrentTargetSmt(settings.appSmt(DEFAULT_APP));
       setCurrentTargetCpuNum(settings.appCpuNum(DEFAULT_APP));
       setCurrentTargetCpuBoost(settings.appCpuboost(DEFAULT_APP));
@@ -124,7 +124,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
       setCurrentTargetTDPEnable(settings.appTDPEnable(DEFAULT_APP));
       setCurrentTargetGPUMode(settings.appGPUMode(DEFAULT_APP));
       setCurrentTargetGPUFreq(settings.appGPUFreq(DEFAULT_APP));
-      setCurrentTargetCPUFreqIndex(settings.appCPUFreqIndex(DEFAULT_APP));
+      setCurrentTargetCPUFreq(settings.appCPUFreq(DEFAULT_APP));
     }
     saveSettingsToLocalStorage(settings);
   }, [currentAppOverride, currentEnabled, initialized]);
@@ -192,7 +192,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
           {!currentTargetCpuBoost&&<PanelSectionRow>
           <SliderField
             label="CPU最大频率限制"
-            value={currentTargetCPUFreqIndex}
+            value={backend.data.getCPUFreqIndexByFreq(currentTargetCPUFreq)}
             step={1}
             max={backend.data.getCPUFreqMaxIndex()}
             min={0}
@@ -207,8 +207,8 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
               }))
             }
             onChange={(index: number) => {
-              setCurrentTargetCPUFreqIndex(index)
-              console.log("CPUFreq index = ",index);
+              setCurrentTargetCPUFreq(backend.data.getCPUFreqByIndex(index))
+              console.log(`CPUFreq index = ${index}  freq= ${backend.data.getCPUFreqByIndex(index)}`);
             }}
           />
         </PanelSectionRow>}
@@ -325,7 +325,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
     const smt = settings.appSmt(appId);
     const cpuNum = settings.appCpuNum(appId);
     const cpuBoost = settings.appCpuboost(appId);
-    const cpuFreqIndex = settings.appCPUFreqIndex(appId);
+    const cpuFreq = settings.appCPUFreq(appId);
     const tdp = settings.appTDP(appId);
     const tdpEnable = settings.appTDPEnable(appId);
     const gpuMode = settings.appGPUMode(appId);
@@ -333,10 +333,10 @@ export default definePlugin((serverAPI: ServerAPI) => {
     backend.applySmt(smt);
     backend.applyCpuNum(cpuNum);
     backend.applyCpuBoost(cpuBoost);
-    if(!cpuBoost&&backend.data.HasCPUFreqList()){
-      backend.applyCPUFreq(backend.data.getCPUFreqList()[cpuFreqIndex]);
+    if(!cpuBoost&&(cpuFreq!=0||backend.data.HasCPUFreqList())){
+      backend.applyCPUFreq(cpuFreq);
     }else if(cpuBoost&&backend.data.HasCPUFreqList()){
-        backend.applyCPUFreq(backend.data.getCPUFreqList()[backend.data.getCPUFreqMaxIndex()]);
+        backend.applyCPUFreq(backend.data.getCPUFreqMax());
     }
     if (tdpEnable){
       backend.applyTDP(tdp);

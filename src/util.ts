@@ -68,6 +68,7 @@ export class BackendData{
   private cpuFreqList:number[] = [];
   private has_cpuFreqList = false;
   private cpuMaxFreqIndex = 0;
+  private cpuMaxFreq = 0;
   public init(serverAPI:ServerAPI){
     serverAPI!.callPluginMethod<{},number>("get_cpuMaxNum",{}).then(res=>{
       if (res.success){
@@ -102,6 +103,7 @@ export class BackendData{
         this.cpuFreqList = res.result;
         if(this.cpuFreqList.length>=1){
           this.cpuMaxFreqIndex = this.cpuFreqList.length - 1;
+          this.cpuMaxFreq = this.cpuFreqList[this.cpuFreqList.length - 1]
           this.has_cpuFreqList = true;
         }
         console.log("cpuFreqList = " + this.cpuFreqList)
@@ -131,8 +133,47 @@ export class BackendData{
   }
 
   public getCPUFreqMaxIndex(){
-    console.log("cpuMaxFreq = " + this.cpuMaxFreqIndex);
+    console.log("cpuMaxFreqIndez = " + this.cpuMaxFreqIndex);
     return this.cpuMaxFreqIndex;
+  }
+
+  public getCPUFreqIndexByFreq(freq:number){
+    if(this.has_cpuFreqList){
+      var freqIndex = this.getCPUFreqList().findIndex((value)=>{
+        return value == freq;
+      })
+      if(freqIndex == -1)
+        return this.cpuMaxFreqIndex
+      else
+        return freqIndex
+    }
+    return 0
+  }
+
+  public getCPUFreqByIndex(index:number){
+    if(this.has_cpuFreqList){
+      if(index>this.cpuMaxFreqIndex){
+        console.log("cpuFreqIndex超出最大数组下标");
+        return this.cpuMaxFreq;
+      }
+      else if(index <=0){
+        console.log("cpuFreqIndex小于0");
+        return this.getCPUFreqList()[0];
+      }
+      else{
+        return this.getCPUFreqList()[index];
+      }
+    }
+    else
+      return 0;
+  }
+
+  public getCPUFreqMax(){
+    console.log("cpuMaxFreq = " + this.cpuMaxFreq);
+    if(this.HasCPUFreqList()){
+      return this.cpuMaxFreq;
+    }
+    return 0;
   }
 
   public getCPUFreqList(){

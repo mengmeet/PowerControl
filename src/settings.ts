@@ -22,7 +22,7 @@ export class AppSetting {
   @JsonProperty()
   gpuFreq?:number
   @JsonProperty()
-  cpuFreqIndex?:number
+  cpuFreq?:number
 
   hasSettings(): boolean {
     if (this.smt != undefined)
@@ -39,7 +39,7 @@ export class AppSetting {
       return true;
     if (this.gpuFreq != undefined)
       return true;
-    if (this.cpuFreqIndex != undefined)
+    if (this.cpuFreq != undefined)
       return true;
     return false;
   }
@@ -115,11 +115,11 @@ export class Settings {
     return 1600;
   }
 
-  appCPUFreqIndex(appId: string){
-    if (this.perApp[appId]?.cpuFreqIndex != undefined)
-      return this.perApp[appId].cpuFreqIndex!!;
-    if (this.perApp[DEFAULT_APP]?.cpuFreqIndex != undefined)
-      return this.perApp[DEFAULT_APP].cpuFreqIndex!!;
+  appCPUFreq(appId: string){
+    if (this.perApp[appId]?.cpuFreq != undefined)
+      return this.perApp[appId].cpuFreq!!;
+    if (this.perApp[DEFAULT_APP]?.cpuFreq != undefined)
+      return this.perApp[DEFAULT_APP].cpuFreq!!;
     return 0;
   }
 }
