@@ -18,9 +18,8 @@
 6. 自动GPU频率
 7. 限制cpu最大频率
 
-
-**自动GPU频率根据GPU使用率自动调整频率，最好配合关闭睿频使用，目前检测较为简单，可能存在一定问题**
-**cpu最大频率限制参考[CPU frequency scaling](https://wiki.archlinux.org/title/CPU_frequency_scaling#Setting_maximum_and_minimum_frequencies),只能限制在内核提供的cpu频率数据**
+**自动GPU频率根据GPU使用率自动调整频率，最好配合关闭睿频使用，目前检测较为简单，可能存在一定问题**  
+**cpu最大频率限制参考[CPU frequency scaling](https://wiki.archlinux.org/title/CPU_frequency_scaling#Setting_maximum_and_minimum_frequencies),只能限制在内核提供的cpu频率数据**  
 
 ## 演示
 ![](assets/20230110153822_1.jpg)
