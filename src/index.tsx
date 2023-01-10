@@ -256,7 +256,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
           </PanelSectionRow>
           {!currentTargetCpuBoost&&<PanelSectionRow>
           <SliderField
-            label="CPU最大频率限制"
+            label="CPU 最大频率限制"
             value={backend.data.getCPUFreqIndexByFreq(currentTargetCPUFreq)}
             step={1}
             max={backend.data.getCPUFreqMaxIndex()}

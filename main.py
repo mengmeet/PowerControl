@@ -134,7 +134,6 @@ class GPU_AutoFreqManager (threading.Thread):
                 logging.info(f"当前的GPU频率:{gpu_oldFreq}mhz 不在限制范围  GPU最大限制频率{gpu_autoFreqMax}mhz GPU最小限制频率{gpu_autoFreqMin}mhz")
         except Exception as e:
             logging.info(e)
-            return False
 
     def optimization_GPUFreq(self):
         try:
