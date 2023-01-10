@@ -37,7 +37,13 @@ declare var SteamClient: any;
 
 let settings: Settings;
 
-const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, resetFn: () => void, backend:Backend}> = ({ runningApps, applyFn, resetFn, backend }) => {
+const SET_ALL = "ALL";
+const SET_CPUFREQ = "SET_CPUFREQ";
+const SET_CPUCORE = "SET_CPUCORE";
+const SET_TDP = "SET_TDP"
+const SET_GPU = "SET_GPU";
+
+const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarget:string) => void, resetFn: () => void, backend:Backend}> = ({ runningApps, applyFn, resetFn, backend }) => {
   const [initialized, setInitialized] = useState<boolean>(false);
 
   const [currentEnabled, setCurrentEnabled] = useState<boolean>(true);
@@ -46,11 +52,14 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
   const [currentTargetSmt, setCurrentTargetSmt] = useState<boolean>(true);
   const [currentTargetCpuBoost, setCurrentTargetCpuBoost] = useState<boolean>(true);
   const [currentTargetCpuNum, setCurrentTargetCpuNum] = useState<number>(backend.data.getCpuMaxNum());
+  const [currentTargetCPUFreq, setCurrentTargetCPUFreq] = useState<number>(backend.data.getCPUFreqMax());
   const [currentTargetTDPEnable, setCurrentTargetTDPEnable] = useState<boolean>(false);
   const [currentTargetTDP, setCurrentTargetTDP] = useState<number>(backend.data.getTDPMax());
   const [currentTargetGPUMode, setCurrentTargetGPUMode] = useState<number>(0);
   const [currentTargetGPUFreq, setCurrentTargetGPUFreq] = useState<number>(backend.data.getGPUFreqMax());
-  const [currentTargetCPUFreq, setCurrentTargetCPUFreq] = useState<number>(backend.data.getCPUFreqMax());
+  const [currentTargetGPUAutoMaxFreq,setCurrentTargetGPUAutoMaxFreq] = useState<number>(backend.data.getGPUFreqMax());
+  const [currentTargetGPUAutoMinFreq,setCurrentTargetGPUAutoMinFreq] = useState<number>(200);
+  
   const refresh = () => {
     // prevent updates while we are reloading
     setInitialized(false);
@@ -71,8 +80,64 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
     setCurrentTargetGPUMode(settings.appGPUMode(activeApp));
     setCurrentTargetGPUFreq(settings.appGPUFreq(activeApp));
     setCurrentTargetCPUFreq(settings.appCPUFreq(activeApp));
+    setCurrentTargetGPUAutoMaxFreq(settings.appGPUAutoMaxFreq(activeApp))
+    setCurrentTargetGPUAutoMinFreq(settings.appGPUAutoMinFreq(activeApp))
     setInitialized(true);
   }
+
+  useEffect(() => {
+    if (!initialized || !currentEnabled)
+      return;
+
+    let activeApp = RunningApps.active();
+    if (currentAppOverride && currentAppOverridable) {
+      console.log(`SET_CPUCORE 设置app(${activeApp})配置状态`);
+    } else {
+      console.log(`SET_CPUCORE 设置默认配置状态`);
+      activeApp = DEFAULT_APP;
+    }
+    settings.ensureApp(activeApp).smt = currentTargetSmt;
+    settings.ensureApp(activeApp).cpuNum = currentTargetCpuNum;
+    applyFn(RunningApps.active(),SET_CPUCORE);
+
+    saveSettingsToLocalStorage(settings);
+  }, [currentTargetSmt,currentTargetCpuNum,currentEnabled, initialized]);
+
+  useEffect(() => {
+    if (!initialized || !currentEnabled)
+      return;
+
+    let activeApp = RunningApps.active();
+    if (currentAppOverride && currentAppOverridable) {
+      console.log(`SET_CPUFREQ 设置app(${activeApp})配置状态`);
+    } else {
+      console.log(`SET_CPUFREQ 设置默认配置状态`);
+      activeApp = DEFAULT_APP;
+    }
+    settings.ensureApp(activeApp).cpuboost = currentTargetCpuBoost;
+    settings.ensureApp(activeApp).cpuFreq = currentTargetCPUFreq;
+    applyFn(RunningApps.active(),SET_CPUFREQ);
+
+    saveSettingsToLocalStorage(settings);
+  }, [currentTargetCpuBoost,currentTargetCPUFreq, currentEnabled, initialized]);
+
+  useEffect(() => {
+    if (!initialized || !currentEnabled)
+      return;
+
+    let activeApp = RunningApps.active();
+    if (currentAppOverride && currentAppOverridable) {
+      console.log(`SET_TDP 设置app(${activeApp})配置状态`);
+    } else {
+      console.log(`SET_TDP 设置默认配置状态`);
+      activeApp = DEFAULT_APP;
+    }
+    settings.ensureApp(activeApp).tdp = currentTargetTDP;
+    settings.ensureApp(activeApp).tdpEnable = currentTargetTDPEnable;
+    applyFn(RunningApps.active(),SET_TDP);
+
+    saveSettingsToLocalStorage(settings);
+  }, [currentTargetTDP, currentTargetTDPEnable, currentEnabled, initialized]);
 
   useEffect(() => {
     if (!initialized || !currentEnabled)
@@ -85,18 +150,14 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
       console.log(`设置默认配置状态`);
       activeApp = DEFAULT_APP;
     }
-    settings.ensureApp(activeApp).smt = currentTargetSmt;
-    settings.ensureApp(activeApp).cpuNum = currentTargetCpuNum;
-    settings.ensureApp(activeApp).cpuboost = currentTargetCpuBoost;
-    settings.ensureApp(activeApp).tdp = currentTargetTDP;
-    settings.ensureApp(activeApp).tdpEnable = currentTargetTDPEnable;
     settings.ensureApp(activeApp).gpuMode = currentTargetGPUMode;
     settings.ensureApp(activeApp).gpuFreq = currentTargetGPUFreq;
-    settings.ensureApp(activeApp).cpuFreq = currentTargetCPUFreq;
-    applyFn(RunningApps.active());
+    settings.ensureApp(activeApp).gpuAutoMaxFreq = currentTargetGPUAutoMaxFreq;
+    settings.ensureApp(activeApp).gpuAutoMinFreq = currentTargetGPUAutoMinFreq;
+    applyFn(RunningApps.active(),SET_GPU);
 
     saveSettingsToLocalStorage(settings);
-  }, [currentTargetSmt,currentTargetCpuNum, currentTargetCpuBoost, currentTargetTDP, currentTargetTDPEnable, currentTargetGPUMode, currentTargetGPUFreq, currentTargetCPUFreq, currentEnabled, initialized]);
+  }, [currentTargetGPUMode, currentTargetGPUFreq, currentTargetGPUAutoMaxFreq, currentTargetGPUAutoMinFreq, currentEnabled, initialized]);
 
   useEffect(() => {
     if (!initialized || !currentEnabled)
@@ -117,6 +178,8 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
       settings.ensureApp(activeApp).gpuMode = undefined;
       settings.ensureApp(activeApp).gpuFreq = undefined;
       settings.ensureApp(activeApp).cpuFreq = undefined;
+      settings.ensureApp(activeApp).gpuAutoMaxFreq = undefined;
+      settings.ensureApp(activeApp).gpuAutoMinFreq = undefined;
       setCurrentTargetSmt(settings.appSmt(DEFAULT_APP));
       setCurrentTargetCpuNum(settings.appCpuNum(DEFAULT_APP));
       setCurrentTargetCpuBoost(settings.appCpuboost(DEFAULT_APP));
@@ -125,6 +188,8 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
       setCurrentTargetGPUMode(settings.appGPUMode(DEFAULT_APP));
       setCurrentTargetGPUFreq(settings.appGPUFreq(DEFAULT_APP));
       setCurrentTargetCPUFreq(settings.appCPUFreq(DEFAULT_APP));
+      setCurrentTargetGPUAutoMaxFreq(settings.appGPUAutoMaxFreq(DEFAULT_APP));
+      setCurrentTargetGPUAutoMinFreq(settings.appGPUAutoMinFreq(DEFAULT_APP));
     }
     saveSettingsToLocalStorage(settings);
   }, [currentAppOverride, currentEnabled, initialized]);
@@ -308,6 +373,43 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string) => void, 
             }}
           />
         </PanelSectionRow>}
+        {currentTargetGPUMode==2&&<PanelSectionRow>
+          <SliderField
+            label="GPU 最大频率限制"
+            value={currentTargetGPUAutoMaxFreq}
+            step={50}
+            max={backend.data.getGPUFreqMax()}
+            min={200}
+            disabled={!backend.data.HasGPUFreqMax()}
+            showValue={true}
+            onChange={(value: number) => {
+              if(value <= currentTargetGPUAutoMinFreq){
+                setCurrentTargetGPUAutoMaxFreq(currentTargetGPUAutoMaxFreq)
+              }else{
+                setCurrentTargetGPUAutoMaxFreq(value);
+              }
+            }}
+          />
+        </PanelSectionRow>}
+        {currentTargetGPUMode==2&&<PanelSectionRow>
+          <SliderField
+            label="GPU 最小频率限制"
+            value={currentTargetGPUAutoMinFreq}
+            step={50}
+            max={backend.data.getGPUFreqMax()}
+            min={200}
+            disabled={!backend.data.HasGPUFreqMax()}
+            showValue={true}
+            onChange={(value: number) => {
+              if(value >= currentTargetGPUAutoMaxFreq){
+                setCurrentTargetGPUAutoMinFreq(currentTargetGPUAutoMaxFreq)
+              }else{
+                setCurrentTargetGPUAutoMinFreq(value);
+              }
+
+            }}
+          />
+        </PanelSectionRow>}
       </PanelSection>
       }
     </div>
@@ -321,41 +423,50 @@ export default definePlugin((serverAPI: ServerAPI) => {
   const backend = new Backend(serverAPI);
   const runningApps = new RunningApps();
 
-  const applySettings = (appId: string) => {
-    const smt = settings.appSmt(appId);
-    const cpuNum = settings.appCpuNum(appId);
-    const cpuBoost = settings.appCpuboost(appId);
-    const cpuFreq = settings.appCPUFreq(appId);
-    const tdp = settings.appTDP(appId);
-    const tdpEnable = settings.appTDPEnable(appId);
-    const gpuMode = settings.appGPUMode(appId);
-    const gpuFreq = settings.appGPUFreq(appId);
-    backend.applySmt(smt);
-    backend.applyCpuNum(cpuNum);
-    backend.applyCpuBoost(cpuBoost);
-    if(!cpuBoost&&(cpuFreq!=0||backend.data.HasCPUFreqList())){
-      backend.applyCPUFreq(cpuFreq);
-    }else if(cpuBoost&&backend.data.HasCPUFreqList()){
-        backend.applyCPUFreq(backend.data.getCPUFreqMax());
+  const applySettings = (appId: string,applyTarget:string) => {
+    if(applyTarget == SET_ALL || applyTarget == SET_CPUCORE){
+      const smt = settings.appSmt(appId);
+      const cpuNum = settings.appCpuNum(appId);
+      backend.applySmt(smt);
+      backend.applyCpuNum(cpuNum);
     }
-    if (tdpEnable){
-      backend.applyTDP(tdp);
+    if(applyTarget == SET_ALL || applyTarget == SET_CPUFREQ){
+      const cpuBoost = settings.appCpuboost(appId);
+      const cpuFreq = settings.appCPUFreq(appId);
+      backend.applyCpuBoost(cpuBoost);
+      backend.applyCPUFreq(cpuBoost,cpuFreq);
     }
-    else{
-      backend.applyTDP(backend.data.getTDPMax());
+    if(applyTarget == SET_ALL || applyTarget == SET_TDP){
+      const tdp = settings.appTDP(appId);
+      const tdpEnable = settings.appTDPEnable(appId);
+      if (tdpEnable){
+        backend.applyTDP(tdp);
+      }
+      else{
+        backend.applyTDP(backend.data.getTDPMax());
+      }
     }
-    if(gpuMode == 0){
-      backend.applyGPUFreq(0);
-    }else if(gpuMode == 1){
-        backend.applyGPUFreq(gpuFreq);
-    }else if(gpuMode == 2){
-        console.log(`开始自动优化GPU频率`)
-        backend.applyGPUAuto(true);
-    }
-    else{
-        console.log(`出现意外的GPUmode = ${gpuMode}`)
+    if(applyTarget == SET_ALL || applyTarget == SET_GPU){
+      const gpuMode = settings.appGPUMode(appId);
+      const gpuFreq = settings.appGPUFreq(appId);
+      const gpuAutoMaxFreq = settings.appGPUAutoMaxFreq(appId);
+      const gpuAutoMinFreq = settings.appGPUAutoMinFreq(appId);
+      if(gpuMode == 0){
         backend.applyGPUFreq(0);
+      }else if(gpuMode == 1){
+          backend.applyGPUFreq(gpuFreq);
+      }else if(gpuMode == 2){
+          console.log(`开始自动优化GPU频率`)
+          backend.applyGPUAuto(true);
+          backend.applyGPUAutoMax(gpuAutoMaxFreq);
+          backend.applyGPUAutoMin(gpuAutoMinFreq);          
+      }
+      else{
+          console.log(`出现意外的GPUmode = ${gpuMode}`)
+          backend.applyGPUFreq(0);
+      }
     }
+
   };
 
   const resetSettings = () => {
@@ -374,7 +485,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
     if (update.bRunning) {
         console.log(`unAppID=${update.unAppID} 游戏状态更新`)
         if (settings.enabled){
-          applySettings(RunningApps.active());
+          applySettings(RunningApps.active(),SET_ALL);
         }
         else{
           resetSettings();
@@ -382,7 +493,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
     } else {
         console.log("unAppID=" + update.unAppID.toString() + "结束游戏"); 
         if (settings.enabled){
-          applySettings(DEFAULT_APP);
+          applySettings(DEFAULT_APP,SET_ALL);
         }else{
           resetSettings();
         }
@@ -392,7 +503,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
     console.log("休眠结束，重新应用设置")
     if (settings.enabled){
       backend.throwSuspendEvt()
-      applySettings(RunningApps.active());
+      applySettings(RunningApps.active(),SET_ALL);
     }else{
       resetSettings();
     }
@@ -401,7 +512,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
 
   // apply initially
   if (settings.enabled) {
-    applySettings(RunningApps.active());
+    applySettings(RunningApps.active(),SET_ALL);
   }
 
   return {

@@ -22,6 +22,10 @@ export class AppSetting {
   @JsonProperty()
   gpuFreq?:number
   @JsonProperty()
+  gpuAutoMaxFreq?:number
+  @JsonProperty()
+  gpuAutoMinFreq?:number
+  @JsonProperty()
   cpuFreq?:number
 
   hasSettings(): boolean {
@@ -40,6 +44,10 @@ export class AppSetting {
     if (this.gpuFreq != undefined)
       return true;
     if (this.cpuFreq != undefined)
+      return true;
+    if (this.gpuAutoMaxFreq != undefined)
+      return true;
+    if (this.gpuAutoMinFreq != undefined)
       return true;
     return false;
   }
@@ -122,6 +130,23 @@ export class Settings {
       return this.perApp[DEFAULT_APP].cpuFreq!!;
     return 0;
   }
+
+  appGPUAutoMaxFreq(appId: string){
+    if (this.perApp[appId]?.gpuAutoMaxFreq != undefined)
+      return this.perApp[appId].gpuAutoMaxFreq!!;
+    if (this.perApp[DEFAULT_APP]?.gpuAutoMaxFreq != undefined)
+      return this.perApp[DEFAULT_APP].gpuAutoMaxFreq!!;
+    return 1600;
+  }
+
+  appGPUAutoMinFreq(appId: string){
+    if (this.perApp[appId]?.gpuAutoMinFreq != undefined)
+      return this.perApp[appId].gpuAutoMinFreq!!;
+    if (this.perApp[DEFAULT_APP]?.gpuAutoMinFreq != undefined)
+      return this.perApp[DEFAULT_APP].gpuAutoMinFreq!!;
+    return 200;
+  }
+
 }
 
 export function loadSettingsFromLocalStorage(): Settings {

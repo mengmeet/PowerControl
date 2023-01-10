@@ -18,7 +18,7 @@ logging.basicConfig(
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-logging.info(f"PowerControl main.py")
+logging.info("PowerControl main.py")
 
 HOME_DIR = str(pathlib.Path(os.getcwd()).parent.parent.resolve())
 PARENT_DIR = str(pathlib.Path(__file__).parent.resolve())
@@ -37,6 +37,8 @@ gpu_freqMax=1600
 gpu_freqMin=200
 gpu_nowFreq=0
 gpu_autofreqManager = None
+gpu_autoFreqMax=1600
+gpu_autoFreqMin=200
 
 
 sh_path="../plugins/PowerControl/TDP/tdp-control.sh"
@@ -45,15 +47,16 @@ class GPU_AutoFreqManager (threading.Thread):
 
     def __init__(self):
         self._gpu_enableAutoFreq = False        #标记是否开启GPU频率优化
-        self._gpu_autoFreqCheckInterval = 0.5   #gpu占用率数据检测检测
-        self._gpu_adjustFreqInterval = 1.5      #gpu调整间隔
+        self._gpu_autoFreqCheckInterval = 0.005   #gpu占用率数据检测间隔
+        self._gpu_adjustFreqInterval = 0.5      #gpu调整间隔
         self._gpu_busyPercentQueue = collections.deque()    #记录gpu占用率的队列
-        self._gpu_busyPercentMaxNum = 6     #gpu占用率最多记录几个
+        self._gpu_busyPercentMaxNum = 100     #gpu占用率最多记录几个
         self._gpu_busyPercentNum = 0    #当前gpu占用率个数
         self._gpu_busyPercentSum = 0    #当前所有的gpu占用率总和 方便计算平均值 无需每次遍历队列
         self._gpu_addFreqBase=50        #自动优化频率的基准大小
         self._gpu_minBusyPercent = 75       #优化占用率的区间最小值
-        self._gpu_maxBusyPercent = 90       #优化占用率的区间最大值
+        self._gpu_maxBusyPercent = 95       #优化占用率的区间最大值
+        self._isRunning = False     #标记是否正在运行gpu频率优化
         threading.Thread.__init__(self)
 
     def Set_gpuFreq(self, value: int):
@@ -120,44 +123,40 @@ class GPU_AutoFreqManager (threading.Thread):
     
     def optimization_GPUFreq(self):
         try:
-            global gpu_freqMax
-            global gpu_freqMin
+            global gpu_autoFreqMax
+            global gpu_autoFreqMin
             global gpu_nowFreq
             gpu_Avg = self.Get_gpuBusyPercentAvg()
             gpu_addFreqOnce = self._gpu_addFreqBase
             if gpu_Avg >= self._gpu_maxBusyPercent:
-                gpu_addFreqOnce = min(gpu_freqMax - gpu_nowFreq,int((gpu_Avg - self._gpu_maxBusyPercent)/5)*self._gpu_addFreqBase)
-                if gpu_nowFreq + gpu_addFreqOnce > gpu_freqMax:
-                    logging.info(f"当前平均GPU使用率::{gpu_Avg}% 大于目标范围最大值:{self._gpu_maxBusyPercent}% 已达到GPU最大频率{gpu_freqMax}mhz,无法继续增加")
-                    logging.info(f"当前的GPU频率:{gpu_nowFreq} 当前GPU使用率标记队列: {self._gpu_busyPercentQueue}")
-                else:
+                gpu_addFreqOnce = min(gpu_autoFreqMax - gpu_nowFreq, self._gpu_addFreqBase)
+                if gpu_addFreqOnce != 0:
                     gpu_nowFreq = gpu_nowFreq + gpu_addFreqOnce
                     self.Set_gpuFreq(gpu_nowFreq)
-                    logging.info(f"当前平均GPU使用率::{gpu_Avg}% 大于目标范围最大值:{self._gpu_maxBusyPercent}% 增加{gpu_addFreqOnce}mhz GPU频率")
-                    logging.info(f"增加后的GPU频率:{gpu_nowFreq} 当前GPU使用率标记队列: {self._gpu_busyPercentQueue}")
-            elif gpu_Avg <= self._gpu_minBusyPercent:
-                #gpu_addFreqOnce = min(self._gpu_nowFreq - gpu_freqMin,int((self._gpu_maxBusyPercent - gpu_Avg)*self._gpu_addFreqBase/10))
-                gpu_addFreqOnce = min(gpu_nowFreq - gpu_freqMin,self._gpu_addFreqBase)
-                if gpu_nowFreq - gpu_addFreqOnce < gpu_freqMin:
-                    logging.info(f"当前平均GPU使用率::{gpu_Avg}% 小于目标范围最小值:{self._gpu_minBusyPercent}% 已达到GPU最小频率，无法继续降低")
-                    logging.info(f"当前的GPU频率:{gpu_nowFreq} 当前GPU使用率标记队列: {self._gpu_busyPercentQueue}")
+                    logging.info(f"当前平均GPU使用率::{gpu_Avg}% 大于目标范围最大值:{self._gpu_maxBusyPercent}% 增加{gpu_addFreqOnce}mhz GPU频率 增加后的GPU频率:{gpu_nowFreq}")
                 else:
+                    logging.info(f"当前平均GPU使用率::{gpu_Avg}% 大于目标范围最大值:{self._gpu_maxBusyPercent}% 已达到GPU最大限制频率{gpu_autoFreqMax}mhz,无法继续增加  当前的GPU频率:{gpu_nowFreq}")
+            elif gpu_Avg <= self._gpu_minBusyPercent:
+                gpu_addFreqOnce = min(gpu_nowFreq - gpu_autoFreqMin,self._gpu_addFreqBase)
+                if gpu_addFreqOnce != 0:
                     gpu_nowFreq = gpu_nowFreq - gpu_addFreqOnce
                     self.Set_gpuFreq(gpu_nowFreq)
-                    logging.info(f"当前平均GPU使用率::{gpu_Avg}% 小于目标范围最小值:{self._gpu_minBusyPercent}% 降低{gpu_addFreqOnce}mhz GPU频率")
-                    logging.info(f"降低后的GPU频率:{gpu_nowFreq} 当前GPU使用率标记队列: {self._gpu_busyPercentQueue}")
+                    logging.info(f"当前平均GPU使用率::{gpu_Avg}% 小于目标范围最小值:{self._gpu_minBusyPercent}% 降低{gpu_addFreqOnce}mhz GPU频率 降低后的GPU频率:{gpu_nowFreq} ")
+                else:
+                    logging.info(f"当前平均GPU使用率::{gpu_Avg}% 小于目标范围最小值:{self._gpu_minBusyPercent}% 已达到GPU最小限制频率，无法继续降低 当前的GPU频率:{gpu_nowFreq} ")
             else:
-                logging.info(f"当前平均GPU使用率::{gpu_Avg}% 处于目标范围{self._gpu_minBusyPercent}%-{self._gpu_maxBusyPercent}% 无需修改GPU频率")
-                logging.info(f"当前的GPU频率:{gpu_nowFreq} 当前GPU使用率标记队列: {self._gpu_busyPercentQueue}")
+                logging.info(f"当前平均GPU使用率::{gpu_Avg}% 处于目标范围{self._gpu_minBusyPercent}%-{self._gpu_maxBusyPercent}% 无需修改GPU频率  当前的GPU频率:{gpu_nowFreq}")
         except Exception as e:
             logging.info(e)
 
     def run(self):
         logging.info("开始自动优化频率:" + self.name)
         adjust_count = 0
+        self._isRunning = True
         while True:
             try:
                 if not self._gpu_enableAutoFreq:
+                    self._isRunning = False
                     logging.info("退出自动优化频率：" + self.name)
                     break
                 self.Add_gpuBusyPercentQueue()
@@ -301,25 +300,49 @@ class Plugin:
             logging.info(f"set_gpuAuto  isAuto: {value}")
             global gpu_autofreqManager
             #设置GPU自动频率时判断是否已经有自动频率设置管理器
-            if gpu_autofreqManager is None:
-                #没有管理器且当前为开启设置，则实例化一个并开启
+            if gpu_autofreqManager is None or not gpu_autofreqManager._isRunning:
+                #没有管理器或者当前管理器已经停止运行，且当前为开启设置，则实例化一个并开启
                 if value:
                     gpu_autofreqManager = GPU_AutoFreqManager()
                     gpu_autofreqManager.GPU_enableAutoFreq(True)
             else:
-                #有管理器且当前为开启设置，则需要先关闭上一个管理器再开启
-                if value:
-                    gpu_autofreqManager.GPU_enableAutoFreq(False)
-                    gpu_autofreqManager = GPU_AutoFreqManager()
-                    gpu_autofreqManager.GPU_enableAutoFreq(True)
-                #有管理器且当前为关闭设置，则直接关闭当前的管理器
-                else:
+                #有管理器且管理器正在运行，且当前为关闭设置，则直接关闭当前的管理器
+                if not value:
                     gpu_autofreqManager.GPU_enableAutoFreq(False)
                     gpu_autofreqManager = None
+                    
         except Exception as e:
             logging.info(e)
             return False
-            
+
+    def set_gpuAutoMaxFreq(self, value: int):
+        try:
+            logging.info(f"set_gpuAutoMaxFreq {value}")
+            global gpu_autoFreqMax
+            if value >= gpu_freqMax:
+                gpu_autoFreqMax = gpu_freqMax
+            elif value <= gpu_freqMin:
+                gpu_autoFreqMax = gpu_freqMin
+            else:
+                gpu_autoFreqMax = value
+        except Exception as e:
+            logging.info(e)
+            return False
+    
+    def set_gpuAutoMinFreq(self, value: int):
+        try:
+            logging.info(f"set_gpuAutoMinFreq {value}")
+            global gpu_autoFreqMin
+            if value >= gpu_freqMax:
+                gpu_autoFreqMin = gpu_freqMax
+            elif value <= gpu_freqMin:
+                gpu_autoFreqMin = gpu_freqMin
+            else:
+                gpu_autoFreqMin = value
+        except Exception as e:
+            logging.info(e)
+            return False
+
     def set_gpuFreq(self, value: int):
         try:
             if value >= 0:

@@ -225,6 +225,10 @@ export class Backend {
 
   applyCpuBoost(cpuBoost: boolean) {
     console.log("Applying cpuBoost " + cpuBoost.toString());
+    if(cpuBoost&&this.data.HasCPUFreqList()){
+      console.log("cpuBoost = " + cpuBoost.toString()+"Applying cpuMaxFreq" + this.data.getCPUFreqMax().toString());
+      this.serverAPI!.callPluginMethod("set_cpuFreq", {"value":this.data.getCPUFreqMax()});
+    }
     this.serverAPI!.callPluginMethod("set_cpuBoost", { "value": cpuBoost });
   }
 
@@ -244,9 +248,21 @@ export class Backend {
     this.serverAPI!.callPluginMethod("set_gpuAuto", {"value":auto});
   }
 
-  applyCPUFreq(freq: number){
-    console.log("Applying cpuFreq" + freq.toString());
-    this.serverAPI!.callPluginMethod("set_cpuFreq", {"value":freq});
+  applyGPUAutoMax(maxAutoFreq:number){
+    console.log("Applying gpuAuto" + maxAutoFreq.toString());
+    this.serverAPI!.callPluginMethod("set_gpuAutoMaxFreq", {"value":maxAutoFreq});
+  }
+
+  applyGPUAutoMin(minAutoFreq:number){
+    console.log("Applying gpuAuto" + minAutoFreq.toString());
+    this.serverAPI!.callPluginMethod("set_gpuAutoMinFreq", {"value":minAutoFreq});
+  }
+
+  applyCPUFreq(boost:boolean,freq: number){
+    if(!boost&&(freq!=0||this.data.HasCPUFreqList())){
+      console.log("boost = " + boost.toString()+"Applying cpuFreq" + freq.toString());
+      this.serverAPI!.callPluginMethod("set_cpuFreq", {"value":freq});
+    }
   }
 
   throwSuspendEvt(){
