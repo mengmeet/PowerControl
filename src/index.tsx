@@ -384,7 +384,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
             showValue={true}
             onChange={(value: number) => {
               if(value <= currentTargetGPUAutoMinFreq){
-                setCurrentTargetGPUAutoMaxFreq(currentTargetGPUAutoMaxFreq)
+                setCurrentTargetGPUAutoMaxFreq(currentTargetGPUAutoMinFreq)
               }else{
                 setCurrentTargetGPUAutoMaxFreq(value);
               }

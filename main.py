@@ -121,6 +121,21 @@ class GPU_AutoFreqManager (threading.Thread):
             logging.info(e)
             return False
     
+    def check_LegalCpuFreq(self):
+        try:
+            global gpu_autoFreqMax
+            global gpu_autoFreqMin
+            global gpu_nowFreq
+            gpu_oldFreq = gpu_nowFreq
+            gpu_nowFreq = min(gpu_nowFreq,gpu_autoFreqMax)
+            gpu_nowFreq = max(gpu_nowFreq, gpu_autoFreqMin)
+            if gpu_oldFreq != gpu_nowFreq:
+                self.Set_gpuFreq(gpu_nowFreq)
+                logging.info(f"当前的GPU频率:{gpu_oldFreq}mhz 不在限制范围  GPU最大限制频率{gpu_autoFreqMax}mhz GPU最小限制频率{gpu_autoFreqMin}mhz")
+        except Exception as e:
+            logging.info(e)
+            return False
+
     def optimization_GPUFreq(self):
         try:
             global gpu_autoFreqMax
@@ -128,6 +143,7 @@ class GPU_AutoFreqManager (threading.Thread):
             global gpu_nowFreq
             gpu_Avg = self.Get_gpuBusyPercentAvg()
             gpu_addFreqOnce = self._gpu_addFreqBase
+
             if gpu_Avg >= self._gpu_maxBusyPercent:
                 gpu_addFreqOnce = min(gpu_autoFreqMax - gpu_nowFreq, self._gpu_addFreqBase)
                 if gpu_addFreqOnce != 0:
@@ -143,9 +159,10 @@ class GPU_AutoFreqManager (threading.Thread):
                     self.Set_gpuFreq(gpu_nowFreq)
                     logging.info(f"当前平均GPU使用率::{gpu_Avg}% 小于目标范围最小值:{self._gpu_minBusyPercent}% 降低{gpu_addFreqOnce}mhz GPU频率 降低后的GPU频率:{gpu_nowFreq} ")
                 else:
-                    logging.info(f"当前平均GPU使用率::{gpu_Avg}% 小于目标范围最小值:{self._gpu_minBusyPercent}% 已达到GPU最小限制频率，无法继续降低 当前的GPU频率:{gpu_nowFreq} ")
+                    logging.info(f"当前平均GPU使用率::{gpu_Avg}% 小于目标范围最小值:{self._gpu_minBusyPercent}% 已达到GPU最小限制频率{gpu_autoFreqMin}mhz，无法继续降低 当前的GPU频率:{gpu_nowFreq} ")
             else:
                 logging.info(f"当前平均GPU使用率::{gpu_Avg}% 处于目标范围{self._gpu_minBusyPercent}%-{self._gpu_maxBusyPercent}% 无需修改GPU频率  当前的GPU频率:{gpu_nowFreq}")
+            self.check_LegalCpuFreq()
         except Exception as e:
             logging.info(e)
 
