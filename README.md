@@ -15,10 +15,15 @@
 3. 调整物理核心开启数量
 4. 限制TDP
 5. 固定GPU频率
-5. 自动GPU频率(根据GPU使用率自动调整频率，最好配合关闭睿频使用)
+6. 自动GPU频率
+7. 限制cpu最大频率
+
+
+**自动GPU频率根据GPU使用率自动调整频率，最好配合关闭睿频使用，目前检测较为简单，可能存在一定问题**
+**cpu最大频率限制参考[CPU frequency scaling](https://wiki.archlinux.org/title/CPU_frequency_scaling#Setting_maximum_and_minimum_frequencies),只能限制在内核提供的cpu频率数据**
 
 ## 演示
-![](assets/20230107182846_1.jpg)
+![](assets/20230110153822_1.jpg)
 ![](assets/20230108234559_1.jpg)
 
 ## 性能调整范围预设
