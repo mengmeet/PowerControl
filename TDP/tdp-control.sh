@@ -33,12 +33,12 @@ function set_cpu_Freq()
 function get_cpu_nowFreq()
 {
     cpu_index=$1
-    echo $(cat /sys/devices/system/cpu/cpufreq/policy${cpu_index}/scaling_cur_freq)
+    echo "$(cat /sys/devices/system/cpu/cpufreq/policy${cpu_index}/scaling_cur_freq)"
 }
 
 function get_cpu_AvailableFreq()
 {
-    echo $(cat /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies)
+    echo "$(cat /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies)"
 }
 
 function set_cpu_online()
@@ -74,6 +74,16 @@ function set_clock_limits()
         sudo echo "c" > /sys/class/drm/card0/device/pp_od_clk_voltage
     fi
     sudo echo "gpu_clock_limit "$1 $2 >> /tmp/powerControl-sh.log
+}
+
+function get_gpu_FreqMinLimit()
+{
+    echo "$(sudo cat /sys/class/drm/card0/device/pp_dpm_sclk|grep "0:"|awk '{print $2}'|sed -e  's/Mhz//g')"
+}
+
+function get_gpu_FreqMaxLimit()
+{
+    echo "$(sudo cat /sys/class/drm/card0/device/pp_dpm_sclk|grep "2:"|awk '{print $2}'|sed -e  's/Mhz//g')"
 }
 
 function set_gpu_flk()
@@ -132,6 +142,8 @@ function set_cpu_boost()
     check_clock_limits)check_clock_limits $2 $3 $4;;
     set_gpu_flk)set_gpu_flk $2;;
     get_cpuID)get_cpuID;;
+    get_gpu_FreqMinLimit)get_gpu_FreqMinLimit;;
+    get_gpu_FreqMaxLimit)get_gpu_FreqMaxLimit;;
     *)sudo echo $1 $2 $3 $4>>  /tmp/powerControl-sh.log;;
     esac
 fi

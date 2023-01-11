@@ -59,10 +59,29 @@ class GPU_AutoFreqManager (threading.Thread):
         self._isRunning = False     #标记是否正在运行gpu频率优化
         threading.Thread.__init__(self)
 
-    def Set_gpuFreq(self, min: int, max:int):
+    def Check_gpuNeedSet(self, freqMin:int, freqMax:int):
         try:
-            if min >= 0 and max >=0:
-                command="sudo sh {} set_clock_limits {} {}".format(sh_path,min,max)
+            gpuFreqPath = "/sys/class/drm/card0/device/pp_dpm_sclk"
+            #可查询gpu设置频率时，判断当前设置是否与系统相同
+            if os.path.exists(gpuFreqPath):
+                maxCommand="sudo sh {} get_gpu_FreqMaxLimit ".format(sh_path)
+                minCommand="sudo sh {} get_gpu_FreqMinLimit ".format(sh_path)
+                qfreqMax=int(subprocess.getoutput(maxCommand))
+                qfreqMin=int(subprocess.getoutput(minCommand))
+                logging.info(f"当前要设置的频率区间 freqMin={freqMin} freqMax={freqMax} 当前系统频率区间 qfreqMin={qfreqMin} qfreMax={qfreqMax}  是否满足设置条件{qfreqMin!=freqMin or qfreqMax != freqMax}")
+                return qfreqMin!=freqMin or qfreqMax != freqMax
+            #查不到gpu设置频率时，只要合法则进行设置
+            else:
+                logging.info(f"当前要设置的频率区间 freqMin={freqMin} freqMax={freqMax} 当前频率={gpu_nowFreq} 是否满足设置条件{freqMax>=0 and freqMin >=0}")
+                return freqMax>=0 and freqMin >=0 
+        except Exception as e:
+            logging.info(e)
+            return freqMax>=0 and freqMin >=0
+
+    def Set_gpuFreq(self, freqMin: int, freqMax:int):
+        try:
+            if self.Check_gpuNeedSet(freqMin, freqMax):
+                command="sudo sh {} set_clock_limits {} {}".format(sh_path,freqMin,freqMax)
                 os.system(command)
                 return True
             else:
@@ -147,20 +166,14 @@ class GPU_AutoFreqManager (threading.Thread):
 
             if gpu_Avg >= self._gpu_maxBusyPercent:
                 gpu_addFreqOnce = min(gpu_autoFreqMax - gpu_nowFreq, self._gpu_addFreqBase)
-                if gpu_addFreqOnce != 0:
-                    gpu_nowFreq = gpu_nowFreq + gpu_addFreqOnce
-                    self.Set_gpuFreq(gpu_nowFreq,gpu_nowFreq)
-                    logging.info(f"当前平均GPU使用率::{gpu_Avg}% 大于目标范围最大值:{self._gpu_maxBusyPercent}% 增加{gpu_addFreqOnce}mhz GPU频率 增加后的GPU频率:{gpu_nowFreq}")
-                else:
-                    logging.info(f"当前平均GPU使用率::{gpu_Avg}% 大于目标范围最大值:{self._gpu_maxBusyPercent}% 已达到GPU最大限制频率{gpu_autoFreqMax}mhz,无法继续增加  当前的GPU频率:{gpu_nowFreq}")
+                gpu_nowFreq = gpu_nowFreq + gpu_addFreqOnce
+                self.Set_gpuFreq(gpu_nowFreq,gpu_nowFreq)
+                logging.info(f"当前平均GPU使用率::{gpu_Avg}% 大于目标范围最大值:{self._gpu_maxBusyPercent}% 增加{gpu_addFreqOnce}mhz GPU频率 增加后的GPU频率:{gpu_nowFreq}")
             elif gpu_Avg <= self._gpu_minBusyPercent:
                 gpu_addFreqOnce = min(gpu_nowFreq - gpu_autoFreqMin,self._gpu_addFreqBase)
-                if gpu_addFreqOnce != 0:
-                    gpu_nowFreq = gpu_nowFreq - gpu_addFreqOnce
-                    self.Set_gpuFreq(gpu_nowFreq,gpu_nowFreq)
-                    logging.info(f"当前平均GPU使用率::{gpu_Avg}% 小于目标范围最小值:{self._gpu_minBusyPercent}% 降低{gpu_addFreqOnce}mhz GPU频率 降低后的GPU频率:{gpu_nowFreq} ")
-                else:
-                    logging.info(f"当前平均GPU使用率::{gpu_Avg}% 小于目标范围最小值:{self._gpu_minBusyPercent}% 已达到GPU最小限制频率{gpu_autoFreqMin}mhz，无法继续降低 当前的GPU频率:{gpu_nowFreq} ")
+                gpu_nowFreq = gpu_nowFreq - gpu_addFreqOnce
+                self.Set_gpuFreq(gpu_nowFreq,gpu_nowFreq)
+                logging.info(f"当前平均GPU使用率::{gpu_Avg}% 小于目标范围最小值:{self._gpu_minBusyPercent}% 降低{gpu_addFreqOnce}mhz GPU频率 降低后的GPU频率:{gpu_nowFreq} ")
             else:
                 logging.info(f"当前平均GPU使用率::{gpu_Avg}% 处于目标范围{self._gpu_minBusyPercent}%-{self._gpu_maxBusyPercent}% 无需修改GPU频率  当前的GPU频率:{gpu_nowFreq}")
             self.check_LegalCpuFreq()
