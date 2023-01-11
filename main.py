@@ -95,6 +95,8 @@ class GPU_AutoFreqManager (threading.Thread):
             return int(gpu_busy_percent)
         except Exception as e:
             logging.info(f"添加gpu_busy_percent时出现异常{e}")
+            self.GPU_enableAutoFreq(False)
+            self.Set_gpuFreq(0)
             return 0
 
     def Get_gpuBusyPercentAvg(self):
