@@ -18,8 +18,12 @@
 6. 自动GPU频率
 7. 限制cpu最大频率
 
-**自动GPU频率根据GPU使用率自动调整频率，推荐配合关闭睿频以及高TDP设置使用，或限制最大最小GPU频率来使用，以实现TDP浮动达到省电的目的**  
-**cpu最大频率限制参考[CPU frequency scaling](https://wiki.archlinux.org/title/CPU_frequency_scaling#Setting_maximum_and_minimum_frequencies) 只能限制在内核提供的cpu频率数据**  
+**- 自动GPU频率根据GPU使用率自动调整频率，推荐配合关闭睿频以及高TDP设置使用，或限制最大最小GPU频率来使用，以实现TDP浮动达到省电的目的**  
+**- cpu最大频率限制参考[CPU frequency scaling](https://wiki.archlinux.org/title/CPU_frequency_scaling#Setting_maximum_and_minimum_frequencies) 只能限制在内核提供的cpu频率数据**  
+
+
+## 已知问题
+**- 6800U在休眠后GPU监控文件会冻结，导致无法正常使用自动GPU频率功能,默认由系统在最小最大频率限制之间调度。该问题是由内核问题导致的，使用6.1以上的内核即可**  
 
 ## 演示
 ![](assets/20230110153822_1.jpg)
