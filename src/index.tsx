@@ -457,9 +457,9 @@ export default definePlugin((serverAPI: ServerAPI) => {
           backend.applyGPUFreq(gpuFreq);
       }else if(gpuMode == 2){
           console.log(`开始自动优化GPU频率`)
-          backend.applyGPUAuto(true);
           backend.applyGPUAutoMax(gpuAutoMaxFreq);
-          backend.applyGPUAutoMin(gpuAutoMinFreq);          
+          backend.applyGPUAutoMin(gpuAutoMinFreq);      
+          backend.applyGPUAuto(true);    
       }
       else{
           console.log(`出现意外的GPUmode = ${gpuMode}`)

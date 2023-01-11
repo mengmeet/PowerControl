@@ -69,35 +69,35 @@ export class BackendData{
   private has_cpuFreqList = false;
   private cpuMaxFreqIndex = 0;
   private cpuMaxFreq = 0;
-  public init(serverAPI:ServerAPI){
-    serverAPI!.callPluginMethod<{},number>("get_cpuMaxNum",{}).then(res=>{
+  public async init(serverAPI:ServerAPI){
+    await serverAPI!.callPluginMethod<{},number>("get_cpuMaxNum",{}).then(res=>{
       if (res.success){
         console.log("cpuMaxNum = " + res.result);
         this.cpuMaxNum = res.result;
         this.has_cpuMaxNum = true;
       }
     })
-    serverAPI!.callPluginMethod<{},number>("get_tdpMax",{}).then(res=>{
+    await serverAPI!.callPluginMethod<{},number>("get_tdpMax",{}).then(res=>{
       if (res.success){
         console.log("tdpMax = " + res.result);
         this.tdpMax = res.result;
         this.has_tdpMax = true;
       }
     })
-    serverAPI!.callPluginMethod<{},boolean>("get_hasRyzenadj",{}).then(res=>{
+    await serverAPI!.callPluginMethod<{},boolean>("get_hasRyzenadj",{}).then(res=>{
       if (res.success){
         console.log("has_ryzenadj = " + res.result);
         this.has_ryzenadj= res.result;
       }
     })
-    serverAPI!.callPluginMethod<{},number>("get_gpuFreqMax",{}).then(res=>{
+    await serverAPI!.callPluginMethod<{},number>("get_gpuFreqMax",{}).then(res=>{
       if (res.success){
         console.log("gpuMax = " + res.result);
         this.gpuMax = res.result;
         this.has_gpuMax = true;
       }
     })
-    serverAPI!.callPluginMethod<{},number[]>("get_cpu_AvailableFreq",{}).then(res=>{
+    await serverAPI!.callPluginMethod<{},number[]>("get_cpu_AvailableFreq",{}).then(res=>{
       if (res.success){
         console.log("res.result = " + res.result)
         this.cpuFreqList = res.result;
