@@ -40,6 +40,12 @@ TDP最大：30 W  GPU频率：200-2000 Mhz
 ### AMD 6800U
 TDP最大：40 W  GPU频率：200-2200 Mhz
 
+### AMD 4800U
+TDP最大：25 W  GPU频率：200-1800 Mhz
+
+### AMD 4500U
+TDP最大：25 W  GPU频率：200-1500 Mhz
+
 ### 其他
 TDP最大：15 W  GPU频率：200-1600 Mhz
 
