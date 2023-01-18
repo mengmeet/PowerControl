@@ -262,6 +262,14 @@ class Plugin:
                 'AMD Ryzen 7 6800U with Radeon Graphics'
             ):
                 cpu_tdpMax=40
+            elif cpu_ID in (
+                'AMD Ryzen 7 4800U with Radeon Graphics'
+            ):
+                cpu_tdpMax=25
+            elif cpu_ID in (
+                'AMD Ryzen 5 4500U with Radeon Graphics'
+            ):
+                cpu_tdpMax=25
             else:
                 cpu_tdpMax=15
             command="sudo sh {} get_tdpMax {}".format(sh_path,cpu_tdpMax)
@@ -290,6 +298,14 @@ class Plugin:
                 'AMD Ryzen 7 6800U with Radeon Graphics'
             ):
                 gpu_freqMax=2200
+            elif cpu_ID in (
+                'AMD Ryzen 7 4800U with Radeon Graphics'
+            ):
+                gpu_freqMax=1800
+            elif cpu_ID in (
+                'AMD Ryzen 5 4500U with Radeon Graphics'
+            ):
+                gpu_freqMax=1500
             else:
                 gpu_freqMax=1600
             command="sudo sh {} get_gpuFreqMax {}".format(sh_path,gpu_freqMax)
