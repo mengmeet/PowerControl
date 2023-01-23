@@ -234,6 +234,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
             <ToggleField
               label="睿 频"
               description={"提升最大cpu频率"}
+              disabled={currentTargetGPUMode==2}
               checked={currentTargetCpuBoost}
               onChange={(value) => {
                 setCurrentTargetCpuBoost(value);
@@ -293,7 +294,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
               label="热设计功耗（TDP）限制"
               description={backend.data.HasRyzenadj()?"限制处理器功耗以降低总功耗":"未检测到ryzenAdj"}
               checked={currentTargetTDPEnable}
-              disabled={!backend.data.HasRyzenadj()}
+              disabled={!backend.data.HasRyzenadj()||currentTargetGPUMode==2}
               onChange={(value) => {
                 setCurrentTargetTDPEnable(value);
               }}
@@ -341,6 +342,10 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
             }
             onChange={(value: number) => {
               setCurrentTargetGPUMode(value);
+              if(value==2){
+                setCurrentTargetCpuBoost(false);
+                setCurrentTargetTDPEnable(false);
+              }
               console.log("GPUMode value = ",value);
             }}
           />
