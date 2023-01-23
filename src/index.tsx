@@ -24,7 +24,7 @@ import {
   ToggleField,
   staticClasses,
 } from "decky-frontend-lib";
-import { VFC, useState, useEffect } from "react";
+import { VFC, useState, useEffect} from "react";
 import { FaSuperpowers } from "react-icons/fa";
 import { loadSettingsFromLocalStorage, Settings, saveSettingsToLocalStorage } from "./settings";
 import { RunningApps, Backend, DEFAULT_APP} from "./util";
@@ -38,7 +38,6 @@ declare var SteamClient: any;
 let settings: Settings;
 
 const SET_ALL = "ALL";
-//const SET_CPUFREQ = "SET_CPUFREQ";
 const SET_CPUBOOST = "SET_CPUBOOST"
 const SET_CPUCORE = "SET_CPUCORE";
 const SET_TDP = "SET_TDP"
@@ -53,7 +52,6 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
   const [currentTargetSmt, setCurrentTargetSmt] = useState<boolean>(true);
   const [currentTargetCpuBoost, setCurrentTargetCpuBoost] = useState<boolean>(true);
   const [currentTargetCpuNum, setCurrentTargetCpuNum] = useState<number>(backend.data.getCpuMaxNum());
-  //const [currentTargetCPUFreq, setCurrentTargetCPUFreq] = useState<number>(backend.data.getCPUFreqMax());
   const [currentTargetTDPEnable, setCurrentTargetTDPEnable] = useState<boolean>(false);
   const [currentTargetTDP, setCurrentTargetTDP] = useState<number>(backend.data.getTDPMax());
   const [currentTargetGPUMode, setCurrentTargetGPUMode] = useState<number>(0);
@@ -69,11 +67,9 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
 
     const activeApp = settings.appOverWrite(RunningApps.active())?RunningApps.active():DEFAULT_APP;
     console.log(`Refresh 设置${activeApp}配置状态`);
-    // does active app have a saved setting
     setCurrentAppOverridable(RunningApps.active() != DEFAULT_APP);
 
     setCurrentAppOverride(settings.appOverWrite(activeApp));
-    // get configured saturation for current app (also Deck UI!)
     setCurrentTargetSmt(settings.appSmt(activeApp));
     setCurrentTargetCpuNum(settings.appCpuNum(activeApp));
     setCurrentTargetCpuBoost(settings.appCpuboost(activeApp));
@@ -81,12 +77,13 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
     setCurrentTargetTDPEnable(settings.appTDPEnable(activeApp));
     setCurrentTargetGPUMode(settings.appGPUMode(activeApp));
     setCurrentTargetGPUFreq(settings.appGPUFreq(activeApp));
-    //setCurrentTargetCPUFreq(settings.appCPUFreq(activeApp));
     setCurrentTargetGPUAutoMaxFreq(settings.appGPUAutoMaxFreq(activeApp))
     setCurrentTargetGPUAutoMinFreq(settings.appGPUAutoMinFreq(activeApp))
+
     setInitialized(true);
   }
 
+  //SMT以及cpu核心数设置
   useEffect(() => {
     if (!initialized || !currentEnabled)
       return;
@@ -105,6 +102,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
     saveSettingsToLocalStorage(settings);
   }, [currentTargetSmt,currentTargetCpuNum]);
 
+  //睿频设置
   useEffect(() => {
     if (!initialized || !currentEnabled)
       return;
@@ -117,12 +115,12 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
       activeApp = DEFAULT_APP;
     }
     settings.ensureApp(activeApp).cpuboost = currentTargetCpuBoost;
-    //settings.ensureApp(activeApp).cpuFreq = currentTargetCPUFreq;
     applyFn(RunningApps.active(),SET_CPUBOOST);
 
     saveSettingsToLocalStorage(settings);
-  }, [currentTargetCpuBoost,/*currentTargetCPUFreq,*/]);
+  }, [currentTargetCpuBoost]);
 
+  //tdp设置
   useEffect(() => {
     if (!initialized || !currentEnabled)
       return;
@@ -141,6 +139,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
     saveSettingsToLocalStorage(settings);
   }, [currentTargetTDP, currentTargetTDPEnable]);
 
+  //GPU模式设置
   useEffect(() => {
     if (!initialized || !currentEnabled)
       return;
@@ -161,6 +160,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
     saveSettingsToLocalStorage(settings);
   }, [currentTargetGPUMode, currentTargetGPUFreq, currentTargetGPUAutoMaxFreq, currentTargetGPUAutoMinFreq]);
 
+  //使用游戏配置文件设置
   useEffect(() => {
     if (!initialized || !currentEnabled)
       return;
@@ -173,6 +173,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
     refresh();
   }, [currentAppOverride]);
 
+  //是否启用设置
   useEffect(() => {
     if (!initialized)
       return;
@@ -188,6 +189,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
     saveSettingsToLocalStorage(settings);
   }, [currentEnabled, initialized]);
 
+  //设置刷新
   useEffect(() => {
     refresh();
     runningApps.listenActiveChange(() => refresh());
@@ -224,8 +226,9 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
               }}
             />
           </PanelSectionRow>}
+          
       </PanelSection>
-      {currentEnabled &&
+      {currentEnabled&&
         <PanelSection title="CPU">
            <PanelSectionRow>
             <ToggleField

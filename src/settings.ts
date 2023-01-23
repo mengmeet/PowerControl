@@ -151,14 +151,6 @@ export class Settings {
     return 1600;
   }
 
-  /*appCPUFreq(appId: string){
-    if (this.perApp[appId]?.cpuFreq != undefined)
-      return this.perApp[appId].cpuFreq!!;
-    if (this.perApp[DEFAULT_APP]?.cpuFreq != undefined)
-      return this.perApp[DEFAULT_APP].cpuFreq!!;
-    return 0;
-  }*/
-
   appGPUAutoMaxFreq(appId: string){
     if (this.perApp[appId]?.gpuAutoMaxFreq != undefined)
       return this.perApp[appId].gpuAutoMaxFreq!!;

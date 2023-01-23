@@ -94,7 +94,7 @@ class GPU_AutoFreqManager (threading.Thread):
             #未抢电则判断gpu占用率 过高时认定gpu不够用 增加频率
             elif gpu_avgPercent >= self._gpu_maxBusyPercent:
                 gpu_addFreqOnce = min(gpu_autoFreqMax - gpu_nowFreq, self._gpu_addFreqBase)
-                gpu_nowFreq = gpu_nowFreq + gpu_addFreqOnce
+                gpu_nowFreq = gpu_nowFreq + gpu_addFreqOnce*3 if gpu_avgPercent>=99 else gpu_addFreqOnce
                 self.Set_gpuFreq(gpu_nowFreq,gpu_nowFreq)
                 logging.debug(f"当前平均CPU使用率::{cpu_avgPercent}% 当前平均GPU使用率::{gpu_avgPercent}% 大于目标范围最大值:{self._gpu_maxBusyPercent}% 增加{gpu_addFreqOnce}mhz GPU频率 增加后的GPU频率:{gpu_nowFreq}")
             #未抢电则判断gpu占用率 过低时认定gpu富余 降低频率
