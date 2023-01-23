@@ -65,10 +65,10 @@ export class BackendData{
   private has_ryzenadj = false;
   private gpuMax = 0;
   private has_gpuMax = false;
-  private cpuFreqList:number[] = [];
-  private has_cpuFreqList = false;
-  private cpuMaxFreqIndex = 0;
-  private cpuMaxFreq = 0;
+  //private cpuFreqList:number[] = [];
+  //private has_cpuFreqList = false;
+  //private cpuMaxFreqIndex = 0;
+  //private cpuMaxFreq = 0;
   public async init(serverAPI:ServerAPI){
     await serverAPI!.callPluginMethod<{},number>("get_cpuMaxNum",{}).then(res=>{
       if (res.success){
@@ -97,7 +97,7 @@ export class BackendData{
         this.has_gpuMax = true;
       }
     })
-    await serverAPI!.callPluginMethod<{},number[]>("get_cpu_AvailableFreq",{}).then(res=>{
+    /*await serverAPI!.callPluginMethod<{},number[]>("get_cpu_AvailableFreq",{}).then(res=>{
       if (res.success){
         console.log("res.result = " + res.result)
         this.cpuFreqList = res.result;
@@ -109,7 +109,7 @@ export class BackendData{
         console.log("cpuFreqList = " + this.cpuFreqList)
         console.log("cpuFreqList.length = " + this.cpuFreqList.length)
       }
-    })
+    })*/
   }
 
   public getCpuMaxNum(){
@@ -128,11 +128,11 @@ export class BackendData{
   }
 
   public getGPUFreqMax(){
-    console.log("gpuMax = " + this.tdpMax);
+    console.log("gpuMax = " + this.gpuMax);
     return this.gpuMax;
   }
 
-  public getCPUFreqMaxIndex(){
+  /*public getCPUFreqMaxIndex(){
     console.log("cpuMaxFreqIndez = " + this.cpuMaxFreqIndex);
     return this.cpuMaxFreqIndex;
   }
@@ -179,7 +179,7 @@ export class BackendData{
   public getCPUFreqList(){
     console.log("cpuFreqList = " + this.cpuFreqList);
     return this.cpuFreqList;
-  }
+  }*/
 
   public HasGPUFreqMax(){
     console.log("has_gpuMax = " + this.has_gpuMax);
@@ -196,10 +196,10 @@ export class BackendData{
     return this.has_ryzenadj;
   }
 
-  public HasCPUFreqList(){
+  /*public HasCPUFreqList(){
     console.log("has_cpuFreqList = " + this.has_cpuFreqList)
     return this.has_cpuFreqList
-  }
+  }*/
 
 }
 
@@ -225,10 +225,10 @@ export class Backend {
 
   applyCpuBoost(cpuBoost: boolean) {
     console.log("Applying cpuBoost " + cpuBoost.toString());
-    if(cpuBoost&&this.data.HasCPUFreqList()){
+    /*if(cpuBoost&&this.data.HasCPUFreqList()){
       console.log("cpuBoost = " + cpuBoost.toString()+"Applying cpuMaxFreq" + this.data.getCPUFreqMax().toString());
       this.serverAPI!.callPluginMethod("set_cpuFreq", {"value":this.data.getCPUFreqMax()});
-    }
+    }*/
     this.serverAPI!.callPluginMethod("set_cpuBoost", { "value": cpuBoost });
   }
 
@@ -258,12 +258,12 @@ export class Backend {
     this.serverAPI!.callPluginMethod("set_gpuAutoMinFreq", {"value":minAutoFreq});
   }
 
-  applyCPUFreq(boost:boolean,freq: number){
+  /*applyCPUFreq(boost:boolean,freq: number){
     if(!boost&&(freq!=0||this.data.HasCPUFreqList())){
       console.log("boost = " + boost.toString()+"Applying cpuFreq" + freq.toString());
       this.serverAPI!.callPluginMethod("set_cpuFreq", {"value":freq});
     }
-  }
+  }*/
 
   throwSuspendEvt(){
     console.log("throwSuspendEvt");

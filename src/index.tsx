@@ -38,7 +38,8 @@ declare var SteamClient: any;
 let settings: Settings;
 
 const SET_ALL = "ALL";
-const SET_CPUFREQ = "SET_CPUFREQ";
+//const SET_CPUFREQ = "SET_CPUFREQ";
+const SET_CPUBOOST = "SET_CPUBOOST"
 const SET_CPUCORE = "SET_CPUCORE";
 const SET_TDP = "SET_TDP"
 const SET_GPU = "SET_GPU";
@@ -52,7 +53,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
   const [currentTargetSmt, setCurrentTargetSmt] = useState<boolean>(true);
   const [currentTargetCpuBoost, setCurrentTargetCpuBoost] = useState<boolean>(true);
   const [currentTargetCpuNum, setCurrentTargetCpuNum] = useState<number>(backend.data.getCpuMaxNum());
-  const [currentTargetCPUFreq, setCurrentTargetCPUFreq] = useState<number>(backend.data.getCPUFreqMax());
+  //const [currentTargetCPUFreq, setCurrentTargetCPUFreq] = useState<number>(backend.data.getCPUFreqMax());
   const [currentTargetTDPEnable, setCurrentTargetTDPEnable] = useState<boolean>(false);
   const [currentTargetTDP, setCurrentTargetTDP] = useState<number>(backend.data.getTDPMax());
   const [currentTargetGPUMode, setCurrentTargetGPUMode] = useState<number>(0);
@@ -66,11 +67,12 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
 
     setCurrentEnabled(settings.enabled)
 
-    const activeApp = RunningApps.active();
+    const activeApp = settings.appOverWrite(RunningApps.active())?RunningApps.active():DEFAULT_APP;
+    console.log(`Refresh 设置${activeApp}配置状态`);
     // does active app have a saved setting
-    setCurrentAppOverride(settings.perApp[activeApp]?.hasSettings() || false);
-    setCurrentAppOverridable(activeApp != DEFAULT_APP);
+    setCurrentAppOverridable(RunningApps.active() != DEFAULT_APP);
 
+    setCurrentAppOverride(settings.appOverWrite(activeApp));
     // get configured saturation for current app (also Deck UI!)
     setCurrentTargetSmt(settings.appSmt(activeApp));
     setCurrentTargetCpuNum(settings.appCpuNum(activeApp));
@@ -79,7 +81,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
     setCurrentTargetTDPEnable(settings.appTDPEnable(activeApp));
     setCurrentTargetGPUMode(settings.appGPUMode(activeApp));
     setCurrentTargetGPUFreq(settings.appGPUFreq(activeApp));
-    setCurrentTargetCPUFreq(settings.appCPUFreq(activeApp));
+    //setCurrentTargetCPUFreq(settings.appCPUFreq(activeApp));
     setCurrentTargetGPUAutoMaxFreq(settings.appGPUAutoMaxFreq(activeApp))
     setCurrentTargetGPUAutoMinFreq(settings.appGPUAutoMinFreq(activeApp))
     setInitialized(true);
@@ -101,7 +103,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
     applyFn(RunningApps.active(),SET_CPUCORE);
 
     saveSettingsToLocalStorage(settings);
-  }, [currentTargetSmt,currentTargetCpuNum,currentEnabled, initialized]);
+  }, [currentTargetSmt,currentTargetCpuNum]);
 
   useEffect(() => {
     if (!initialized || !currentEnabled)
@@ -115,11 +117,11 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
       activeApp = DEFAULT_APP;
     }
     settings.ensureApp(activeApp).cpuboost = currentTargetCpuBoost;
-    settings.ensureApp(activeApp).cpuFreq = currentTargetCPUFreq;
-    applyFn(RunningApps.active(),SET_CPUFREQ);
+    //settings.ensureApp(activeApp).cpuFreq = currentTargetCPUFreq;
+    applyFn(RunningApps.active(),SET_CPUBOOST);
 
     saveSettingsToLocalStorage(settings);
-  }, [currentTargetCpuBoost,currentTargetCPUFreq, currentEnabled, initialized]);
+  }, [currentTargetCpuBoost,/*currentTargetCPUFreq,*/]);
 
   useEffect(() => {
     if (!initialized || !currentEnabled)
@@ -137,7 +139,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
     applyFn(RunningApps.active(),SET_TDP);
 
     saveSettingsToLocalStorage(settings);
-  }, [currentTargetTDP, currentTargetTDPEnable, currentEnabled, initialized]);
+  }, [currentTargetTDP, currentTargetTDPEnable]);
 
   useEffect(() => {
     if (!initialized || !currentEnabled)
@@ -157,7 +159,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
     applyFn(RunningApps.active(),SET_GPU);
 
     saveSettingsToLocalStorage(settings);
-  }, [currentTargetGPUMode, currentTargetGPUFreq, currentTargetGPUAutoMaxFreq, currentTargetGPUAutoMinFreq, currentEnabled, initialized]);
+  }, [currentTargetGPUMode, currentTargetGPUFreq, currentTargetGPUAutoMaxFreq, currentTargetGPUAutoMinFreq]);
 
   useEffect(() => {
     if (!initialized || !currentEnabled)
@@ -166,40 +168,21 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
     const activeApp = RunningApps.active();
     if (activeApp == DEFAULT_APP)
       return;
-
-    console.log(`使用 ${activeApp} 配置文件来覆盖`);
-
-    if (!currentAppOverride) {
-      settings.ensureApp(activeApp).smt = undefined;
-      settings.ensureApp(activeApp).cpuNum = undefined;
-      settings.ensureApp(activeApp).cpuboost = undefined;
-      settings.ensureApp(activeApp).tdp = undefined;
-      settings.ensureApp(activeApp).tdpEnable = undefined;
-      settings.ensureApp(activeApp).gpuMode = undefined;
-      settings.ensureApp(activeApp).gpuFreq = undefined;
-      settings.ensureApp(activeApp).cpuFreq = undefined;
-      settings.ensureApp(activeApp).gpuAutoMaxFreq = undefined;
-      settings.ensureApp(activeApp).gpuAutoMinFreq = undefined;
-      setCurrentTargetSmt(settings.appSmt(DEFAULT_APP));
-      setCurrentTargetCpuNum(settings.appCpuNum(DEFAULT_APP));
-      setCurrentTargetCpuBoost(settings.appCpuboost(DEFAULT_APP));
-      setCurrentTargetTDP(settings.appTDP(DEFAULT_APP));
-      setCurrentTargetTDPEnable(settings.appTDPEnable(DEFAULT_APP));
-      setCurrentTargetGPUMode(settings.appGPUMode(DEFAULT_APP));
-      setCurrentTargetGPUFreq(settings.appGPUFreq(DEFAULT_APP));
-      setCurrentTargetCPUFreq(settings.appCPUFreq(DEFAULT_APP));
-      setCurrentTargetGPUAutoMaxFreq(settings.appGPUAutoMaxFreq(DEFAULT_APP));
-      setCurrentTargetGPUAutoMinFreq(settings.appGPUAutoMinFreq(DEFAULT_APP));
-    }
+    settings.ensureApp(activeApp).overwrite = currentAppOverride;
     saveSettingsToLocalStorage(settings);
-  }, [currentAppOverride, currentEnabled, initialized]);
+    refresh();
+  }, [currentAppOverride]);
 
   useEffect(() => {
     if (!initialized)
       return;
 
+    const activeApp = RunningApps.active();
     if (!currentEnabled)
       resetFn();
+    else{
+      applyFn(activeApp,SET_ALL)
+    }
 
     settings.enabled = currentEnabled;
     saveSettingsToLocalStorage(settings);
@@ -254,7 +237,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
               }}
             />
           </PanelSectionRow>
-          {!currentTargetCpuBoost&&<PanelSectionRow>
+          {/*!currentTargetCpuBoost&&<PanelSectionRow>
           <SliderField
             label="CPU 最大频率限制"
             value={backend.data.getCPUFreqIndexByFreq(currentTargetCPUFreq)}
@@ -276,7 +259,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
               console.log(`CPUFreq index = ${index}  freq= ${backend.data.getCPUFreqByIndex(index)}`);
             }}
           />
-        </PanelSectionRow>}
+          </PanelSectionRow>*/}
           <PanelSectionRow>
             <ToggleField
               label="SMT"
@@ -424,17 +407,19 @@ export default definePlugin((serverAPI: ServerAPI) => {
   const runningApps = new RunningApps();
 
   const applySettings = (appId: string,applyTarget:string) => {
+    if(!settings.appOverWrite(appId))
+      appId = DEFAULT_APP;
     if(applyTarget == SET_ALL || applyTarget == SET_CPUCORE){
       const smt = settings.appSmt(appId);
       const cpuNum = settings.appCpuNum(appId);
       backend.applySmt(smt);
       backend.applyCpuNum(cpuNum);
     }
-    if(applyTarget == SET_ALL || applyTarget == SET_CPUFREQ){
+    if(applyTarget == SET_ALL || applyTarget == SET_CPUBOOST){
       const cpuBoost = settings.appCpuboost(appId);
-      const cpuFreq = settings.appCPUFreq(appId);
+      //const cpuFreq = settings.appCPUFreq(appId);
       backend.applyCpuBoost(cpuBoost);
-      backend.applyCPUFreq(cpuBoost,cpuFreq);
+      //backend.applyCPUFreq(cpuBoost,cpuFreq);
     }
     if(applyTarget == SET_ALL || applyTarget == SET_TDP){
       const tdp = settings.appTDP(appId);
