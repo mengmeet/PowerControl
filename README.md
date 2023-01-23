@@ -16,10 +16,8 @@
 4. 限制TDP
 5. 固定GPU频率
 6. 自动GPU频率
-7. 限制cpu最大频率
 
 **- 自动GPU频率根据GPU使用率自动调整频率，推荐配合关闭睿频以及高TDP设置使用，或限制最大最小GPU频率来使用，以实现TDP浮动达到省电的目的**  
-**- cpu最大频率限制参考[CPU frequency scaling](https://wiki.archlinux.org/title/CPU_frequency_scaling#Setting_maximum_and_minimum_frequencies) 只能限制在内核提供的cpu频率数据**  
 
 
 ## 已知问题
