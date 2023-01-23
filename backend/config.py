@@ -5,7 +5,7 @@ try:
     #日志配置
     LOG_LOCATION = "/tmp/PowerControl_py.log"
     logging.basicConfig(
-        level = logging.INFO,
+        level = logging.DEBUG,
         filename = LOG_LOCATION,
         format="[%(asctime)s | %(filename)s:%(lineno)s:%(funcName)s] %(levelname)s: %(message)s",
         filemode = 'w',
