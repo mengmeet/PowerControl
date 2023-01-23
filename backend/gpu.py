@@ -22,6 +22,7 @@ class GPU_AutoFreqManager (threading.Thread):
         self._gpu_addFreqBase=50        #自动优化频率的基准大小
         self._gpu_minBusyPercent = 75       #优化占用率的区间最小值
         self._gpu_maxBusyPercent = 95       #优化占用率的区间最大值
+        self._cpu_maxBusyPercent = 80       #cpu最大占用率 超过该占用率认定为gpu抢电 需要降低频率给cpu供电
         self._isRunning = False     #标记是否正在运行gpu频率优化
         threading.Thread.__init__(self)
 
@@ -83,18 +84,28 @@ class GPU_AutoFreqManager (threading.Thread):
             global gpu_nowFreq
             gpu_addFreqOnce = self._gpu_addFreqBase
             gpu_avgPercent = sysInfo.gpu_busyPercent
-            if gpu_avgPercent >= self._gpu_maxBusyPercent:
+            cpu_avgPercent = sysInfo.cpu_busyPercent
+            #cpu占用率过高 判定为被抢电 降低一点频率让电
+            if cpu_avgPercent >= self._cpu_maxBusyPercent:
+                gpu_addFreqOnce = min(gpu_nowFreq - gpu_autoFreqMin,self._gpu_addFreqBase)
+                gpu_nowFreq = gpu_nowFreq - gpu_addFreqOnce
+                self.Set_gpuFreq(gpu_nowFreq,gpu_nowFreq)
+                logging.debug(f"当前平均CPU使用率::{cpu_avgPercent}% 当前平均GPU使用率::{gpu_avgPercent}% 大于最大值:{self._cpu_maxBusyPercent}% 降低{gpu_addFreqOnce}mhz GPU频率 降低后的GPU频率:{gpu_nowFreq} ")
+            #未抢电则判断gpu占用率 过高时认定gpu不够用 增加频率
+            elif gpu_avgPercent >= self._gpu_maxBusyPercent:
                 gpu_addFreqOnce = min(gpu_autoFreqMax - gpu_nowFreq, self._gpu_addFreqBase)
                 gpu_nowFreq = gpu_nowFreq + gpu_addFreqOnce
                 self.Set_gpuFreq(gpu_nowFreq,gpu_nowFreq)
-                logging.debug(f"当前平均GPU使用率::{gpu_avgPercent}% 大于目标范围最大值:{self._gpu_maxBusyPercent}% 增加{gpu_addFreqOnce}mhz GPU频率 增加后的GPU频率:{gpu_nowFreq}")
+                logging.debug(f"当前平均CPU使用率::{cpu_avgPercent}% 当前平均GPU使用率::{gpu_avgPercent}% 大于目标范围最大值:{self._gpu_maxBusyPercent}% 增加{gpu_addFreqOnce}mhz GPU频率 增加后的GPU频率:{gpu_nowFreq}")
+            #未抢电则判断gpu占用率 过低时认定gpu富余 降低频率
             elif gpu_avgPercent <= self._gpu_minBusyPercent:
                 gpu_addFreqOnce = min(gpu_nowFreq - gpu_autoFreqMin,self._gpu_addFreqBase)
                 gpu_nowFreq = gpu_nowFreq - gpu_addFreqOnce
                 self.Set_gpuFreq(gpu_nowFreq,gpu_nowFreq)
-                logging.debug(f"当前平均GPU使用率::{gpu_avgPercent}% 小于目标范围最小值:{self._gpu_minBusyPercent}% 降低{gpu_addFreqOnce}mhz GPU频率 降低后的GPU频率:{gpu_nowFreq} ")
+                logging.debug(f"当前平均CPU使用率::{cpu_avgPercent}% 当前平均GPU使用率::{gpu_avgPercent}% 小于目标范围最小值:{self._gpu_minBusyPercent}% 降低{gpu_addFreqOnce}mhz GPU频率 降低后的GPU频率:{gpu_nowFreq} ")
+            #不做任何调整
             else:
-                logging.debug(f"当前平均GPU使用率::{gpu_avgPercent}% 处于目标范围{self._gpu_minBusyPercent}%-{self._gpu_maxBusyPercent}% 无需修改GPU频率  当前的GPU频率:{gpu_nowFreq}")
+                logging.debug(f"当前平均CPU使用率::{cpu_avgPercent}% 当前平均GPU使用率::{gpu_avgPercent}% 处于目标范围{self._gpu_minBusyPercent}%-{self._gpu_maxBusyPercent}% 无需修改GPU频率  当前的GPU频率:{gpu_nowFreq}")
             self.check_LegalGPUFreq()
         except Exception as e:
             logging.error(e)
