@@ -102,7 +102,6 @@ function set_gpu_flk()
     sudo echo "gpu_flk_limit " $index >> /tmp/powerControl_sh.log
 }
 
-
 function check_clock_limits()
 {
     mode=$1
@@ -130,6 +129,12 @@ function set_cpu_boost()
     fi
 }
 
+function get_language()
+{
+    language_path=$1
+    sudo cat $language_path|grep language|sed -n '1p'|xargs|cut  -d " " -f  2
+}
+
 
  if [ -n "$1" ]; then
     case "$1" in
@@ -145,6 +150,7 @@ function set_cpu_boost()
     get_cpuID)get_cpuID;;
     get_gpu_FreqMinLimit)get_gpu_FreqMinLimit;;
     get_gpu_FreqMaxLimit)get_gpu_FreqMaxLimit;;
+    get_language)get_language $2;;
     *)sudo echo $1 $2 $3 $4>>  /tmp/powerControl_sh.log;;
     esac
 fi

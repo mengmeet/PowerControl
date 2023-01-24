@@ -11,6 +11,7 @@ try:
     from config import logging
     from gpu import gpuManager
     from cpu import cpuManager
+    from sysInfo import sysInfoManager
     logging.info("PowerControl main.py")
 except Exception as e:
     logging.error(e)
@@ -54,7 +55,12 @@ class Plugin:
         except Exception as e:
             logging.error(e)
             return []
-
+    async def get_language(self):
+        try:
+            return sysInfoManager.get_language()
+        except Exception as e:
+            logging.error(e)
+            return []
 
     def set_gpuAuto(self, value:bool):
         try:

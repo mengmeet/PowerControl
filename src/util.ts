@@ -1,5 +1,4 @@
 import {AppOverview, Router, ServerAPI } from "decky-frontend-lib";
-
 type ActiveAppChangedHandler = (newAppId: string, oldAppId: string) => void;
 type UnregisterFn = () => void;
 
@@ -93,6 +92,7 @@ export class BackendData{
         this.has_gpuMax = true;
       }
     })
+    
   }
 
   public getCpuMaxNum(){

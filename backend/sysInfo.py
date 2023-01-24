@@ -4,7 +4,8 @@ import threading
 import time
 import os
 import asyncio
-from config import logging
+from config import logging,SH_PATH
+from helpers import get_user
 
 cpu_busyPercent = 0
 has_cpuData = True
@@ -89,7 +90,25 @@ class SysInfoManager (threading.Thread):
 
         self._collectInfoInterval=0.005           #记录数据的间隔
         self._isRunning = False     #标记是否正在运行gpu频率优化
+
+        self._language = "schinese"     #当前客户端使用的语言
+
         threading.Thread.__init__(self)
+    
+    def get_language(self):
+        try:
+            lang_path=f"/home/{get_user()}/.steam/registry.vdf"
+            if os.path.exists(lang_path):
+                command="sudo sh {} get_language {}".format(SH_PATH, lang_path)
+                self._language=subprocess.getoutput(command)
+            else:
+                logging.error(f"語言檢測路徑{lang_path}不存在該文件")
+            logging.info(f"get_language {self._language} path={lang_path}")
+            return self._language
+        except Exception as e:
+            logging.error(e)
+            return self._language
+            
 
     def updateCpuData(self):
         try:

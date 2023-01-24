@@ -26,6 +26,7 @@ import {
 } from "decky-frontend-lib";
 import { VFC, useState, useEffect} from "react";
 import { FaSuperpowers } from "react-icons/fa";
+import { localizationManager } from "./localization";
 import { loadSettingsFromLocalStorage, Settings, saveSettingsToLocalStorage } from "./settings";
 import { RunningApps, Backend, DEFAULT_APP} from "./util";
 
@@ -43,7 +44,7 @@ const SET_CPUCORE = "SET_CPUCORE";
 const SET_TDP = "SET_TDP"
 const SET_GPU = "SET_GPU";
 
-const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarget:string) => void, resetFn: () => void, backend:Backend}> = ({ runningApps, applyFn, resetFn, backend }) => {
+const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarget:string) => void, resetFn: () => void, getString: (index:number,defaultString:string) => string|undefined, backend:Backend}> = ({ runningApps, applyFn, resetFn,getString, backend }) => {
   const [initialized, setInitialized] = useState<boolean>(false);
 
   const [currentEnabled, setCurrentEnabled] = useState<boolean>(true);
@@ -182,7 +183,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
     if (!currentEnabled)
       resetFn();
     else{
-      applyFn(activeApp,SET_ALL)
+      applyFn(activeApp,SET_ALL);
     }
 
     settings.enabled = currentEnabled;
@@ -197,10 +198,10 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
 
   return (
     <div>
-      <PanelSection title="设置">
+      <PanelSection title={getString(1,"设置")}>
         <PanelSectionRow>
           <ToggleField
-            label="启用插件设置"
+            label={getString(22,"启用插件设置")}
             checked={currentEnabled}
             onChange={(enabled) => {
               setCurrentEnabled(enabled);
@@ -210,13 +211,13 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
            {currentEnabled&&
             <PanelSectionRow>
             <ToggleField
-              label={"使用按游戏设置的配置文件"}
+              label={getString(2,"使用按游戏设置的配置文件")}
               description={
                   <div style={{ display: "flex", justifyContent: "left" }}>
                   <img src={ RunningApps.active_app()?.icon_data? "data:image/" +RunningApps.active_app()?.icon_data_format +";base64," +RunningApps.active_app()?.icon_data: "/assets/" + RunningApps.active_app()?.appid + "_icon.jpg?v=" + RunningApps.active_app()?.icon_hash} width={18} height={18}
                         style={{ display: currentAppOverride&&currentAppOverridable? "block":"none"}}
                   />
-                  {" 正在使用" + (currentAppOverride && currentAppOverridable ? `『${RunningApps.active_app()?.display_name}』` : "默认") + "配置文件"}
+                  {getString(3,"正在使用") + (currentAppOverride && currentAppOverridable ? `『${RunningApps.active_app()?.display_name}』` : `${getString(4,"默认")}`) + getString(5,"配置文件")}
                   </div>
               }
               checked={currentAppOverride && currentAppOverridable}
@@ -232,8 +233,8 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
         <PanelSection title="CPU">
            <PanelSectionRow>
             <ToggleField
-              label="睿 频"
-              description={"提升最大cpu频率"}
+              label={getString(6,"睿 频")}
+              description={getString(7,"提升最大cpu频率")}
               disabled={currentTargetGPUMode==2}
               checked={currentTargetCpuBoost}
               onChange={(value) => {
@@ -267,7 +268,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
           <PanelSectionRow>
             <ToggleField
               label="SMT"
-              description={"启用奇数编号的cpu"}
+              description={getString(8,"启用奇数编号的cpu")}
               checked={currentTargetSmt}
               onChange={(smt) => {
                 setCurrentTargetSmt(smt);
@@ -276,8 +277,8 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
           </PanelSectionRow>
           <PanelSectionRow>
             <SliderField
-              label="核 心 数"
-              description={`设置启用的物理核心数量`}
+              label={getString(9,"核 心 数")}
+              description={getString(10,"设置启用的物理核心数量")}
               value={currentTargetCpuNum}
               step={1}
               max={backend.data.getCpuMaxNum()}
@@ -291,8 +292,8 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
           </PanelSectionRow>
           <PanelSectionRow>
             <ToggleField
-              label="热设计功耗（TDP）限制"
-              description={backend.data.HasRyzenadj()?"限制处理器功耗以降低总功耗":"未检测到ryzenAdj"}
+              label={getString(11,"热设计功耗（TDP）限制")}
+              description={backend.data.HasRyzenadj()?getString(12,"限制处理器功耗以降低总功耗"):getString(13,"未检测到ryzenAdj")}
               checked={currentTargetTDPEnable}
               disabled={!backend.data.HasRyzenadj()||currentTargetGPUMode==2}
               onChange={(value) => {
@@ -302,7 +303,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
           </PanelSectionRow>
           {currentTargetTDPEnable&&<PanelSectionRow>
             <SliderField
-              label="瓦特"
+              label={getString(14,"瓦特")}
               value={currentTargetTDP}
               step={1}
               max={backend.data.getTDPMax()}
@@ -319,7 +320,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
       {currentEnabled&&<PanelSection title="GPU">
       {<PanelSectionRow>
           <SliderField
-            label="GPU 频率模式"
+            label={getString(15,"GPU 频率模式")}
             value={currentTargetGPUMode}
             step={1}
             max={2}
@@ -328,15 +329,15 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
             notchLabels={
               [{
                 notchIndex: 0,
-                label: "不限制",
+                label:`${getString(16,"不限制")}`,
                 value:0,
               },{
                 notchIndex: 1,
-                label: "固定频率",
+                label: `${getString(17,"固定频率")}`,
                 value:1,
               },{
                 notchIndex: 2,
-                label: "自动频率",
+                label: `${getString(18,"自动频率")}`,
                 value:2,
               }]
             }
@@ -352,7 +353,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
         </PanelSectionRow>}
         {currentTargetGPUMode==1&&<PanelSectionRow>
           <SliderField
-            label="GPU 频率"
+            label={getString(19,"GPU 频率")}
             value={currentTargetGPUFreq}
             step={50}
             max={backend.data.getGPUFreqMax()}
@@ -366,7 +367,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
         </PanelSectionRow>}
         {currentTargetGPUMode==2&&<PanelSectionRow>
           <SliderField
-            label="GPU 最大频率限制"
+            label={getString(20,"GPU 最大频率限制")}
             value={currentTargetGPUAutoMaxFreq}
             step={50}
             max={backend.data.getGPUFreqMax()}
@@ -384,7 +385,7 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
         </PanelSectionRow>}
         {currentTargetGPUMode==2&&<PanelSectionRow>
           <SliderField
-            label="GPU 最小频率限制"
+            label={getString(21,"GPU 最小频率限制")}
             value={currentTargetGPUAutoMinFreq}
             step={50}
             max={backend.data.getGPUFreqMax()}
@@ -412,6 +413,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
   settings = loadSettingsFromLocalStorage();
 
   const backend = new Backend(serverAPI);
+  const localize = new localizationManager(serverAPI);
   const runningApps = new RunningApps();
 
   const applySettings = (appId: string,applyTarget:string) => {
@@ -510,7 +512,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
 
   return {
     title: <div className={staticClasses.Title}>PowerControl</div>,
-    content: <Content runningApps={runningApps} applyFn={applySettings} resetFn={resetSettings} backend={backend}/>,
+    content: <Content runningApps={runningApps} applyFn={applySettings} resetFn={resetSettings} getString={localize.getString} backend={backend} />,
     icon: <FaSuperpowers />,
     onDismount() {
       lifetimeHook!.unregister();
