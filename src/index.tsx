@@ -30,7 +30,6 @@ import { localizationManager } from "./localization";
 import { loadSettingsFromLocalStorage, Settings, saveSettingsToLocalStorage } from "./settings";
 import { RunningApps, Backend, DEFAULT_APP} from "./util";
 
-var lifetimeHook: any = null;
 var suspendEndHook: any = null;
 
 // Appease TypeScript
@@ -44,7 +43,7 @@ const SET_CPUCORE = "SET_CPUCORE";
 const SET_TDP = "SET_TDP"
 const SET_GPU = "SET_GPU";
 
-const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarget:string) => void, resetFn: () => void, getString: (index:number,defaultString:string) => string|undefined, backend:Backend}> = ({ runningApps, applyFn, resetFn,getString, backend }) => {
+const Content: VFC<{applyFn: (appId: string,applyTarget:string) => void, resetFn: () => void, getString: (index:number,defaultString:string) => string|undefined, backend:Backend}> = ({applyFn, resetFn,getString, backend }) => {
   const [initialized, setInitialized] = useState<boolean>(false);
 
   const [currentEnabled, setCurrentEnabled] = useState<boolean>(true);
@@ -193,7 +192,6 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
   //设置刷新
   useEffect(() => {
     refresh();
-    runningApps.listenActiveChange(() => refresh());
   }, []);
 
   return (
@@ -242,29 +240,6 @@ const Content: VFC<{runningApps: RunningApps, applyFn: (appId: string,applyTarge
               }}
             />
           </PanelSectionRow>
-          {/*!currentTargetCpuBoost&&<PanelSectionRow>
-          <SliderField
-            label="CPU 最大频率限制"
-            value={backend.data.getCPUFreqIndexByFreq(currentTargetCPUFreq)}
-            step={1}
-            max={backend.data.getCPUFreqMaxIndex()}
-            min={0}
-            description={backend.data.HasCPUFreqList()?"":"未检测到可用的CPU频率限制列表"}
-            disabled={!backend.data.HasCPUFreqList()}
-            notchCount={backend.data.getCPUFreqList()?.length}
-            notchLabels={backend.data.getCPUFreqList()?.map((value, index) => (
-              {
-                notchIndex: index,
-                label: `${value/1000000}Ghz`,
-                value: index,
-              }))
-            }
-            onChange={(index: number) => {
-              setCurrentTargetCPUFreq(backend.data.getCPUFreqByIndex(index))
-              console.log(`CPUFreq index = ${index}  freq= ${backend.data.getCPUFreqByIndex(index)}`);
-            }}
-          />
-          </PanelSectionRow>*/}
           <PanelSectionRow>
             <ToggleField
               label="SMT"
@@ -427,9 +402,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
     }
     if(applyTarget == SET_ALL || applyTarget == SET_CPUBOOST){
       const cpuBoost = settings.appCpuboost(appId);
-      //const cpuFreq = settings.appCPUFreq(appId);
       backend.applyCpuBoost(cpuBoost);
-      //backend.applyCPUFreq(cpuBoost,cpuFreq);
     }
     if(applyTarget == SET_ALL || applyTarget == SET_TDP){
       const tdp = settings.appTDP(appId);
@@ -474,26 +447,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
   };
 
   runningApps.register();
-  lifetimeHook = SteamClient.GameSessions.RegisterForAppLifetimeNotifications((update: {
-    unAppID: any; bRunning: any; 
-}) => {
-    if (update.bRunning) {
-        console.log(`unAppID=${update.unAppID} 游戏状态更新`)
-        if (settings.enabled){
-          applySettings(RunningApps.active(),SET_ALL);
-        }
-        else{
-          resetSettings();
-        }
-    } else {
-        console.log("unAppID=" + update.unAppID.toString() + "结束游戏"); 
-        if (settings.enabled){
-          applySettings(DEFAULT_APP,SET_ALL);
-        }else{
-          resetSettings();
-        }
-    }
-});
+
   suspendEndHook=SteamClient.System.RegisterForOnResumeFromSuspend(async () => {
     console.log("休眠结束，重新应用设置")
     if (settings.enabled){
@@ -504,18 +458,17 @@ export default definePlugin((serverAPI: ServerAPI) => {
     }
 });
   
-
-  // apply initially
   if (settings.enabled) {
     applySettings(RunningApps.active(),SET_ALL);
   }
 
+  runningApps.listenActiveChange(()=>applySettings(RunningApps.active(),SET_ALL));
+
   return {
     title: <div className={staticClasses.Title}>PowerControl</div>,
-    content: <Content runningApps={runningApps} applyFn={applySettings} resetFn={resetSettings} getString={localize.getString} backend={backend} />,
+    content: <Content applyFn={applySettings} resetFn={resetSettings} getString={localize.getString} backend={backend} />,
     icon: <FaSuperpowers />,
     onDismount() {
-      lifetimeHook!.unregister();
       suspendEndHook!.unregister();
       runningApps.unregister();
       resetSettings();

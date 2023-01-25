@@ -153,6 +153,7 @@ class SysInfoManager (threading.Thread):
             has_cpuData = False
 
     def run(self):
+        self._isRunning=True
         while True:
             self.updateCpuData()
             self.updateGpuData()
