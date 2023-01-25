@@ -167,6 +167,12 @@ export class Backend {
     this.serverAPI!.callPluginMethod("set_gpuFreq", {"value":freq});
   }
 
+  applyGPUFreqRange(freqMin: number, freqMax: number){
+    this.applyGPUAuto(false);
+    console.log("Applying gpuFreqRange  " + freqMin.toString() + "   "+ freqMax.toString());
+    this.serverAPI!.callPluginMethod("set_gpuFreqRange", {"value":freqMin, "value2":freqMax});
+  }
+
   applyGPUAuto(auto: boolean){
     console.log("Applying gpuAuto" + auto.toString());
     this.serverAPI!.callPluginMethod("set_gpuAuto", {"value":auto});

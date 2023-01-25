@@ -37,6 +37,11 @@ declare var SteamClient: any;
 
 let settings: Settings;
 
+const GPUMODE_NOLIMIT=0 //不限制
+const GPUMODE_FIX=1 //固定频率
+const GPUMode_RANGE=2  //系统调度
+const GPUMODE_AUTO=3  //自动频率
+
 const SET_ALL = "ALL";
 const SET_CPUBOOST = "SET_CPUBOOST"
 const SET_CPUCORE = "SET_CPUCORE";
@@ -58,6 +63,8 @@ const Content: VFC<{applyFn: (appId: string,applyTarget:string) => void, resetFn
   const [currentTargetGPUFreq, setCurrentTargetGPUFreq] = useState<number>(backend.data.getGPUFreqMax());
   const [currentTargetGPUAutoMaxFreq,setCurrentTargetGPUAutoMaxFreq] = useState<number>(backend.data.getGPUFreqMax());
   const [currentTargetGPUAutoMinFreq,setCurrentTargetGPUAutoMinFreq] = useState<number>(200);
+  const [currentTargetGPURangeMaxFreq,setCurrentTargetGPURangeMaxFreq] = useState<number>(backend.data.getGPUFreqMax());
+  const [currentTargetGPURangeMinFreq,setCurrentTargetGPURangeMinFreq] = useState<number>(200);
   
   const refresh = () => {
     // prevent updates while we are reloading
@@ -79,6 +86,8 @@ const Content: VFC<{applyFn: (appId: string,applyTarget:string) => void, resetFn
     setCurrentTargetGPUFreq(settings.appGPUFreq(activeApp));
     setCurrentTargetGPUAutoMaxFreq(settings.appGPUAutoMaxFreq(activeApp))
     setCurrentTargetGPUAutoMinFreq(settings.appGPUAutoMinFreq(activeApp))
+    setCurrentTargetGPURangeMaxFreq(settings.appGPUAutoMaxFreq(activeApp))
+    setCurrentTargetGPURangeMinFreq(settings.appGPUAutoMinFreq(activeApp))
 
     setInitialized(true);
   }
@@ -155,10 +164,12 @@ const Content: VFC<{applyFn: (appId: string,applyTarget:string) => void, resetFn
     settings.ensureApp(activeApp).gpuFreq = currentTargetGPUFreq;
     settings.ensureApp(activeApp).gpuAutoMaxFreq = currentTargetGPUAutoMaxFreq;
     settings.ensureApp(activeApp).gpuAutoMinFreq = currentTargetGPUAutoMinFreq;
+    settings.ensureApp(activeApp).gpuRangeMaxFreq = currentTargetGPURangeMaxFreq;
+    settings.ensureApp(activeApp).gpuRangeMinFreq = currentTargetGPURangeMinFreq;
     applyFn(RunningApps.active(),SET_GPU);
 
     saveSettingsToLocalStorage(settings);
-  }, [currentTargetGPUMode, currentTargetGPUFreq, currentTargetGPUAutoMaxFreq, currentTargetGPUAutoMinFreq]);
+  }, [currentTargetGPUMode, currentTargetGPUFreq, currentTargetGPUAutoMaxFreq, currentTargetGPUAutoMinFreq,currentTargetGPURangeMaxFreq, currentTargetGPURangeMinFreq]);
 
   //使用游戏配置文件设置
   useEffect(() => {
@@ -233,7 +244,7 @@ const Content: VFC<{applyFn: (appId: string,applyTarget:string) => void, resetFn
             <ToggleField
               label={getString(6,"睿 频")}
               description={getString(7,"提升最大cpu频率")}
-              disabled={currentTargetGPUMode==2}
+              disabled={currentTargetGPUMode==GPUMODE_AUTO}
               checked={currentTargetCpuBoost}
               onChange={(value) => {
                 setCurrentTargetCpuBoost(value);
@@ -270,7 +281,7 @@ const Content: VFC<{applyFn: (appId: string,applyTarget:string) => void, resetFn
               label={getString(11,"热设计功耗（TDP）限制")}
               description={backend.data.HasRyzenadj()?getString(12,"限制处理器功耗以降低总功耗"):getString(13,"未检测到ryzenAdj")}
               checked={currentTargetTDPEnable}
-              disabled={!backend.data.HasRyzenadj()||currentTargetGPUMode==2}
+              disabled={!backend.data.HasRyzenadj()||currentTargetGPUMode==GPUMODE_AUTO}
               onChange={(value) => {
                 setCurrentTargetTDPEnable(value);
               }}
@@ -283,7 +294,7 @@ const Content: VFC<{applyFn: (appId: string,applyTarget:string) => void, resetFn
               step={1}
               max={backend.data.getTDPMax()}
               min={3}
-              disabled={!backend.data.HasTDPMax()}
+              disabled={!backend.data.HasTDPMax()||currentTargetGPUMode==GPUMODE_AUTO}
               showValue={true}
               onChange={(value: number) => {
                 setCurrentTargetTDP(value);
@@ -298,35 +309,40 @@ const Content: VFC<{applyFn: (appId: string,applyTarget:string) => void, resetFn
             label={getString(15,"GPU 频率模式")}
             value={currentTargetGPUMode}
             step={1}
-            max={2}
+            max={3}
             min={0}
-            notchCount={3}
+            notchCount={4}
             notchLabels={
               [{
-                notchIndex: 0,
+                notchIndex: GPUMODE_NOLIMIT,
                 label:`${getString(16,"不限制")}`,
-                value:0,
+                value:GPUMODE_NOLIMIT,
               },{
-                notchIndex: 1,
+                notchIndex: GPUMODE_FIX,
                 label: `${getString(17,"固定频率")}`,
-                value:1,
+                value:GPUMODE_FIX,
               },{
-                notchIndex: 2,
+                notchIndex: GPUMode_RANGE,
+                label: `${getString(23,"范围频率")}`,
+                value:GPUMode_RANGE,
+              },{
+                notchIndex: GPUMODE_AUTO,
                 label: `${getString(18,"自动频率")}`,
-                value:2,
-              }]
+                value:GPUMODE_AUTO,
+              }
+            ]
             }
             onChange={(value: number) => {
               setCurrentTargetGPUMode(value);
-              if(value==2){
+              if(value==GPUMODE_AUTO){
                 setCurrentTargetCpuBoost(false);
                 setCurrentTargetTDPEnable(false);
               }
-              console.log("GPUMode value = ",value);
+              console.log("GPUMode value = ",value,"     ",GPUMODE_AUTO);
             }}
           />
         </PanelSectionRow>}
-        {currentTargetGPUMode==1&&<PanelSectionRow>
+        {currentTargetGPUMode==GPUMODE_FIX&&<PanelSectionRow>
           <SliderField
             label={getString(19,"GPU 频率")}
             value={currentTargetGPUFreq}
@@ -340,7 +356,44 @@ const Content: VFC<{applyFn: (appId: string,applyTarget:string) => void, resetFn
             }}
           />
         </PanelSectionRow>}
-        {currentTargetGPUMode==2&&<PanelSectionRow>
+        {currentTargetGPUMode==GPUMode_RANGE&&<PanelSectionRow>
+          <SliderField
+            label={getString(20,"GPU 最大频率限制")}
+            value={currentTargetGPURangeMaxFreq}
+            step={50}
+            max={backend.data.getGPUFreqMax()}
+            min={200}
+            disabled={!backend.data.HasGPUFreqMax()}
+            showValue={true}
+            onChange={(value: number) => {
+              if(value <= currentTargetGPURangeMinFreq){
+                setCurrentTargetGPURangeMaxFreq(currentTargetGPURangeMinFreq)
+              }else{
+                setCurrentTargetGPURangeMaxFreq(value);
+              }
+            }}
+          />
+        </PanelSectionRow>}
+        {currentTargetGPUMode==GPUMode_RANGE&&<PanelSectionRow>
+          <SliderField
+            label={getString(21,"GPU 最小频率限制")}
+            value={currentTargetGPURangeMinFreq}
+            step={50}
+            max={backend.data.getGPUFreqMax()}
+            min={200}
+            disabled={!backend.data.HasGPUFreqMax()}
+            showValue={true}
+            onChange={(value: number) => {
+              if(value >= currentTargetGPURangeMaxFreq){
+                setCurrentTargetGPURangeMinFreq(currentTargetGPURangeMaxFreq)
+              }else{
+                setCurrentTargetGPURangeMinFreq(value);
+              }
+
+            }}
+          />
+        </PanelSectionRow>}
+        {currentTargetGPUMode==GPUMODE_AUTO&&<PanelSectionRow>
           <SliderField
             label={getString(20,"GPU 最大频率限制")}
             value={currentTargetGPUAutoMaxFreq}
@@ -358,7 +411,7 @@ const Content: VFC<{applyFn: (appId: string,applyTarget:string) => void, resetFn
             }}
           />
         </PanelSectionRow>}
-        {currentTargetGPUMode==2&&<PanelSectionRow>
+        {currentTargetGPUMode==GPUMODE_AUTO&&<PanelSectionRow>
           <SliderField
             label={getString(21,"GPU 最小频率限制")}
             value={currentTargetGPUAutoMinFreq}
@@ -419,15 +472,19 @@ export default definePlugin((serverAPI: ServerAPI) => {
       const gpuFreq = settings.appGPUFreq(appId);
       const gpuAutoMaxFreq = settings.appGPUAutoMaxFreq(appId);
       const gpuAutoMinFreq = settings.appGPUAutoMinFreq(appId);
-      if(gpuMode == 0){
+      const gpuRangeMaxFreq = settings.appGPURangeMaxFreq(appId);
+      const gpuRangeMinFreq = settings.appGPURangeMinFreq(appId);
+      if(gpuMode == GPUMODE_NOLIMIT){
         backend.applyGPUFreq(0);
-      }else if(gpuMode == 1){
+      }else if(gpuMode == GPUMODE_FIX){
           backend.applyGPUFreq(gpuFreq);
-      }else if(gpuMode == 2){
+      }else if(gpuMode == GPUMODE_AUTO){
           console.log(`开始自动优化GPU频率`)
           backend.applyGPUAutoMax(gpuAutoMaxFreq);
           backend.applyGPUAutoMin(gpuAutoMinFreq);      
           backend.applyGPUAuto(true);    
+      }else if(gpuMode == GPUMode_RANGE){
+        backend.applyGPUFreqRange(gpuRangeMinFreq,gpuRangeMaxFreq);
       }
       else{
           console.log(`出现意外的GPUmode = ${gpuMode}`)

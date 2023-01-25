@@ -27,8 +27,10 @@ export class AppSetting {
   gpuAutoMaxFreq?:number
   @JsonProperty()
   gpuAutoMinFreq?:number
-  //@JsonProperty()
-  //cpuFreq?:number
+  @JsonProperty()
+  gpuRangeMaxFreq?:number
+  @JsonProperty()
+  gpuRangeMinFreq?:number
 
   hasSettings(): boolean {
     if (this.overwrite != undefined)
@@ -52,6 +54,10 @@ export class AppSetting {
     if (this.gpuAutoMaxFreq != undefined)
       return true;
     if (this.gpuAutoMinFreq != undefined)
+      return true;
+    if (this.gpuRangeMaxFreq != undefined)
+      return true;
+    if (this.gpuRangeMinFreq != undefined)
       return true;
     return false;
   }
@@ -170,6 +176,28 @@ export class Settings {
     }
     return 200;
   }
+
+  appGPURangeMaxFreq(appId: string){
+    if (this.perApp[appId]?.gpuRangeMaxFreq != undefined)
+      return this.perApp[appId].gpuRangeMaxFreq!!;
+    if (this.perApp[DEFAULT_APP]?.gpuRangeMaxFreq != undefined){
+      this.perApp[appId].gpuRangeMaxFreq = this.perApp[DEFAULT_APP].gpuRangeMaxFreq;
+      return this.perApp[appId].gpuRangeMaxFreq!!;
+    }
+    return 1600;
+  }
+
+  appGPURangeMinFreq(appId: string){
+    if (this.perApp[appId]?.gpuRangeMinFreq != undefined)
+      return this.perApp[appId].gpuRangeMinFreq!!;
+    if (this.perApp[DEFAULT_APP]?.gpuRangeMinFreq != undefined){
+      this.perApp[appId].gpuRangeMinFreq = this.perApp[DEFAULT_APP].gpuRangeMinFreq;
+      return this.perApp[appId].gpuRangeMinFreq!!;    
+    }
+    return 200;
+  }
+
+
 
 }
 

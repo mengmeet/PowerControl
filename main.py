@@ -89,6 +89,13 @@ class Plugin:
         except Exception as e:
             logging.error(e)
             return False
+    
+    def set_gpuFreqRange(self, value: int, value2: int):
+        try:
+            return gpuManager.set_gpuFreqRange(value,value2)
+        except Exception as e:
+            logging.error(e)
+            return False
 
     def set_cpuTDP(self, value: int):
         try:

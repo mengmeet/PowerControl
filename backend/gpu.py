@@ -12,6 +12,8 @@ gpu_nowFreq=0
 gpu_autofreqManager = None
 gpu_autoFreqMax=1600
 gpu_autoFreqMin=200
+gpu_rangeFreqMax=1600
+gpu_rangeFreqMin=200
 
 class GPU_AutoFreqManager (threading.Thread):
 
@@ -207,6 +209,22 @@ class GPU_Manager ():
                 global gpu_nowFreq
                 gpu_nowFreq = value
                 command="sudo sh {} set_clock_limits {} {}".format(SH_PATH,value,value)
+                os.system(command)
+                return True
+            else:
+                return False
+        except Exception as e:
+            logging.error(e)
+            return False
+
+    def set_gpuFreqRange(self, value: int, value2:int):
+        try:
+            if value >= 0:
+                global gpu_rangeFreqMin
+                global gpu_rangeFreqMax
+                gpu_rangeFreqMax = value2
+                gpu_rangeFreqMin = value
+                command="sudo sh {} set_clock_limits {} {}".format(SH_PATH,value,value2)
                 os.system(command)
                 return True
             else:
