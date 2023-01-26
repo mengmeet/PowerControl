@@ -86,8 +86,8 @@ const Content: VFC<{applyFn: (appId: string,applyTarget:string) => void, resetFn
     setCurrentTargetGPUFreq(settings.appGPUFreq(activeApp));
     setCurrentTargetGPUAutoMaxFreq(settings.appGPUAutoMaxFreq(activeApp))
     setCurrentTargetGPUAutoMinFreq(settings.appGPUAutoMinFreq(activeApp))
-    setCurrentTargetGPURangeMaxFreq(settings.appGPUAutoMaxFreq(activeApp))
-    setCurrentTargetGPURangeMinFreq(settings.appGPUAutoMinFreq(activeApp))
+    setCurrentTargetGPURangeMaxFreq(settings.appGPURangeMaxFreq(activeApp))
+    setCurrentTargetGPURangeMinFreq(settings.appGPURangeMinFreq(activeApp))
 
     setInitialized(true);
   }
