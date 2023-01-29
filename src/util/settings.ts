@@ -1,5 +1,5 @@
 import { JsonObject, JsonProperty, JsonSerializer } from 'typescript-json-serializer';
-import { DEFAULT_APP } from './util';
+import { DEFAULT_APP } from './runningApp';
 
 const SETTINGS_KEY = "PowerControl";
 
@@ -66,18 +66,18 @@ export class AppSetting {
 @JsonObject()
 export class Settings {
   @JsonProperty()
-  enabled: boolean = true;
+  static enabled: boolean = true;
   @JsonProperty({ isDictionary: true, type: AppSetting })
-  perApp: { [appId: string]: AppSetting } = {};
+  static perApp: { [appId: string]: AppSetting } = {};
 
-  ensureApp(appId: string): AppSetting {
+  static ensureApp(appId: string): AppSetting {
     if (!(appId in this.perApp)) {
       this.perApp[appId] = new AppSetting();
     }
     return this.perApp[appId];
   }
 
-  appOverWrite(appId: string):boolean {
+  public static appOverWrite(appId: string):boolean {
     if (this.perApp[appId]?.overwrite != undefined)
       return this.perApp[appId].overwrite!!;
     if (this.perApp[DEFAULT_APP]?.overwrite != undefined){
@@ -87,7 +87,7 @@ export class Settings {
     return false;
   }
 
-  appSmt(appId: string): boolean {
+  static appSmt(appId: string): boolean {
     if (this.perApp[appId]?.smt != undefined)
       return this.perApp[appId].smt!!;
     if (this.perApp[DEFAULT_APP]?.smt != undefined){
@@ -97,7 +97,7 @@ export class Settings {
     return true;
   }
 
-  appCpuNum(appId: string) {
+  static appCpuNum(appId: string) {
     if (this.perApp[appId]?.cpuNum != undefined)
       return this.perApp[appId].cpuNum!!;
     if (this.perApp[DEFAULT_APP]?.cpuNum != undefined){
@@ -107,7 +107,7 @@ export class Settings {
     return 4;
   }
 
-  appCpuboost(appId: string): boolean {
+  static appCpuboost(appId: string): boolean {
     if (this.perApp[appId]?.cpuboost != undefined)
       return this.perApp[appId].cpuboost!!;
     if (this.perApp[DEFAULT_APP]?.cpuboost != undefined){
@@ -117,7 +117,7 @@ export class Settings {
     return true;
   }
 
-  appTDP(appId: string) {
+  static appTDP(appId: string) {
     if (this.perApp[appId]?.tdp != undefined)
       return this.perApp[appId].tdp!!;
     if (this.perApp[DEFAULT_APP]?.tdp != undefined){
@@ -127,7 +127,7 @@ export class Settings {
     return 15;
   }
 
-  appTDPEnable(appId: string){
+  static appTDPEnable(appId: string){
     if (this.perApp[appId]?.tdpEnable != undefined)
       return this.perApp[appId].tdpEnable!!;
     if (this.perApp[DEFAULT_APP]?.tdpEnable != undefined){
@@ -137,7 +137,7 @@ export class Settings {
     return false;
   }
 
-  appGPUMode(appId: string){
+  static appGPUMode(appId: string){
     if (this.perApp[appId]?.gpuMode != undefined)
       return this.perApp[appId].gpuMode!!;
     if (this.perApp[DEFAULT_APP]?.gpuMode != undefined){
@@ -147,7 +147,7 @@ export class Settings {
     return 0;
   }
 
-  appGPUFreq(appId: string){
+  static appGPUFreq(appId: string){
     if (this.perApp[appId]?.gpuFreq != undefined)
       return this.perApp[appId].gpuFreq!!;
     if (this.perApp[DEFAULT_APP]?.gpuFreq != undefined){
@@ -157,7 +157,7 @@ export class Settings {
     return 1600;
   }
 
-  appGPUAutoMaxFreq(appId: string){
+  static appGPUAutoMaxFreq(appId: string){
     if (this.perApp[appId]?.gpuAutoMaxFreq != undefined)
       return this.perApp[appId].gpuAutoMaxFreq!!;
     if (this.perApp[DEFAULT_APP]?.gpuAutoMaxFreq != undefined){
@@ -167,7 +167,7 @@ export class Settings {
     return 1600;
   }
 
-  appGPUAutoMinFreq(appId: string){
+  static appGPUAutoMinFreq(appId: string){
     if (this.perApp[appId]?.gpuAutoMinFreq != undefined)
       return this.perApp[appId].gpuAutoMinFreq!!;
     if (this.perApp[DEFAULT_APP]?.gpuAutoMinFreq != undefined){
@@ -177,7 +177,7 @@ export class Settings {
     return 200;
   }
 
-  appGPURangeMaxFreq(appId: string){
+  static appGPURangeMaxFreq(appId: string){
     if (this.perApp[appId]?.gpuRangeMaxFreq != undefined)
       return this.perApp[appId].gpuRangeMaxFreq!!;
     if (this.perApp[DEFAULT_APP]?.gpuRangeMaxFreq != undefined){
@@ -187,7 +187,7 @@ export class Settings {
     return 1600;
   }
 
-  appGPURangeMinFreq(appId: string){
+  static appGPURangeMinFreq(appId: string){
     if (this.perApp[appId]?.gpuRangeMinFreq != undefined)
       return this.perApp[appId].gpuRangeMinFreq!!;
     if (this.perApp[DEFAULT_APP]?.gpuRangeMinFreq != undefined){
@@ -197,19 +197,16 @@ export class Settings {
     return 200;
   }
 
+  static loadSettingsFromLocalStorage(){
+    const settingsString = localStorage.getItem(SETTINGS_KEY) || "{}";
+    const settingsJson = JSON.parse(settingsString);
+    serializer.deserializeObject(settingsJson, Settings);
+  }
 
+  static saveSettingsToLocalStorage() {
+    const settingsJson = serializer.serializeObject(this) || {};
+    const settingsString = JSON.stringify(settingsJson);
+    localStorage.setItem(SETTINGS_KEY, settingsString);
+  }
 
-}
-
-export function loadSettingsFromLocalStorage(): Settings {
-  const settingsString = localStorage.getItem(SETTINGS_KEY) || "{}";
-  const settingsJson = JSON.parse(settingsString);
-  const settings = serializer.deserializeObject(settingsJson, Settings);
-  return settings || new Settings();
-}
-
-export function saveSettingsToLocalStorage(settings: Settings) {
-  const settingsJson = serializer.serializeObject(settings) || {};
-  const settingsString = JSON.stringify(settingsJson);
-  localStorage.setItem(SETTINGS_KEY, settingsString);
 }

@@ -33,10 +33,10 @@ var localizeMap:Map<number,localizeString>= new Map([
 
 
 export class localizationManager {
-  private language = "schinese"
+  private static language = "schinese"
   //private has_language  = false
-  constructor(serverAPI: ServerAPI) {
-    serverAPI!.callPluginMethod<{},string>("get_language",{}).then(res=>{
+  public static async init(serverAPI: ServerAPI) {
+    await serverAPI!.callPluginMethod<{},string>("get_language",{}).then(res=>{
       if (res.success){
         console.log("language = " + res.result);
         this.language = res.result;
@@ -44,7 +44,7 @@ export class localizationManager {
       }
     })
   }
-  public getString=(index:number, defaultString:string)=> {
+  public static getString=(index:number, defaultString:string)=> {
     if(localizeMap.has(index)){
       if(this.language=="schinese"){
         return localizeMap.get(index)?.schinese;
@@ -59,6 +59,6 @@ export class localizationManager {
     else{
       return defaultString
     }
-}
+  }
 }
 
