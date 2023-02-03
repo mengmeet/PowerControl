@@ -1,4 +1,7 @@
 import {ServerAPI } from "decky-frontend-lib";
+import { APPLYTYPE, GPUMODE } from "../components";
+import { Settings } from "./settings";
+
 
 
 export class BackendData{
@@ -98,13 +101,11 @@ export class Backend {
   }
   
   public static applyGPUFreq(freq: number){
-    this.applyGPUAuto(false);
     console.log("Applying gpuFreq " + freq.toString());
     this.serverAPI!.callPluginMethod("set_gpuFreq", {"value":freq});
   }
 
   public static applyGPUFreqRange(freqMin: number, freqMax: number){
-    this.applyGPUAuto(false);
     console.log("Applying gpuFreqRange  " + freqMin.toString() + "   "+ freqMax.toString());
     this.serverAPI!.callPluginMethod("set_gpuFreqRange", {"value":freqMin, "value2":freqMax});
   }
@@ -128,4 +129,63 @@ export class Backend {
     console.log("throwSuspendEvt");
     this.serverAPI!.callPluginMethod("receive_suspendEvent", {});
   }
+
+  public static applySettings = (applyTarget: string) => {
+    if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_CPUCORE) {
+      const smt = Settings.appSmt();
+      const cpuNum = Settings.appCpuNum();
+      Backend.applySmt(smt);
+      Backend.applyCpuNum(cpuNum);
+    }
+    if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_CPUBOOST) {
+      const cpuBoost = Settings.appCpuboost();
+      Backend.applyCpuBoost(cpuBoost);
+    }
+    if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_TDP) {
+      const tdp = Settings.appTDP();
+      const tdpEnable = Settings.appTDPEnable();
+      if (tdpEnable) {
+        Backend.applyTDP(tdp);
+      }
+      else {
+        Backend.applyTDP(Backend.data.getTDPMax());
+      }
+    }
+    if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_GPUMODE) {
+      const gpuMode = Settings.appGPUMode();
+      const gpuFreq = Settings.appGPUFreq();
+      const gpuAutoMaxFreq = Settings.appGPUAutoMaxFreq();
+      const gpuAutoMinFreq = Settings.appGPUAutoMinFreq();
+      const gpuRangeMaxFreq = Settings.appGPURangeMaxFreq();
+      const gpuRangeMinFreq = Settings.appGPURangeMinFreq();
+      if (gpuMode == GPUMODE.NOLIMIT) {
+        Backend.applyGPUAuto(false);
+        Backend.applyGPUFreq(0);
+      } else if (gpuMode == GPUMODE.FIX) {
+        Backend.applyGPUAuto(false);
+        Backend.applyGPUFreq(gpuFreq);
+      } else if (gpuMode == GPUMODE.AUTO) {
+        console.log(`开始自动优化GPU频率`)
+        Backend.applyGPUAutoMax(gpuAutoMaxFreq);
+        Backend.applyGPUAutoMin(gpuAutoMinFreq);
+        Backend.applyGPUAuto(true);
+      } else if (gpuMode == GPUMODE.RANGE) {
+        Backend.applyGPUAuto(false);
+        Backend.applyGPUFreqRange(gpuRangeMinFreq, gpuRangeMaxFreq);
+      }
+      else {
+        console.log(`出现意外的GPUmode = ${gpuMode}`)
+        Backend.applyGPUFreq(0);
+      }
+    }
+  };
+
+  public static resetSettings = () => {
+    console.log("重置所有设置");
+    Backend.applySmt(true);
+    Backend.applyCpuNum(Backend.data.getCpuMaxNum());
+    Backend.applyCpuBoost(true);
+    Backend.applyTDP(Backend.data.getTDPMax());
+    Backend.applyGPUFreq(0);
+  };
 }

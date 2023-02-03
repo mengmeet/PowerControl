@@ -3,79 +3,203 @@ import {
   PanelSectionRow,
   SliderField,
 } from "decky-frontend-lib";
-import { VFC, useEffect, useState} from "react";
-import { localizationManager } from "../util";
-import { Backend} from "../util";
+import { useEffect, useState, VFC} from "react";
+import { GPUMODE,ComponentName, UpdateType} from "./enum";
+import { localizationManager, Settings,Backend, PluginManager} from "../util";
+import {SlowSliderField} from "./SlowSliderField"
 
-// Appease TypeScript
-declare var SteamClient: any;
-
-export enum GPUMODE{
-  NOLIMIT=0, //不限制
-  FIX=1, //固定频率
-  RANGE=2, //系统调度
-  AUTO=3,  //自动频率
-}
-export enum GPUFunc{
-  GPUMODE=0,
-}
-
-export class GPUComponents {
-  //public language = "schinese"
-  private static hideItemList:GPUFunc[] = []
-  private static disableItemList:GPUFunc[] = []
-  private static globalEnable:boolean=false;
-  static ReloadComponents: () => void;
-  static DisableItem: (funcName:GPUFunc,disabled:boolean) => void;
-  static HideItem: (funcName:GPUFunc,Hide:boolean) => void;
-  static HideAll: (funcName:GPUFunc,Hide:boolean) => void;
-
-  static GPUItem: VFC<{apply: (appId: string,applyTarget:string) => void, reset: () => void, backend:Backend}> = ({ }) => {
-    const [gpuMode, setGPUMode] = useState<number>(0);
-    //const [gpuFreq, setGPUFreq] = useState<number>(1600);
-    //const [gpuAutoMaxFreq, setGPUAutoMaxFreq] = useState<number>(1600);
-    //const [gpuAutoMinFreq, setGPUAutoMinFreq] = useState<number>(200);
-    //const [gpuRangeMaxFreq, setGPURangeMaxFreq] = useState<number>(1600);
-    //const [gpuRangeMinFreq, setGPURangeMinFreq] = useState<number>(200);
-
-    this.ReloadComponents=()=>{
-      console.log("");
-    }
-
-    this.DisableItem=(funcName:GPUFunc,disabled:boolean)=>{
-      if(this.disableItemList.indexOf(funcName) != -1 && disabled == true){
-        this.disableItemList.push(funcName);
-        this.hideItemList.push();
+//GPUFreq模块
+const GPUFreqComponent: VFC = () => {
+  const [gpuFreq, setGPUFreq] = useState<number>(Settings.appGPUFreq());
+  const refresh = () => {
+    setGPUFreq(Settings.appGPUFreq());
+  };
+  //listen Settings
+  useEffect(() => {
+    PluginManager.listenUpdateComponent(ComponentName.GPU_FREQFIX,(_ComponentName,updateType)=>{
+      switch(updateType){
+        case(UpdateType.UPDATE):{
+          refresh();
+        }
       }
-      this.ReloadComponents();
-    }
+    })
+  }, []);
+  return (
+    <PanelSectionRow>
+      <SlowSliderField
+        label={localizationManager.getString(19, "GPU 频率")}
+        value={gpuFreq}
+        step={50}
+        max={Backend.data.getGPUFreqMax()}
+        min={200}
+        disabled={!Backend.data.HasGPUFreqMax()}
+        showValue={true}
+        onChangeEnd={(value: number) => {
+          Settings.setGPUFreq(value);
+        }}
+      />
+    </PanelSectionRow>
+  );
+};
 
-    
+//GPURange模块
+const GPURangeComponent: VFC = () => {
+  const [gpuRangeMaxFreq, setGPURangeMaxFreq] = useState<number>(Settings.appGPURangeMaxFreq());
+  const [gpuRangeMinFreq, setGPURangeMinFreq] = useState<number>(Settings.appGPURangeMinFreq());
+  //GPURange设置
+  const refresh = () => {
+    setGPURangeMaxFreq(Settings.appGPURangeMaxFreq());
+    setGPURangeMinFreq(Settings.appGPURangeMinFreq());
+  };
+  //listen Settings
+  useEffect(() => {
+    PluginManager.listenUpdateComponent(ComponentName.GPU_FREQRANGE,(_ComponentName,updateType)=>{
+      switch(updateType){
+        case(UpdateType.UPDATE):{
+          refresh();
+        }
+      }
+    })
+  }, []);
+  return (
+    <PanelSectionRow>
+      <SlowSliderField
+        label={localizationManager.getString(20, "GPU 最大频率限制")}
+        value={gpuRangeMaxFreq}
+        step={50}
+        max={Backend.data.getGPUFreqMax()}
+        min={200}
+        changeMin={gpuRangeMinFreq}
+        disabled={!Backend.data.HasGPUFreqMax()}
+        showValue={true}
+        onChangeEnd={(value: number) => {
+          Settings.setGPURangeFreq(value,gpuRangeMinFreq);
+        }}
+      />
+    <SlowSliderField
+        label={localizationManager.getString(21, "GPU 最小频率限制")}
+        value={gpuRangeMinFreq}
+        step={50}
+        max={Backend.data.getGPUFreqMax()}
+        min={200}
+        changeMax={gpuRangeMaxFreq}
+        disabled={!Backend.data.HasGPUFreqMax()}
+        showValue={true}
+        onChangeEnd={(value: number) => {
+          Settings.setGPURangeFreq(gpuRangeMaxFreq,value);
+        }}
+      />
+    </PanelSectionRow>
+  );
+};
 
-    //GPU模式设置
-    useEffect(() => {
-      console.log(`useEffect gpumode invoke  value=${gpuMode}`);
-    }, [gpuMode]);
-  
-    return (
-      <div>
-        {this.globalEnable && <PanelSection title="GPU">
-        {<PanelSectionRow>
+//GPUAutoMax模块
+const GPUAutoComponent: VFC = () => {
+  const [gpuAutoMaxFreq, setGPUAutoMaxFreq] = useState<number>(Settings.appGPUAutoMaxFreq());
+  const [gpuAutoMinFreq, setGPUAutoMinFreq] = useState<number>(Settings.appGPUAutoMinFreq());
+  const refresh = () => {
+    setGPUAutoMaxFreq(Settings.appGPUAutoMaxFreq());
+    setGPUAutoMinFreq(Settings.appGPUAutoMinFreq());
+  };
+  //listen Settings
+  useEffect(() => {
+    PluginManager.listenUpdateComponent(ComponentName.GPU_FREQAUTO,(_ComponentName,updateType)=>{
+      switch(updateType){
+        case(UpdateType.UPDATE):{
+          refresh();
+        }
+      }
+    })
+  }, []);
+  return (
+    <PanelSectionRow>
+      <SlowSliderField
+        label={localizationManager.getString(20, "GPU 最大频率限制")}
+        value={gpuAutoMaxFreq}
+        step={50}
+        max={Backend.data.getGPUFreqMax()}
+        min={200}
+        changeMin={gpuAutoMinFreq}
+        disabled={!Backend.data.HasGPUFreqMax()}
+        showValue={true}
+        onChangeEnd={(value: number) => {
+          Settings.setGPUAutoMaxFreq(value);
+        }}
+      />
+    <SlowSliderField
+      label={localizationManager.getString(21, "GPU 最小频率限制")}
+      value={gpuAutoMinFreq}
+      step={50}
+      max={Backend.data.getGPUFreqMax()}
+      min={200}
+      changeMax={gpuAutoMaxFreq}
+      disabled={!Backend.data.HasGPUFreqMax()}
+      showValue={true}
+      onChangeEnd={(value: number) => {
+        Settings.setGPUAutoMinFreq(value);
+      }}
+    />
+  </PanelSectionRow>
+  );
+};
+
+export const GPUModeComponent: VFC = () => {
+  const [gpuMode, setGPUMode] = useState<number>(Settings.appGPUMode());
+  //GPU模式设置
+  const refresh = () => {
+    setGPUMode(Settings.appGPUMode());
+  };
+  //listen Settings
+  useEffect(() => {
+    PluginManager.listenUpdateComponent(ComponentName.GPU_FREQMODE,(_ComponentName,updateType)=>{
+      switch(updateType){
+        case(UpdateType.UPDATE):{
+          refresh();
+        }
+      }
+    })
+  }, []);
+  return (
+        <div>
+        <PanelSection title="GPU">
+          <PanelSectionRow>
           <SliderField
             label={localizationManager.getString(15, "GPU 频率模式")}
             value={gpuMode}
             step={1}
             max={3}
             min={0}
+            notchCount={4}
+            notchLabels={
+              [{
+                notchIndex: GPUMODE.NOLIMIT,
+                label: `${localizationManager.getString(16, "不限制")}`,
+                value: GPUMODE.NOLIMIT,
+              }, {
+                notchIndex: GPUMODE.FIX,
+                label: `${localizationManager.getString(17, "固定频率")}`,
+                value: GPUMODE.FIX,
+              }, {
+                notchIndex: GPUMODE.RANGE,
+                label: `${localizationManager.getString(23, "范围频率")}`,
+                value: GPUMODE.RANGE,
+              }, {
+                notchIndex: GPUMODE.AUTO,
+                label: `${localizationManager.getString(18, "自动频率")}`,
+                value: GPUMODE.AUTO,
+              }
+              ]
+            }
             onChange={(value: number) => {
-              setGPUMode(value);
+              Settings.setGPUMode(value);
             }}
           />
-        </PanelSectionRow>}
-      </PanelSection>
-      }
-      </div>
+        </PanelSectionRow>
+          {gpuMode==GPUMODE.FIX&&<GPUFreqComponent/>}
+          {gpuMode==GPUMODE.RANGE&&<GPURangeComponent/>}
+          {gpuMode==GPUMODE.AUTO&&<GPUAutoComponent/>}
+        </PanelSection>
+        </div>
     );
-  };
+};
 
-}
