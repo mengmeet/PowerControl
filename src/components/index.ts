@@ -1,4 +1,5 @@
 export * from "./SlowSliderField"
-export * from "./enum"
 export * from "./gpu"
+export * from "./cpu"
+export * from "./settings"
 

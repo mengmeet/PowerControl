@@ -1,5 +1,5 @@
 import { JsonObject, JsonProperty, JsonSerializer } from 'typescript-json-serializer';
-import { APPLYTYPE, ComponentName, GPUMODE, UpdateType } from '../components';
+import { APPLYTYPE, ComponentName, GPUMODE, UpdateType } from './enum';
 import { Backend } from './backend';
 import { DEFAULT_APP, PluginManager, RunningApps } from './pluginMain';
 
@@ -77,7 +77,18 @@ export class Settings {
 
   //设置开启关闭
   public static setEnable(enabled:boolean){
-    this._instance.enabled = enabled;
+    if(this._instance.enabled != enabled){
+      this._instance.enabled = enabled;
+      Settings.saveSettingsToLocalStorage();
+      if(enabled){
+        Backend.applySettings(APPLYTYPE.SET_ALL);
+        PluginManager.updateAllComponent(UpdateType.SHOW);
+      }else{
+        Backend.resetSettings();
+        PluginManager.updateAllComponent(UpdateType.HIDE);
+      }
+      PluginManager.updateAllComponent(UpdateType.UPDATE);
+    }
   }
 
   //获取当前配置文件
@@ -121,30 +132,77 @@ export class Settings {
     return Settings.ensureApp().overwrite!!;
   }
   static setOverWrite(overwrite:boolean){
-    if(RunningApps.active()!=DEFAULT_APP){
+    if(RunningApps.active()!=DEFAULT_APP&&Settings.appOverWrite()!=overwrite){
       Settings._instance.perApp[RunningApps.active()].overwrite=overwrite;
       Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_ALL);
+      PluginManager.updateAllComponent(UpdateType.UPDATE);
     }
   }
 
   static appSmt(): boolean {
     return Settings.ensureApp().smt!!;
   }
+
+  static setSmt(smt:boolean) {
+    if(Settings.ensureApp().smt!=smt){
+      Settings.ensureApp().smt=smt;
+      Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_CPUCORE);
+      PluginManager.updateComponent(ComponentName.CPU_SMT,UpdateType.UPDATE);
+    }
+  }
   
   static appCpuNum() {
     return Settings.ensureApp().cpuNum!!;
+  }
+
+  static setCpuNum(cpuNum:number) {
+    if(Settings.ensureApp().cpuNum!=cpuNum){
+      Settings.ensureApp().cpuNum=cpuNum;
+      Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_CPUCORE);
+      PluginManager.updateComponent(ComponentName.CPU_NUM,UpdateType.UPDATE);
+    }
   }
 
   static appCpuboost(): boolean {
     return Settings.ensureApp().cpuboost!!;
   }
 
+  static setCpuboost(cpuboost:boolean) {
+    if(Settings.ensureApp().cpuboost!=cpuboost){
+      Settings.ensureApp().cpuboost=cpuboost;
+      Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_CPUBOOST);
+      PluginManager.updateComponent(ComponentName.CPU_BOOST,UpdateType.UPDATE);
+    }
+  }
+
   static appTDP() {
     return Settings.ensureApp().tdp!!;
   }
 
+  static setTDP(tdp:number) {
+    if(Settings.ensureApp().tdp!=tdp){
+      Settings.ensureApp().tdp=tdp;
+      Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_TDP);
+      PluginManager.updateComponent(ComponentName.CPU_TDP,UpdateType.UPDATE);
+    }
+  }
+
   static appTDPEnable(){
     return Settings.ensureApp().tdpEnable!!;
+  }
+
+  static setTDPEnable(tdpEnable:boolean) {
+    if(Settings.ensureApp().tdpEnable!=tdpEnable){
+      Settings.ensureApp().tdpEnable=tdpEnable;
+      Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_TDP);
+      PluginManager.updateComponent(ComponentName.CPU_TDP,UpdateType.UPDATE);
+    }
   }
 
   static appGPUMode(){
@@ -157,6 +215,7 @@ export class Settings {
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
       PluginManager.updateComponent(ComponentName.GPU_FREQMODE,UpdateType.UPDATE);
+      
     }
   }
 
@@ -169,7 +228,7 @@ export class Settings {
     if(Settings.ensureApp().gpuFreq!=gpuFreq){
       Settings.ensureApp().gpuFreq=gpuFreq;
       Settings.saveSettingsToLocalStorage();
-      Backend.applyGPUFreq(Settings.appGPUFreq());
+      Backend.applySettings(APPLYTYPE.SET_GPUMODE);
       PluginManager.updateComponent(ComponentName.GPU_FREQFIX,UpdateType.UPDATE);
     }
   }
@@ -183,7 +242,7 @@ export class Settings {
     if(Settings.ensureApp().gpuAutoMaxFreq!=gpuAutoMaxFreq){
       Settings.ensureApp().gpuAutoMaxFreq=gpuAutoMaxFreq;
       Settings.saveSettingsToLocalStorage();
-      Backend.applyGPUAutoMax(gpuAutoMaxFreq);
+      Backend.applySettings(APPLYTYPE.SET_GPUMODE);
       PluginManager.updateComponent(ComponentName.GPU_FREQRANGE,UpdateType.UPDATE);
     }
   }
@@ -197,7 +256,7 @@ export class Settings {
     if(Settings.ensureApp().gpuAutoMinFreq!=gpuAutoMinFreq){
       Settings.ensureApp().gpuAutoMinFreq=gpuAutoMinFreq;
       Settings.saveSettingsToLocalStorage();
-      Backend.applyGPUAutoMin(gpuAutoMinFreq);
+      Backend.applySettings(APPLYTYPE.SET_GPUMODE);
       PluginManager.updateComponent(ComponentName.GPU_FREQRANGE,UpdateType.UPDATE);
     }
   }
@@ -215,7 +274,7 @@ export class Settings {
     if(Settings.ensureApp().gpuRangeMaxFreq!=gpuRangeMaxFreq||Settings.ensureApp().gpuRangeMinFreq!=gpuRangeMinFreq){
       Settings.ensureApp().gpuRangeMaxFreq=gpuRangeMaxFreq;
       Settings.ensureApp().gpuRangeMinFreq=gpuRangeMinFreq;
-      Backend.applyGPUFreqRange(gpuRangeMinFreq,gpuRangeMaxFreq);
+      Backend.applySettings(APPLYTYPE.SET_GPUMODE);
       Settings.saveSettingsToLocalStorage();
       PluginManager.updateComponent(ComponentName.GPU_FREQRANGE,UpdateType.UPDATE);
     }

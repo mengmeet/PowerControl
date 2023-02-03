@@ -13,6 +13,14 @@ export enum APPLYTYPE{
 }
 
 export enum ComponentName{
+    SET_ENABLE="SET_ENABLE",
+    SET_PERAPP="SET_PERAPP",
+    CPU_ALL="CPU_ALL",
+    CPU_BOOST="CPU_BOOST",
+    CPU_SMT="CPU_SMT",
+    CPU_NUM="CPU_NUM",
+    CPU_TDP="CPU_TDP",
+    GPU_ALL="GPU_ALL",
     GPU_FREQMODE="GPU_FREQMODE",
     GPU_FREQFIX="GPU_FREQFIX",
     GPU_FREQRANGE="GPU_FREQRANGE",
@@ -23,5 +31,12 @@ export enum UpdateType{
     DISABLE="DISABLE",
     UPDATE="UPDATE",
     HIDE="HIDE",
+    SHOW="SHOW",
     ENABLE="ENABLE",
 }
+
+export enum PluginState{
+    INIT="0",
+    RUN="1",
+    QUIT="2",
+  }

@@ -1,5 +1,5 @@
 import {ServerAPI } from "decky-frontend-lib";
-import { APPLYTYPE, GPUMODE } from "../components";
+import { APPLYTYPE, GPUMODE } from "./enum";
 import { Settings } from "./settings";
 
 
@@ -80,47 +80,47 @@ export class Backend {
     await this.data.init(serverAPI);
   }
 
-  public static applySmt(smt: boolean) {
+  private static applySmt(smt: boolean) {
     console.log("Applying smt " + smt.toString());
     this.serverAPI!.callPluginMethod("set_smt", { "value": smt });
   }
 
-  public static applyCpuNum(cpuNum: number) {
+  private static applyCpuNum(cpuNum: number) {
     console.log("Applying cpuNum " + cpuNum.toString());
     this.serverAPI!.callPluginMethod("set_cpuOnline", { "value": cpuNum });
   }
 
-  public static applyCpuBoost(cpuBoost: boolean) {
+  private static applyCpuBoost(cpuBoost: boolean) {
     console.log("Applying cpuBoost " + cpuBoost.toString());
     this.serverAPI!.callPluginMethod("set_cpuBoost", { "value": cpuBoost });
   }
 
-  public static applyTDP(tdp: number) {
+  private static applyTDP(tdp: number) {
     console.log("Applying tdp " + tdp.toString());
     this.serverAPI!.callPluginMethod("set_cpuTDP", {"value":tdp});
   }
   
-  public static applyGPUFreq(freq: number){
+  private static applyGPUFreq(freq: number){
     console.log("Applying gpuFreq " + freq.toString());
     this.serverAPI!.callPluginMethod("set_gpuFreq", {"value":freq});
   }
 
-  public static applyGPUFreqRange(freqMin: number, freqMax: number){
+  private static applyGPUFreqRange(freqMin: number, freqMax: number){
     console.log("Applying gpuFreqRange  " + freqMin.toString() + "   "+ freqMax.toString());
     this.serverAPI!.callPluginMethod("set_gpuFreqRange", {"value":freqMin, "value2":freqMax});
   }
 
-  public static applyGPUAuto(auto: boolean){
+  private static applyGPUAuto(auto: boolean){
     console.log("Applying gpuAuto" + auto.toString());
     this.serverAPI!.callPluginMethod("set_gpuAuto", {"value":auto});
   }
 
-  public static applyGPUAutoMax(maxAutoFreq:number){
+  private static applyGPUAutoMax(maxAutoFreq:number){
     console.log("Applying gpuAuto" + maxAutoFreq.toString());
     this.serverAPI!.callPluginMethod("set_gpuAutoMaxFreq", {"value":maxAutoFreq});
   }
 
-  public static applyGPUAutoMin(minAutoFreq:number){
+  private static applyGPUAutoMin(minAutoFreq:number){
     console.log("Applying gpuAuto" + minAutoFreq.toString());
     this.serverAPI!.callPluginMethod("set_gpuAutoMinFreq", {"value":minAutoFreq});
   }
@@ -166,6 +166,8 @@ export class Backend {
         Backend.applyGPUFreq(gpuFreq);
       } else if (gpuMode == GPUMODE.AUTO) {
         console.log(`开始自动优化GPU频率`)
+        Settings.setTDPEnable(false);
+        Settings.setCpuboost(false);
         Backend.applyGPUAutoMax(gpuAutoMaxFreq);
         Backend.applyGPUAutoMin(gpuAutoMinFreq);
         Backend.applyGPUAuto(true);
