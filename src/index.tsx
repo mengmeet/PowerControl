@@ -32,11 +32,13 @@ const Content: VFC<{}> = ({}) => {
   return (
       <div>
         {PluginManager.isIniting()&&<PanelSectionRow>
-          <SteamSpinner style={{marginTop: "80px",}}/>
+          <SteamSpinner/>
         </PanelSectionRow>}
-        <SettingsComponent/>
-        <CPUComponent/>
-        <GPUComponent/>
+        {!PluginManager.isIniting()&&<PanelSectionRow>
+          <SettingsComponent/>
+          <CPUComponent/>
+          <GPUComponent/>
+        </PanelSectionRow>}
       </div>
     );
 };

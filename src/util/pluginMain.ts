@@ -94,6 +94,7 @@ export class PluginManager{
     PluginManager.state = PluginState.QUIT; 
   }
 
+  //下发某个组件更新事件
   static updateComponent(comName:ComponentName,updateType:UpdateType) {
     if(this.listeners.has(comName)){
       this.listeners.get(comName)?.forEach((fn,_wholisten)=>{
@@ -103,6 +104,7 @@ export class PluginManager{
     }
   }
 
+  //下发所有更新事件
   static updateAllComponent(updateType:UpdateType) {
     this.listeners.forEach((listenList,lisComName) => {
       listenList.forEach((fn)=>{
@@ -112,6 +114,7 @@ export class PluginManager{
     });
   }
 
+  //监听组件更新事件（哪个组件监听，被监听组件，监听事件）
   static listenUpdateComponent(whoListen:ComponentName,lisComponentNames:ComponentName[],lisfn: ComponentUpdateHandler) {
     lisComponentNames.forEach((lisComponentName)=>{
       if(this.listeners.has(lisComponentName)&&this.listeners.get(lisComponentName)!=undefined){

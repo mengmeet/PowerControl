@@ -38,7 +38,7 @@ export class localizationManager {
   public static async init(serverAPI: ServerAPI) {
     await serverAPI!.callPluginMethod<{},string>("get_language",{}).then(res=>{
       if (res.success){
-        console.log("language = " + res.result);
+        //console.log("language = " + res.result);
         this.language = res.result;
         //this.has_language = true;
       }
