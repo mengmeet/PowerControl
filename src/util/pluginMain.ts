@@ -67,17 +67,12 @@ export class PluginManager{
       }
     });
     Settings.loadSettingsFromLocalStorage();
-    if (Settings.ensureEnable()) {
-      Backend.applySettings(APPLYTYPE.SET_ALL);
-    }
+    Backend.applySettings(APPLYTYPE.SET_ALL);
     PluginManager.suspendEndHook = SteamClient.System.RegisterForOnResumeFromSuspend(async () => {
-      console.log("休眠结束，重新应用设置")
       if (Settings.ensureEnable()) {
         Backend.throwSuspendEvt()
-        Backend.applySettings(APPLYTYPE.SET_ALL);
-      } else {
-        Backend.resetSettings();
       }
+      Backend.applySettings(APPLYTYPE.SET_ALL);
     });
     PluginManager.state = PluginState.RUN;
   }

@@ -63,6 +63,7 @@ const GPURangeComponent: VFC = () => {
     })
   }, []);
   return (
+    <div>
     <PanelSectionRow>
       <SlowSliderField
         label={localizationManager.getString(20, "GPU 最大频率限制")}
@@ -77,6 +78,8 @@ const GPURangeComponent: VFC = () => {
           Settings.setGPURangeFreq(value,gpuRangeMinFreq);
         }}
       />
+    </PanelSectionRow>
+    <PanelSectionRow>
     <SlowSliderField
         label={localizationManager.getString(21, "GPU 最小频率限制")}
         value={gpuRangeMinFreq}
@@ -91,6 +94,7 @@ const GPURangeComponent: VFC = () => {
         }}
       />
     </PanelSectionRow>
+    </div>
   );
 };
 
@@ -114,6 +118,7 @@ const GPUAutoComponent: VFC = () => {
     })
   }, []);
   return (
+    <div>
     <PanelSectionRow>
       <SlowSliderField
         label={localizationManager.getString(20, "GPU 最大频率限制")}
@@ -128,6 +133,8 @@ const GPUAutoComponent: VFC = () => {
           Settings.setGPUAutoMaxFreq(value);
         }}
       />
+    </PanelSectionRow>
+    <PanelSectionRow>
     <SlowSliderField
       label={localizationManager.getString(21, "GPU 最小频率限制")}
       value={gpuAutoMinFreq}
@@ -141,7 +148,8 @@ const GPUAutoComponent: VFC = () => {
         Settings.setGPUAutoMinFreq(value);
       }}
     />
-  </PanelSectionRow>
+    </PanelSectionRow>
+    </div>
   );
 };
 
@@ -196,10 +204,10 @@ const GPUModeComponent: VFC = () => {
               Settings.setGPUMode(value);
             }}
           />
-        </PanelSectionRow>
           {gpuMode==GPUMODE.FIX&&<GPUFreqComponent/>}
           {gpuMode==GPUMODE.RANGE&&<GPURangeComponent/>}
           {gpuMode==GPUMODE.AUTO&&<GPUAutoComponent/>}
+          </PanelSectionRow>
         </div>
     );
 };

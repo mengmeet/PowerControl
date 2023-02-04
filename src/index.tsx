@@ -34,11 +34,11 @@ const Content: VFC<{}> = ({}) => {
         {PluginManager.isIniting()&&<PanelSectionRow>
           <SteamSpinner/>
         </PanelSectionRow>}
-        {!PluginManager.isIniting()&&<PanelSectionRow>
+        {!PluginManager.isIniting()&&<div>
           <SettingsComponent/>
           <CPUComponent/>
           <GPUComponent/>
-        </PanelSectionRow>}
+        </div>}
       </div>
     );
 };

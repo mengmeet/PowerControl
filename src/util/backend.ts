@@ -131,6 +131,10 @@ export class Backend {
   }
 
   public static applySettings = (applyTarget: string) => {
+    if (!Settings.ensureEnable()) {
+      Backend.resetSettings();
+      return;
+    }
     if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_CPUCORE) {
       const smt = Settings.appSmt();
       const cpuNum = Settings.appCpuNum();

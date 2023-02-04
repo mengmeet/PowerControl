@@ -142,7 +142,7 @@ const CPUTDPComponent:VFC = () =>{
               }}
             />
           </PanelSectionRow>
-          {tdpEnable && <PanelSectionRow>
+          {tdpEnable&&<PanelSectionRow>
             <SlowSliderField
               label={localizationManager.getString(14, "瓦特")}
               value={tdp}
