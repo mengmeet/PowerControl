@@ -42,9 +42,9 @@ export class AppSetting {
     this.gpuMode=GPUMODE.NOLIMIT;
     this.gpuFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
     this.gpuAutoMaxFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
-    this.gpuAutoMinFreq=200;
+    this.gpuAutoMinFreq=Backend.data?.HasGPUFreqMin()?Backend.data.getGPUFreqMin():200;
     this.gpuRangeMaxFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
-    this.gpuRangeMinFreq=200;
+    this.gpuRangeMinFreq=Backend.data?.HasGPUFreqMin()?Backend.data.getGPUFreqMin():200;
   }
   deepCopy(copyTarget:AppSetting){
     this.overwrite=copyTarget.overwrite;

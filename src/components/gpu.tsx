@@ -31,7 +31,7 @@ const GPUFreqComponent: VFC = () => {
         value={gpuFreq}
         step={50}
         max={Backend.data.getGPUFreqMax()}
-        min={200}
+        min={Backend.data.getGPUFreqMin()}
         disabled={!Backend.data.HasGPUFreqMax()}
         showValue={true}
         onChangeEnd={(value: number) => {
@@ -70,7 +70,7 @@ const GPURangeComponent: VFC = () => {
         value={gpuRangeMaxFreq}
         step={50}
         max={Backend.data.getGPUFreqMax()}
-        min={200}
+        min={Backend.data.getGPUFreqMin()}
         changeMin={gpuRangeMinFreq}
         disabled={!Backend.data.HasGPUFreqMax()}
         showValue={true}
@@ -85,7 +85,7 @@ const GPURangeComponent: VFC = () => {
         value={gpuRangeMinFreq}
         step={50}
         max={Backend.data.getGPUFreqMax()}
-        min={200}
+        min={Backend.data.getGPUFreqMin()}
         changeMax={gpuRangeMaxFreq}
         disabled={!Backend.data.HasGPUFreqMax()}
         showValue={true}
@@ -125,7 +125,7 @@ const GPUAutoComponent: VFC = () => {
         value={gpuAutoMaxFreq}
         step={50}
         max={Backend.data.getGPUFreqMax()}
-        min={200}
+        min={Backend.data.getGPUFreqMin()}
         changeMin={gpuAutoMinFreq}
         disabled={!Backend.data.HasGPUFreqMax()}
         showValue={true}
@@ -140,7 +140,7 @@ const GPUAutoComponent: VFC = () => {
       value={gpuAutoMinFreq}
       step={50}
       max={Backend.data.getGPUFreqMax()}
-      min={200}
+      min={Backend.data.getGPUFreqMin()}
       changeMax={gpuAutoMaxFreq}
       disabled={!Backend.data.HasGPUFreqMax()}
       showValue={true}

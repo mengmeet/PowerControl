@@ -20,7 +20,7 @@ import {
   PanelSectionRow,
   ServerAPI,
   staticClasses,
-  SteamSpinner,
+  SteamSpinner
 } from "decky-frontend-lib";
 import { VFC} from "react";
 import { FaSuperpowers } from "react-icons/fa";

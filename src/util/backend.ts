@@ -12,6 +12,8 @@ export class BackendData{
   private has_ryzenadj = false;
   private gpuMax = 0;
   private has_gpuMax = false;
+  private gpuMin = 0;
+  private has_gpuMin = false;
   public async init(serverAPI:ServerAPI){
     await serverAPI!.callPluginMethod<{},number>("get_cpuMaxNum",{}).then(res=>{
       if (res.success){
@@ -40,6 +42,13 @@ export class BackendData{
         this.has_gpuMax = true;
       }
     })
+    await serverAPI!.callPluginMethod<{},number>("get_gpuFreqMin",{}).then(res=>{
+      if (res.success){
+        console.info("gpuMin = " + res.result);
+        this.gpuMin = res.result;
+        this.has_gpuMin = true;
+      }
+    })
   }
   public getCpuMaxNum(){
     return this.cpuMaxNum;
@@ -59,6 +68,14 @@ export class BackendData{
 
   public HasGPUFreqMax(){
     return this.has_gpuMax;
+  }
+
+  public getGPUFreqMin(){
+    return this.gpuMin;
+  }
+
+  public HasGPUFreqMin(){
+    return this.has_gpuMin;
   }
 
   public HasTDPMax(){

@@ -77,14 +77,24 @@ function set_clock_limits()
     sudo echo "gpu_clock_limit "$1 $2 >> /tmp/powerControl_sh.log
 }
 
-function get_gpu_FreqMinLimit()
+function get_gpu_nowFreqMinLimit()
 {
-    echo "$(sudo cat /sys/class/drm/card0/device/pp_dpm_sclk|grep "0:"|awk '{print $2}'|sed -e  's/Mhz//g')"
+     echo "$(sudo cat /sys/class/drm/card0/device/pp_od_clk_voltage|grep -a "0:"|awk '{print $2}'|sed -e  's/Mhz//g')"
 }
 
-function get_gpu_FreqMaxLimit()
+function get_gpu_nowFreqMaxLimit()
 {
-    echo "$(sudo cat /sys/class/drm/card0/device/pp_dpm_sclk|grep "2:"|awk '{print $2}'|sed -e  's/Mhz//g')"
+    echo "$(sudo cat /sys/class/drm/card0/device/pp_od_clk_voltage|grep -a "1:"|awk '{print $2}'|sed -e  's/Mhz//g')"
+}
+
+function get_gpuFreqMin()
+{
+    echo "$(sudo cat /sys/class/drm/card0/device/pp_od_clk_voltage|grep -a "SCLK:"|awk '{print $2}'|sed -e 's/Mhz//g'|xargs)"
+}
+
+function get_gpuFreqMax()
+{
+    echo "$(sudo cat /sys/class/drm/card0/device/pp_od_clk_voltage|grep -a "SCLK:"|awk '{print $3}'|sed -e 's/Mhz//g'|xargs)"
 }
 
 function set_gpu_flk()
@@ -148,9 +158,11 @@ function get_language()
     check_clock_limits)check_clock_limits $2 $3 $4;;
     set_gpu_flk)set_gpu_flk $2;;
     get_cpuID)get_cpuID;;
-    get_gpu_FreqMinLimit)get_gpu_FreqMinLimit;;
-    get_gpu_FreqMaxLimit)get_gpu_FreqMaxLimit;;
+    get_gpu_nowFreqMinLimit)get_gpu_nowFreqMinLimit;;
+    get_gpu_nowFreqMaxLimit)get_gpu_nowFreqMaxLimit;;
     get_language)get_language $2;;
+    get_gpuFreqMin)get_gpuFreqMin;;
+    get_gpuFreqMax)get_gpuFreqMax;;
     *)sudo echo $1 $2 $3 $4>>  /tmp/powerControl_sh.log;;
     esac
 fi

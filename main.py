@@ -48,6 +48,13 @@ class Plugin:
         except Exception as e:
             logging.error(e)
             return 0
+    
+    async def get_gpuFreqMin(self):
+        try:
+            return gpuManager.get_gpuFreqMin()
+        except Exception as e:
+            logging.error(e)
+            return 0
 
     async def get_cpu_AvailableFreq(self):
         try:
