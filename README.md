@@ -30,22 +30,22 @@
 ## 性能调整范围预设
 
 ### AMD 5560U
-TDP最大：18 W  GPU频率：200-1600 Mhz
+TDP最大：18 W
 
 ### AMD 5800U 5825U
-TDP最大：30 W  GPU频率：200-2000 Mhz
+TDP最大：30 W
 
 ### AMD 6800U
-TDP最大：40 W  GPU频率：200-2200 Mhz
+TDP最大：40 W
 
 ### AMD 4800U
-TDP最大：25 W  GPU频率：200-1800 Mhz
+TDP最大：25 W
 
 ### AMD 4500U
-TDP最大：25 W  GPU频率：200-1500 Mhz
+TDP最大：25 W
 
 ### 其他
-TDP最大：15 W  GPU频率：200-1600 Mhz
+TDP最大：15 W
 
 **TDP调整基于ryzenadj,因此只支持ryzenadj支持的cpu列表.如有未列出的cpu或者给出的范围数值不正确,请在[issuse](https://github.com/Gawah/PowerControl/issues)提交**
 
