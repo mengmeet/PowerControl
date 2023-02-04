@@ -150,7 +150,7 @@ class SysInfoManager (threading.Thread):
             gpu_busyPercent = self._gpu_busyPercentSum / max(self._gpu_NowQueueLength,1)
         except Exception as e:
             logging.error(f"添加gpu_busy_percent时出现异常{e}")
-            has_cpuData = False
+            has_gpuData = False
 
     def run(self):
         self._isRunning=True

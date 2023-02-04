@@ -16,7 +16,7 @@ var localizeMap:Map<number,localizeString>= new Map([
   [8,{schinese:"启用奇数编号的cpu",tchinese:"啟用多執行續",english:"Enables odd-numbered CPUs"}],
   [9,{schinese:"核 心 数",tchinese:"CPU內核數",english:"Number of cpu cores"}],
   [10,{schinese:"设置启用的物理核心数量",tchinese:"設置啟用CPU內核數量",english:"Set the enabled physical core"}],
-  [11,{schinese:"热设计功耗（TDP）限制",tchinese:"散熱設計功率(TDP)限制",english:"Thermal Power (TDP) Limit"}],
+  [11,{schinese:"热设计功耗 (TDP) 限制",tchinese:"散熱設計功率 (TDP) 限制",english:"Thermal Power (TDP) Limit"}],
   [12,{schinese:"限制处理器功耗以降低总功耗",tchinese:"限制處理器功率以降低總功率",english:"Limits processor power for less total power"}],
   [13,{schinese:"未检测到ryzenAdj",tchinese:"未檢測到ryzenAdj文件",english:"ryzenAdj not detected"}],
   [14,{schinese:"瓦特",tchinese:"瓦特(W)",english:"Watts"}],
@@ -33,18 +33,18 @@ var localizeMap:Map<number,localizeString>= new Map([
 
 
 export class localizationManager {
-  private language = "schinese"
+  private static language = "schinese"
   //private has_language  = false
-  constructor(serverAPI: ServerAPI) {
-    serverAPI!.callPluginMethod<{},string>("get_language",{}).then(res=>{
+  public static async init(serverAPI: ServerAPI) {
+    await serverAPI!.callPluginMethod<{},string>("get_language",{}).then(res=>{
       if (res.success){
-        console.log("language = " + res.result);
+        //console.log("language = " + res.result);
         this.language = res.result;
         //this.has_language = true;
       }
     })
   }
-  public getString=(index:number, defaultString:string)=> {
+  public static getString=(index:number, defaultString:string)=> {
     if(localizeMap.has(index)){
       if(this.language=="schinese"){
         return localizeMap.get(index)?.schinese;
@@ -59,6 +59,6 @@ export class localizationManager {
     else{
       return defaultString
     }
-}
+  }
 }
 

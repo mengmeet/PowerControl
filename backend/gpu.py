@@ -3,7 +3,7 @@ import collections
 import threading
 import time
 import os
-from config import logging,SH_PATH,GPU_FREQ_CONFIG
+from config import logging,SH_PATH,GPUFREQ_PATH
 import sysInfo
 #初始参数
 gpu_freqMax=1600
@@ -30,11 +30,10 @@ class GPU_AutoFreqManager (threading.Thread):
 
     def Check_gpuNeedSet(self, freqMin:int, freqMax:int):
         try:
-            gpuFreqPath = "/sys/class/drm/card0/device/pp_dpm_sclk"
             #可查询gpu设置频率时，判断当前设置是否与系统相同
-            if os.path.exists(gpuFreqPath):
-                maxCommand="sudo sh {} get_gpu_FreqMaxLimit ".format(SH_PATH)
-                minCommand="sudo sh {} get_gpu_FreqMinLimit ".format(SH_PATH)
+            if os.path.exists(GPUFREQ_PATH):
+                maxCommand="sudo sh {} get_gpu_nowFreqMaxLimit ".format(SH_PATH)
+                minCommand="sudo sh {} get_gpu_nowFreqMinLimit ".format(SH_PATH)
                 qfreqMax=int(subprocess.getoutput(maxCommand))
                 qfreqMin=int(subprocess.getoutput(minCommand))
                 logging.info(f"当前要设置的频率区间 freqMin={freqMin} freqMax={freqMax} 当前系统频率区间 qfreqMin={qfreqMin} qfreMax={qfreqMax}  是否满足设置条件{qfreqMin!=freqMin or qfreqMax != freqMax}")
@@ -142,17 +141,25 @@ class GPU_Manager ():
     def get_gpuFreqMax(self):
         try:
             global gpu_freqMax
-            #获取cpu型号并根据型号返回gpu频率最大值
-            command="sudo sh {} get_cpuID ".format(SH_PATH)
-            cpu_ID=subprocess.getoutput(command)
-            if cpu_ID in GPU_FREQ_CONFIG:
-                gpu_freqMax=GPU_FREQ_CONFIG[cpu_ID]
-            else:
-                gpu_freqMax=1600
+            maxCommand="sudo sh {} get_gpuFreqMax".format(SH_PATH)
+            gpu_freqMax=int(subprocess.getoutput(maxCommand))
             logging.info("get_gpuFreqMax {}".format(gpu_freqMax))
             return gpu_freqMax
         except Exception as e:
             logging.error(e)
+            logging.error(f"maxResult={subprocess.getoutput(maxCommand)}|")
+            return 0
+    
+    def get_gpuFreqMin(self):
+        try:
+            global gpu_freqMin
+            minCommand="sudo sh {} get_gpuFreqMin".format(SH_PATH)
+            gpu_freqMin=int(subprocess.getoutput(minCommand))
+            logging.info("get_gpuFreqMin {}".format(gpu_freqMin))
+            return gpu_freqMin
+        except Exception as e:
+            logging.error(e)
+            logging.error(f"minResult={subprocess.getoutput(minCommand)}|")
             return 0
 
     def set_gpuAuto(self, value:bool):
