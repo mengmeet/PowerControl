@@ -4,7 +4,8 @@ import threading
 import time
 import os
 import asyncio
-from config import logging,SH_PATH
+from ec import EC
+from config import logging,SH_PATH,FAN_MANUAL_OFFSET,FAN_RPMREAD_OFFSET,FAN_IS_ADAPTED
 from helpers import get_user
 
 cpu_busyPercent = 0
@@ -75,7 +76,6 @@ class CPUData:
         totaltime = usertime + nicetime + systemalltime + idlealltime + self.steal + virtalltime;
         return max(totaltime,0)
 
-
 class SysInfoManager (threading.Thread):
     def __init__(self):
         self._cpuDataQueue = collections.deque()    #记录cpu数据的队列
@@ -108,7 +108,17 @@ class SysInfoManager (threading.Thread):
         except Exception as e:
             logging.error(e)
             return self._language
-            
+
+    def get_fanRPM(self):
+        try:
+            if FAN_IS_ADAPTED:
+                fanRPM=EC.ReadLonger(FAN_RPMREAD_OFFSET,2)
+                return fanRPM
+            else:
+                return 0
+        except Exception as e:
+            logging.debug(e)
+            return 0
 
     def updateCpuData(self):
         try:

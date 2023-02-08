@@ -25,6 +25,7 @@ export enum ComponentName{
     GPU_FREQFIX="GPU_FREQFIX",
     GPU_FREQRANGE="GPU_FREQRANGE",
     GPU_FREQAUTO="GPU_FREQAUTO",
+    FAN_ALL="FAN_ALL",
 }
 
 export enum UpdateType{

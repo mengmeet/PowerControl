@@ -29,6 +29,7 @@ var localizeMap:Map<number,localizeString>= new Map([
   [21,{schinese:"GPU 最小频率限制",tchinese:"GPU最小頻率限制",english:"minimum frequency limit"}],
   [22,{schinese:"启用插件设置",tchinese:"啟用插件功能列",english:"Enable settings"}],
   [23,{schinese:"范围频率",tchinese:"範圍頻率",english:"Range"}],
+  [24,{schinese:"风扇转速",tchinese:"风扇转速",english:"Fan Speed"}],
 ])
 
 

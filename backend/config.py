@@ -26,6 +26,30 @@ try:
         "AMD Ryzen 5 4500U with Radeon Graphics":25,
         "AMD Athlon Silver 3050e with Radeon Graphics":12,
     }
-
+    #风扇ec偏移配置
+    system_id = open("/sys/devices/virtual/dmi/id/product_name", "r").read().strip()
+    FAN_MANUAL_OFFSET=0
+    FAN_RPMWRITE_OFFSET=0
+    FAN_RPMREAD_OFFSET=0
+    FAN_IS_ADAPTED=False
+    if system_id in (
+        "AIR",
+        "AIR Pro",
+        "AYANEO 2",
+        ):
+        FAN_MANUAL_OFFSET=0x4a
+        FAN_RPMWRITE_OFFSET=0x4b
+        FAN_RPMREAD_OFFSET=0x76
+        FAN_IS_ADAPTED=True
+    elif system_id in (
+        "ONEXPLAYER Mini Pro",
+        "AOKZOE A1 AR07"
+        "ONEXPLAYER 2 ARP23",
+        ):
+        FAN_MANUAL_OFFSET=0x4a
+        FAN_RPMWRITE_OFFSET=0x4b
+        FAN_RPMREAD_OFFSET=0x76
+        FAN_IS_ADAPTED=True
+    
 except Exception as e:
     logging.error(e)

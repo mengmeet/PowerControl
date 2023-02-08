@@ -5,6 +5,7 @@ import { Settings } from "./settings";
 
 
 export class BackendData{
+  private serverAPI:ServerAPI | undefined;
   private cpuMaxNum = 0;
   private has_cpuMaxNum = false;
   private tdpMax = 0;
@@ -15,6 +16,7 @@ export class BackendData{
   private gpuMin = 0;
   private has_gpuMin = false;
   public async init(serverAPI:ServerAPI){
+    this.serverAPI=serverAPI;
     await serverAPI!.callPluginMethod<{},number>("get_cpuMaxNum",{}).then(res=>{
       if (res.success){
         console.info("cpuMaxNum = " + res.result);
@@ -84,6 +86,19 @@ export class BackendData{
 
   public HasRyzenadj(){
     return this.has_ryzenadj;
+  }
+
+  public async getFanPRM(){
+    var fanPRM:number;
+    await this.serverAPI!.callPluginMethod<{},number>("get_fanRPM",{}).then(res=>{
+      if (res.success){
+        console.info("fanRPM = " + res.result);
+        fanPRM=res.result;
+      }else{
+        fanPRM=0;
+      }
+    })
+    return fanPRM!!;
   }
 }
 

@@ -67,7 +67,14 @@ class Plugin:
             return sysInfoManager.get_language()
         except Exception as e:
             logging.error(e)
-            return []
+            return ""
+
+    async def get_fanRPM(self):
+        try:
+            return sysInfoManager.get_fanRPM()
+        except Exception as e:
+            logging.error(e)
+            return 0
 
     def set_gpuAuto(self, value:bool):
         try:
