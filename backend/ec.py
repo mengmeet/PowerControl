@@ -85,6 +85,3 @@ class EC:
                     print(hex(x),"\t",end="")
                 print(EC.Read((x<<4)+y),"\t",end="")
             print()
-    
-EC.PrintAll()
-print(EC.ReadLonger(0x76,2))
