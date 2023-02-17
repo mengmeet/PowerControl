@@ -9,7 +9,6 @@ import sysInfo
 gpu_freqMax=1600
 gpu_freqMin=200
 gpu_nowFreq=0
-gpu_autofreqManager = None
 gpu_autoFreqMax=1600
 gpu_autoFreqMin=200
 gpu_rangeFreqMax=1600
@@ -36,11 +35,11 @@ class GPU_AutoFreqManager (threading.Thread):
                 minCommand="sudo sh {} get_gpu_nowFreqMinLimit ".format(SH_PATH)
                 qfreqMax=int(subprocess.getoutput(maxCommand))
                 qfreqMin=int(subprocess.getoutput(minCommand))
-                logging.info(f"当前要设置的频率区间 freqMin={freqMin} freqMax={freqMax} 当前系统频率区间 qfreqMin={qfreqMin} qfreMax={qfreqMax}  是否满足设置条件{qfreqMin!=freqMin or qfreqMax != freqMax}")
+                logging.debug(f"当前要设置的频率区间 freqMin={freqMin} freqMax={freqMax} 当前系统频率区间 qfreqMin={qfreqMin} qfreMax={qfreqMax}  是否满足设置条件{qfreqMin!=freqMin or qfreqMax != freqMax}")
                 return qfreqMin!=freqMin or qfreqMax != freqMax
             #查不到gpu设置频率时，只要合法则进行设置
             else:
-                logging.info(f"当前要设置的频率区间 freqMin={freqMin} freqMax={freqMax} 当前频率={gpu_nowFreq} 是否满足设置条件{freqMax>=0 and freqMin >=0}")
+                logging.debug(f"当前要设置的频率区间 freqMin={freqMin} freqMax={freqMax} 当前频率={gpu_nowFreq} 是否满足设置条件{freqMax>=0 and freqMin >=0}")
                 return freqMax>=0 and freqMin >=0 
         except Exception as e:
             logging.error(e)
@@ -61,7 +60,10 @@ class GPU_AutoFreqManager (threading.Thread):
     def GPU_enableAutoFreq(self,enable):
         #初始化并开启自动优化线程
         self._gpu_enableAutoFreq = enable
-        if enable:
+        #自动频率开启时去开启数据收集，避免不必要的性能浪费
+        sysInfo.sysInfoManager.EnableCPUINFO(enable)
+        sysInfo.sysInfoManager.EnableGPUINFO(enable)
+        if enable and not self._isRunning:    
             self.start()
     
     def check_LegalGPUFreq(self):
@@ -112,20 +114,20 @@ class GPU_AutoFreqManager (threading.Thread):
             logging.error(e)
 
     def run(self):
-        logging.info("开始自动优化频率:" + self.name)
+        logging.debug("开始自动优化频率:" + self.name)
         adjust_count = 0
         self._isRunning = True
         while True:
             try:
                 if not self._gpu_enableAutoFreq:
                     self._isRunning = False
-                    logging.info("退出自动优化频率：" + self.name)
+                    logging.debug("退出自动优化频率：" + self.name)
                     break
                 if not sysInfo.has_gpuData:
                     self.GPU_enableAutoFreq(False)
                     self.Set_gpuFreq(gpu_autoFreqMin,gpu_autoFreqMax)
                     self._isRunning = False
-                    logging.info("退出自动优化频率：" + self.name)
+                    logging.debug("退出自动优化频率：" + self.name)
                     break
                 adjust_count = adjust_count + 1
                 if adjust_count >= int(self._gpu_adjustFreqInterval / self._gpu_autoFreqCheckInterval):
@@ -136,7 +138,69 @@ class GPU_AutoFreqManager (threading.Thread):
                 logging.error(e)
                 time.sleep(self._gpu_autoFreqCheckInterval)
 
+class GPU_RangeFreqManager (threading.Thread):
+    def __init__(self):
+        self._gpu_enableCheckFreq = False        #标记是否开启GPU频率检测
+        self._gpu_FreqCheckInterval = 1   #GPU频率检查间隔
+        self._gpu_MinFreq = 0  #当前设置的最大GPU频率
+        self._gpu_MaxFreq = 0  #当前设置的最小GPU频率
+        self._isRunning = False     #标记是否正在运行gpu频率check
+        threading.Thread.__init__(self)
+
+    def Check_gpuFreq(self, freqMin:int, freqMax:int):
+        global gpu_freqMax
+        global gpu_freqMin
+        try:
+            #可查询gpu设置频率时，判断当前设置是否与系统相同
+            if os.path.exists(GPUFREQ_PATH):
+                maxCommand="sudo sh {} get_gpu_nowFreqMaxLimit ".format(SH_PATH)
+                minCommand="sudo sh {} get_gpu_nowFreqMinLimit ".format(SH_PATH)
+                qfreqMax=int(subprocess.getoutput(maxCommand))
+                qfreqMin=int(subprocess.getoutput(minCommand))
+                #当前设置与查询的设置不相同时设置一次(特殊情况：0，0对应区间最小和区间最大 即不限制)
+                if(((qfreqMin!=freqMin or qfreqMax != freqMax)and freqMin !=0 and freqMax !=0) or (freqMin == 0 and freqMax == 0 and (qfreqMin != gpu_freqMin or qfreqMax != gpu_freqMax))):
+                    logging.debug(f"检测到当前设置与系统不同 当前检查的频率 freqMin={freqMin} freqMax={freqMax} 当前系统频率 qfreqMin={qfreqMin}({gpu_freqMin}) qfreMax={qfreqMax}({gpu_freqMax})")
+                    command="sudo sh {} set_clock_limits {} {}".format(SH_PATH,freqMin,freqMax)
+                    os.system(command)
+                else:
+                    logging.debug(f"检测到当前设置与系统相同 当前系统频率 qfreqMin={qfreqMin} qfreMax={qfreqMax}")
+            #查不到gpu设置频率时，只要合法则进行设置
+            else:
+                logging.debug(f"无法查询当前系统GPU频率")
+        except Exception as e:
+            logging.error(e)
+
+    def Set_GPUFreq(self,freqMin,freqMax):
+        #初始化并开启检查GPU频率线程
+        self._gpu_enableCheckFreq = True
+        self._gpu_MinFreq=freqMin
+        self._gpu_MaxFreq=freqMax
+        if not self._isRunning:
+            self.start()
+        
+    def Stop_Check(self):
+        self._gpu_enableCheckFreq = False
+        
+
+    def run(self):
+        logging.debug("开始检查GPU频率:" + self.name)
+        self._isRunning = True
+        while True:
+            try:
+                if not self._gpu_enableCheckFreq:
+                    self._isRunning = False
+                    logging.debug("停止检查GPU频率:" + self.name)
+                    break
+                self.Check_gpuFreq(self._gpu_MinFreq,self._gpu_MaxFreq)
+                time.sleep(self._gpu_FreqCheckInterval)
+            except Exception as e:
+                logging.error(e)
+                time.sleep(self._gpu_FreqCheckInterval)
+   
 class GPU_Manager ():
+    def __init__(self):
+        self._gpu_AutoFreqManager = None
+        self._gpu_RangeFreqManager = None
 
     def get_gpuFreqMax(self):
         try:
@@ -164,27 +228,29 @@ class GPU_Manager ():
 
     def set_gpuAuto(self, value:bool):
         try:
-            logging.info(f"set_gpuAuto  isAuto: {value}")
-            global gpu_autofreqManager
+            logging.debug(f"set_gpuAuto  isAuto: {value}")
             #设置GPU自动频率时判断是否已经有自动频率设置管理器
-            if gpu_autofreqManager is None or not gpu_autofreqManager._isRunning:
+            if self._gpu_AutoFreqManager is None or not self._gpu_AutoFreqManager._isRunning:
                 #没有管理器或者当前管理器已经停止运行，且当前为开启设置，则实例化一个并开启
                 if value:
-                    gpu_autofreqManager = GPU_AutoFreqManager()
-                    gpu_autofreqManager.GPU_enableAutoFreq(True)
+                    self._gpu_AutoFreqManager = GPU_AutoFreqManager()
+                    self._gpu_AutoFreqManager.GPU_enableAutoFreq(True)
+                    if self._gpu_RangeFreqManager is not None:
+                        self._gpu_RangeFreqManager.Stop_Check()
+                        self._gpu_RangeFreqManager=None
             else:
                 #有管理器且管理器正在运行，且当前为关闭设置，则直接关闭当前的管理器
                 if not value:
-                    gpu_autofreqManager.GPU_enableAutoFreq(False)
-                    gpu_autofreqManager = None
-                    
+                    self._gpu_AutoFreqManager.GPU_enableAutoFreq(False)
+                    self._gpu_AutoFreqManager = None
+            
         except Exception as e:
             logging.error(e)
             return False
 
     def set_gpuAutoMaxFreq(self, value: int):
         try:
-            logging.info(f"set_gpuAutoMaxFreq {value}")
+            logging.debug(f"set_gpuAutoMaxFreq {value}")
             global gpu_autoFreqMax
             if value >= gpu_freqMax:
                 gpu_autoFreqMax = gpu_freqMax
@@ -198,7 +264,7 @@ class GPU_Manager ():
     
     def set_gpuAutoMinFreq(self, value: int):
         try:
-            logging.info(f"set_gpuAutoMinFreq {value}")
+            logging.debug(f"set_gpuAutoMinFreq {value}")
             global gpu_autoFreqMin
             if value >= gpu_freqMax:
                 gpu_autoFreqMin = gpu_freqMax
@@ -212,11 +278,22 @@ class GPU_Manager ():
 
     def set_gpuFreq(self, value: int):
         try:
+            logging.debug(f"set_gpuFreq {value}")
             if value >= 0:
                 global gpu_nowFreq
+                #设置GPU范围频率时判断是否已经有范围频率管理器
+                if self._gpu_RangeFreqManager is None or not self._gpu_RangeFreqManager._isRunning:
+                    #没有管理器或者当前管理器已经停止运行，且当前为开启设置，则实例化一个并开启
+                    self._gpu_RangeFreqManager = GPU_RangeFreqManager()
+                    self._gpu_RangeFreqManager.Set_GPUFreq(value,value)
+                else:
+                    #有管理器且正在运行，则更改范围
+                    self._gpu_RangeFreqManager.Set_GPUFreq(value,value)
+                #有自动频率时关闭它
+                if self._gpu_AutoFreqManager is not None:
+                    self._gpu_AutoFreqManager.GPU_enableAutoFreq(False)
+                    self._gpu_AutoFreqManager = None
                 gpu_nowFreq = value
-                command="sudo sh {} set_clock_limits {} {}".format(SH_PATH,value,value)
-                os.system(command)
                 return True
             else:
                 return False
@@ -226,13 +303,24 @@ class GPU_Manager ():
 
     def set_gpuFreqRange(self, value: int, value2:int):
         try:
+            logging.debug(f"set_gpuRangeMinFreq {value}  {value2}")
             if value >= 0:
                 global gpu_rangeFreqMin
                 global gpu_rangeFreqMax
                 gpu_rangeFreqMax = value2
                 gpu_rangeFreqMin = value
-                command="sudo sh {} set_clock_limits {} {}".format(SH_PATH,value,value2)
-                os.system(command)
+                #设置GPU范围频率时判断是否已经有范围频率管理器
+                if self._gpu_RangeFreqManager is None or not self._gpu_RangeFreqManager._isRunning:
+                    #没有管理器或者当前管理器已经停止运行，且当前为开启设置，则实例化一个并开启
+                    self._gpu_RangeFreqManager = GPU_RangeFreqManager()
+                    self._gpu_RangeFreqManager.Set_GPUFreq(value,value2)
+                else:
+                    #有管理器且正在运行，则更改范围
+                    self._gpu_RangeFreqManager.Set_GPUFreq(value,value2)
+                #有自动频率时关闭它
+                if self._gpu_AutoFreqManager is not None:
+                    self._gpu_AutoFreqManager.GPU_enableAutoFreq(False)
+                    self._gpu_AutoFreqManager = None
                 return True
             else:
                 return False

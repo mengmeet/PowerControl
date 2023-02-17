@@ -58,7 +58,7 @@ function set_cpu_tdp()
     ryzenadj_path=$1
     let slow=$2*1000
     let fast=$3*1000
-    sudo $ryzenadj_path --stapm-limit=$fast --fast-limit=$fast --slow-limit=$fast --tctl-temp=100
+    sudo $ryzenadj_path --stapm-limit=$fast --fast-limit=$fast --slow-limit=$fast --tctl-temp=90
     sudo echo "${ryzenadj_path}  --stapm-limit=${fast} --fast-limit=${fast}   --slow-limit=${slow}" >>  /tmp/powerControl_sh.log
 }
 

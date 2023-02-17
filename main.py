@@ -19,7 +19,7 @@ except Exception as e:
 class Plugin:
     async def _main(self):
         while True:
-                await asyncio.sleep(3)
+            await asyncio.sleep(3)
 
     async def get_hasRyzenadj(self):
         try:

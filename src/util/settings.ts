@@ -93,7 +93,7 @@ export class Settings {
 
   //获取当前配置文件
   public static ensureApp(): AppSetting {
-    const appId = RunningApps.active() 
+    const appId = RunningApps.active(); 
     //没有配置文件的时候新生成一个
     if (!(appId in this._instance.perApp)) {
       this._instance.perApp[appId]=new AppSetting();
@@ -109,8 +109,8 @@ export class Settings {
     return this._instance.perApp[appId];
   }
 
-  static currentSettingAppID():string{
-    const appId = RunningApps.active() 
+  static ensureAppID():string{
+    const appId = RunningApps.active();
     if (!(appId in this._instance.perApp)) {
       this._instance.perApp[appId]=new AppSetting();
       if(DEFAULT_APP in this._instance.perApp){

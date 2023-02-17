@@ -1,7 +1,7 @@
 import subprocess
 import os
-from config import logging,SH_PATH,TDP_LIMIT_CONFIG,RYZENADJ_PATH
-
+from config import logging,SH_PATH,RYZENADJ_PATH
+from config import TDP_LIMIT_CONFIG_CPU,TDP_LIMIT_CONFIG_PRODUCT,PRODUCT_NAME,CPU_ID
 #初始参数
 cpu_boost=True
 cpu_smt=True
@@ -50,12 +50,12 @@ class CPU_Manager ():
 
     def get_tdpMax(self):
         try:
-            #获取cpu型号并根据型号返回tdp最大值
+            #根据机器型号或者CPU型号返回tdp最大值
             global cpu_tdpMax
-            command="sudo sh {} get_cpuID ".format(SH_PATH)
-            cpu_ID=subprocess.getoutput(command)
-            if cpu_ID in TDP_LIMIT_CONFIG:
-                cpu_tdpMax=TDP_LIMIT_CONFIG[cpu_ID]
+            if PRODUCT_NAME in TDP_LIMIT_CONFIG_PRODUCT:
+                cpu_tdpMax=TDP_LIMIT_CONFIG_PRODUCT[PRODUCT_NAME]
+            elif CPU_ID in TDP_LIMIT_CONFIG_CPU:
+                cpu_tdpMax=TDP_LIMIT_CONFIG_CPU[CPU_ID]
             else:
                 cpu_tdpMax=15
             logging.info("get_tdpMax {}".format(cpu_tdpMax))
@@ -104,7 +104,7 @@ class CPU_Manager ():
 
     def set_cpuOnline(self, value: int):
         try:
-            logging.info("set_cpuOnline {} {}".format(value,cpu_maxNum))
+            logging.debug("set_cpuOnline {} {}".format(value,cpu_maxNum))
             global cpu_num
             cpu_num=value
             #cpu0不可操作，从cpu1到开启物理核心数*2-1进行设置，如果关闭smt则只开启偶数编号的cpu
@@ -125,7 +125,7 @@ class CPU_Manager ():
 
     def set_smt(self, value: bool):
         try:
-            logging.info("set_smt {}".format(value))
+            logging.debug("set_smt {}".format(value))
             global cpu_smt
             cpu_smt=value
             return True
@@ -135,7 +135,7 @@ class CPU_Manager ():
     
     def set_cpuBoost(self, value: bool):
         try:
-            logging.info("set_cpuBoost {}".format(value))
+            logging.debug("set_cpuBoost {}".format(value))
             global cpu_boost
             cpu_boost=value
             if cpu_boost:
@@ -150,7 +150,7 @@ class CPU_Manager ():
 
     def check_cpuFreq(self):
         try:
-            logging.info(f"check_cpuFreq cpu_nowLimitFreq = {cpu_nowLimitFreq}")
+            logging.debug(f"check_cpuFreq cpu_nowLimitFreq = {cpu_nowLimitFreq}")
             if cpu_nowLimitFreq == 0:
                 return False
             need_set=False
@@ -170,7 +170,7 @@ class CPU_Manager ():
     def set_cpuFreq(self, value: int):
         try:
             global cpu_nowLimitFreq
-            logging.info(f"set_cpuFreq cpu_nowLimitFreq = {cpu_nowLimitFreq} value ={value}")
+            logging.debug(f"set_cpuFreq cpu_nowLimitFreq = {cpu_nowLimitFreq} value ={value}")
             #频率不同才可设置，设置相同频率时检测当前频率是否已经生效，未生效时再设置一次
             if cpu_nowLimitFreq != value:
                 need_set = True

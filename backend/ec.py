@@ -1,7 +1,8 @@
+from config import logging
 try:
     import portio
 except Exception as e:
-    print(e)
+    logging.error(e)
 EC_IBF_BIT = 0b10
 EC_OBF_BIT = 0b01
 EC_CMD_STATUS_REGISTER_PORT = 0x66
