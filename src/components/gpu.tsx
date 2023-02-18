@@ -212,7 +212,7 @@ const GPUModeComponent: VFC = () => {
     );
 };
 
-export const GPUComponent: VFC = () =>{
+export function GPUComponent(){
   const [show,setShow] = useState<boolean>(Settings.ensureEnable());
   const hide = (ishide:boolean) => {
     setShow(!ishide);

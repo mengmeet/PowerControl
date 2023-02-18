@@ -1,7 +1,10 @@
 import {
   PanelSection,
   PanelSectionRow,
-  Field
+  Field,
+  ButtonItem,
+  showModal,
+  ModalRoot,
 } from "decky-frontend-lib";
 import { useEffect, useState,useRef,VFC} from "react";
 import { localizationManager, Settings,Backend, PluginManager,ComponentName, UpdateType} from "../util";
@@ -87,7 +90,53 @@ const FANCanvasComponent: VFC = () =>{
   )
 };
 
-export const FANComponent: VFC = () =>{
+const FANCreateProfileComponent: VFC = ()=>{
+  return(
+    <PanelSectionRow>
+      <ButtonItem
+        layout="below"
+        onClick={() => {
+          showModal(<FANCretateProfileModelComponent/>);
+        }}>
+        {localizationManager.getString(25,"创建风扇配置文件")}
+      </ButtonItem>
+    </PanelSectionRow>
+  )
+}
+
+const FANCretateProfileModelComponent: VFC = () =>{
+  const closeModal = () => {
+
+  }
+  return (
+    <ModalRoot onCancel={closeModal} onEscKeypress={closeModal}>
+      <h1 style={{ marginBlockEnd: "10px", marginBlockStart: "0px" }}>Your Themes</h1>
+      <PanelSectionRow>
+        <ButtonItem
+          layout="inline"
+          bottomSeparator="standard"
+          onClick={() => {
+            
+          }}
+        >
+          Create Preset
+        </ButtonItem>
+      </PanelSectionRow>
+      <PanelSectionRow>
+        <ButtonItem
+          layout="below"
+          onClick={() => {
+            closeModal();
+          }}
+        >
+          Close
+        </ButtonItem>
+      </PanelSectionRow>
+    </ModalRoot>
+  );
+}
+
+export function FANComponent(){
   const [show,setShow] = useState<boolean>(Settings.ensureEnable());
   const hide = (ishide:boolean) => {
     setShow(!ishide);

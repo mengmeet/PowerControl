@@ -20,15 +20,13 @@ import {
   PanelSectionRow,
   ServerAPI,
   staticClasses,
-  SteamSpinner
+  SteamSpinner,
 } from "decky-frontend-lib";
 import { VFC} from "react";
 import { FaSuperpowers } from "react-icons/fa";
 import { PluginManager} from "./util";
 import { GPUComponent,CPUComponent,SettingsComponent,FANComponent} from "./components";
-
 const Content: VFC<{}> = ({}) => {
-
   return (
       <div>
         {PluginManager.isIniting()&&<PanelSectionRow>
@@ -36,9 +34,9 @@ const Content: VFC<{}> = ({}) => {
         </PanelSectionRow>}
         {!PluginManager.isIniting()&&<div>
           <SettingsComponent/>
-          <CPUComponent/>
-          <GPUComponent/>
-          <FANComponent/>
+          <CPUComponent />
+          <GPUComponent />
+          <FANComponent />
         </div>}
       </div>
     );
