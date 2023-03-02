@@ -50,7 +50,7 @@ function set_cpu_online()
 
 function get_cpuID()
 {
-    lscpu | grep "Model name" | sed -n '1p'| cut -d : -f 2 | xargs
+    cat /proc/cpuinfo | grep "model name" | sed -n '1p'| cut -d : -f 2 | xargs
 }
 
 function set_cpu_tdp()
