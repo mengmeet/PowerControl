@@ -38,6 +38,7 @@ try:
         "AIR Pro":20,
         "AYANEO 2":30,
         "ONEXPLAYER Mini":30,
+        "NEXT":35,
         "ONEXPLAYER Mini Pro":40,
         "AOKZOE A1 AR07":40,
         "ONEXPLAYER 2 ARP23":45,
