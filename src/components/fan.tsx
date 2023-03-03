@@ -7,6 +7,7 @@ import {
   ModalRoot,
   Focusable,
   DialogButton,
+  ToggleField,
 } from "decky-frontend-lib";
 import { useEffect, useState,useRef,VFC} from "react";
 import { localizationManager, Settings,Backend, PluginManager,ComponentName, UpdateType} from "../util";
@@ -40,48 +41,55 @@ const FANRPMComponent: VFC = () => {
 };
 
 const FANCanvasComponent: VFC = () =>{
-  const Canvas = (props: any) => {
-
-    const { draw, options, ...rest } = props;
-    //const { context, ...moreConfig } = options;
-    const canvasRef = useCanvas(draw);
-  
-    return <canvas ref={canvasRef} {...rest}/>;
-  }
-  
-  const useCanvas = (draw: (ctx: any, count: number) => void) => {
-  
   const canvasRef: any = useRef(null);
-  
+  const refresh=()=>{
+    const tempMax=100;
+    const fanMax=100;
+    const totalLines = 9;
+    const canvas = canvasRef.current;
+    const ctx = canvas!.getContext('2d');
+    const width: number = ctx.canvas.width;
+    const height: number = ctx.canvas.height;
+    const lineDistance = 1 / (totalLines + 1);
+    //网格绘制
+    ctx.beginPath();
+    ctx.strokeStyle = "#093455";
+    for (let i = 1; i <= totalLines + 1; i++) {
+      ctx.moveTo(lineDistance * i * width, 0);
+      ctx.lineTo(lineDistance * i * width, height);
+      ctx.moveTo(0, lineDistance * i * height);
+      ctx.lineTo(width, lineDistance * i * height);
+    }
+    ctx.stroke();
+    //文字绘制
+    ctx.beginPath();
+    ctx.fillStyle = "#FFFFFF";
+    for (let i = 1; i <= totalLines + 1; i++) {
+      const tempText= tempMax / (totalLines + 1) * i +"°C";
+      const fanText= fanMax / (totalLines + 1) * i +"%";
+      ctx.textAlign = "right";
+      ctx.fillText(tempText, lineDistance * i * width - 2, height - 2);
+      ctx.textAlign = "left";
+      ctx.fillText(fanText, 2, height-lineDistance * i * height + 10);
+    }
+    ctx.stroke();
+  }
   useEffect(() => {
-      const canvas = canvasRef.current;
-      const context = canvas!.getContext('2d');
-      let frameCount = 0;
-      let animationFrameId: number;
-  
-      const render = () => {
-        frameCount++;
-        draw(context, frameCount);
-        animationFrameId = window.requestAnimationFrame(render);
-      }
-      render();
-  
-      return () => {
-        window.cancelAnimationFrame(animationFrameId);
-      }
-    }, [draw]);
-    return canvasRef;
-  }
-  function drawCanvas(ctx: any, frameCount: number): void {
-    console.log(`frameCount=${frameCount}`)
-  }
+    refresh();
+  }, []);
   function onClickCanvas(e: any): void {
-    console.log(e);
+    const canvas = canvasRef.current;
+    const ctx = canvas!.getContext('2d');
+    const realEvent: any = e.nativeEvent;
+    ctx.beginPath();
+    ctx.arc(realEvent.layerX,realEvent.layerY,8, 0, Math.PI * 2);
+    ctx.stroke();
+    //console.log("Canvas click @ (" + realEvent.layerX.toString() + ", " + realEvent.layerY.toString() + ")");
   }
   return(
     <PanelSectionRow>
-        <canvas draw={drawCanvas} width={600} height={300} style={{
-          "width": "600px",
+        <canvas ref={canvasRef} width={400} height={300} style={{
+          "width": "400px",
           "height": "300px",
           "padding":"0px",
           "border":"1px solid #1a9fff",
@@ -115,10 +123,18 @@ function FANCretateProfileModelComponent({
 }: {
   closeModal: () => void;
 }){
+  const cpuboost=false;
   return (
     <ModalRoot onCancel={closeModal} onEscKeypress={closeModal}>
       <h1 style={{ marginBlockEnd: "5px", marginBlockStart: "-15px", fontSize:25}}>{localizationManager.getString(25,"创建风扇配置文件")}</h1>
-      <FANCanvasComponent/>
+      <Focusable style={{marginBlockEnd: "0px", marginBlockStart: "0px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)",gridGap: "0.5rem", padding: "8px 0"}}>
+        <FANCanvasComponent/>
+        <div style={{
+          "width": "250px",
+          "height": "300px",
+        }}></div>
+      </Focusable>
+      
       <Focusable style={{marginBlockEnd: "-25px", marginBlockStart: "-5px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)",gridGap: "0.5rem", padding: "8px 0"}}>
       <DialogButton onClick={() => {closeModal()}}> Create Preset</DialogButton>
       <DialogButton onClick={() => {closeModal()}}>Close</DialogButton>
