@@ -41,8 +41,12 @@ try:
         "ONEXPLAYER Mini Pro":40,
         "AOKZOE A1 AR07":40,
         "ONEXPLAYER 2 ARP23":45,
+        "G1619-04":45,     #GPD WINMAX2
+        "G1618-04":45,     #GPD WIN4
     }
     TDP_LIMIT_CONFIG_CPU={
+        "AMD Ryzen 7 7735HS with Radeon Graphics":45,
+        "AMD Ryzen 7 7735U with Radeon Graphics":40,
         "AMD Ryzen 5 5560U with Radeon Graphics":18,
         "AMD Ryzen 7 5700U with Radeon Graphics":28,
         "AMD Ryzen 7 5800U with Radeon Graphics":30,
