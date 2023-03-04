@@ -4,6 +4,11 @@ export enum GPUMODE{
     RANGE=2, //系统调度
     AUTO=3,  //自动频率
 }
+export enum FANMODE{
+    NOCONTROL=0, //不控制
+    FIX=1, //固定
+    CURVE=2, //曲线
+}
 export enum APPLYTYPE{
     SET_ALL = "ALL",
     SET_CPUBOOST = "SET_CPUBOOST",

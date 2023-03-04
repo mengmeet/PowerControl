@@ -157,6 +157,42 @@ var localizeMap:Map<number,localizeString>= new Map([
     english:"Create fan profile",
     german:"Lüfterprofil erstellen",
   }],
+  [26,{
+    schinese:"网格对齐",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
+  [27,{
+    schinese:"风扇模式",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
+  [28,{
+    schinese:"不控制",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
+  [29,{
+    schinese:"固定",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
+  [30,{
+    schinese:"曲线",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
+  [31,{
+    schinese:"对齐到网格线交点",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
 ])
 
 

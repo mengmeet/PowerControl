@@ -8,10 +8,11 @@ import {
   Focusable,
   DialogButton,
   ToggleField,
+  SliderField,
 } from "decky-frontend-lib";
 import { useEffect, useState,useRef,VFC} from "react";
 import { localizationManager, Settings,Backend, PluginManager,ComponentName, UpdateType} from "../util";
-
+import { GPUComponent,CPUComponent} from "./index";
 var fanRPMIntervalID:any;
 //FANRPM模块
 const FANRPMComponent: VFC = () => {
@@ -88,8 +89,8 @@ const FANCanvasComponent: VFC = () =>{
   }
   return(
     <PanelSectionRow>
-        <canvas ref={canvasRef} width={400} height={300} style={{
-          "width": "400px",
+        <canvas ref={canvasRef} width={300} height={300} style={{
+          "width": "300px",
           "height": "300px",
           "padding":"0px",
           "border":"1px solid #1a9fff",
@@ -123,17 +124,52 @@ function FANCretateProfileModelComponent({
 }: {
   closeModal: () => void;
 }){
-  const cpuboost=false;
+
   return (
     <ModalRoot onCancel={closeModal} onEscKeypress={closeModal}>
       <h1 style={{ marginBlockEnd: "5px", marginBlockStart: "-15px", fontSize:25}}>{localizationManager.getString(25,"创建风扇配置文件")}</h1>
-      <Focusable style={{marginBlockEnd: "0px", marginBlockStart: "0px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)",gridGap: "0.5rem", padding: "8px 0"}}>
+      <div style={{marginBlockEnd: "0px", marginBlockStart: "0px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", padding: "8px 0"}}>
         <FANCanvasComponent/>
         <div style={{
-          "width": "250px",
+          "width": "300px",
           "height": "300px",
-        }}></div>
-      </Focusable>
+          "overflow": "scroll",
+        }}><PanelSection>
+          <ToggleField
+        label={localizationManager.getString(26, "网格对齐")}
+        description={localizationManager.getString(31, "对齐到网格线交点")}
+        checked={true}
+        onChange={(value) => {
+          
+        }}
+      /><SliderField
+            label={localizationManager.getString(27, "风扇模式")}
+            value={1}
+            step={1}
+            max={2}
+            min={0}
+            notchCount={3}
+            notchLabels={
+              [{
+                notchIndex: 0,
+                label: `${localizationManager.getString(28, "不控制")}`,
+                value: 0,
+              }, {
+                notchIndex: 1,
+                label: `${localizationManager.getString(29, "固定")}`,
+                value: 1,
+              }, {
+                notchIndex: 2,
+                label: `${localizationManager.getString(30, "曲线")}`,
+                value: 2,
+              }
+              ]
+            }
+            onChange={(value: number) => {
+              
+            }}
+          /></PanelSection></div>
+      </div>
       
       <Focusable style={{marginBlockEnd: "-25px", marginBlockStart: "-5px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)",gridGap: "0.5rem", padding: "8px 0"}}>
       <DialogButton onClick={() => {closeModal()}}> Create Preset</DialogButton>
@@ -165,7 +201,6 @@ export function FANComponent(){
   return (
     <div>
       {show&&<PanelSection title="FAN">
-        <FANCanvasComponent/>
         <FANRPMComponent/>
         <FANCreateProfileComponent/>
       </PanelSection>}

@@ -1,6 +1,7 @@
 import { JsonObject, JsonProperty, JsonSerializer } from 'typescript-json-serializer';
-import { APPLYTYPE, ComponentName, GPUMODE, UpdateType } from './enum';
+import { APPLYTYPE, ComponentName, FANMODE, GPUMODE, UpdateType } from './enum';
 import { Backend } from './backend';
+import { fanPosition } from './position';
 import { DEFAULT_APP, PluginManager, RunningApps } from './pluginMain';
 
 const SETTINGS_KEY = "PowerControl";
@@ -32,6 +33,8 @@ export class AppSetting {
   gpuRangeMaxFreq?:number
   @JsonProperty()
   gpuRangeMinFreq?:number
+  @JsonProperty()
+  fanProfileName?:string;
   constructor(){
     this.overwrite=false;
     this.smt=false;
@@ -63,13 +66,31 @@ export class AppSetting {
 }
 
 @JsonObject()
+export class FanSetting{
+  @JsonProperty()
+  snapToGrid?:boolean
+  @JsonProperty()
+  fanMode?:number
+  @JsonProperty()
+  fixSpeed?:number
+  @JsonProperty()
+  curvePoints?:fanPosition[]
+  constructor(){
+    this.snapToGrid=false;
+    this.fanMode=FANMODE.NOCONTROL;
+    this.curvePoints = [];
+  }
+}
+
+@JsonObject()
 export class Settings {
   private static _instance:Settings = new Settings();
   @JsonProperty()
   public enabled: boolean = true;
   @JsonProperty({ isDictionary: true, type: AppSetting })
   public perApp: { [appId: string]: AppSetting } = {};
-
+  @JsonProperty({ isDictionary: true, type: FanSetting })
+  public fanSettings: { [fanProfile: string]: FanSetting } = {};
   //插件是否开启
   public static ensureEnable():boolean{
     return this._instance.enabled;
@@ -280,12 +301,25 @@ export class Settings {
     }
   }
 
+  //设置一个风扇配置
+  static setFanSettings(fanProfileName:string,fanSetting:FanSetting){
+      this._instance.fanSettings[fanProfileName] = fanSetting;
+  }
+
+  private getPresetFanSetings(){
+    const presetFanSettings={
+      "搜索所":new FanSetting(),
+
+    }
+  }
+
   static loadSettingsFromLocalStorage(){
     const settingsString = localStorage.getItem(SETTINGS_KEY) || "{}";
     const settingsJson = JSON.parse(settingsString);
     const loadSetting=serializer.deserializeObject(settingsJson, Settings);
     this._instance.enabled = loadSetting?loadSetting.enabled:false;
     this._instance.perApp = loadSetting?loadSetting.perApp:{};
+    this._instance.fanSettings=loadSetting?.fanSettings ?loadSetting.fanSettings:{};
   }
 
   static saveSettingsToLocalStorage() {
