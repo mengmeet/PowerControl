@@ -60,12 +60,16 @@ try:
 except Exception as e:
     logging.error(f"TDP配置异常|{e}")
 
-#风扇ec偏移配置
+#风扇配置
 try:
-    FAN_MANUAL_OFFSET=0
-    FAN_RPMWRITE_OFFSET=0
-    FAN_RPMREAD_OFFSET=0
-    FAN_IS_ADAPTED=False
+    FAN_MANUAL_OFFSET=0     #风扇自动控制ec地址
+    FAN_RPMWRITE_OFFSET=0   #风扇写入转速ec地址
+    FAN_RPMREAD_OFFSET=0    #风扇读取转速ec地址
+    FAN_MAXTEMP=0    #风扇图表最大温度
+    FAN_MINTEMP=0     #风扇图表最小温度
+    FAN_MAXRPM_PERCENT=0    #风扇图表最大转速百分比
+    FAN_MINRPM_PERCENT=0    #风扇图表最小转速百分比
+    FAN_IS_ADAPTED=False    
     if PRODUCT_NAME in (
         "AIR",
         "AIR Pro",
@@ -94,4 +98,4 @@ try:
         FAN_RPMWRITE_MAX=184
         FAN_IS_ADAPTED=True
 except Exception as e:
-    logging.error(f"风扇ec配置异常|{e}")
+    logging.error(f"风扇配置异常|{e}")

@@ -68,17 +68,18 @@ export class AppSetting {
 @JsonObject()
 export class FanSetting{
   @JsonProperty()
-  snapToGrid?:boolean
+  snapToGrid?:boolean = false;
   @JsonProperty()
-  fanMode?:number
+  fanMode?:number = FANMODE.NOCONTROL
   @JsonProperty()
-  fixSpeed?:number
+  fixSpeed?:number = 50;
   @JsonProperty()
-  curvePoints?:fanPosition[]
-  constructor(){
-    this.snapToGrid=false;
-    this.fanMode=FANMODE.NOCONTROL;
-    this.curvePoints = [];
+  curvePoints?:fanPosition[] = []
+  constructor(snapToGrid:boolean,fanMode:number,fixSpeed:number,curvePoints:fanPosition[]){
+    this.snapToGrid=snapToGrid;
+    this.fanMode=fanMode;
+    this.fixSpeed=fixSpeed;
+    this.curvePoints = curvePoints;
   }
 }
 
@@ -308,9 +309,11 @@ export class Settings {
 
   private getPresetFanSetings(){
     const presetFanSettings={
-      "搜索所":new FanSetting(),
-
+      "静音":new FanSetting(true,FANMODE.FIX,30,[]),
+      "平衡":new FanSetting(true,FANMODE.CURVE,30,[new fanPosition(0,0),new fanPosition(100,100)]),
+      "激进":new FanSetting(true,FANMODE.CURVE,30,[new fanPosition(0,0),new fanPosition(100,100)]),
     }
+    return presetFanSettings;
   }
 
   static loadSettingsFromLocalStorage(){

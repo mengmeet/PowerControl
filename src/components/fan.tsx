@@ -11,9 +11,11 @@ import {
   SliderField,
 } from "decky-frontend-lib";
 import { useEffect, useState,useRef,VFC} from "react";
-import { localizationManager, Settings,Backend, PluginManager,ComponentName, UpdateType} from "../util";
-import { GPUComponent,CPUComponent} from "./index";
+import { localizationManager, Settings,Backend, PluginManager,ComponentName, UpdateType, FANMODE, createFanPosByCanvasPos} from "../util";
 var fanRPMIntervalID:any;
+const tempMax=100; 
+const fanMax=100;
+const totalLines = 9;
 //FANRPM模块
 const FANRPMComponent: VFC = () => {
   const [fanrpm, setFanPRM] = useState<number>(0);
@@ -41,12 +43,31 @@ const FANRPMComponent: VFC = () => {
   );
 };
 
-const FANCanvasComponent: VFC = () =>{
+const FANCreateProfileComponent: VFC = ()=>{
+  return(
+    <PanelSectionRow>
+      <ButtonItem
+        layout="below"
+        onClick={() => {
+          // @ts-ignore
+          showModal(<FANCretateProfileModelComponent/>);
+        }}>
+        {localizationManager.getString(25,"创建风扇配置文件")}
+      </ButtonItem>
+    </PanelSectionRow>
+  )
+}
+
+function FANCretateProfileModelComponent({
+  closeModal,
+}: {
+  closeModal: () => void;
+}){
   const canvasRef: any = useRef(null);
-  const refresh=()=>{
-    const tempMax=100;
-    const fanMax=100;
-    const totalLines = 9;
+  const [snapToGrid,setSnapToGrid] = useState(true);
+  const [fanMode,setFanMode] = useState(FANMODE.NOCONTROL);
+  const refreshCanvas=()=>{
+    
     const canvas = canvasRef.current;
     const ctx = canvas!.getContext('2d');
     const width: number = ctx.canvas.width;
@@ -76,101 +97,80 @@ const FANCanvasComponent: VFC = () =>{
     ctx.stroke();
   }
   useEffect(() => {
-    refresh();
+    refreshCanvas();
   }, []);
   function onClickCanvas(e: any): void {
     const canvas = canvasRef.current;
     const ctx = canvas!.getContext('2d');
+    const width: number = ctx.canvas.width;
+    const height: number = ctx.canvas.height;
     const realEvent: any = e.nativeEvent;
     ctx.beginPath();
     ctx.arc(realEvent.layerX,realEvent.layerY,8, 0, Math.PI * 2);
+    var clickPosition=createFanPosByCanvasPos(realEvent.layerX,realEvent.layerY,width,height);
+    ctx.fillText(`(${clickPosition.temperature}°C,${clickPosition.fanRPMpercent}%)`, realEvent.layerX,realEvent.layerY-5);
     ctx.stroke();
     //console.log("Canvas click @ (" + realEvent.layerX.toString() + ", " + realEvent.layerY.toString() + ")");
   }
-  return(
-    <PanelSectionRow>
+  return (
+    <ModalRoot onCancel={closeModal} onEscKeypress={closeModal}>
+      <h1 style={{ marginBlockEnd: "5px", marginBlockStart: "-15px", fontSize:25}}>{localizationManager.getString(25,"创建风扇配置文件")}</h1>
+      <div style={{marginBlockEnd: "0px", marginBlockStart: "0px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", padding: "8px 0"}}>
+      <PanelSectionRow>
         <canvas ref={canvasRef} width={300} height={300} style={{
           "width": "300px",
           "height": "300px",
           "padding":"0px",
           "border":"1px solid #1a9fff",
-          //"position":"relative",
           // @ts-ignore
           "background-color":"#1a1f2c",
           "border-radius":"4px",
-          //"margin":"center",
         }} onClick={(e: any) => onClickCanvas(e)}/>
       </PanelSectionRow>
-  )
-};
-
-const FANCreateProfileComponent: VFC = ()=>{
-  return(
-    <PanelSectionRow>
-      <ButtonItem
-        layout="below"
-        onClick={() => {
-          // @ts-ignore
-          showModal(<FANCretateProfileModelComponent/>);
-        }}>
-        {localizationManager.getString(25,"创建风扇配置文件")}
-      </ButtonItem>
-    </PanelSectionRow>
-  )
-}
-
-function FANCretateProfileModelComponent({
-  closeModal,
-}: {
-  closeModal: () => void;
-}){
-
-  return (
-    <ModalRoot onCancel={closeModal} onEscKeypress={closeModal}>
-      <h1 style={{ marginBlockEnd: "5px", marginBlockStart: "-15px", fontSize:25}}>{localizationManager.getString(25,"创建风扇配置文件")}</h1>
-      <div style={{marginBlockEnd: "0px", marginBlockStart: "0px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", padding: "8px 0"}}>
-        <FANCanvasComponent/>
         <div style={{
           "width": "300px",
           "height": "300px",
           "overflow": "scroll",
-        }}><PanelSection>
-          <ToggleField
-        label={localizationManager.getString(26, "网格对齐")}
-        description={localizationManager.getString(31, "对齐到网格线交点")}
-        checked={true}
-        onChange={(value) => {
-          
-        }}
-      /><SliderField
-            label={localizationManager.getString(27, "风扇模式")}
-            value={1}
-            step={1}
-            max={2}
-            min={0}
-            notchCount={3}
-            notchLabels={
-              [{
-                notchIndex: 0,
-                label: `${localizationManager.getString(28, "不控制")}`,
-                value: 0,
-              }, {
-                notchIndex: 1,
-                label: `${localizationManager.getString(29, "固定")}`,
-                value: 1,
-              }, {
-                notchIndex: 2,
-                label: `${localizationManager.getString(30, "曲线")}`,
-                value: 2,
+        }}>
+          <PanelSection>
+            <ToggleField
+              label={localizationManager.getString(26, "网格对齐")}
+              description={localizationManager.getString(31, "对齐到网格线交点")}
+              checked={snapToGrid}
+              onChange={(value) => {
+                setSnapToGrid(value);
+              }}
+            />
+            <SliderField
+              label={localizationManager.getString(27, "风扇模式")}
+              value={fanMode}
+              step={1}
+              max={2}
+              min={0}
+              notchCount={3}
+              notchLabels={
+                [{
+                  notchIndex: 0,
+                  label: `${localizationManager.getString(28, "不控制")}`,
+                  value: 0,
+                }, {
+                  notchIndex: 1,
+                  label: `${localizationManager.getString(29, "固定")}`,
+                  value: 1,
+                }, {
+                  notchIndex: 2,
+                  label: `${localizationManager.getString(30, "曲线")}`,
+                  value: 2,
+                }
+                ]
               }
-              ]
-            }
-            onChange={(value: number) => {
-              
-            }}
-          /></PanelSection></div>
+              onChange={(value: number) => {
+                setFanMode(value);
+                }}
+              />
+          </PanelSection>
+        </div>
       </div>
-      
       <Focusable style={{marginBlockEnd: "-25px", marginBlockStart: "-5px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)",gridGap: "0.5rem", padding: "8px 0"}}>
       <DialogButton onClick={() => {closeModal()}}> Create Preset</DialogButton>
       <DialogButton onClick={() => {closeModal()}}>Close</DialogButton>
