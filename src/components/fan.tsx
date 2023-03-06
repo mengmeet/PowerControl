@@ -11,7 +11,7 @@ import {
   SliderField,
 } from "decky-frontend-lib";
 import { useEffect, useState,useRef,VFC} from "react";
-import { localizationManager, Settings,Backend, PluginManager,ComponentName, UpdateType, FANMODE, createFanPosByCanvasPos} from "../util";
+import { localizationManager, Settings,Backend, PluginManager,ComponentName, UpdateType, FANMODE, createFanPosByCanvasPos, getTextPosByCanvasPos} from "../util";
 var fanRPMIntervalID:any;
 const tempMax=100; 
 const fanMax=100;
@@ -64,15 +64,16 @@ function FANCretateProfileModelComponent({
   closeModal: () => void;
 }){
   const canvasRef: any = useRef(null);
+  const curvePoints : any = useRef([]);
   const [snapToGrid,setSnapToGrid] = useState(true);
   const [fanMode,setFanMode] = useState(FANMODE.NOCONTROL);
   const refreshCanvas=()=>{
-    
     const canvas = canvasRef.current;
     const ctx = canvas!.getContext('2d');
     const width: number = ctx.canvas.width;
     const height: number = ctx.canvas.height;
     const lineDistance = 1 / (totalLines + 1);
+    ctx.clearRect(0, 0, width, height);
     //网格绘制
     ctx.beginPath();
     ctx.strokeStyle = "#093455";
@@ -94,7 +95,17 @@ function FANCretateProfileModelComponent({
       ctx.textAlign = "left";
       ctx.fillText(fanText, 2, height-lineDistance * i * height + 10);
     }
-    ctx.stroke();
+    for(let pointIndex = 0; pointIndex < curvePoints.current.length;pointIndex++){
+      var curvePoint = curvePoints.current[pointIndex];
+      var pointCanvasPos = curvePoint.getCanvasPos(width,height);
+      var textPox = getTextPosByCanvasPos(pointCanvasPos[0],pointCanvasPos[1],width,height)
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(pointCanvasPos[0],pointCanvasPos[1],8, 0, Math.PI * 2);
+      ctx.fillText(`(${Math.trunc(curvePoint.temperature!!)}°C,${Math.trunc(curvePoint.fanRPMpercent!!)}%)`, textPox[0],textPox[1]);
+      ctx.stroke();
+    }
+   
   }
   useEffect(() => {
     refreshCanvas();
@@ -105,11 +116,8 @@ function FANCretateProfileModelComponent({
     const width: number = ctx.canvas.width;
     const height: number = ctx.canvas.height;
     const realEvent: any = e.nativeEvent;
-    ctx.beginPath();
-    ctx.arc(realEvent.layerX,realEvent.layerY,8, 0, Math.PI * 2);
-    var clickPosition=createFanPosByCanvasPos(realEvent.layerX,realEvent.layerY,width,height);
-    ctx.fillText(`(${clickPosition.temperature}°C,${clickPosition.fanRPMpercent}%)`, realEvent.layerX,realEvent.layerY-5);
-    ctx.stroke();
+    curvePoints.current.push(createFanPosByCanvasPos(realEvent.layerX,realEvent.layerY,width,height));
+    refreshCanvas();
     //console.log("Canvas click @ (" + realEvent.layerX.toString() + ", " + realEvent.layerY.toString() + ")");
   }
   return (
