@@ -14,18 +14,36 @@ export class fanPosition {
   {
     const tempMax=100; 
     const fanMax=100;
-    var canPosx=this.temperature!!/tempMax*canWidth;
-    var canPosy=(1-this.fanRPMpercent!!/fanMax)*canHeight;
-    return [canPosx,canPosy]!!
+    var canPosx=Math.min(Math.max(this.temperature!!/tempMax*canWidth,0),canWidth);
+    var canPosy=Math.min(Math.max((1-this.fanRPMpercent!!/fanMax)*canHeight,0),canHeight);
+    return new canvasPosition(canPosx,canPosy)
+  }
+  public isCloseToOther(other:fanPosition,distance:number){
+    var getDis =Math.sqrt(Math.pow((other.temperature!!-this.temperature!!),2)+Math.pow((other.fanRPMpercent!!-this.fanRPMpercent!!),2))
+    return getDis<=distance
   }
 }
-export const createFanPosByCanvasPos=(canPosx:number,canPosy:number,canWidth:number,canHeight:number)=>{
-  const tempMax=100; 
-  const fanMax=100;
-  var temperature=canPosx/canWidth*tempMax;
-  var fanRPMpercent=(1-canPosy/canHeight)*fanMax;
-  return new fanPosition(temperature,fanRPMpercent)
+export class canvasPosition {
+  @JsonProperty()
+  canx?:number;
+  @JsonProperty()
+  cany?:number;
+  constructor(canx:number,cany:number){
+    this.canx=canx;
+    this.cany=cany;
+  }
+  public getFanPos(canWidth:number,canHeight:number)
+  {
+    const tempMax=100; 
+    const fanMax=100;
+    const fanMin=0;
+    const tempMin=0;
+    var temperature=Math.min(Math.max(this.canx!!/canWidth*tempMax,tempMin),tempMax);
+    var fanRPMpercent=Math.min(Math.max((1-this.cany!!/canHeight)*fanMax,fanMin),fanMax);
+    return new fanPosition(temperature,fanRPMpercent)
+  }
 }
+//通过画布位置来调整文字位置
 export const getTextPosByCanvasPos=(canPosx:number,canPosy:number,canWidth:number,_canHeight:number)=>{
   var textlen=55
   var textheight=12
@@ -43,5 +61,12 @@ export const getTextPosByCanvasPos=(canPosx:number,canPosy:number,canWidth:numbe
   }else{
     offsetY = -textheight;
   }
-  return [canPosx+offsetX,canPosy+offsetY]
+  return new canvasPosition(canPosx+offsetX,canPosy+offsetY)
 }
+
+//检测该点位置周围是否有
+export const checkfanPosHasPoint=(point:fanPosition,points:fanPosition[])=>{
+
+}
+
+

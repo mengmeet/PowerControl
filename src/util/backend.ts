@@ -92,7 +92,6 @@ export class BackendData{
     var fanPRM:number;
     await this.serverAPI!.callPluginMethod<{},number>("get_fanRPM",{}).then(res=>{
       if (res.success){
-        console.info("fanRPM = " + res.result);
         fanPRM=res.result;
       }else{
         fanPRM=0;

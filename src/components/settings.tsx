@@ -2,6 +2,7 @@ import {
   PanelSection,
   PanelSectionRow,
   ToggleField,
+  Marquee,
 } from "decky-frontend-lib";
 import { useEffect, useState, VFC} from "react";
 import { localizationManager, Settings, PluginManager, RunningApps, DEFAULT_APP,ComponentName, UpdateType} from "../util";
@@ -79,10 +80,18 @@ const SettingsPerAppComponent:VFC = () =>{
             label={localizationManager.getString(2, "使用按游戏设置的配置文件")}
             description={
               <div style={{ display: "flex", justifyContent: "left" }}>
-                <img src={RunningApps.active_appInfo()?.icon_data ? "data:image/" + RunningApps.active_appInfo()?.icon_data_format + ";base64," + RunningApps.active_appInfo()?.icon_data : "/assets/" + RunningApps.active_appInfo()?.appid + "_icon.jpg?v=" + RunningApps.active_appInfo()?.icon_hash} width={18} height={18}
-                  style={{ display: override && overrideable ? "block" : "none" }}
+                <img src={RunningApps.active_appInfo()?.icon_data ? "data:image/" + RunningApps.active_appInfo()?.icon_data_format + ";base64," + RunningApps.active_appInfo()?.icon_data : "/assets/" + RunningApps.active_appInfo()?.appid + "_icon.jpg?v=" + RunningApps.active_appInfo()?.icon_hash} width={20} height={20}
+                  style={{ paddingRight:"5px",display: override && overrideable ? "block" : "none" }}
                 />
-                {localizationManager.getString(3, "正在使用") + (override && overrideable ? `『${RunningApps.active_appInfo()?.display_name}』` : `${localizationManager.getString(4, "默认")}`) + localizationManager.getString(5, "配置文件")}
+                <div style={{lineHeight:"20px"}}>{localizationManager.getString(3, "正在使用") + (override && overrideable ?"『":"")}</div>
+                <Marquee play={true} fadeLength={10} delay={1} style={{
+                  maxWidth:"100px",
+                  lineHeight:"20px"
+                }}>
+                {(override && overrideable ? `${RunningApps.active_appInfo()?.display_name}` : `${localizationManager.getString(4, "默认")}`)}
+                </Marquee>
+                <div style={{lineHeight:"20px"}}>{(override && overrideable ?"』":"")+localizationManager.getString(5, "配置文件")}</div>
+                
               </div>
             }
             checked={override && overrideable}

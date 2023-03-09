@@ -31,6 +31,7 @@ export enum ComponentName{
     GPU_FREQRANGE="GPU_FREQRANGE",
     GPU_FREQAUTO="GPU_FREQAUTO",
     FAN_ALL="FAN_ALL",
+    FAN_RPM="FAN_RPM"
 }
 
 export enum UpdateType{
@@ -39,6 +40,7 @@ export enum UpdateType{
     HIDE="HIDE",
     SHOW="SHOW",
     ENABLE="ENABLE",
+    DISMOUNT="DISMOUNT"
 }
 
 export enum PluginState{

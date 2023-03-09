@@ -84,6 +84,7 @@ export class PluginManager{
 
   public static unregister = ()=>{
     PluginManager.suspendEndHook!.unregister();
+    PluginManager.updateAllComponent(UpdateType.DISMOUNT);
     RunningApps.unregister();
     Backend.resetSettings();
     PluginManager.state = PluginState.QUIT; 
