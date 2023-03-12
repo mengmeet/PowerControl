@@ -199,6 +199,18 @@ var localizeMap:Map<number,localizeString>= new Map([
     english:"",
     german:"",
   }],
+  [33,{
+    schinese:"传感器温度",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
+  [34,{
+    schinese:"风扇转速",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
 ])
 
 

@@ -10,15 +10,17 @@ import {
   SliderField,
 } from "decky-frontend-lib";
 import { useEffect, useState,useRef,VFC} from "react";
-import { localizationManager, Settings,Backend, PluginManager,ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, canvasPosition, fanPosition} from "../util";
+import { localizationManager, Settings,Backend, PluginManager,ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, fanPosition} from "../util";
+import {FanCanvas} from "./fanCanvas";
 var fanRPMIntervalID:any;
 const tempMax=100; 
 const fanMax=100;
 const totalLines = 9;
 const pointBlockDis = 5;
-const pointColor = "1a9fff";
-const selectColor = "ff0000";
-const textColor = "FFFFFF";
+const pointColor = "#1A9FFF";
+const selectColor = "#FF0000";
+const textColor = "#FFFFFF";
+const lineColor = "#1A4AFF";
 //FANRPM模块
 const FANRPMComponent: VFC = () => {
   const [fanrpm, setFanRPM] = useState<number>(0);
@@ -80,15 +82,23 @@ function FANCretateProfileModelComponent({
 }){
   const canvasRef: any = useRef(null);
   const curvePoints : any = useRef([]);
+  //drag
   const dragPoint : any = useRef(null);
-  const isDrag:any = useRef(false);
+  //select
   const selectedPoint: any = useRef(null);
+  
+
   const [snapToGrid,setSnapToGrid] = useState(true);
   const [fanMode,setFanMode] = useState(FANMODE.NOCONTROL);
   const [fixSpeed,setFixSpeed] = useState(50);
+  const [selPointTemp,setSelPointTemp] = useState(0);
+  const [selPointSpeed,setSelPointSpeed] = useState(0);
+  const initDraw=(ref:any)=>{
+    canvasRef.current=ref;
+  }
   const refreshCanvas=()=>{
     const canvas = canvasRef.current;
-    const ctx = canvas!.getContext('2d');
+    const ctx = canvas?.getContext('2d');
     const width: number = ctx.canvas.width;
     const height: number = ctx.canvas.height;
     const lineDistance = 1 / (totalLines + 1);
@@ -131,134 +141,135 @@ function FANCretateProfileModelComponent({
   }
   const drawFixMode=()=>{
     const canvas = canvasRef.current;
-    const ctx = canvas!.getContext('2d');
+    const ctx = canvas?.getContext('2d');
     const width: number = ctx.canvas.width;
     const height: number = ctx.canvas.height;
     const anchorPoint = new fanPosition(tempMax/2,fixSpeed).getCanvasPos(width,height);
-    var lineStart=new canvasPosition(0,anchorPoint.cany!!);
-    var lineEnd=new canvasPosition(width,anchorPoint.cany!!);
-    var textPos=getTextPosByCanvasPos(anchorPoint.canx!!,anchorPoint.cany!!,width,height)
+    var lineStart=[0,anchorPoint[1]];
+    var lineEnd=[width,anchorPoint[1]];
+    var textPos=getTextPosByCanvasPos(anchorPoint[0],anchorPoint[1],width,height)
     ctx.beginPath();
-    ctx.arc(lineStart.canx,lineStart.cany,8, 0, Math.PI * 2);
-    ctx.arc(lineEnd.canx,lineEnd.cany,8, 0, Math.PI * 2);
-    ctx.fillText(`(${Math.trunc(fixSpeed!!)}%)`, textPos.canx,textPos.cany);
-    ctx.moveTo(lineStart.canx,lineStart.cany);
-    ctx.lineTo(lineEnd.canx, lineEnd.cany);
+    ctx.arc(lineStart[0],lineStart[1],8, 0, Math.PI * 2);
+    ctx.arc(lineEnd[0],lineEnd[1],8, 0, Math.PI * 2);
+    ctx.fillText(`(${Math.trunc(fixSpeed!!)}%)`, textPos[0],textPos[1]);
+    ctx.moveTo(lineStart[0],lineStart[1]);
+    ctx.lineTo(lineEnd[0], lineEnd[1]);
     ctx.stroke();
   }
   const drawCurveMode=()=>{
     const canvas = canvasRef.current;
-    const ctx = canvas!.getContext('2d');
+    const ctx = canvas?.getContext('2d');
     const width: number = ctx.canvas.width;
     const height: number = ctx.canvas.height;
+    curvePoints.current = curvePoints.current.sort((a:fanPosition,b:fanPosition)=>{
+      return a.temperature==b.temperature?a.fanRPMpercent!!-b.fanRPMpercent!!:a.temperature!!-b.temperature!!
+    });
+    
+    //绘制线段
+    ctx.beginPath();
+    ctx.moveTo(0,height);
+    ctx.strokeStyle=lineColor;
     for(let pointIndex = 0; pointIndex < curvePoints.current.length;pointIndex++){
       var curvePoint = curvePoints.current[pointIndex];
       var pointCanvasPos = curvePoint.getCanvasPos(width,height);
-      var textPox = getTextPosByCanvasPos(pointCanvasPos.canx,pointCanvasPos.cany,width,height)
+      ctx.lineTo(pointCanvasPos[0],pointCanvasPos[1]);
+      ctx.moveTo(pointCanvasPos[0],pointCanvasPos[1]);
+    }
+    ctx.lineTo(width,0);
+    ctx.stroke();
+    //绘制点和坐标
+    for(let pointIndex = 0; pointIndex < curvePoints.current.length;pointIndex++){
+      var curvePoint = curvePoints.current[pointIndex];
+      var pointCanvasPos = curvePoint.getCanvasPos(width,height);
+      var textPox = getTextPosByCanvasPos(pointCanvasPos[0],pointCanvasPos[1],width,height)
       ctx.beginPath();
-      ctx.fillStyle = curvePoint == selectedPoint.current ? selectColor:pointColor;
-      ctx.arc(pointCanvasPos.canx,pointCanvasPos.cany,8, 0, Math.PI * 2,true);
+      ctx.fillStyle = curvePoint == selectedPoint.current?selectColor:pointColor;
+      ctx.arc(pointCanvasPos[0],pointCanvasPos[1],8, 0, Math.PI * 2);
       ctx.fill();
+      ctx.beginPath();
       ctx.fillStyle = textColor;
-      ctx.fillText(`(${Math.trunc(curvePoint.temperature!!)}°C,${Math.trunc(curvePoint.fanRPMpercent!!)}%)`, textPox.canx,textPox.cany);
+      ctx.fillText(`(${Math.trunc(curvePoint.temperature!!)}°C,${Math.trunc(curvePoint.fanRPMpercent!!)}%)`, textPox[0],textPox[1]);
       ctx.fill();
     }
   }
   useEffect(()=>{
     refreshCanvas();
   },[snapToGrid,fanMode,fixSpeed]);
+  useEffect(()=>{
+    if(selectedPoint.current){
+      selectedPoint.current.temperature=selPointTemp;
+      selectedPoint.current.fanRPMpercent=selPointSpeed;
+      refreshCanvas();
+    }
+  },[selPointTemp,selPointSpeed]);
   useEffect(() => {
     refreshCanvas();
   }, []);
-  function onClickCanvas(e: any): void {
-    const canvas = canvasRef.current;
-    const ctx = canvas!.getContext('2d');
-    const width: number = ctx.canvas.width;
-    const height: number = ctx.canvas.height;
-    const realEvent: any = e.nativeEvent;
-    const canClickPos = new canvasPosition(realEvent.layerX,realEvent.layerY)
-    const fanclickPos = canClickPos.getFanPos(width,height)
-    console.log(`clickPosx=${fanclickPos.temperature} clickPosy=${fanclickPos.fanRPMpercent}`)
+
+  function onPointerShortPress(shortPressPos: fanPosition): void {
     switch(fanMode){
       case(FANMODE.NOCONTROL):{
 
       }
       case(FANMODE.FIX):{
-        var percent=fanclickPos.fanRPMpercent!!;
+        var percent=shortPressPos.fanRPMpercent!!;
         setFixSpeed(percent);
         break;
       }
       case(FANMODE.CURVE):{
-        curvePoints.current.push(fanclickPos);
+        //选中点时再点击则取消该点,点击其他位置则取消当前选中
+        if(selectedPoint.current){
+          for(let i=0;i<curvePoints.current.length;i++){
+            if(shortPressPos.isCloseToOther(selectedPoint.current,pointBlockDis)&&curvePoints.current[i]==selectedPoint.current){
+              curvePoints.current.splice(i,1);
+              break;
+            }
+          }
+          selectedPoint.current = null;
+          setSelPointTemp(0);
+          setSelPointSpeed(0);
+        }else{
+          //没有选中点时，获取选中的点
+          for(let i=0;i<curvePoints.current.length;i++){
+            if(curvePoints.current[i].isCloseToOther(shortPressPos,pointBlockDis)){
+              selectedPoint.current = curvePoints.current[i];
+              setSelPointTemp(selectedPoint.current.temperature);
+              setSelPointSpeed(selectedPoint.current.fanRPMpercent);
+              break;
+            }
+          }
+          if(!selectedPoint.current){
+            curvePoints.current.push(shortPressPos);
+          }
+        }
         refreshCanvas();
         break;
       }
     }
+    console.log(`onPointerShortPress temperature=${shortPressPos.temperature} fanRPMpercent=${shortPressPos.fanRPMpercent}`)
   }
-  function onMouseDown(e:any):void{
-    const canvas = canvasRef.current;
-    const ctx = canvas!.getContext('2d');
-    const width: number = ctx.canvas.width;
-    const height: number = ctx.canvas.height;
-    const realEvent: any = e.nativeEvent;
-    const canClickPos = new canvasPosition(realEvent.layerX,realEvent.layerY)
-    const fanClickPos = canClickPos.getFanPos(width,height)
+
+  function onPointerDragDown(dragDownPos:fanPosition):boolean{
     switch(fanMode){
       case(FANMODE.NOCONTROL):{
-
+        return false;
       }
       case(FANMODE.FIX):{
-        if(Math.abs(fanClickPos.fanRPMpercent!! - fixSpeed)<=3)
-          isDrag.current = true;
-        break;
+        if(Math.abs(dragDownPos.fanRPMpercent!! - fixSpeed)<=3)
+          return true;
       }
       case(FANMODE.CURVE):{
-        //按下时获取选中点
-        if(selectedPoint.current!=null && !selectedPoint.current.isCloseToOther(fanClickPos,pointBlockDis)){
-          selectedPoint.current = null;
-        }else if(selectedPoint.current == null){
-          for(let i=0;i<curvePoints.current.length;i++){
-            if(curvePoints.current[i].isCloseToOther(fanClickPos,pointBlockDis)){
-              selectedPoint.current = curvePoints.current[i];
-              break;
-            }
-          }
-        }
-        //按下时标记拖动初始
         for(let i=0;i<curvePoints.current.length;i++){
-          if(curvePoints.current[i].isCloseToOther(fanClickPos,pointBlockDis)){
-            isDrag.current = true;
+          if(curvePoints.current[i].isCloseToOther(dragDownPos,pointBlockDis)){
             dragPoint.current=curvePoints.current[i];
-            break;
+            return true;
           }
         }
-        break;
       }
-    }
-    console.log(`onmousedown x= ${realEvent.layerX}, y=${realEvent.layerY}`);
-  }
-  function onMouseUp(e:any):void{
-    if(isDrag.current){
-      isDrag.current = false;
-      dragPoint.current=null;
-    }else{
-      onClickCanvas(e);
+      return false;
     }
   }
-  function onMouseMove(e:any):void{
-    if(isDrag.current){
-      onDrag(e);
-    }
-      
-  }
-  function onDrag(e:any):void{
-    const canvas = canvasRef.current;
-    const ctx = canvas!.getContext('2d');
-    const width: number = ctx.canvas.width;
-    const height: number = ctx.canvas.height;
-    const realEvent: any = e.nativeEvent;
-    const canClickPos = new canvasPosition(realEvent.layerX,realEvent.layerY)
-    const fanClickPos = canClickPos.getFanPos(width,height)
+  function onPointerDraging(fanClickPos:fanPosition):void{
     switch(fanMode){
       case(FANMODE.NOCONTROL):{
 
@@ -270,12 +281,14 @@ function FANCretateProfileModelComponent({
       case(FANMODE.CURVE):{
         dragPoint.current.temperature = fanClickPos.temperature;
         dragPoint.current.fanRPMpercent = fanClickPos.fanRPMpercent;
-        console.log(`curveDrag  tem=${dragPoint.current.temperature}  rpm=${dragPoint.current.fanRPMpercent}`)
+        selectedPoint.current = dragPoint.current;
+        setSelPointTemp(selectedPoint.current.temperature);
+        setSelPointSpeed(selectedPoint.current.fanRPMpercent);
         refreshCanvas();
         break;
       }
     }
-    console.log(`onmouseMove x= ${realEvent.layerX}, y=${realEvent.layerY}`);
+    console.log(`onClickCanvas temperature=${fanClickPos.temperature} fanRPMpercent=${fanClickPos.fanRPMpercent}`)
   }
   return (
     <div>
@@ -289,7 +302,7 @@ function FANCretateProfileModelComponent({
     <ModalRoot onCancel={closeModal} onEscKeypress={closeModal} >
       <h1 style={{ marginBlockEnd: "5px", marginBlockStart: "-15px", fontSize:25}}>{localizationManager.getString(25,"创建风扇配置文件")}</h1>
       <div style={{marginBlockEnd: "0px", marginBlockStart: "0px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", padding: "8px 0"}}>
-        <canvas ref={canvasRef} width={300} height={300} style={{
+        <FanCanvas width={300} height={300} style={{
           "width": "300px",
           "height": "300px",
           "padding":"0px",
@@ -298,20 +311,16 @@ function FANCretateProfileModelComponent({
           "background-color":"#1a1f2c",
           "border-radius":"4px",
         }}  //onClick={(e: any) => onClickCanvas(e)}
-            //onMouseDown={(e:any) => onMouseDown(e)}
-            //onMouseMove={(e:any) => onMouseMove(e)}
-            //onMouseUp={(e:any) => onMouseUp(e)}
-            onPointerDown={(e:any) => onMouseDown(e)}
-            onPointerMove={(e:any) => onMouseMove(e)}
-            onPointerUp={(e:any) => onMouseUp(e)}
-            //onPointerDown={(e:any) => console.log(`onPointDown X=${e.nativeEvent.layerX} Y=${e.nativeEvent.layerY}`)}
-            //onPointerMove={(e:any) => console.log(`onPointMove X=${e.nativeEvent.layerX} Y=${e.nativeEvent.layerY}`)}
-            //onPointerUp={(e:any) => console.log(`ononPointUp X=${e.nativeEvent.layerX} Y=${e.nativeEvent.layerY}`)}
-            //onPointerCancel={(e:any) => console.log(`ononPointCancel X=${e.nativeEvent.layerX} Y=${e.nativeEvent.layerY}`)}
-            //onPointerEnter={(e:any) => console.log(`ononPointEnter X=${e.nativeEvent.layerX} Y=${e.nativeEvent.layerY}`)}
-            //onPointerLeave={(e:any) => console.log(`ononPointLeave X=${e.nativeEvent.layerX} Y=${e.nativeEvent.layerY}`)}
-            //onPointerOut={(e:any) => console.log(`ononPointOut X=${e.nativeEvent.layerX} Y=${e.nativeEvent.layerY}`)}
-            //onPointerOver={(e:any) => console.log(`ononPointOver X=${e.nativeEvent.layerX} Y=${e.nativeEvent.layerY}`)}
+            //onPointerDown={(e:any) => onPointerDown(e)}
+            //onPointerMove={(e:any) => onPointerMove(e)}
+            //onPointerUp={(e:any) => onPointerUp(e)}
+            //onPointerDown={(e:fanPosition) => {onPointerDown(e)}}
+            //onPointerMove={(e:fanPosition) => {onPointerMove(e)}}
+            //onPointerUp={(e:fanPosition) => {onPointerUp(e)}}
+            onPointerShortPress={(e:fanPosition) => {onPointerShortPress(e)}}
+            onPointerDragDown={(e:fanPosition) => {return onPointerDragDown(e)!!}}
+            onPointerDraging={(e:fanPosition) => {onPointerDraging(e)}}
+            initDraw={(f:any)=>{initDraw(f)}}
           />
         <div style={{
           "width": "300px",
@@ -364,6 +373,34 @@ function FANCretateProfileModelComponent({
                 min={0}
                 onChange={(value: number) => {
                   setFixSpeed(value);
+                }}
+              />}
+              {fanMode==FANMODE.CURVE&&<SliderField
+                label={localizationManager.getString(33, "传感器温度")}
+                value={selPointTemp}
+                valueSuffix={"°C"}
+                showValue={true}
+                layout={"inline"}
+                disabled={!selectedPoint.current}
+                step={1}
+                max={tempMax}
+                min={0}
+                onChange={(value: number) => {
+                  setSelPointTemp(value);
+                }}
+              />}
+              {fanMode==FANMODE.CURVE&&<SliderField
+                label={localizationManager.getString(32, "风扇转速百分比")}
+                value={selPointSpeed}
+                valueSuffix={"%"}
+                showValue={true}
+                layout={"inline"}
+                disabled={!selectedPoint.current}
+                step={1}
+                max={fanMax}
+                min={0}
+                onChange={(value: number) => {
+                  setSelPointSpeed(value);
                 }}
               />}
           </PanelSection>
