@@ -62,6 +62,7 @@ export class AppSetting {
     this.gpuAutoMinFreq=copyTarget.gpuAutoMinFreq;
     this.gpuRangeMaxFreq=copyTarget.gpuRangeMaxFreq;
     this.gpuRangeMinFreq=copyTarget.gpuAutoMinFreq;
+    this.fanProfileName=copyTarget.fanProfileName;
   }
 }
 
@@ -302,10 +303,55 @@ export class Settings {
     }
   }
 
-  //设置一个风扇配置
-  static setFanSettings(fanProfileName:string,fanSetting:FanSetting){
-      this._instance.fanSettings[fanProfileName] = fanSetting;
+  //风扇配置文件名称
+  static appFanSettingName(){
+    return Settings.ensureApp().fanProfileName
   }
+
+  //风扇配置文件内容
+  static appFanSetting(fanProfileName:string){
+    if(fanProfileName in this._instance.fanSettings){
+      return this._instance.fanSettings[fanProfileName];
+    }else{
+      return null; 
+    }
+  }
+
+  //设置使用的风扇配置文件名称
+  static setAppFanSettingName(fanProfileName:string){
+    if(Settings.ensureApp().fanProfileName!=fanProfileName){
+      Settings.ensureApp().fanProfileName=fanProfileName;
+      Settings.saveSettingsToLocalStorage();
+      //Backend.applySettings(APPLYTYPE.SET_FAN);
+    }
+  }
+
+  //添加一个风扇配置
+  static addFanSetting(fanProfileName:string,fanSetting:FanSetting){
+    if(fanProfileName!=undefined){
+      this._instance.fanSettings[fanProfileName] = fanSetting;
+      Settings.saveSettingsToLocalStorage();
+    }
+  }
+  //删除一个风扇配置
+  static removeFanSetting(fanProfileName:string){
+    if(fanProfileName in this._instance.fanSettings){
+      delete this._instance.fanSettings[fanProfileName];
+      Object.entries(this._instance.perApp).forEach(([appID, appSettings]) => {
+        if(appSettings.fanProfileName==fanProfileName){
+          appSettings.fanProfileName=this._instance.perApp[DEFAULT_APP].fanProfileName;
+        }
+      })
+      Settings.saveSettingsToLocalStorage();
+    }
+  }
+
+
+  //获取风扇配置列表
+  static getFanSettings():{[fanProfile: string]:FanSetting}{
+    return this._instance.fanSettings;
+  }
+
 
   private getPresetFanSetings(){
     const presetFanSettings={

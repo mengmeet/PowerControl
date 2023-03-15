@@ -16,7 +16,9 @@ export interface FanCanvasProps{
 }
 export const FanCanvas: FC<FanCanvasProps> = (canvas) => {
   const pointerDownPos: any = useRef(null);
+  const pointerDownTime: any = useRef(null);
   const pointerUpPos: any = useRef(null);
+  const pointerUpTime: any = useRef(null);
   const pointerIsDrag = useRef(false);
   const canvasRef: any = useRef(null);
   useEffect(()=>{
@@ -26,6 +28,7 @@ export const FanCanvas: FC<FanCanvasProps> = (canvas) => {
     const realEvent: any = e.nativeEvent;
     const fanClickPos = fanPosition.createFanPosByCanPos(realEvent.layerX,realEvent.layerY,canvas.width,canvas.height);
     pointerDownPos.current=[realEvent.layerX,realEvent.layerY]
+    pointerDownTime.current=Date.parse(new Date().toString());
     canvas.onPointerDown?.call(canvas,fanClickPos)
     onDragDown(e);
   }
@@ -33,11 +36,16 @@ export const FanCanvas: FC<FanCanvasProps> = (canvas) => {
     const realEvent: any = e.nativeEvent;
     const fanClickPos = fanPosition.createFanPosByCanPos(realEvent.layerX,realEvent.layerY,canvas.width,canvas.height);
     pointerUpPos.current=[realEvent.layerX,realEvent.layerY]
+    pointerUpTime.current=Date.parse(new Date().toString());
     canvas.onPointerUp?.call(canvas,fanClickPos)
     //call PointPressEvent
     if(approximatelyEqual(pointerDownPos.current[0],pointerUpPos.current[0],5) && approximatelyEqual(pointerDownPos.current[1],pointerUpPos.current[1],5)){
-      onPointerShortPress(e);
+      if(pointerUpTime.current-pointerDownTime.current<=1000)
+        onPointerShortPress(e);
+      else
+        onPointLongPress(e);
     }
+    //console.log(`pressDownTime=${pointerDownTime.current} pressUpTime=${pointerUpTime.current}`)
     if(pointerIsDrag.current){
       pointerIsDrag.current=false;
     }

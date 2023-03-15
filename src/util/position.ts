@@ -1,6 +1,4 @@
-import { PropsWithChildren } from 'react';
 import { JsonObject, JsonProperty } from 'typescript-json-serializer';
-import { FanCanvasProps } from '../components';
 
 @JsonObject()
 export class fanPosition {
@@ -76,11 +74,6 @@ export const getTextPosByCanvasPos=(canPosx:number,canPosy:number,canWidth:numbe
     offsetY = -textheight;
   }
   return [canPosx+offsetX,canPosy+offsetY]
-}
-
-//检测该点位置周围是否有
-export const checkfanPosHasPoint=(point:fanPosition,points:fanPosition[])=>{
-
 }
 
 

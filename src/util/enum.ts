@@ -9,12 +9,19 @@ export enum FANMODE{
     FIX=1, //固定
     CURVE=2, //曲线
 }
+
+export enum FANPROFILEACTION{
+    DELETE="DELETE",    //删除风扇配置
+    USE="USE",  //使用风扇配置
+}
+
 export enum APPLYTYPE{
     SET_ALL = "ALL",
     SET_CPUBOOST = "SET_CPUBOOST",
     SET_CPUCORE = "SET_CPUCORE",
     SET_TDP = "SET_TDP",
     SET_GPUMODE = "SET_GPUMODE",
+    SET_FAN="SET_FAN"
 }
 
 export enum ComponentName{

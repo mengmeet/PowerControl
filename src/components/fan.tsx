@@ -7,10 +7,15 @@ import {
   ModalRoot,
   DialogButton,
   ToggleField,
+  TextField,
   SliderField,
+  Dropdown,
+  DropdownOption,
+  SingleDropdownOption,
+  DisplayStatus,
 } from "decky-frontend-lib";
 import { useEffect, useState,useRef,VFC} from "react";
-import { localizationManager, Settings,Backend, PluginManager,ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, fanPosition} from "../util";
+import { localizationManager, Settings,Backend, PluginManager,ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, fanPosition, FanSetting, FANPROFILEACTION} from "../util";
 import {FanCanvas} from "./fanCanvas";
 var fanRPMIntervalID:any;
 const tempMax=100; 
@@ -21,6 +26,44 @@ const pointColor = "#1A9FFF";
 const selectColor = "#FF0000";
 const textColor = "#FFFFFF";
 const lineColor = "#1A4AFF";
+
+const FANSelectProfileComponent: VFC = () =>{
+  //@ts-ignore
+  const [items, setItems] = useState<DropdownOption[]>(
+    Object.entries(Settings.getFanSettings()).map(([profileName, fanSetting]) => ({
+      label: profileName,
+      options:[
+        {label:localizationManager.getString(38,"使用"),data:{profileName:profileName,type:FANPROFILEACTION.USE,setting:fanSetting}},
+        {label:localizationManager.getString(39,"删除"),data:{profileName:profileName,type:FANPROFILEACTION.DELETE,setting:fanSetting}},
+      ]
+    }))
+  );
+  //@ts-ignore
+  const [selectedItem,setSelectedItem] = useState<DropdownOption|undefined>(items.find((item)=>{
+    console.log(`item.label=${item.label} appseting=${Settings.appFanSettingName()} equal=${item.label==Settings.appFanSettingName()}`);
+    return item.label==Settings.appFanSettingName(); 
+  }));
+  return (        
+    <PanelSectionRow>
+          <Dropdown
+            focusable={true}
+            disabled={items.length==0}
+            rgOptions={items}
+            strDefaultLabel={selectedItem?selectedItem.label?.toString():(items.length==0?localizationManager.getString(35,"创建一个风扇配置"):localizationManager.getString(36,"选择一个风扇配置"))}
+            selectedOption={selectedItem}
+            onChange={(item:DropdownOption)=>{
+              //setSelectedItem(item);
+              if(item.data.type==FANPROFILEACTION.USE){
+                Settings.setAppFanSettingName(item.data.profileName)
+              }else if(item.data.type==FANPROFILEACTION.DELETE){
+                Settings.removeFanSetting(item.data.profileName)
+              }
+            }}
+          />
+    </PanelSectionRow>
+);
+}
+
 //FANRPM模块
 const FANRPMComponent: VFC = () => {
   const [fanrpm, setFanRPM] = useState<number>(0);
@@ -88,6 +131,7 @@ function FANCretateProfileModelComponent({
   const selectedPoint: any = useRef(null);
   
 
+  const [profileName,setProfileName]=useState<string>();
   const [snapToGrid,setSnapToGrid] = useState(true);
   const [fanMode,setFanMode] = useState(FANMODE.NOCONTROL);
   const [fixSpeed,setFixSpeed] = useState(50);
@@ -192,6 +236,9 @@ function FANCretateProfileModelComponent({
       ctx.fill();
     }
   }
+  const onCreateProfile=()=>{
+    Settings.addFanSetting(profileName!!,new FanSetting(snapToGrid,fanMode,fixSpeed,curvePoints.current))
+  }
   useEffect(()=>{
     refreshCanvas();
   },[snapToGrid,fanMode,fixSpeed]);
@@ -293,14 +340,38 @@ function FANCretateProfileModelComponent({
   return (
     <div>
     <style>
-      {`
+      {
+        //禁用滑动防止画布拖动事件失去焦点
+        `
         .gamepaddialog_ModalPosition_30VHl{
           overflow-y:hidden
+        }
+        `
+      }
+      {`
+        .DialogLabel, .DialogLabelStrong {
+          font-weight: 500;
+          color: #ffffff;
+          text-transform: uppercase;
+          line-height: 19px;
+          font-size: 16px;
+          margin-bottom: 4px;
+          user-select: none;
+          letter-spacing: initial;
         }
       `}
     </style>
     <ModalRoot onCancel={closeModal} onEscKeypress={closeModal} >
-      <h1 style={{ marginBlockEnd: "5px", marginBlockStart: "-15px", fontSize:25}}>{localizationManager.getString(25,"创建风扇配置文件")}</h1>
+      <h1 style={{ marginBlockEnd: "5px", marginBlockStart: "-15px", fontSize:25}}>
+        <div style={{width:180,display:"inline-block"}}>{localizationManager.getString(37, "配置文件名称")}</div>
+        <div style={{width:250,height:20,display:"inline-block"}}><TextField
+            value={profileName}
+            onChange={(e) => {
+              setProfileName(e.target.value);
+              console.log(e.target.value);
+            }}
+          /></div>
+      </h1>
       <div style={{marginBlockEnd: "0px", marginBlockStart: "0px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)", padding: "8px 0"}}>
         <FanCanvas width={300} height={300} style={{
           "width": "300px",
@@ -329,15 +400,8 @@ function FANCretateProfileModelComponent({
           "overflow-x": "hidden",
           "overflow-y": "scroll",
         }}>
+          
           <PanelSection>
-            <ToggleField
-              label={localizationManager.getString(26, "网格对齐")}
-              description={localizationManager.getString(31, "对齐到网格线交点")}
-              checked={snapToGrid}
-              onChange={(value) => {
-                setSnapToGrid(value);
-              }}
-            />
             <SliderField
               label={localizationManager.getString(27, "风扇模式")}
               value={fanMode}
@@ -407,7 +471,10 @@ function FANCretateProfileModelComponent({
         </div>
       </div>
       <div style={{marginBlockEnd: "-25px", marginBlockStart: "-5px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)",gridGap: "0.5rem", padding: "8px 0"}}>
-      <DialogButton onClick={() => {closeModal()}}> Create Preset</DialogButton>
+      <DialogButton onClick={() => {
+          onCreateProfile();
+          closeModal();
+        }}> Create Preset</DialogButton>
       <DialogButton onClick={() => {closeModal()}}>Close</DialogButton>
       </div>
     </ModalRoot>
@@ -434,9 +501,11 @@ export function FANComponent(){
       }
     })
   }, []);
+  //<FANSelectProfileComponent/>
   return (
     <div>
       {show&&<PanelSection title="FAN">
+        <FANSelectProfileComponent/>
         <FANRPMComponent/>
         <FANCreateProfileComponent/>
       </PanelSection>}

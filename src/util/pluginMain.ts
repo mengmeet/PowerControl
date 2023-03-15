@@ -49,7 +49,9 @@ export class RunningApps {
     static active_appInfo() {
       return Router.MainRunningApp as unknown as AppOverviewExt || null;
     }
-  }
+}
+
+
 
 export class PluginManager{
   private static state:PluginState;

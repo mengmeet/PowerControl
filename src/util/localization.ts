@@ -211,6 +211,36 @@ var localizeMap:Map<number,localizeString>= new Map([
     english:"",
     german:"",
   }],
+  [35,{
+    schinese:"创建一个风扇配置文件",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
+  [36,{
+    schinese:"选择一个风扇配置文件",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
+  [37,{
+    schinese:"配置文件名称",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
+  [38,{
+    schinese:"使用",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
+  [39,{
+    schinese:"删除",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
 ])
 
 
