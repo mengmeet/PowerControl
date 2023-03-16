@@ -1,5 +1,6 @@
 import logging
 import subprocess
+import os
 from helpers import get_homebrew_path,get_home_path,get_user
 
 #日志配置
@@ -69,6 +70,9 @@ try:
     FAN_MINTEMP=0     #风扇图表最小温度
     FAN_MAXRPM_PERCENT=0    #风扇图表最大转速百分比
     FAN_MINRPM_PERCENT=0    #风扇图表最小转速百分比
+    FAN_RPMWRITE_MAX=0      #风扇最大转速ec写入值
+    FAN_CPUTEMP_PATH=""     #CPU温度路径
+    FAN_GPUTEMP_PATH=""     #GPU温度路径
     FAN_IS_ADAPTED=False    
     if PRODUCT_NAME in (
         "AIR",
@@ -97,5 +101,19 @@ try:
         FAN_RPMREAD_OFFSET=0x58
         FAN_RPMWRITE_MAX=184
         FAN_IS_ADAPTED=True
+    hwmon_path="/sys/class/hwmon"
+    hwmon_files=os.listdir(hwmon_path)
+    for file in hwmon_files:
+        try:
+            path=hwmon_path+"/"+file
+            name = open(path+"/name").read().strip()
+            if(name=="amdgpu"):
+                temp=int(open(path+"/temp1_input").read().strip())
+                FAN_GPUTEMP_PATH=path+"/temp1_input"
+            if(name=="k10temp"):
+                temp=int(open(path+"/temp1_input").read().strip())
+                FAN_CPUTEMP_PATH=path+"/temp1_input"
+        except Exception as e:
+            logging.error(f"温度路径获取异常|{e}")
 except Exception as e:
     logging.error(f"风扇配置异常|{e}")

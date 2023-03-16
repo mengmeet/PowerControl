@@ -15,6 +15,8 @@ export class BackendData{
   private has_gpuMax = false;
   private gpuMin = 0;
   private has_gpuMin = false;
+  private fanMaxRPM = 0;
+  private has_fanMaxRPM = false;
   public async init(serverAPI:ServerAPI){
     this.serverAPI=serverAPI;
     await serverAPI!.callPluginMethod<{},number>("get_cpuMaxNum",{}).then(res=>{
@@ -49,6 +51,14 @@ export class BackendData{
         console.info("gpuMin = " + res.result);
         this.gpuMin = res.result;
         this.has_gpuMin = true;
+      }
+    })
+    await this.serverAPI!.callPluginMethod<{},number>("get_fanMAXRPM",{}).then(res=>{
+      if (res.success){
+        this.fanMaxRPM=res.result;
+        this.has_fanMaxRPM=true;
+      }else{
+        this.fanMaxRPM=1;
       }
     })
   }
@@ -88,6 +98,16 @@ export class BackendData{
     return this.has_ryzenadj;
   }
 
+  public getFanMAXPRM(){
+    return this.fanMaxRPM;
+  }
+
+  public HasFanMAXPRM(){
+    return this.has_fanMaxRPM;
+  }
+
+
+
   public async getFanPRM(){
     var fanPRM:number;
     await this.serverAPI!.callPluginMethod<{},number>("get_fanRPM",{}).then(res=>{
@@ -98,6 +118,30 @@ export class BackendData{
       }
     })
     return fanPRM!!;
+  }
+
+  public async getFanRPMPercent(){
+    var fanRPMpercent:number;
+    await this.serverAPI!.callPluginMethod<{},number>("get_fanRPMPercent",{}).then(res=>{
+      if (res.success){
+        fanRPMpercent=res.result;
+      }else{
+        fanRPMpercent=0;
+      }
+    })
+    return fanRPMpercent!!;
+  }
+
+  public async getFanTemp(){
+    var fanTemp:number;
+    await this.serverAPI!.callPluginMethod<{},number>("get_fanTemp",{}).then(res=>{
+      if (res.success){
+        fanTemp=res.result/1000;
+      }else{
+        fanTemp=-1;
+      }
+    })
+    return fanTemp!!;
   }
 }
 

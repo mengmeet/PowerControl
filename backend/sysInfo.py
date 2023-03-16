@@ -5,7 +5,8 @@ import time
 import os
 import asyncio
 from ec import EC
-from config import logging,SH_PATH,FAN_MANUAL_OFFSET,FAN_RPMREAD_OFFSET,FAN_IS_ADAPTED,PRODUCT_NAME,FAN_RPMREAD_OFFSET
+from config import logging,SH_PATH,PRODUCT_NAME
+from config import FAN_MANUAL_OFFSET,FAN_IS_ADAPTED,FAN_RPMREAD_OFFSET,FAN_GPUTEMP_PATH,FAN_CPUTEMP_PATH,FAN_RPMWRITE_MAX,FAN_RPMWRITE_OFFSET
 from helpers import get_user
 
 cpu_busyPercent = 0
@@ -18,6 +19,7 @@ has_gpuData = True
 
 statPath="/proc/stat"
 gpu_busy_percentPath="/sys/class/drm/card0/device/gpu_busy_percent"
+hwmon_path="/sys/class/hwmon"
 #GPU单次监控数据
 class GPUData:
     def __init__(self):
@@ -126,6 +128,44 @@ class SysInfoManager (threading.Thread):
         except Exception as e:
             logging.error(f"获取风扇转速异常:{e}")
             return 0
+    
+    def get_fanRPMPercent(self):
+        try:
+            if FAN_IS_ADAPTED:
+                fanRPMPercent=EC.Read(FAN_RPMWRITE_OFFSET)/FAN_RPMWRITE_MAX
+                logging.debug(f"机型已适配fan 当前机型:{PRODUCT_NAME} 读取EC地址:{hex(FAN_RPMWRITE_OFFSET)} 风扇转速百分比:{fanRPMPercent}")
+                return fanRPMPercent
+            else:
+                logging.debug(f"机型未适配fan 当前机型:{PRODUCT_NAME}")
+                return 0
+        except Exception as e:
+            logging.error(f"获取风扇转速异常:{e}")
+            return 0
+    
+    def get_gpuTemp(self):
+        try:
+            global FAN_GPUTEMP_PATH
+            if(FAN_GPUTEMP_PATH==""):
+                hwmon_path="/sys/class/hwmon"
+                hwmon_files=os.listdir(hwmon_path)
+                for file in hwmon_files:
+                    path=hwmon_path+"/"+file
+                    name = open(path+"/name").read().strip()
+                    if(name=="amdgpu"):
+                        FAN_GPUTEMP_PATH=path+"/temp1_input"
+            temp = int(open(FAN_GPUTEMP_PATH).read().strip())
+            return temp
+        except Exception as e:
+            logging.error(f"获取gpu温度异常:{e}")
+            return -1
+    
+    def get_cpuTemp(self):
+        try:
+            temp = int(open(FAN_CPUTEMP_PATH).read().strip())
+            return temp
+        except Exception as e:
+            logging.error(f"获取cpu温度异常:{e}")
+            return -1
 
     def updateCpuData(self):
         global cpu_DataErrCnt

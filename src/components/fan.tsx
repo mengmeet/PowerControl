@@ -6,18 +6,16 @@ import {
   showModal,
   ModalRoot,
   DialogButton,
-  ToggleField,
   TextField,
   SliderField,
   Dropdown,
   DropdownOption,
-  SingleDropdownOption,
-  DisplayStatus,
 } from "decky-frontend-lib";
 import { useEffect, useState,useRef,VFC} from "react";
 import { localizationManager, Settings,Backend, PluginManager,ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, fanPosition, FanSetting, FANPROFILEACTION} from "../util";
 import {FanCanvas} from "./fanCanvas";
 var fanRPMIntervalID:any;
+var fanDisplayIntervalID:any;
 const tempMax=100; 
 const fanMax=100;
 const totalLines = 9;
@@ -26,7 +24,10 @@ const pointColor = "#1A9FFF";
 const selectColor = "#FF0000";
 const textColor = "#FFFFFF";
 const lineColor = "#1A4AFF";
+const nowPointColor = "#03FF09";
+const realPointColor = "#FF0309";
 
+//选择配置文件下拉框
 const FANSelectProfileComponent: VFC = () =>{
   //@ts-ignore
   const [items, setItems] = useState<DropdownOption[]>(
@@ -40,10 +41,9 @@ const FANSelectProfileComponent: VFC = () =>{
   );
   //@ts-ignore
   const [selectedItem,setSelectedItem] = useState<DropdownOption|undefined>(items.find((item)=>{
-    console.log(`item.label=${item.label} appseting=${Settings.appFanSettingName()} equal=${item.label==Settings.appFanSettingName()}`);
     return item.label==Settings.appFanSettingName(); 
   }));
-  return (        
+  return (
     <PanelSectionRow>
           <Dropdown
             focusable={true}
@@ -63,6 +63,190 @@ const FANSelectProfileComponent: VFC = () =>{
     </PanelSectionRow>
 );
 }
+
+//显示当前风扇配置和温度转速信息
+const FANDisplayComponent: VFC = () =>{
+  const canvasRef: any = useRef(null);
+  const curvePoints : any = useRef([]);
+  const nowPoint : any = useRef(new fanPosition(0,0));
+  const initDraw=(ref:any)=>{
+    canvasRef.current=ref;
+    curvePoints.current=Settings.appFanSetting()?.curvePoints;
+  }
+  const refresh = async() => {
+    await Backend.data.getFanRPMPercent().then((value)=>{
+      nowPoint.current.fanRPMpercent=value;
+    });
+    await Backend.data.getFanTemp().then((value)=>{
+      nowPoint.current.temperature=value;
+    });
+    refreshCanvas(); 
+  };
+  const dismount = () =>{
+    if(fanDisplayIntervalID!=null){
+      clearInterval(fanDisplayIntervalID);
+    }
+  }
+  useEffect(() => {
+    refresh();
+    if(fanDisplayIntervalID!=null){
+      clearInterval(fanDisplayIntervalID);
+    }
+    fanDisplayIntervalID=setInterval(()=>{
+      refresh();
+    },1000)
+    PluginManager.listenUpdateComponent(ComponentName.FAN_DISPLAY,[ComponentName.FAN_DISPLAY],(_ComponentName,updateType)=>{
+      switch(updateType){
+        case(UpdateType.UPDATE):{
+          refresh();
+          break;
+        }
+        case(UpdateType.DISMOUNT):{
+          dismount();
+          break;
+        }
+      }
+    })
+  }, []);
+  const refreshCanvas=()=>{
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    const width: number = ctx.canvas.width;
+    const height: number = ctx.canvas.height;
+    const lineDistance = 1 / (totalLines + 1);
+    ctx.clearRect(0, 0, width, height);
+    //网格绘制
+    ctx.beginPath();
+    ctx.strokeStyle = "#093455";
+    for (let i = 1; i <= totalLines + 1; i++) {
+      ctx.moveTo(lineDistance * i * width, 0);
+      ctx.lineTo(lineDistance * i * width, height);
+      ctx.moveTo(0, lineDistance * i * height);
+      ctx.lineTo(width, lineDistance * i * height);
+    }
+    ctx.stroke();
+    //文字绘制
+    /*
+    ctx.beginPath();
+    ctx.fillStyle = "#FFFFFF";
+    for (let i = 1; i <= totalLines + 1; i++) {
+      const tempText= tempMax / (totalLines + 1) * i +"°C";
+      const fanText= fanMax / (totalLines + 1) * i +"%";
+      ctx.textAlign = "right";
+      ctx.fillText(tempText, lineDistance * i * width - 2, height - 2);
+      ctx.textAlign = "left";
+      ctx.fillText(fanText, 2, height-lineDistance * i * height + 10);
+    }
+    ctx.stroke();*/
+    //说明绘制
+    ctx.beginPath();
+    ctx.fillStyle = nowPointColor;
+    ctx.textAlign = "left";
+    ctx.fillText("当前坐标",22,16);
+    ctx.arc(12,12,5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.fillStyle = realPointColor;
+    ctx.textAlign = "left";
+    ctx.fillText("实际坐标",22,30);
+    ctx.arc(12,26,5, 0, Math.PI * 2);
+    ctx.fill();
+    //绘制实际点和设置点
+    ctx.beginPath();
+    ctx.fillStyle = realPointColor;
+    var nowPointCanPos=(nowPoint.current as fanPosition).getCanvasPos(width,height);
+    var textPos = getTextPosByCanvasPos(nowPointCanPos[0],nowPointCanPos[1],width,height)
+    ctx.fillText(`(${Math.trunc(nowPoint.current.temperature!!)}°C,${Math.trunc(nowPoint.current.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
+    ctx.arc(nowPointCanPos[0],nowPointCanPos[1],5, 0, Math.PI * 2);
+    ctx.fill();
+    switch(Settings.appFanSetting()?.fanMode){
+      case(FANMODE.NOCONTROL):{
+        break;
+      }
+      case(FANMODE.FIX):{
+        drawFixMode();
+        break;
+      }
+      case(FANMODE.CURVE):{
+        drawCurveMode();
+        break;
+      }
+    }
+  }
+  const drawFixMode=()=>{
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    const width: number = ctx.canvas.width;
+    const height: number = ctx.canvas.height;
+    const anchorPoint = new fanPosition(tempMax/2,Settings.appFanSetting()?.fixSpeed!!).getCanvasPos(width,height);
+    var lineStart=[0,anchorPoint[1]];
+    var lineEnd=[width,anchorPoint[1]];
+    var textPos=getTextPosByCanvasPos(anchorPoint[0],anchorPoint[1],width,height)
+    ctx.beginPath();
+    ctx.arc(lineStart[0],lineStart[1],8, 0, Math.PI * 2);
+    ctx.arc(lineEnd[0],lineEnd[1],8, 0, Math.PI * 2);
+    ctx.fillText(`(${Math.trunc(Settings.appFanSetting()?.fixSpeed!!!!)}%)`, textPos[0],textPos[1]);
+    ctx.moveTo(lineStart[0],lineStart[1]);
+    ctx.lineTo(lineEnd[0], lineEnd[1]);
+    ctx.stroke();
+  }
+  const drawCurveMode=()=>{
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    const width: number = ctx.canvas.width;
+    const height: number = ctx.canvas.height;
+    curvePoints.current = curvePoints.current.sort((a:fanPosition,b:fanPosition)=>{
+      return a.temperature==b.temperature?a.fanRPMpercent!!-b.fanRPMpercent!!:a.temperature!!-b.temperature!!
+    });
+    
+    //绘制线段
+    ctx.beginPath();
+    ctx.moveTo(0,height);
+    ctx.strokeStyle=lineColor;
+    for(let pointIndex = 0; pointIndex < curvePoints.current.length;pointIndex++){
+      var curvePoint = curvePoints.current[pointIndex];
+      var pointCanvasPos = (curvePoint as fanPosition).getCanvasPos(width,height);
+      ctx.lineTo(pointCanvasPos[0],pointCanvasPos[1]);
+      ctx.moveTo(pointCanvasPos[0],pointCanvasPos[1]);
+    }
+    ctx.lineTo(width,0);
+    ctx.stroke();
+    //绘制点和坐标
+    /*
+    for(let pointIndex = 0; pointIndex < curvePoints.current.length;pointIndex++){
+      var curvePoint = curvePoints.current[pointIndex];
+      var pointCanvasPos = curvePoint.getCanvasPos(width,height);
+      var textPox = getTextPosByCanvasPos(pointCanvasPos[0],pointCanvasPos[1],width,height)
+      ctx.beginPath();
+      ctx.fillStyle = curvePoint == selectedPoint.current?selectColor:pointColor;
+      ctx.arc(pointCanvasPos[0],pointCanvasPos[1],8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.fillStyle = textColor;
+      ctx.fillText(`(${Math.trunc(curvePoint.temperature!!)}°C,${Math.trunc(curvePoint.fanRPMpercent!!)}%)`, textPox[0],textPox[1]);
+      ctx.fill();
+    }
+    */
+  }
+  return (
+    <PanelSectionRow>
+    <FanCanvas width={250} height={250} style={{
+      "width": "250px",
+      "height": "250px",
+      "border":"1px solid #1a9fff",
+      "padding":"0px",
+      // @ts-ignore
+      "background-color":"#1a1f2c",
+      "border-radius":"4px",
+      "margin-top":"10px",
+      "margin-left":"8px"
+    }} 
+      initDraw={(f:any)=>{initDraw(f)}}
+      />
+    </PanelSectionRow>
+  );
+}
+
 
 //FANRPM模块
 const FANRPMComponent: VFC = () => {
@@ -293,7 +477,6 @@ function FANCretateProfileModelComponent({
         break;
       }
     }
-    console.log(`onPointerShortPress temperature=${shortPressPos.temperature} fanRPMpercent=${shortPressPos.fanRPMpercent}`)
   }
 
   function onPointerDragDown(dragDownPos:fanPosition):boolean{
@@ -335,7 +518,6 @@ function FANCretateProfileModelComponent({
         break;
       }
     }
-    console.log(`onClickCanvas temperature=${fanClickPos.temperature} fanRPMpercent=${fanClickPos.fanRPMpercent}`)
   }
   return (
     <div>
@@ -506,6 +688,7 @@ export function FANComponent(){
     <div>
       {show&&<PanelSection title="FAN">
         <FANSelectProfileComponent/>
+        <FANDisplayComponent/>
         <FANRPMComponent/>
         <FANCreateProfileComponent/>
       </PanelSection>}

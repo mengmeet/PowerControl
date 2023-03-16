@@ -55,6 +55,13 @@ class Plugin:
         except Exception as e:
             logging.error(e)
             return 0
+    
+    async def get_gpuFreqMin(self):
+        try:
+            return gpuManager.get_gpuFreqMin()
+        except Exception as e:
+            logging.error(e)
+            return 0
 
     async def get_cpu_AvailableFreq(self):
         try:
@@ -72,6 +79,26 @@ class Plugin:
     async def get_fanRPM(self):
         try:
             return sysInfoManager.get_fanRPM()
+        except Exception as e:
+            logging.error(e)
+            return 0
+    
+    async def get_fanRPMPercent(self):
+        try:
+            return sysInfoManager.get_fanRPMPercent()
+        except Exception as e:
+            logging.error(e)
+            return 0
+    
+    async def get_fanTemp(self):
+        try:
+            gpu_temp = sysInfoManager.get_gpuTemp()
+            if(gpu_temp!=-1):
+                return gpu_temp
+            cpu_temp = sysInfoManager.get_cpuTemp()
+            if(cpu_temp!=-1):
+                return cpu_temp
+            return -273100
         except Exception as e:
             logging.error(e)
             return 0

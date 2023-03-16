@@ -41,7 +41,7 @@ export class AppSetting {
     this.cpuNum=Backend.data?.HasCpuMaxNum()?Backend.data?.getCpuMaxNum():4;
     this.cpuboost=false;
     this.tdpEnable=true;
-    this.tdp=Backend.data?.HasTDPMax()?Backend.data?.getTDPMax()/2:15;
+    this.tdp=Backend.data?.HasTDPMax()?Math.trunc(Backend.data?.getTDPMax()/2):15;
     this.gpuMode=GPUMODE.NOLIMIT;
     this.gpuFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
     this.gpuAutoMaxFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
@@ -74,7 +74,7 @@ export class FanSetting{
   fanMode?:number = FANMODE.NOCONTROL
   @JsonProperty()
   fixSpeed?:number = 50;
-  @JsonProperty()
+  @JsonProperty({type:fanPosition})
   curvePoints?:fanPosition[] = []
   constructor(snapToGrid:boolean,fanMode:number,fixSpeed:number,curvePoints:fanPosition[]){
     this.snapToGrid=snapToGrid;
@@ -89,9 +89,9 @@ export class Settings {
   private static _instance:Settings = new Settings();
   @JsonProperty()
   public enabled: boolean = true;
-  @JsonProperty({ isDictionary: true, type: AppSetting })
+  @JsonProperty({isDictionary:true, type: AppSetting })
   public perApp: { [appId: string]: AppSetting } = {};
-  @JsonProperty({ isDictionary: true, type: FanSetting })
+  @JsonProperty({isDictionary:true, type: FanSetting })
   public fanSettings: { [fanProfile: string]: FanSetting } = {};
   //插件是否开启
   public static ensureEnable():boolean{
@@ -309,11 +309,12 @@ export class Settings {
   }
 
   //风扇配置文件内容
-  static appFanSetting(fanProfileName:string){
+  static appFanSetting(){
+    var fanProfileName = Settings.ensureApp().fanProfileName!!;
     if(fanProfileName in this._instance.fanSettings){
       return this._instance.fanSettings[fanProfileName];
     }else{
-      return null; 
+      return undefined; 
     }
   }
 
@@ -337,7 +338,7 @@ export class Settings {
   static removeFanSetting(fanProfileName:string){
     if(fanProfileName in this._instance.fanSettings){
       delete this._instance.fanSettings[fanProfileName];
-      Object.entries(this._instance.perApp).forEach(([appID, appSettings]) => {
+      Object.entries(this._instance.perApp).forEach(([_appID, appSettings]) => {
         if(appSettings.fanProfileName==fanProfileName){
           appSettings.fanProfileName=this._instance.perApp[DEFAULT_APP].fanProfileName;
         }
@@ -368,7 +369,7 @@ export class Settings {
     const loadSetting=serializer.deserializeObject(settingsJson, Settings);
     this._instance.enabled = loadSetting?loadSetting.enabled:false;
     this._instance.perApp = loadSetting?loadSetting.perApp:{};
-    this._instance.fanSettings=loadSetting?.fanSettings ?loadSetting.fanSettings:{};
+    this._instance.fanSettings=loadSetting?loadSetting.fanSettings:{};
   }
 
   static saveSettingsToLocalStorage() {
