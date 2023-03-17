@@ -197,12 +197,12 @@ const FANDisplayComponent: VFC = () =>{
     ctx.fillText(`(${Math.trunc(FanControl.setPoint.temperature!!)}°C,${Math.trunc(FanControl.setPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
     ctx.arc(setPointCanPos[0],setPointCanPos[1],5, 0, Math.PI * 2);
     ctx.fill();
-    ctx.beginPath();
     //点线绘制
     var lineStart=[0,anchorPoint[1]];
     var lineEnd=[width,anchorPoint[1]];
     var textPos=getTextPosByCanvasPos(anchorPoint[0],anchorPoint[1],width,height)
     ctx.beginPath();
+    ctx.strokeStyle=lineColor;
     ctx.fillText(`(${Math.trunc(Settings.appFanSetting()?.fixSpeed!!!!)}%)`, textPos[0],textPos[1]);
     ctx.moveTo(lineStart[0],lineStart[1]);
     ctx.lineTo(lineEnd[0], lineEnd[1]);
@@ -422,8 +422,7 @@ function FANCretateProfileModelComponent({
     var lineEnd=[width,anchorPoint[1]];
     var textPos=getTextPosByCanvasPos(anchorPoint[0],anchorPoint[1],width,height)
     ctx.beginPath();
-    ctx.arc(lineStart[0],lineStart[1],8, 0, Math.PI * 2);
-    ctx.arc(lineEnd[0],lineEnd[1],8, 0, Math.PI * 2);
+    ctx.strokeStyle=lineColor;
     ctx.fillText(`(${Math.trunc(fixSpeed!!)}%)`, textPos[0],textPos[1]);
     ctx.moveTo(lineStart[0],lineStart[1]);
     ctx.lineTo(lineEnd[0], lineEnd[1]);
