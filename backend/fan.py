@@ -35,7 +35,7 @@ class FAN_Manager ():
         try:
             if FAN_IS_ADAPTED:
                 fanIsAuto=EC.Read(FAN_MANUAL_OFFSET)
-                logging.debug(f"机型已适配fan 当前机型:{PRODUCT_NAME} 读取EC地址:{hex(FAN_MANUAL_OFFSET)} 风扇是否自动:{fanIsAuto}")
+                logging.debug(f"机型已适配fan 当前机型:{PRODUCT_NAME} 读取EC地址:{hex(FAN_MANUAL_OFFSET)} 风扇是否自动:{not fanIsAuto}")
                 return not fanIsAuto
             else:
                 logging.debug(f"机型未适配fan 当前机型:{PRODUCT_NAME}")
@@ -49,7 +49,7 @@ class FAN_Manager ():
             if FAN_IS_ADAPTED:
                 fanIsManual = not value
                 EC.Write(FAN_MANUAL_OFFSET,fanIsManual)
-                logging.debug(f"机型已适配fan 当前机型:{PRODUCT_NAME} 写入EC地址:{hex(FAN_MANUAL_OFFSET)} 写入风扇是否自动:{fanIsManual}")
+                logging.debug(f"机型已适配fan 当前机型:{PRODUCT_NAME} 写入EC地址:{hex(FAN_MANUAL_OFFSET)} 写入风扇是否自动:{not fanIsManual}")
             else:
                 logging.debug(f"机型未适配fan 当前机型:{PRODUCT_NAME}")
             return True       

@@ -332,6 +332,9 @@ export class Settings {
     if(fanProfileName!=undefined){
       this._instance.fanSettings[fanProfileName] = fanSetting;
       Settings.saveSettingsToLocalStorage();
+      return true;
+    }else{
+      return false;
     }
   }
   //删除一个风扇配置
@@ -351,16 +354,6 @@ export class Settings {
   //获取风扇配置列表
   static getFanSettings():{[fanProfile: string]:FanSetting}{
     return this._instance.fanSettings;
-  }
-
-
-  private getPresetFanSetings(){
-    const presetFanSettings={
-      "静音":new FanSetting(true,FANMODE.FIX,30,[]),
-      "平衡":new FanSetting(true,FANMODE.CURVE,30,[new fanPosition(0,0),new fanPosition(100,100)]),
-      "激进":new FanSetting(true,FANMODE.CURVE,30,[new fanPosition(0,0),new fanPosition(100,100)]),
-    }
-    return presetFanSettings;
   }
 
   static loadSettingsFromLocalStorage(){

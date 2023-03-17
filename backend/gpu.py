@@ -35,11 +35,11 @@ class GPU_AutoFreqManager (threading.Thread):
                 minCommand="sudo sh {} get_gpu_nowFreqMinLimit ".format(SH_PATH)
                 qfreqMax=int(subprocess.getoutput(maxCommand))
                 qfreqMin=int(subprocess.getoutput(minCommand))
-                logging.debug(f"当前要设置的频率区间 freqMin={freqMin} freqMax={freqMax} 当前系统频率区间 qfreqMin={qfreqMin} qfreMax={qfreqMax}  是否满足设置条件{qfreqMin!=freqMin or qfreqMax != freqMax}")
+                logging.debug(f"{self.name}|当前要设置的频率区间 freqMin={freqMin} freqMax={freqMax} 当前系统频率区间 qfreqMin={qfreqMin} qfreMax={qfreqMax}  是否满足设置条件{qfreqMin!=freqMin or qfreqMax != freqMax}")
                 return qfreqMin!=freqMin or qfreqMax != freqMax
             #查不到gpu设置频率时，只要合法则进行设置
             else:
-                logging.debug(f"当前要设置的频率区间 freqMin={freqMin} freqMax={freqMax} 当前频率={gpu_nowFreq} 是否满足设置条件{freqMax>=0 and freqMin >=0}")
+                logging.debug(f"{self.name}|当前要设置的频率区间 freqMin={freqMin} freqMax={freqMax} 当前频率={gpu_nowFreq} 是否满足设置条件{freqMax>=0 and freqMin >=0}")
                 return freqMax>=0 and freqMin >=0 
         except Exception as e:
             logging.error(e)
@@ -159,14 +159,14 @@ class GPU_RangeFreqManager (threading.Thread):
                 qfreqMin=int(subprocess.getoutput(minCommand))
                 #当前设置与查询的设置不相同时设置一次(特殊情况：0，0对应区间最小和区间最大 即不限制)
                 if(((qfreqMin!=freqMin or qfreqMax != freqMax)and freqMin !=0 and freqMax !=0) or (freqMin == 0 and freqMax == 0 and (qfreqMin != gpu_freqMin or qfreqMax != gpu_freqMax))):
-                    logging.debug(f"检测到当前设置与系统不同 当前检查的频率 freqMin={freqMin} freqMax={freqMax} 当前系统频率 qfreqMin={qfreqMin}({gpu_freqMin}) qfreMax={qfreqMax}({gpu_freqMax})")
+                    logging.debug(f"{self.name}|检测到当前设置与系统不同 当前检查的频率 freqMin={freqMin} freqMax={freqMax} 当前系统频率 qfreqMin={qfreqMin}({gpu_freqMin}) qfreMax={qfreqMax}({gpu_freqMax})")
                     command="sudo sh {} set_clock_limits {} {}".format(SH_PATH,freqMin,freqMax)
                     os.system(command)
                 else:
-                    logging.debug(f"检测到当前设置与系统相同 当前系统频率 qfreqMin={qfreqMin} qfreMax={qfreqMax}")
+                    logging.debug(f"{self.name}|检测到当前设置与系统相同 当前系统频率 qfreqMin={qfreqMin} qfreMax={qfreqMax}")
             #查不到gpu设置频率时，只要合法则进行设置
             else:
-                logging.debug(f"无法查询当前系统GPU频率")
+                logging.debug(f"{self.name}|无法查询当前系统GPU频率")
         except Exception as e:
             logging.error(e)
 

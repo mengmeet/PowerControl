@@ -4,6 +4,7 @@ import { Backend} from "./backend";
 import { localizationManager } from "./localization";
 import { Settings } from "./settings";
 import { AppOverviewExt } from "./steamClient";
+import { calPointInLine, fanPosition } from "./position";
 
 type ActiveAppChangedHandler = (newAppId: string, oldAppId: string) => void;
 type ComponentUpdateHandler = (componentsName: ComponentName,updateType:UpdateType) => void;
@@ -53,17 +54,85 @@ export class RunningApps {
 
 export class FanControl{
   private static intervalId: any;
+  public static nowPoint:fanPosition=new fanPosition(0,0);
+  public static setPoint:fanPosition=new fanPosition(0,0);
   static register() {
     if (this.intervalId == undefined)
-      this.intervalId = setInterval(() => this.updateFan(), 300);
+      this.intervalId = setInterval(() => this.updateFan(), 500);
   }
   
   static async updateFan(){
+    FanControl.updateFanInfo();
     Backend.applySettings(APPLYTYPE.SET_FAN);
     PluginManager.updateComponent(ComponentName.FAN_DISPLAY,UpdateType.UPDATE);
   }
 
+  static async updateFanInfo(){
+    await Backend.data.getFanRPMPercent().then((value)=>{
+      FanControl.nowPoint.fanRPMpercent=value;
+    });
+    await Backend.data.getFanTemp().then((value)=>{
+      FanControl.nowPoint.temperature=value;
+    });
+    const fanSetting = Settings.appFanSetting();
+    const fanMode = fanSetting?.fanMode;
+    switch(fanMode){
+      case(FANMODE.NOCONTROL):{
+        break;
+      }
+      case(FANMODE.FIX):{
+        var fixSpeed = fanSetting?.fixSpeed;
+        FanControl.setPoint.temperature=FanControl.nowPoint.temperature;
+        FanControl.setPoint.fanRPMpercent=fixSpeed;
+        break;
+      }
+      case(FANMODE.CURVE):{
+        var curvePoints = fanSetting?.curvePoints!!.sort((a:fanPosition,b:fanPosition)=>{
+          return a.temperature==b.temperature?a.fanRPMpercent!!-b.fanRPMpercent!!:a.temperature!!-b.temperature!!
+        });
+        //每俩点判断是否在这俩点之间
+        var lineStart = new fanPosition(fanPosition.tempMin,fanPosition.fanMin);
+        if(curvePoints?.length!!>0){
+          var lineEnd = curvePoints!![0];
+          if(FanControl.nowPoint.temperature!!>lineStart.temperature!!&&FanControl.nowPoint.temperature!!<=lineEnd.temperature!!){
+            FanControl.setPoint = calPointInLine(lineStart,lineEnd,FanControl.nowPoint.temperature!!)!!;
+            return;
+          }
+          curvePoints?.forEach((value,index)=>{
+            if(index>=curvePoints?.length!!-1)
+              return;
+            lineStart = value;
+            lineEnd = curvePoints!![index+1];
+            if(FanControl.nowPoint.temperature!!>lineStart.temperature!!&&FanControl.nowPoint.temperature!!<=lineEnd.temperature!!){
+              FanControl.setPoint = calPointInLine(lineStart,lineEnd,FanControl.nowPoint.temperature!!)!!;
+              return;
+            }
+          })
+        }else{
+          var lineEnd = new fanPosition(fanPosition.tempMax,fanPosition.fanMax);
+          if(FanControl.nowPoint.temperature!!>lineStart.temperature!!&&FanControl.nowPoint.temperature!!<=lineEnd.temperature!!){
+            FanControl.setPoint = calPointInLine(lineStart,lineEnd,FanControl.nowPoint.temperature!!)!!;
+            return;
+          }
+        }
+        break;
+      }
+      default:{
+        console.error(`错误的fanmode = ${fanMode}`)
+      }
+    }
+  }
+
+  static enableFan(){
+    this.register();
+  }
+
+  static disableFan(){
+    this.unregister();
+  }
+
   static unregister(){
+    Backend.resetFanSettings();
     if (this.intervalId != undefined)
       clearInterval(this.intervalId);
   }

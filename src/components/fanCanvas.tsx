@@ -39,7 +39,7 @@ export const FanCanvas: FC<FanCanvasProps> = (canvas) => {
     pointerUpTime.current=Date.parse(new Date().toString());
     canvas.onPointerUp?.call(canvas,fanClickPos)
     //call PointPressEvent
-    if(approximatelyEqual(pointerDownPos.current[0],pointerUpPos.current[0],5) && approximatelyEqual(pointerDownPos.current[1],pointerUpPos.current[1],5)){
+    if(approximatelyEqual(pointerDownPos.current[0],pointerUpPos.current[0],3) && approximatelyEqual(pointerDownPos.current[1],pointerUpPos.current[1],3)){
       if(pointerUpTime.current-pointerDownTime.current<=1000)
         onPointerShortPress(e);
       else

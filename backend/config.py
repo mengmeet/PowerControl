@@ -82,7 +82,7 @@ try:
         FAN_RPMWRITE_OFFSET=0x4b
         FAN_RPMREAD_OFFSET=0x58
         FAN_RPMWRITE_MAX=184
-        FAN_RPMVALUE_MAX=4968
+        FAN_RPMVALUE_MAX=5000
         FAN_IS_ADAPTED=True    
     elif PRODUCT_NAME in (
         "AIR",
@@ -92,7 +92,7 @@ try:
         FAN_RPMWRITE_OFFSET=0x4b
         FAN_RPMREAD_OFFSET=0x76
         FAN_RPMWRITE_MAX=64
-        FAN_RPMVALUE_MAX=5800
+        FAN_RPMVALUE_MAX=5811
         FAN_IS_ADAPTED=True
     elif PRODUCT_NAME in (
         "AYANEO 2",

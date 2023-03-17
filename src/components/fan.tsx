@@ -12,20 +12,18 @@ import {
   DropdownOption,
 } from "decky-frontend-lib";
 import { useEffect, useState,useRef,VFC} from "react";
-import { localizationManager, Settings,Backend, PluginManager,ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, fanPosition, FanSetting, FANPROFILEACTION} from "../util";
+import { localizationManager, Settings,Backend, PluginManager,ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, fanPosition, FanSetting, FANPROFILEACTION, FanControl} from "../util";
 import {FanCanvas} from "./fanCanvas";
 var fanRPMIntervalID:any;
 var fanDisplayIntervalID:any;
-const tempMax=100; 
-const fanMax=100;
 const totalLines = 9;
 const pointBlockDis = 5;
 const pointColor = "#1A9FFF";
 const selectColor = "#FF0000";
 const textColor = "#FFFFFF";
 const lineColor = "#1A4AFF";
-const nowPointColor = "#03FF09";
-const realPointColor = "#FF0309";
+const setPointColor = "#03FF09";
+const nowPointColor = "#FF0309";
 
 //选择配置文件下拉框
 const FANSelectProfileComponent: VFC = () =>{
@@ -68,18 +66,11 @@ const FANSelectProfileComponent: VFC = () =>{
 const FANDisplayComponent: VFC = () =>{
   const canvasRef: any = useRef(null);
   const curvePoints : any = useRef([]);
-  const nowPoint : any = useRef(new fanPosition(0,0));
   const initDraw=(ref:any)=>{
     canvasRef.current=ref;
     curvePoints.current=Settings.appFanSetting()?.curvePoints;
   }
-  const refresh = async() => {
-    await Backend.data.getFanRPMPercent().then((value)=>{
-      nowPoint.current.fanRPMpercent=value;
-    });
-    await Backend.data.getFanTemp().then((value)=>{
-      nowPoint.current.temperature=value;
-    });
+  const refresh = () => {
     refreshCanvas(); 
   };
   const dismount = () =>{
@@ -138,29 +129,9 @@ const FANDisplayComponent: VFC = () =>{
       ctx.fillText(fanText, 2, height-lineDistance * i * height + 10);
     }
     ctx.stroke();*/
-    //说明绘制
-    ctx.beginPath();
-    ctx.fillStyle = nowPointColor;
-    ctx.textAlign = "left";
-    ctx.fillText("当前坐标",22,16);
-    ctx.arc(12,12,5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.fillStyle = realPointColor;
-    ctx.textAlign = "left";
-    ctx.fillText("实际坐标",22,30);
-    ctx.arc(12,26,5, 0, Math.PI * 2);
-    ctx.fill();
-    //绘制实际点和设置点
-    ctx.beginPath();
-    ctx.fillStyle = realPointColor;
-    var nowPointCanPos=(nowPoint.current as fanPosition).getCanvasPos(width,height);
-    var textPos = getTextPosByCanvasPos(nowPointCanPos[0],nowPointCanPos[1],width,height)
-    ctx.fillText(`(${Math.trunc(nowPoint.current.temperature!!)}°C,${Math.trunc(nowPoint.current.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
-    ctx.arc(nowPointCanPos[0],nowPointCanPos[1],5, 0, Math.PI * 2);
-    ctx.fill();
     switch(Settings.appFanSetting()?.fanMode){
       case(FANMODE.NOCONTROL):{
+        drawNoControlMode();
         break;
       }
       case(FANMODE.FIX):{
@@ -173,18 +144,65 @@ const FANDisplayComponent: VFC = () =>{
       }
     }
   }
+  const drawNoControlMode=()=>{
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    const width: number = ctx.canvas.width;
+    const height: number = ctx.canvas.height;
+    ctx.beginPath();
+    ctx.fillStyle = nowPointColor;
+    ctx.textAlign = "left";
+    ctx.fillText(localizationManager.getString(43,"实际坐标"),22,16);
+    ctx.arc(12,12,5, 0, Math.PI * 2);
+    ctx.fill();
+    //绘制实际点
+    ctx.fillStyle = nowPointColor;
+    var nowPointCanPos=FanControl.nowPoint.getCanvasPos(width,height);
+    var textPos = getTextPosByCanvasPos(nowPointCanPos[0],nowPointCanPos[1],width,height)
+    ctx.fillText(`(${Math.trunc(FanControl.nowPoint.temperature!!)}°C,${Math.trunc(FanControl.nowPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
+    ctx.arc(nowPointCanPos[0],nowPointCanPos[1],5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+  }
   const drawFixMode=()=>{
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
     const width: number = ctx.canvas.width;
     const height: number = ctx.canvas.height;
-    const anchorPoint = new fanPosition(tempMax/2,Settings.appFanSetting()?.fixSpeed!!).getCanvasPos(width,height);
+    const anchorPoint = new fanPosition(fanPosition.tempMax/2,Settings.appFanSetting()?.fixSpeed!!).getCanvasPos(width,height);
+    //说明绘制
+    ctx.beginPath();
+    ctx.fillStyle = setPointColor;
+    ctx.textAlign = "left";
+    ctx.fillText(localizationManager.getString(42,"设置坐标"),22,16);
+    ctx.arc(12,12,5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.fillStyle = nowPointColor;
+    ctx.textAlign = "left";
+    ctx.fillText(localizationManager.getString(43,"实际坐标"),22,30);
+    ctx.arc(12,26,5, 0, Math.PI * 2);
+    ctx.fill();
+    //绘制实际点和设置点
+    ctx.fillStyle = nowPointColor;
+    var nowPointCanPos=FanControl.nowPoint.getCanvasPos(width,height);
+    var textPos = getTextPosByCanvasPos(nowPointCanPos[0],nowPointCanPos[1],width,height)
+    ctx.fillText(`(${Math.trunc(FanControl.nowPoint.temperature!!)}°C,${Math.trunc(FanControl.nowPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
+    ctx.arc(nowPointCanPos[0],nowPointCanPos[1],5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.fillStyle = setPointColor;
+    var setPointCanPos=FanControl.setPoint.getCanvasPos(width,height);
+    var textPos = getTextPosByCanvasPos(setPointCanPos[0],setPointCanPos[1],width,height)
+    ctx.fillText(`(${Math.trunc(FanControl.setPoint.temperature!!)}°C,${Math.trunc(FanControl.setPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
+    ctx.arc(setPointCanPos[0],setPointCanPos[1],5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    //点线绘制
     var lineStart=[0,anchorPoint[1]];
     var lineEnd=[width,anchorPoint[1]];
     var textPos=getTextPosByCanvasPos(anchorPoint[0],anchorPoint[1],width,height)
     ctx.beginPath();
-    ctx.arc(lineStart[0],lineStart[1],8, 0, Math.PI * 2);
-    ctx.arc(lineEnd[0],lineEnd[1],8, 0, Math.PI * 2);
     ctx.fillText(`(${Math.trunc(Settings.appFanSetting()?.fixSpeed!!!!)}%)`, textPos[0],textPos[1]);
     ctx.moveTo(lineStart[0],lineStart[1]);
     ctx.lineTo(lineEnd[0], lineEnd[1]);
@@ -198,7 +216,33 @@ const FANDisplayComponent: VFC = () =>{
     curvePoints.current = curvePoints.current.sort((a:fanPosition,b:fanPosition)=>{
       return a.temperature==b.temperature?a.fanRPMpercent!!-b.fanRPMpercent!!:a.temperature!!-b.temperature!!
     });
-    
+    //说明绘制
+    ctx.beginPath();
+    ctx.fillStyle = setPointColor;
+    ctx.textAlign = "left";
+    ctx.fillText(localizationManager.getString(42,"设置坐标"),22,16);
+    ctx.arc(12,12,5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.fillStyle = nowPointColor;
+    ctx.textAlign = "left";
+    ctx.fillText(localizationManager.getString(43,"实际坐标"),22,30);
+    ctx.arc(12,26,5, 0, Math.PI * 2);
+    ctx.fill();
+    //绘制实际点和设置点
+    ctx.fillStyle = nowPointColor;
+    var nowPointCanPos=FanControl.nowPoint.getCanvasPos(width,height);
+    var textPos = getTextPosByCanvasPos(nowPointCanPos[0],nowPointCanPos[1],width,height)
+    ctx.fillText(`(${Math.trunc(FanControl.nowPoint.temperature!!)}°C,${Math.trunc(FanControl.nowPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
+    ctx.arc(nowPointCanPos[0],nowPointCanPos[1],5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.fillStyle = setPointColor;
+    var setPointCanPos=FanControl.setPoint.getCanvasPos(width,height);
+    var textPos = getTextPosByCanvasPos(setPointCanPos[0],setPointCanPos[1],width,height)
+    ctx.fillText(`(${Math.trunc(FanControl.setPoint.temperature!!)}°C,${Math.trunc(FanControl.setPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
+    ctx.arc(setPointCanPos[0],setPointCanPos[1],5, 0, Math.PI * 2);
+    ctx.fill();
     //绘制线段
     ctx.beginPath();
     ctx.moveTo(0,height);
@@ -316,6 +360,7 @@ function FANCretateProfileModelComponent({
   
 
   const [profileName,setProfileName]=useState<string>();
+  //@ts-ignore
   const [snapToGrid,setSnapToGrid] = useState(true);
   const [fanMode,setFanMode] = useState(FANMODE.NOCONTROL);
   const [fixSpeed,setFixSpeed] = useState(50);
@@ -345,8 +390,8 @@ function FANCretateProfileModelComponent({
     ctx.beginPath();
     ctx.fillStyle = "#FFFFFF";
     for (let i = 1; i <= totalLines + 1; i++) {
-      const tempText= tempMax / (totalLines + 1) * i +"°C";
-      const fanText= fanMax / (totalLines + 1) * i +"%";
+      const tempText= fanPosition.tempMax / (totalLines + 1) * i +"°C";
+      const fanText= fanPosition.fanMax / (totalLines + 1) * i +"%";
       ctx.textAlign = "right";
       ctx.fillText(tempText, lineDistance * i * width - 2, height - 2);
       ctx.textAlign = "left";
@@ -372,7 +417,7 @@ function FANCretateProfileModelComponent({
     const ctx = canvas?.getContext('2d');
     const width: number = ctx.canvas.width;
     const height: number = ctx.canvas.height;
-    const anchorPoint = new fanPosition(tempMax/2,fixSpeed).getCanvasPos(width,height);
+    const anchorPoint = new fanPosition(fanPosition.tempMax/2,fixSpeed).getCanvasPos(width,height);
     var lineStart=[0,anchorPoint[1]];
     var lineEnd=[width,anchorPoint[1]];
     var textPos=getTextPosByCanvasPos(anchorPoint[0],anchorPoint[1],width,height)
@@ -421,7 +466,7 @@ function FANCretateProfileModelComponent({
     }
   }
   const onCreateProfile=()=>{
-    Settings.addFanSetting(profileName!!,new FanSetting(snapToGrid,fanMode,fixSpeed,curvePoints.current))
+    return Settings.addFanSetting(profileName!!,new FanSetting(snapToGrid,fanMode,fixSpeed,curvePoints.current))
   }
   useEffect(()=>{
     refreshCanvas();
@@ -448,6 +493,25 @@ function FANCretateProfileModelComponent({
         break;
       }
       case(FANMODE.CURVE):{
+        var isPressPoint = false;
+        //短按时如果按到点 删除该点 
+        //如果该点是选中点 取消选中
+        for(let i=0;i<curvePoints.current.length;i++){
+          if(curvePoints.current[i].isCloseToOther(shortPressPos,pointBlockDis)){
+            if(curvePoints.current[i]==selectedPoint.current){
+              selectedPoint.current = null;
+              setSelPointTemp(0);
+              setSelPointSpeed(0);
+            }
+            curvePoints.current.splice(i,1);
+            isPressPoint=true;
+            break;
+          }
+        }
+        //没有按到点 在该位置生成一个点
+        if(!isPressPoint)
+          curvePoints.current.push(shortPressPos);
+        /*
         //选中点时再点击则取消该点,点击其他位置则取消当前选中
         if(selectedPoint.current){
           for(let i=0;i<curvePoints.current.length;i++){
@@ -472,13 +536,64 @@ function FANCretateProfileModelComponent({
           if(!selectedPoint.current){
             curvePoints.current.push(shortPressPos);
           }
-        }
+        }*/
         refreshCanvas();
         break;
       }
     }
   }
 
+  function onPointerLongPress(longPressPos: fanPosition): void {
+    switch(fanMode){
+      case(FANMODE.NOCONTROL):{
+        break;
+      }
+      case(FANMODE.FIX):{
+        var percent=longPressPos.fanRPMpercent!!;
+        setFixSpeed(percent);
+        break;
+      }
+      case(FANMODE.CURVE):{
+        //长按时按到点 则选中该点
+        for(let i=0;i<curvePoints.current.length;i++){
+          if(longPressPos.isCloseToOther(curvePoints.current[i],pointBlockDis)){
+            selectedPoint.current = curvePoints.current[i];
+            setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
+            setSelPointSpeed(Math.trunc(selectedPoint.current.fanRPMpercent));
+            break;
+          }
+        }
+        /*
+        //选中点时如果长按该点 则取消选中
+        if(selectedPoint.current){
+          for(let i=0;i<curvePoints.current.length;i++){
+            if(longPressPos.isCloseToOther(selectedPoint.current,pointBlockDis)&&curvePoints.current[i]==selectedPoint.current){
+              curvePoints.current.splice(i,1);
+              break;
+            }
+          }
+          selectedPoint.current = null;
+          setSelPointTemp(0);
+          setSelPointSpeed(0);
+        }else{
+          //没有选中点时，获取选中的点
+          for(let i=0;i<curvePoints.current.length;i++){
+            if(curvePoints.current[i].isCloseToOther(shortPressPos,pointBlockDis)){
+              selectedPoint.current = curvePoints.current[i];
+              setSelPointTemp(selectedPoint.current.temperature);
+              setSelPointSpeed(selectedPoint.current.fanRPMpercent);
+              break;
+            }
+          }
+          if(!selectedPoint.current){
+            curvePoints.current.push(shortPressPos);
+          }
+        }*/
+        refreshCanvas();
+        break;
+      }
+    }
+  }
   function onPointerDragDown(dragDownPos:fanPosition):boolean{
     switch(fanMode){
       case(FANMODE.NOCONTROL):{
@@ -512,8 +627,8 @@ function FANCretateProfileModelComponent({
         dragPoint.current.temperature = fanClickPos.temperature;
         dragPoint.current.fanRPMpercent = fanClickPos.fanRPMpercent;
         selectedPoint.current = dragPoint.current;
-        setSelPointTemp(selectedPoint.current.temperature);
-        setSelPointSpeed(selectedPoint.current.fanRPMpercent);
+        setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
+        setSelPointSpeed(Math.trunc(selectedPoint.current.fanRPMpercent));
         refreshCanvas();
         break;
       }
@@ -571,6 +686,7 @@ function FANCretateProfileModelComponent({
             //onPointerMove={(e:fanPosition) => {onPointerMove(e)}}
             //onPointerUp={(e:fanPosition) => {onPointerUp(e)}}
             onPointerShortPress={(e:fanPosition) => {onPointerShortPress(e)}}
+            onPointerLongPress={(e:fanPosition) => {onPointerLongPress(e)}}
             onPointerDragDown={(e:fanPosition) => {return onPointerDragDown(e)!!}}
             onPointerDraging={(e:fanPosition) => {onPointerDraging(e)}}
             initDraw={(f:any)=>{initDraw(f)}}
@@ -629,7 +745,7 @@ function FANCretateProfileModelComponent({
                 layout={"inline"}
                 disabled={!selectedPoint.current}
                 step={1}
-                max={tempMax}
+                max={fanPosition.tempMax}
                 min={0}
                 onChange={(value: number) => {
                   setSelPointTemp(value);
@@ -643,7 +759,7 @@ function FANCretateProfileModelComponent({
                 layout={"inline"}
                 disabled={!selectedPoint.current}
                 step={1}
-                max={fanMax}
+                max={fanPosition.fanMax}
                 min={0}
                 onChange={(value: number) => {
                   setSelPointSpeed(value);
@@ -654,10 +770,11 @@ function FANCretateProfileModelComponent({
       </div>
       <div style={{marginBlockEnd: "-25px", marginBlockStart: "-5px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)",gridGap: "0.5rem", padding: "8px 0"}}>
       <DialogButton onClick={() => {
-          onCreateProfile();
-          closeModal();
-        }}> Create Preset</DialogButton>
-      <DialogButton onClick={() => {closeModal()}}>Close</DialogButton>
+          if(onCreateProfile()){
+            closeModal();
+          }
+        }}> {localizationManager.getString(40,"创建")}</DialogButton>
+      <DialogButton onClick={() => {closeModal()}}> {localizationManager.getString(41,"取消")}</DialogButton>
       </div>
     </ModalRoot>
     </div>

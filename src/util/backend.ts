@@ -1,5 +1,6 @@
 import {ServerAPI } from "decky-frontend-lib";
 import { APPLYTYPE, FANMODE, GPUMODE } from "./enum";
+import { FanControl } from "./pluginMain";
 import { Settings } from "./settings";
 
 
@@ -289,18 +290,29 @@ export class Backend {
         Backend.data.getFanIsAuto().then((value)=>{
           if(value)
             Backend.applyFanAuto(false);
-          var fixSpeed = fanSetting?.fixSpeed;
-          Backend.applyFanPercent(fixSpeed!!);
+          Backend.applyFanPercent(FanControl.setPoint.fanRPMpercent!!);
           console.log(`mode=${fanMode} isAuto=${value}`)
         });
       } else if (fanMode == FANMODE.CURVE) {
-        
+        Backend.data.getFanIsAuto().then((value)=>{
+          if(value)
+            Backend.applyFanAuto(false);
+          Backend.applyFanPercent(FanControl.setPoint.fanRPMpercent!!);
+          console.log(`mode=${fanMode} isAuto=${value}`)
+        });
       }else {
-        console.log(`出现意外的FanMode = ${fanMode}`)
-        Backend.applyGPUFreq(0);
+        Backend.data.getFanIsAuto().then((value)=>{
+          if(!value)
+            Backend.applyFanAuto(true);
+            console.log(`出现意外的FanMode = ${fanMode} isAuto=${value}`)
+        });
       }
     }
   };
+
+  public static resetFanSettings = () =>{
+    Backend.applyFanAuto(true);
+  }
 
   public static resetSettings = () => {
     console.log("重置所有设置");
@@ -309,5 +321,6 @@ export class Backend {
     Backend.applyCpuBoost(true);
     Backend.applyTDP(Backend.data.getTDPMax());
     Backend.applyGPUFreq(0);
+    Backend.applyFanAuto(true);
   };
 }

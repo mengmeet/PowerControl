@@ -6,16 +6,19 @@ export class fanPosition {
   temperature?:number;
   @JsonProperty()
   fanRPMpercent?:number;
+  static tempMax:number=100; 
+  static fanMax:number=100;
+  static fanMin:number=0;
+  static tempMin:number=0;
   constructor(temperature:number,fanRPMpercent:number){
-    this.fanRPMpercent=fanRPMpercent;
-    this.temperature=temperature;
+    
+    this.fanRPMpercent=Math.min(Math.max(fanRPMpercent,fanPosition.fanMin),fanPosition.fanMax);
+    this.temperature=Math.min(Math.max(temperature,fanPosition.tempMin),fanPosition.tempMax);
   }
   public getCanvasPos(canWidth:number,canHeight:number)
   {
-    const tempMax=100; 
-    const fanMax=100;
-    var canPosx=Math.min(Math.max(this.temperature!!/tempMax*canWidth,0),canWidth);
-    var canPosy=Math.min(Math.max((1-this.fanRPMpercent!!/fanMax)*canHeight,0),canHeight);
+    var canPosx=Math.min(Math.max(this.temperature!!/fanPosition.tempMax*canWidth,0),canWidth);
+    var canPosy=Math.min(Math.max((1-this.fanRPMpercent!!/fanPosition.fanMax)*canHeight,0),canHeight);
     return [canPosx,canPosy];
   }
   public isCloseToOther(other:fanPosition,distance:number){
@@ -24,12 +27,8 @@ export class fanPosition {
   }
   public static createFanPosByCanPos(canx:number,cany:number,canWidth:number,canHeight:number)
   {
-    const tempMax=100; 
-    const fanMax=100;
-    const fanMin=0;
-    const tempMin=0;
-    var temperature=Math.min(Math.max(canx!!/canWidth*tempMax,tempMin),tempMax);
-    var fanRPMpercent=Math.min(Math.max((1-cany!!/canHeight)*fanMax,fanMin),fanMax);
+    var temperature=Math.min(Math.max(canx!!/canWidth*this.tempMax,this.tempMin),this.tempMax);
+    var fanRPMpercent=Math.min(Math.max((1-cany!!/canHeight)*this.fanMax,this.fanMin),this.fanMax);
     return new fanPosition(temperature,fanRPMpercent)
   }
 }
@@ -74,6 +73,17 @@ export const getTextPosByCanvasPos=(canPosx:number,canPosy:number,canWidth:numbe
     offsetY = -textheight;
   }
   return [canPosx+offsetX,canPosy+offsetY]
+}
+
+export const calPointInLine=(lineStart:fanPosition,lineEnd:fanPosition,calPointIndex:number)=>{
+  if(lineStart.temperature!!>lineEnd.temperature!!)
+    return null;
+  if(calPointIndex<lineStart.temperature!!||calPointIndex>lineEnd.temperature!!)
+    return null;
+  var deltaY = lineEnd.fanRPMpercent!! - lineStart.fanRPMpercent!!;
+  var deltaX = lineEnd.temperature!! - lineStart.temperature!!;
+  var calPointY = deltaX==0?deltaY:(calPointIndex - lineStart.temperature!!)*(deltaY/deltaX)+lineStart.fanRPMpercent!!;
+  return new fanPosition(calPointIndex,calPointY); 
 }
 
 

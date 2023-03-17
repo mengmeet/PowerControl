@@ -241,6 +241,30 @@ var localizeMap:Map<number,localizeString>= new Map([
     english:"",
     german:"",
   }],
+  [40,{
+    schinese:"创建",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
+  [41,{
+    schinese:"取消",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
+  [42,{
+    schinese:"设置坐标",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
+  [43,{
+    schinese:"实际坐标",
+    tchinese:"",
+    english:"",
+    german:"",
+  }],
 ])
 
 
