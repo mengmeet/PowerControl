@@ -1,5 +1,5 @@
 import { Router, ServerAPI } from "decky-frontend-lib";
-import { APPLYTYPE, ComponentName, PluginState, UpdateType } from "./enum";
+import { APPLYTYPE, ComponentName, FANMODE, PluginState, UpdateType } from "./enum";
 import { Backend} from "./backend";
 import { localizationManager } from "./localization";
 import { Settings } from "./settings";
@@ -51,6 +51,23 @@ export class RunningApps {
     }
 }
 
+export class FanControl{
+  private static intervalId: any;
+  static register() {
+    if (this.intervalId == undefined)
+      this.intervalId = setInterval(() => this.updateFan(), 300);
+  }
+  
+  static async updateFan(){
+    Backend.applySettings(APPLYTYPE.SET_FAN);
+    PluginManager.updateComponent(ComponentName.FAN_DISPLAY,UpdateType.UPDATE);
+  }
+
+  static unregister(){
+    if (this.intervalId != undefined)
+      clearInterval(this.intervalId);
+  }
+}
 
 
 export class PluginManager{
@@ -62,6 +79,7 @@ export class PluginManager{
     await Backend.init(serverAPI);
     await localizationManager.init(serverAPI);
     RunningApps.register();
+    FanControl.register()
     RunningApps.listenActiveChange((newAppId, oldAppId) => {
       console.log(`newAppId=${newAppId} oldAppId=${oldAppId}`)
       if (Settings.ensureEnable()) {
@@ -88,6 +106,7 @@ export class PluginManager{
     PluginManager.suspendEndHook!.unregister();
     PluginManager.updateAllComponent(UpdateType.DISMOUNT);
     RunningApps.unregister();
+    FanControl.unregister();
     Backend.resetSettings();
     PluginManager.state = PluginState.QUIT; 
   }

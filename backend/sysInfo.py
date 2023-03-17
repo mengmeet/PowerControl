@@ -6,7 +6,7 @@ import os
 import asyncio
 from ec import EC
 from config import logging,SH_PATH,PRODUCT_NAME
-from config import FAN_MANUAL_OFFSET,FAN_IS_ADAPTED,FAN_RPMREAD_OFFSET,FAN_GPUTEMP_PATH,FAN_CPUTEMP_PATH,FAN_RPMWRITE_MAX,FAN_RPMWRITE_OFFSET
+from config import FAN_GPUTEMP_PATH,FAN_CPUTEMP_PATH
 from helpers import get_user
 
 cpu_busyPercent = 0
@@ -116,31 +116,6 @@ class SysInfoManager (threading.Thread):
             logging.error(e)
             return self._language
 
-    def get_fanRPM(self):
-        try:
-            if FAN_IS_ADAPTED:
-                fanRPM=EC.ReadLonger(FAN_RPMREAD_OFFSET,2)
-                logging.debug(f"机型已适配fan 当前机型:{PRODUCT_NAME} 读取EC地址:{hex(FAN_RPMREAD_OFFSET)} 风扇转速:{fanRPM}")
-                return fanRPM
-            else:
-                logging.debug(f"机型未适配fan 当前机型:{PRODUCT_NAME}")
-                return 0
-        except Exception as e:
-            logging.error(f"获取风扇转速异常:{e}")
-            return 0
-    
-    def get_fanRPMPercent(self):
-        try:
-            if FAN_IS_ADAPTED:
-                fanRPMPercent=EC.Read(FAN_RPMWRITE_OFFSET)/FAN_RPMWRITE_MAX
-                logging.debug(f"机型已适配fan 当前机型:{PRODUCT_NAME} 读取EC地址:{hex(FAN_RPMWRITE_OFFSET)} 风扇转速百分比:{fanRPMPercent}")
-                return fanRPMPercent
-            else:
-                logging.debug(f"机型未适配fan 当前机型:{PRODUCT_NAME}")
-                return 0
-        except Exception as e:
-            logging.error(f"获取风扇转速异常:{e}")
-            return 0
     
     def get_gpuTemp(self):
         try:
@@ -154,6 +129,7 @@ class SysInfoManager (threading.Thread):
                     if(name=="amdgpu"):
                         FAN_GPUTEMP_PATH=path+"/temp1_input"
             temp = int(open(FAN_GPUTEMP_PATH).read().strip())
+            logging.debug(f"获取gpu温度:{temp}")
             return temp
         except Exception as e:
             logging.error(f"获取gpu温度异常:{e}")
@@ -162,6 +138,7 @@ class SysInfoManager (threading.Thread):
     def get_cpuTemp(self):
         try:
             temp = int(open(FAN_CPUTEMP_PATH).read().strip())
+            logging.debug(f"获取cpu温度:{temp}")
             return temp
         except Exception as e:
             logging.error(f"获取cpu温度异常:{e}")

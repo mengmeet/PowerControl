@@ -11,6 +11,7 @@ try:
     from config import logging
     from gpu import gpuManager
     from cpu import cpuManager
+    from fan import fanManager
     from sysInfo import sysInfoManager
     logging.info("PowerControl main.py")
 except Exception as e:
@@ -78,30 +79,47 @@ class Plugin:
 
     async def get_fanRPM(self):
         try:
-            return sysInfoManager.get_fanRPM()
+            return fanManager.get_fanRPM()
         except Exception as e:
             logging.error(e)
             return 0
     
     async def get_fanRPMPercent(self):
         try:
-            return sysInfoManager.get_fanRPMPercent()
+            return fanManager.get_fanRPMPercent()
         except Exception as e:
             logging.error(e)
             return 0
     
     async def get_fanTemp(self):
         try:
-            gpu_temp = sysInfoManager.get_gpuTemp()
-            if(gpu_temp!=-1):
-                return gpu_temp
-            cpu_temp = sysInfoManager.get_cpuTemp()
-            if(cpu_temp!=-1):
-                return cpu_temp
-            return -273100
+            if sysInfoManager.get_gpuTemp()!=-1:
+                return sysInfoManager.get_gpuTemp()
+            return sysInfoManager.get_cpuTemp()
         except Exception as e:
             logging.error(e)
             return 0
+    
+    async def get_fanIsAuto(self):
+        try:
+            return fanManager.get_fanIsAuto()
+        except Exception as e:
+            logging.error(e)
+            return 0
+    
+    def set_fanAuto(self, value:bool):
+        try:
+            return fanManager.set_fanAuto(value)       
+        except Exception as e:
+            logging.error(e)
+            return False
+
+    def set_fanPercent(self, value:int):
+        try:
+            return fanManager.set_fanPercent(value)         
+        except Exception as e:
+            logging.error(e)
+            return False
 
     def set_gpuAuto(self, value:bool):
         try:

@@ -66,23 +66,42 @@ try:
     FAN_MANUAL_OFFSET=0     #风扇自动控制ec地址
     FAN_RPMWRITE_OFFSET=0   #风扇写入转速ec地址
     FAN_RPMREAD_OFFSET=0    #风扇读取转速ec地址
-    FAN_MAXTEMP=0    #风扇图表最大温度
-    FAN_MINTEMP=0     #风扇图表最小温度
-    FAN_MAXRPM_PERCENT=0    #风扇图表最大转速百分比
-    FAN_MINRPM_PERCENT=0    #风扇图表最小转速百分比
+    #FAN_MAXTEMP=0    #风扇图表最大温度
+    #FAN_MINTEMP=0     #风扇图表最小温度
+    #FAN_MAXRPM_PERCENT=0    #风扇图表最大转速百分比
+    #FAN_MINRPM_PERCENT=0    #风扇图表最小转速百分比
     FAN_RPMWRITE_MAX=0      #风扇最大转速ec写入值
+    FAN_RPMVALUE_MAX=0       #风扇最大转速数值
     FAN_CPUTEMP_PATH=""     #CPU温度路径
     FAN_GPUTEMP_PATH=""     #GPU温度路径
-    FAN_IS_ADAPTED=False    
+    FAN_IS_ADAPTED=False
     if PRODUCT_NAME in (
+        "ONEXPLAYER 2 ARP23",
+        ):
+        FAN_MANUAL_OFFSET=0x4a
+        FAN_RPMWRITE_OFFSET=0x4b
+        FAN_RPMREAD_OFFSET=0x58
+        FAN_RPMWRITE_MAX=184
+        FAN_RPMVALUE_MAX=4968
+        FAN_IS_ADAPTED=True    
+    elif PRODUCT_NAME in (
         "AIR",
         "AIR Pro",
+        ):
+        FAN_MANUAL_OFFSET=0x4a
+        FAN_RPMWRITE_OFFSET=0x4b
+        FAN_RPMREAD_OFFSET=0x76
+        FAN_RPMWRITE_MAX=64
+        FAN_RPMVALUE_MAX=5800
+        FAN_IS_ADAPTED=True
+    elif PRODUCT_NAME in (
         "AYANEO 2",
         ):
         FAN_MANUAL_OFFSET=0x4a
         FAN_RPMWRITE_OFFSET=0x4b
         FAN_RPMREAD_OFFSET=0x76
         FAN_RPMWRITE_MAX=100
+        FAN_RPMVALUE_MAX=5811
         FAN_IS_ADAPTED=True
     elif PRODUCT_NAME in (
         "ONEXPLAYER Mini Pro",
@@ -92,14 +111,7 @@ try:
         FAN_RPMWRITE_OFFSET=0x4b
         FAN_RPMREAD_OFFSET=0x76
         FAN_RPMWRITE_MAX=255
-        FAN_IS_ADAPTED=True
-    elif PRODUCT_NAME in (
-        "ONEXPLAYER 2 ARP23",
-        ):
-        FAN_MANUAL_OFFSET=0x4a
-        FAN_RPMWRITE_OFFSET=0x4b
-        FAN_RPMREAD_OFFSET=0x58
-        FAN_RPMWRITE_MAX=184
+        FAN_RPMVALUE_MAX=4968
         FAN_IS_ADAPTED=True
     hwmon_path="/sys/class/hwmon"
     hwmon_files=os.listdir(hwmon_path)

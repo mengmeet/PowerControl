@@ -1,5 +1,5 @@
 import {ServerAPI } from "decky-frontend-lib";
-import { APPLYTYPE, GPUMODE } from "./enum";
+import { APPLYTYPE, FANMODE, GPUMODE } from "./enum";
 import { Settings } from "./settings";
 
 
@@ -124,7 +124,7 @@ export class BackendData{
     var fanRPMpercent:number;
     await this.serverAPI!.callPluginMethod<{},number>("get_fanRPMPercent",{}).then(res=>{
       if (res.success){
-        fanRPMpercent=res.result;
+        fanRPMpercent=res.result*100;
       }else{
         fanRPMpercent=0;
       }
@@ -142,6 +142,18 @@ export class BackendData{
       }
     })
     return fanTemp!!;
+  }
+
+  public async getFanIsAuto(){
+    var fanIsAuto:boolean;
+    await this.serverAPI!.callPluginMethod<{},boolean>("get_fanIsAuto",{}).then(res=>{
+      if (res.success){
+        fanIsAuto=res.result;
+      }else{
+        fanIsAuto=false;
+      }
+    })
+    return fanIsAuto!!;
   }
 }
 
@@ -199,7 +211,12 @@ export class Backend {
     console.log("Applying gpuAuto" + minAutoFreq.toString());
     this.serverAPI!.callPluginMethod("set_gpuAutoMinFreq", {"value":minAutoFreq});
   }
-
+  private static applyFanAuto(auto:boolean){
+    this.serverAPI!.callPluginMethod("set_fanAuto", {"value":auto});
+  }
+  private static applyFanPercent(percent:number){
+    this.serverAPI!.callPluginMethod("set_fanPercent", {"value":percent});
+  }
   public static throwSuspendEvt(){
     console.log("throwSuspendEvt");
     this.serverAPI!.callPluginMethod("receive_suspendEvent", {});
@@ -256,6 +273,30 @@ export class Backend {
       }
       else {
         console.log(`出现意外的GPUmode = ${gpuMode}`)
+        Backend.applyGPUFreq(0);
+      }
+    }
+    if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_FAN){
+      const fanSetting = Settings.appFanSetting();
+      const fanMode = fanSetting?.fanMode;
+      if (fanMode == FANMODE.NOCONTROL) {
+        Backend.data.getFanIsAuto().then((value)=>{
+          if(!value)
+            Backend.applyFanAuto(true);
+          console.log(`mode=${fanMode} isAuto=${value}`)
+        });
+      } else if (fanMode == FANMODE.FIX) {
+        Backend.data.getFanIsAuto().then((value)=>{
+          if(value)
+            Backend.applyFanAuto(false);
+          var fixSpeed = fanSetting?.fixSpeed;
+          Backend.applyFanPercent(fixSpeed!!);
+          console.log(`mode=${fanMode} isAuto=${value}`)
+        });
+      } else if (fanMode == FANMODE.CURVE) {
+        
+      }else {
+        console.log(`出现意外的FanMode = ${fanMode}`)
         Backend.applyGPUFreq(0);
       }
     }
