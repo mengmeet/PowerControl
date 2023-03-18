@@ -109,7 +109,7 @@ export class BackendData{
 
 
 
-  public async getFanPRM(){
+  public async getFanRPM(){
     var fanPRM:number;
     await this.serverAPI!.callPluginMethod<{},number>("get_fanRPM",{}).then(res=>{
       if (res.success){
@@ -277,35 +277,31 @@ export class Backend {
         Backend.applyGPUFreq(0);
       }
     }
-    if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_FAN){
+    if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_FANMODE){
       const fanSetting = Settings.appFanSetting();
       const fanMode = fanSetting?.fanMode;
       if (fanMode == FANMODE.NOCONTROL) {
-        Backend.data.getFanIsAuto().then((value)=>{
-          if(!value)
-            Backend.applyFanAuto(true);
-          console.log(`mode=${fanMode} isAuto=${value}`)
-        });
+          Backend.applyFanAuto(true);
       } else if (fanMode == FANMODE.FIX) {
-        Backend.data.getFanIsAuto().then((value)=>{
-          if(value)
-            Backend.applyFanAuto(false);
-          Backend.applyFanPercent(FanControl.setPoint.fanRPMpercent!!);
-          console.log(`mode=${fanMode} isAuto=${value}`)
-        });
+        Backend.applyFanAuto(false);
       } else if (fanMode == FANMODE.CURVE) {
-        Backend.data.getFanIsAuto().then((value)=>{
-          if(value)
-            Backend.applyFanAuto(false);
-          Backend.applyFanPercent(FanControl.setPoint.fanRPMpercent!!);
-          console.log(`mode=${fanMode} isAuto=${value}`)
-        });
-      }else {
-        Backend.data.getFanIsAuto().then((value)=>{
-          if(!value)
-            Backend.applyFanAuto(true);
-            console.log(`出现意外的FanMode = ${fanMode} isAuto=${value}`)
-        });
+        Backend.applyFanAuto(false);
+      } else {
+          Backend.applyFanAuto(true);
+          console.log(`出现意外的FanMode = ${fanMode}`)
+      };
+    }
+    if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_FANRPM){
+      const fanSetting = Settings.appFanSetting();
+      const fanMode = fanSetting?.fanMode;
+      if (fanMode == FANMODE.NOCONTROL) {
+
+      } else if (fanMode == FANMODE.FIX) {
+        Backend.applyFanPercent(FanControl.setPoint.fanRPMpercent!!);
+      } else if (fanMode == FANMODE.CURVE) {
+        Backend.applyFanPercent(FanControl.setPoint.fanRPMpercent!!);
+      } else {
+        console.log(`出现意外的FanMode = ${fanMode}`)
       }
     }
   };

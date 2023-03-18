@@ -63,9 +63,25 @@ except Exception as e:
 
 #风扇配置
 try:
+
+    #风扇驱动配置
+    FAN_HWMON_LIST={
+        "oxpec":{
+            "pwm_enable":"pwm1_enable",   
+            "pwm":"pwm1",
+            "fan_input":"fan1_input"
+        },}
+    FAN_ISFIND_HWMON=False  #是否找到风扇hwmon
+    FAN_HWMON_NAME=""       #风扇hwmon名字
+    FAN_HWMON_PWMENABLE_PATH=""     #风扇自动控制hwmon地址
+    FAN_HWMON_PWM_PATH=""       #风扇写入转速hwmon地址
+    FAN_HWMON_INPUT_PATH=""     #风扇读取转速hwmon地址
+
+    #风扇ec配置
     FAN_MANUAL_OFFSET=0     #风扇自动控制ec地址
     FAN_RPMWRITE_OFFSET=0   #风扇写入转速ec地址
     FAN_RPMREAD_OFFSET=0    #风扇读取转速ec地址
+
     #FAN_MAXTEMP=0    #风扇图表最大温度
     #FAN_MINTEMP=0     #风扇图表最小温度
     #FAN_MAXRPM_PERCENT=0    #风扇图表最大转速百分比
@@ -125,6 +141,17 @@ try:
             if(name=="k10temp"):
                 temp=int(open(path+"/temp1_input").read().strip())
                 FAN_CPUTEMP_PATH=path+"/temp1_input"
+            if(name in FAN_HWMON_LIST):
+                FAN_HWMON_NAME=name
+                FAN_ISFIND_HWMON=True
+                FAN_HWMON_PWMENABLE_PATH=path+"/"+FAN_HWMON_LIST[name]["pwm_enable"]
+                FAN_HWMON_PWM_PATH=path+"/"+FAN_HWMON_LIST[name]["pwm"]
+                FAN_HWMON_INPUT_PATH=path+"/"+FAN_HWMON_LIST[name]["fan_input"]
+                logging.debug(f"FAN_HWMON_NAME={FAN_HWMON_NAME}")
+                logging.debug(f"FAN_ISFIND_HWMON={FAN_ISFIND_HWMON}")
+                logging.debug(f"FAN_HWMON_PWMENABLE_PATH={FAN_HWMON_PWMENABLE_PATH}")
+                logging.debug(f"FAN_HWMON_PWM_PATH={FAN_HWMON_PWM_PATH}")
+                logging.debug(f"FAN_HWMON_INPUT_PATH={FAN_HWMON_INPUT_PATH}")
         except Exception as e:
             logging.error(f"温度路径获取异常|{e}")
 except Exception as e:

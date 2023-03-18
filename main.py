@@ -107,6 +107,13 @@ class Plugin:
             logging.error(e)
             return 0
     
+    async def get_fanMAXRPM(self):
+        try:
+            return fanManager.get_fanMAXRPM()
+        except Exception as e:
+            logging.error(e)
+            return 0
+    
     def set_fanAuto(self, value:bool):
         try:
             return fanManager.set_fanAuto(value)       

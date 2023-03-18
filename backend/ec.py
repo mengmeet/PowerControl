@@ -1,79 +1,60 @@
+import portio
+import time
+import os
+import asyncio
 from config import logging
-try:
-    import portio
-except Exception as e:
-    logging.error(e)
-EC_IBF_BIT = 0b10
-EC_OBF_BIT = 0b01
 EC_CMD_STATUS_REGISTER_PORT = 0x66
 EC_DATA_REGISTER_PORT = 0x62
-def inb(port):
-    return portio.inb(port)
+EC_IBF_BIT = 1
+EC_OBF_BIT = 0
+RD_EC = 0x80
+WR_EC = 0x81
 
-def outb(port,data):
-    return portio.outb(data,port)
-
-res_sc = portio.ioperm(EC_CMD_STATUS_REGISTER_PORT,1,1)
-res_data = portio.ioperm(EC_DATA_REGISTER_PORT,1,1)
-if (res_sc != 0 or res_data !=0):
-    raise Exception("ioperm error")
-
+for register in [EC_DATA_REGISTER_PORT, EC_CMD_STATUS_REGISTER_PORT]:
+    status = portio.ioperm(register, 1, 1)
 
 class EC:
-    class Register():
-        @staticmethod
-        def WaitInputNFull():
-            while EC.Register.GetStatus() & EC_IBF_BIT != 0:
-                pass
-
-        @staticmethod
-        def WaitOutputFull():
-            i = 0
-            while EC.Register.GetStatus() & EC_OBF_BIT == 0:
-                if i == 0xFFFF:
-                    break
-                i += 1
-
-        @staticmethod
-        def GetStatus():
-            return inb(EC_CMD_STATUS_REGISTER_PORT)
-
-        @staticmethod
-        def SetCmd(cmd: int):
-            EC.Register.WaitInputNFull()
-            outb(EC_CMD_STATUS_REGISTER_PORT, cmd)
-
-        @staticmethod
-        def SetData(data: int):
-            EC.Register.WaitInputNFull()
-            outb(EC_DATA_REGISTER_PORT, data)
-
-        @staticmethod
-        def GetData():
-            EC.Register.WaitOutputFull()
-            return inb(EC_DATA_REGISTER_PORT)
-
+    @staticmethod
+    def Wait(port, flag, value):
+        for i in range(200):
+            data = portio.inb(port)
+            if ((data >> flag) & 0x1) == value:
+                condition = True
+                break
+            time.sleep(0.001)
+    
     @staticmethod
     def Read(address: int):
-        EC.Register.SetCmd(0x80)
-        EC.Register.SetData(address)
-        return EC.Register.GetData()
+        EC.Wait(EC_CMD_STATUS_REGISTER_PORT, EC_IBF_BIT, 0)
+        portio.outb(RD_EC, EC_CMD_STATUS_REGISTER_PORT)
+        EC.Wait(EC_CMD_STATUS_REGISTER_PORT, EC_IBF_BIT, 0)
+        portio.outb(address, EC_DATA_REGISTER_PORT)
+        EC.Wait(EC_CMD_STATUS_REGISTER_PORT, EC_OBF_BIT, 1)
+        result = portio.inb(EC_DATA_REGISTER_PORT)
+        logging.debug(f"ECRead  address:{hex(address)} value:{result}")
+        return result
 
     @staticmethod
     def ReadLonger(address:int,length:int):
         sum=0
         for len in range(length):
-            EC.Register.SetCmd(0x80)
-            EC.Register.SetData(address+len)
-            sum = (sum<<8) + EC.Register.GetData()
+            value = EC.Read(address+len)
+            sum = (sum<<8) + value
+            #logging.debug(f"count={len} sum={sum} address={address+len} value={value}")
+        logging.debug(f"ECReadLonger  address:{hex(address)} value:{sum}")
         return sum
 
 
     @staticmethod
     def Write(address:int,data:int):
-        EC.Register.SetCmd(0x81)
-        EC.Register.SetData(address)
-        EC.Register.SetData(data)
+        EC.Wait(EC_CMD_STATUS_REGISTER_PORT, EC_IBF_BIT, 0)
+        portio.outb(WR_EC, EC_CMD_STATUS_REGISTER_PORT)
+        EC.Wait(EC_CMD_STATUS_REGISTER_PORT, EC_IBF_BIT, 0)
+        portio.outb(address, EC_DATA_REGISTER_PORT)
+        EC.Wait(EC_CMD_STATUS_REGISTER_PORT, EC_IBF_BIT, 0)
+        portio.outb(data, EC_DATA_REGISTER_PORT)
+        EC.Wait(EC_CMD_STATUS_REGISTER_PORT, EC_IBF_BIT, 0)
+        logging.debug(f"ECWrite  address:{hex(address)} value:{data}")
     
     def PrintAll():
         print("","\t",end="")

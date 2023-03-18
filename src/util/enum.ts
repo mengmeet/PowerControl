@@ -21,7 +21,8 @@ export enum APPLYTYPE{
     SET_CPUCORE = "SET_CPUCORE",
     SET_TDP = "SET_TDP",
     SET_GPUMODE = "SET_GPUMODE",
-    SET_FAN="SET_FAN"
+    SET_FANMODE = "SET_FANMODE",
+    SET_FANRPM = "SET_FANRPM",
 }
 
 export enum ComponentName{

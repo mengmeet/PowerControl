@@ -9,7 +9,6 @@ import { calPointInLine, fanPosition } from "./position";
 type ActiveAppChangedHandler = (newAppId: string, oldAppId: string) => void;
 type ComponentUpdateHandler = (componentsName: ComponentName,updateType:UpdateType) => void;
 type UnregisterFn = () => void;
-
 export const DEFAULT_APP = "0";
 export class RunningApps {
     private static listeners: ActiveAppChangedHandler[] = [];
@@ -56,20 +55,33 @@ export class FanControl{
   private static intervalId: any;
   public static nowPoint:fanPosition=new fanPosition(0,0);
   public static setPoint:fanPosition=new fanPosition(0,0);
+  public static fanMode:FANMODE;
+  public static fanRPM:number=0;
   static register() {
     if (this.intervalId == undefined)
-      this.intervalId = setInterval(() => this.updateFan(), 500);
+      this.intervalId = setInterval(() => this.updateFan(), 1000);
   }
   
   static async updateFan(){
+    FanControl.updateFanMode();
     FanControl.updateFanInfo();
-    Backend.applySettings(APPLYTYPE.SET_FAN);
     PluginManager.updateComponent(ComponentName.FAN_DISPLAY,UpdateType.UPDATE);
   }
 
+  static async updateFanMode(){
+    const fanSetting = Settings.appFanSetting();
+    const fanMode = fanSetting?.fanMode;
+    if(FanControl.fanMode==undefined||FanControl.fanMode!=fanMode)
+    {
+      FanControl.fanMode = fanMode!!;
+      Backend.applySettings(APPLYTYPE.SET_FANMODE);
+    }
+  }
+
   static async updateFanInfo(){
-    await Backend.data.getFanRPMPercent().then((value)=>{
-      FanControl.nowPoint.fanRPMpercent=value;
+    await Backend.data.getFanRPM().then((value)=>{
+      this.fanRPM=value;
+      FanControl.nowPoint.fanRPMpercent=Backend.data.HasFanMAXPRM()?value/Backend.data.getFanMAXPRM()*100:-273;
     });
     await Backend.data.getFanTemp().then((value)=>{
       FanControl.nowPoint.temperature=value;
@@ -96,7 +108,7 @@ export class FanControl{
           var lineEnd = curvePoints!![0];
           if(FanControl.nowPoint.temperature!!>lineStart.temperature!!&&FanControl.nowPoint.temperature!!<=lineEnd.temperature!!){
             FanControl.setPoint = calPointInLine(lineStart,lineEnd,FanControl.nowPoint.temperature!!)!!;
-            return;
+            break;
           }
           curvePoints?.forEach((value,index)=>{
             if(index>=curvePoints?.length!!-1)
@@ -112,7 +124,7 @@ export class FanControl{
           var lineEnd = new fanPosition(fanPosition.tempMax,fanPosition.fanMax);
           if(FanControl.nowPoint.temperature!!>lineStart.temperature!!&&FanControl.nowPoint.temperature!!<=lineEnd.temperature!!){
             FanControl.setPoint = calPointInLine(lineStart,lineEnd,FanControl.nowPoint.temperature!!)!!;
-            return;
+            break;
           }
         }
         break;
@@ -121,6 +133,7 @@ export class FanControl{
         console.error(`错误的fanmode = ${fanMode}`)
       }
     }
+    Backend.applySettings(APPLYTYPE.SET_FANRPM);
   }
 
   static enableFan(){
@@ -148,15 +161,20 @@ export class PluginManager{
     await Backend.init(serverAPI);
     await localizationManager.init(serverAPI);
     RunningApps.register();
-    FanControl.register()
+    console.log("111111")
+    FanControl.register();
+    console.log("2222222")
     RunningApps.listenActiveChange((newAppId, oldAppId) => {
       console.log(`newAppId=${newAppId} oldAppId=${oldAppId}`)
       if (Settings.ensureEnable()) {
         Backend.applySettings(APPLYTYPE.SET_ALL);
       }
     });
+    console.log("3333333")
     Settings.loadSettingsFromLocalStorage();
+    console.log("444444444")
     Backend.applySettings(APPLYTYPE.SET_ALL);
+    console.log("55555555")
     PluginManager.suspendEndHook = SteamClient.System.RegisterForOnResumeFromSuspend(async () => {
       if (Settings.ensureEnable()) {
         Backend.throwSuspendEvt()

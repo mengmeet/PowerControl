@@ -12,7 +12,7 @@ import {
   DropdownOption,
 } from "decky-frontend-lib";
 import { useEffect, useState,useRef,VFC} from "react";
-import { localizationManager, Settings,Backend, PluginManager,ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, fanPosition, FanSetting, FANPROFILEACTION, FanControl} from "../util";
+import { localizationManager, Settings, PluginManager,ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, fanPosition, FanSetting, FANPROFILEACTION, FanControl} from "../util";
 import {FanCanvas} from "./fanCanvas";
 var fanRPMIntervalID:any;
 var fanDisplayIntervalID:any;
@@ -296,9 +296,7 @@ const FANDisplayComponent: VFC = () =>{
 const FANRPMComponent: VFC = () => {
   const [fanrpm, setFanRPM] = useState<number>(0);
   const refresh = async() => {
-    Backend.data.getFanPRM().then((value)=>{
-      setFanRPM(value);
-    });
+      setFanRPM(FanControl.fanRPM);
   };
   const dismount = () =>{
     if(fanRPMIntervalID!=null){
