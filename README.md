@@ -26,26 +26,18 @@
 ## 演示
 ![](assets/20230110153822_1.jpg)
 ![](assets/20230111054307_1.jpg)
+![](assets/20230319145542_1.jpg)
 
 ## 性能调整范围预设
-
-### AMD 5560U
-TDP最大：18 W
-
-### AMD 5800U 5825U
-TDP最大：30 W
-
-### AMD 6800U
-TDP最大：40 W
-
-### AMD 4800U
-TDP最大：25 W
-
-### AMD 4500U
-TDP最大：25 W
-
-### 其他
-TDP最大：15 W
+> 以下为各个芯片对应的预设TDP
+|      芯片        | TDP |
+| --------------- | ---- | 
+| AMD 5560U       | 18 W |
+| AMD 5800U 5825U | 30 W |
+| AMD 6800U       | 40 W |
+| AMD 4800U 4500U | 25 W |
+| AMD 4500U       | 25 W |
+| 其他             | 18 W |
 
 **TDP调整基于ryzenadj,因此只支持ryzenadj支持的cpu列表.如有未列出的cpu或者给出的范围数值不正确,请在[issuse](https://github.com/Gawah/PowerControl/issues)提交**
 
