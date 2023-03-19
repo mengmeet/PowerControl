@@ -10,13 +10,13 @@ var localizeMap:Map<number,localizeString>= new Map([
   [1,{
     schinese:"设置",
     tchinese:"設定",
-    english:"SETTINGS",
+    english:"Settings",
     german:"Einstellungen",
   }],
   [2,{
     schinese:"使用按游戏设置的配置文件",
     tchinese:"使用按遊戲設定的配置文件",
-    english:"Use per-game profile",
+    english:"Use per-game Profile",
     german:"Spielspezifisches Profil",
   }],
   [3,{
@@ -28,13 +28,13 @@ var localizeMap:Map<number,localizeString>= new Map([
   [4,{
     schinese:"默认",
     tchinese:"默認",
-    english:"default",
+    english:"Default",
     german:"standard",
   }],
   [5,{
     schinese:"配置文件",
     tchinese:"配置文件",
-    english:" profile",
+    english:" Profile",
     german:" Profil",
   }],
   [6,{
@@ -58,7 +58,7 @@ var localizeMap:Map<number,localizeString>= new Map([
   [9,{
     schinese:"核 心 数",
     tchinese:"CPU內核數",
-    english:"Number of cpu cores",
+    english:"Number Of CPU Cores",
     german:"Anzahl CPU-Kerne",
   }],
   [10,{
@@ -82,7 +82,7 @@ var localizeMap:Map<number,localizeString>= new Map([
   [13,{
     schinese:"未检测到ryzenAdj",
     tchinese:"未檢測到ryzenAdj文件",
-    english:"ryzenAdj not detected",
+    english:"RyzenAdj Not Detected",
     german:"ryzenAdj nicht installiert",
   }],
   [14,{
@@ -94,7 +94,7 @@ var localizeMap:Map<number,localizeString>= new Map([
   [15,{
     schinese:"GPU 频率模式",
     tchinese:"GPU 頻率模式",
-    english:"GPU clock frequency mode",
+    english:"GPU Clock Frequency Mode",
     german:"Grafikkartenfrequenz Modus",
   }],
   [16,{
@@ -106,13 +106,13 @@ var localizeMap:Map<number,localizeString>= new Map([
   [17,{
     schinese:"固定",
     tchinese:"鎖定",
-    english:"fixed",
+    english:"Fixed",
     german:"fix",
   }],
   [18,{
     schinese:"自适应",
     tchinese:"自適應",
-    english:"Automatic",
+    english:"Auto",
     german:"Automatisch",
   }],
   [19,{
@@ -124,19 +124,19 @@ var localizeMap:Map<number,localizeString>= new Map([
   [20,{
     schinese:"GPU 最大频率限制",
     tchinese:"GPU 最大頻率限制",
-    english:"maximum frequency limit",
+    english:"Maximum Frequency Limit",
     german:"Maximale Frequenz",
   }],
   [21,{
     schinese:"GPU 最小频率限制",
     tchinese:"GPU 最小頻率限制",
-    english:"minimum frequency limit",
+    english:"Minimum Frequency Limit",
     german:"Minimale Frequenz",
   }],
   [22,{
     schinese:"启用插件设置",
     tchinese:"啟用插件功能列",
-    english:"Enable settings",
+    english:"Enable Settings",
     german:"Einstellungen aktivieren",
   }],
   [23,{
@@ -154,97 +154,97 @@ var localizeMap:Map<number,localizeString>= new Map([
   [25,{
     schinese:"创建风扇配置文件",
     tchinese:"創建風扇配置檔",
-    english:"Create fan profile",
+    english:"Create Fan Profile",
     german:"Lüfterprofil erstellen",
   }],
   [26,{
     schinese:"网格对齐",
     tchinese:"網格對齊",
-    english:"Grid alignment",
+    english:"Grid Alignment",
     german:"",
   }],
   [27,{
     schinese:"风扇模式",
     tchinese:"風扇模式",
-    english:"Fan mode",
+    english:"Fan Mode",
     german:"Lüfter-Modus",
   }],
   [28,{
     schinese:"不控制",
     tchinese:"不控制",
-    english:"Not controlled",
+    english:"Not Controlled",
     german:"Nicht kontrolliert",
   }],
   [29,{
     schinese:"固定",
     tchinese:"固定",
-    english:"fixed",
+    english:"Fixed",
     german:"Fest",
   }],
   [30,{
     schinese:"曲线",
     tchinese:"曲線",
-    english:"curve",
+    english:"Curve",
     german:"Kurve",
   }],
   [31,{
     schinese:"对齐到网格线交点",
     tchinese:"對齊到網格線交點",
-    english:"Snap to the gridline intersection",
+    english:"Snap To The Gridline Intersection",
     german:"An der Gitternetzlinien-Schnittmenge ausrichten",
   }],
   [32,{
     schinese:"风扇转速百分比",
     tchinese:"風扇轉速百分比",
-    english:"Fan speed percentage",
+    english:"Fan Speed Percentage",
     german:"Prozentualer Anteil der Lüftergeschwindigkeit",
   }],
   [33,{
     schinese:"传感器温度",
     tchinese:"感測器溫度",
-    english:"Sensor temperature",
+    english:"Sensor Temperature",
     german:"Temperatur des Sensors",
   }],
   [35,{
     schinese:"创建一个风扇配置文件",
     tchinese:"創建一個風扇配置檔",
-    english:"Create a fan profile",
+    english:"Create A Fan Profile",
     german:"Fan-Profil erstellen",
   }],
   [36,{
     schinese:"选择一个风扇配置文件",
     tchinese:"選擇一個風扇配置檔",
-    english:"Select a fan profile",
+    english:"Select A Fan Profile",
     german:"Wähle ein Fan-Profil aus",
   }],
   [37,{
     schinese:"配置文件名称",
     tchinese:"配置檔名稱",
-    english:"Profile name",
+    english:"Profile Name",
     german:"Name des Profils",
   }],
   [38,{
     schinese:"使用",
     tchinese:"使用",
-    english:"use",
+    english:"Use",
     german:"gebrauchen",
   }],
   [39,{
     schinese:"删除",
     tchinese:"删除",
-    english:"delete",
+    english:"Delete",
     german:"Löschen",
   }],
   [40,{
     schinese:"创建",
     tchinese:"创建",
-    english:"create",
+    english:"Create",
     german:"schaffen",
   }],
   [41,{
     schinese:"取消",
     tchinese:"取消",
-    english:"cancel",
+    english:"Cancel",
     german:"Abbrechen",
   }],
   [42,{
