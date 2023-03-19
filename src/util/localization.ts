@@ -22,20 +22,20 @@ var localizeMap:Map<number,localizeString>= new Map([
   [3,{
     schinese:"正在使用",
     tchinese:"正在使用",
-    english:"Using ",
-    german:"Verwendet ",
+    english:"Using",
+    german:"Verwendet",
   }],
   [4,{
     schinese:"默认",
     tchinese:"默認",
-    english:"Default",
-    german:"standard",
+    english:" default ",
+    german:" standard ",
   }],
   [5,{
     schinese:"配置文件",
     tchinese:"配置文件",
-    english:" Profile",
-    german:" Profil",
+    english:"Profile",
+    german:"Profil",
   }],
   [6,{
     schinese:"睿 频",

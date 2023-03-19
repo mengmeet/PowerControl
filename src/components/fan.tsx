@@ -10,6 +10,7 @@ import {
   SliderField,
   Dropdown,
   DropdownOption,
+  Focusable,
 } from "decky-frontend-lib";
 import { useEffect, useState,useRef,VFC} from "react";
 import { localizationManager, Settings, PluginManager,ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, fanPosition, FanSetting, FANPROFILEACTION, FanControl} from "../util";
@@ -741,14 +742,14 @@ function FANCretateProfileModelComponent({
           </PanelSection>
         </div>
       </div>
-      <div style={{marginBlockEnd: "-25px", marginBlockStart: "-5px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)",gridGap: "0.5rem", padding: "8px 0"}}>
+      <Focusable style={{marginBlockEnd: "-25px", marginBlockStart: "-5px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)",gridTemplateRows: "repeat(1, 1fr)",gridGap: "0.5rem", padding: "8px 0"}}>
       <DialogButton onClick={() => {
           if(onCreateProfile()){
             closeModal();
           }
         }}> {localizationManager.getString(40,"创建")}</DialogButton>
       <DialogButton onClick={() => {closeModal()}}> {localizationManager.getString(41,"取消")}</DialogButton>
-      </div>
+      </Focusable>
     </ModalRoot>
     </div>
   );

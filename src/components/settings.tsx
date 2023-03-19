@@ -83,14 +83,15 @@ const SettingsPerAppComponent:VFC = () =>{
                 <img src={RunningApps.active_appInfo()?.icon_data ? "data:image/" + RunningApps.active_appInfo()?.icon_data_format + ";base64," + RunningApps.active_appInfo()?.icon_data : "/assets/" + RunningApps.active_appInfo()?.appid + "_icon.jpg?v=" + RunningApps.active_appInfo()?.icon_hash} width={20} height={20}
                   style={{ paddingRight:"5px",display: override && overrideable ? "block" : "none" }}
                 />
-                <div style={{lineHeight:"20px"}}>{localizationManager.getString(3, "正在使用") + (override && overrideable ?"『":"")}</div>
+                <div style={{lineHeight:"20px",whiteSpace:"pre"}}>{localizationManager.getString(3, "正在使用") + (override && overrideable ?"『":"")}</div>
                 <Marquee play={true} fadeLength={10} delay={1} style={{
                   maxWidth:"100px",
-                  lineHeight:"20px"
+                  lineHeight:"20px",
+                  whiteSpace:"pre",
                 }}>
                 {(override && overrideable ? `${RunningApps.active_appInfo()?.display_name}` : `${localizationManager.getString(4, "默认")}`)}
                 </Marquee>
-                <div style={{lineHeight:"20px"}}>{(override && overrideable ?"』":"")+localizationManager.getString(5, "配置文件")}</div>
+                <div style={{lineHeight:"20px",whiteSpace:"pre",}}>{(override && overrideable ?"』":"")+localizationManager.getString(5, "配置文件")}</div>
                 
               </div>
             }
