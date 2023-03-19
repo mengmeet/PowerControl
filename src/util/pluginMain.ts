@@ -57,9 +57,15 @@ export class FanControl{
   public static setPoint:fanPosition=new fanPosition(0,0);
   public static fanMode:FANMODE;
   public static fanRPM:number=0;
-  static register() {
+  public static fanIsEnable:boolean=false;
+  static async register() {
+    if(!Backend.data.getFanIsAdapt()){
+      this.disableFan();
+      return;
+    }
     if (this.intervalId == undefined)
       this.intervalId = setInterval(() => this.updateFan(), 1000);
+    this.fanIsEnable=true;
   }
   
   static async updateFan(){
@@ -137,10 +143,12 @@ export class FanControl{
   }
 
   static enableFan(){
+    this.fanIsEnable=true;
     this.register();
   }
 
   static disableFan(){
+    this.fanIsEnable=false;
     this.unregister();
   }
 
@@ -161,20 +169,15 @@ export class PluginManager{
     await Backend.init(serverAPI);
     await localizationManager.init(serverAPI);
     RunningApps.register();
-    console.log("111111")
     FanControl.register();
-    console.log("2222222")
     RunningApps.listenActiveChange((newAppId, oldAppId) => {
       console.log(`newAppId=${newAppId} oldAppId=${oldAppId}`)
       if (Settings.ensureEnable()) {
         Backend.applySettings(APPLYTYPE.SET_ALL);
       }
     });
-    console.log("3333333")
     Settings.loadSettingsFromLocalStorage();
-    console.log("444444444")
     Backend.applySettings(APPLYTYPE.SET_ALL);
-    console.log("55555555")
     PluginManager.suspendEndHook = SteamClient.System.RegisterForOnResumeFromSuspend(async () => {
       if (Settings.ensureEnable()) {
         Backend.throwSuspendEvt()

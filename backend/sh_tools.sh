@@ -89,11 +89,13 @@ function get_gpu_nowFreqMaxLimit()
 
 function get_gpuFreqMin()
 {
+    sudo echo "manual">/sys/class/drm/card0/device/power_dpm_force_performance_level
     echo "$(sudo cat /sys/class/drm/card0/device/pp_od_clk_voltage|grep -a "SCLK:"|awk '{print $2}'|sed -e 's/Mhz//g'|xargs)"
 }
 
 function get_gpuFreqMax()
 {
+    sudo echo "manual">/sys/class/drm/card0/device/power_dpm_force_performance_level
     echo "$(sudo cat /sys/class/drm/card0/device/pp_od_clk_voltage|grep -a "SCLK:"|awk '{print $3}'|sed -e 's/Mhz//g'|xargs)"
 }
 
@@ -102,7 +104,6 @@ function set_gpu_flk()
     flk=$1
     index=$(((1600-$flk)/400))
     now_mode=$(cat /sys/class/drm/card0/device/power_dpm_force_performance_level)
-    sudo chmod 777  /sys/class/drm/card0/device/pp_dpm_fclk
     if [[ "$now_mode"!="manual" ]];then
         sudo echo "manual" >/sys/class/drm/card0/device/power_dpm_force_performance_level
         sudo echo "$index" >/sys/class/drm/card0/device/pp_dpm_fclk

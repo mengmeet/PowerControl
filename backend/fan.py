@@ -104,5 +104,17 @@ class FAN_Manager ():
         except Exception as e:
             logging.error(f"获取风扇最大转速异常:{e}")
             return 0
+    
+    def get_fanIsAdapted(self):
+        try:
+            if FAN_IS_ADAPTED:
+                logging.debug(f"机型已适配fan 当前机型:{PRODUCT_NAME}")
+                return True
+            else:
+                logging.debug(f"机型未适配fan 当前机型:{PRODUCT_NAME}")
+                return False    
+        except Exception as e:
+            logging.error(f"获取机型适配异常:{e}")
+            return 0
 
 fanManager = FAN_Manager()

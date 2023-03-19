@@ -93,7 +93,7 @@ var localizeMap:Map<number,localizeString>= new Map([
   }],
   [15,{
     schinese:"GPU 频率模式",
-    tchinese:"GPU頻率模式",
+    tchinese:"GPU 頻率模式",
     english:"GPU clock frequency mode",
     german:"Grafikkartenfrequenz Modus",
   }],
@@ -104,32 +104,32 @@ var localizeMap:Map<number,localizeString>= new Map([
     german:"Unbeschränkt",
   }],
   [17,{
-    schinese:"固定频率",
-    tchinese:"鎖定頻率",
+    schinese:"固定",
+    tchinese:"鎖定",
     english:"fixed",
     german:"fix",
   }],
   [18,{
-    schinese:"自动频率",
-    tchinese:"自動頻率",
+    schinese:"自适应",
+    tchinese:"自適應",
     english:"Automatic",
     german:"Automatisch",
   }],
   [19,{
     schinese:"GPU 频率",
-    tchinese:"GPU頻率",
+    tchinese:"GPU 頻率",
     english:"GPU Clock Frequency",
     german:"Grafikkartenfrequenz",
   }],
   [20,{
     schinese:"GPU 最大频率限制",
-    tchinese:"GPU最大頻率限制",
+    tchinese:"GPU 最大頻率限制",
     english:"maximum frequency limit",
     german:"Maximale Frequenz",
   }],
   [21,{
     schinese:"GPU 最小频率限制",
-    tchinese:"GPU最小頻率限制",
+    tchinese:"GPU 最小頻率限制",
     english:"minimum frequency limit",
     german:"Minimale Frequenz",
   }],
@@ -140,130 +140,118 @@ var localizeMap:Map<number,localizeString>= new Map([
     german:"Einstellungen aktivieren",
   }],
   [23,{
-    schinese:"范围频率",
-    tchinese:"範圍頻率",
+    schinese:"范围",
+    tchinese:"範圍",
     english:"Range",
     german:"Bereich",
   }],
   [24,{
     schinese:"风扇转速",
-    tchinese:"风扇转速",
+    tchinese:"風扇轉速",
     english:"Fan Speed",
     german:"Lüftergeschwindigkeit",
   }],
   [25,{
     schinese:"创建风扇配置文件",
-    tchinese:"创建风扇配置文件",
+    tchinese:"創建風扇配置檔",
     english:"Create fan profile",
     german:"Lüfterprofil erstellen",
   }],
   [26,{
     schinese:"网格对齐",
-    tchinese:"",
-    english:"",
+    tchinese:"網格對齊",
+    english:"Grid alignment",
     german:"",
   }],
   [27,{
     schinese:"风扇模式",
-    tchinese:"",
-    english:"",
-    german:"",
+    tchinese:"風扇模式",
+    english:"Fan mode",
+    german:"Lüfter-Modus",
   }],
   [28,{
     schinese:"不控制",
-    tchinese:"",
-    english:"",
-    german:"",
+    tchinese:"不控制",
+    english:"Not controlled",
+    german:"Nicht kontrolliert",
   }],
   [29,{
     schinese:"固定",
-    tchinese:"",
-    english:"",
-    german:"",
+    tchinese:"固定",
+    english:"fixed",
+    german:"Fest",
   }],
   [30,{
     schinese:"曲线",
-    tchinese:"",
-    english:"",
-    german:"",
+    tchinese:"曲線",
+    english:"curve",
+    german:"Kurve",
   }],
   [31,{
     schinese:"对齐到网格线交点",
-    tchinese:"",
-    english:"",
-    german:"",
+    tchinese:"對齊到網格線交點",
+    english:"Snap to the gridline intersection",
+    german:"An der Gitternetzlinien-Schnittmenge ausrichten",
   }],
   [32,{
     schinese:"风扇转速百分比",
-    tchinese:"",
-    english:"",
-    german:"",
+    tchinese:"風扇轉速百分比",
+    english:"Fan speed percentage",
+    german:"Prozentualer Anteil der Lüftergeschwindigkeit",
   }],
   [33,{
     schinese:"传感器温度",
-    tchinese:"",
-    english:"",
-    german:"",
-  }],
-  [34,{
-    schinese:"风扇转速",
-    tchinese:"",
-    english:"",
-    german:"",
+    tchinese:"感測器溫度",
+    english:"Sensor temperature",
+    german:"Temperatur des Sensors",
   }],
   [35,{
     schinese:"创建一个风扇配置文件",
-    tchinese:"",
-    english:"",
-    german:"",
+    tchinese:"創建一個風扇配置檔",
+    english:"Create a fan profile",
+    german:"Fan-Profil erstellen",
   }],
   [36,{
     schinese:"选择一个风扇配置文件",
-    tchinese:"",
-    english:"",
-    german:"",
+    tchinese:"選擇一個風扇配置檔",
+    english:"Select a fan profile",
+    german:"Wähle ein Fan-Profil aus",
   }],
   [37,{
     schinese:"配置文件名称",
-    tchinese:"",
-    english:"",
-    german:"",
+    tchinese:"配置檔名稱",
+    english:"Profile name",
+    german:"Name des Profils",
   }],
   [38,{
     schinese:"使用",
-    tchinese:"",
-    english:"",
-    german:"",
+    tchinese:"使用",
+    english:"use",
+    german:"gebrauchen",
   }],
   [39,{
     schinese:"删除",
-    tchinese:"",
-    english:"",
-    german:"",
+    tchinese:"删除",
+    english:"delete",
+    german:"Löschen",
   }],
   [40,{
     schinese:"创建",
-    tchinese:"",
-    english:"",
-    german:"",
+    tchinese:"创建",
+    english:"create",
+    german:"schaffen",
   }],
   [41,{
     schinese:"取消",
-    tchinese:"",
-    english:"",
-    german:"",
+    tchinese:"取消",
+    english:"cancel",
+    german:"Abbrechen",
   }],
   [42,{
-    schinese:"设置坐标",
-    tchinese:"",
-    english:"",
-    german:"",
-  }],
-  [43,{
-    schinese:"实际坐标",
-    tchinese:"",
-    english:"",
-    german:"",
+    schinese:"当前状态",
+    tchinese:"当前状态",
+    english:"Current status",
+    german:"Aktueller Stand",
   }],
 ])
 
@@ -281,22 +269,22 @@ export class localizationManager {
     })
   }
   public static getString=(index:number, defaultString:string)=> {
+    var str;
     if(localizeMap.has(index)){
       if(this.language=="schinese"){
-        return localizeMap.get(index)?.schinese;
+        str = localizeMap.get(index)?.schinese;
       }else if(this.language=="tchinese"){
-        return localizeMap.get(index)?.tchinese;
+        str = localizeMap.get(index)?.tchinese;
       }else if(this.language=="english"){
-        return localizeMap.get(index)?.english;
+        str = localizeMap.get(index)?.english;
       }else if(this.language=="german"){
-        return localizeMap.get(index)?.german;
-      }else{
-        return defaultString;
+        str = localizeMap.get(index)?.german;
       }
     }
-    else{
-      return defaultString
+    if(str==undefined||str==""){
+      return defaultString 
     }
+    return str
   }
 }
 

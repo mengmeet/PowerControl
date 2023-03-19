@@ -18,6 +18,7 @@ export class BackendData{
   private has_gpuMin = false;
   private fanMaxRPM = 0;
   private has_fanMaxRPM = false;
+  private fanIsAdapted = false;
   public async init(serverAPI:ServerAPI){
     this.serverAPI=serverAPI;
     await serverAPI!.callPluginMethod<{},number>("get_cpuMaxNum",{}).then(res=>{
@@ -60,6 +61,13 @@ export class BackendData{
         this.has_fanMaxRPM=true;
       }else{
         this.fanMaxRPM=1;
+      }
+    })
+    await this.serverAPI!.callPluginMethod<{},boolean>("get_fanIsAdapted",{}).then(res=>{
+      if (res.success){
+        this.fanIsAdapted=res.result;
+      }else{
+        this.fanIsAdapted=false;
       }
     })
   }
@@ -107,7 +115,9 @@ export class BackendData{
     return this.has_fanMaxRPM;
   }
 
-
+  public getFanIsAdapt(){
+    return this.fanIsAdapted;
+  }
 
   public async getFanRPM(){
     var fanPRM:number;
@@ -278,6 +288,9 @@ export class Backend {
       }
     }
     if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_FANMODE){
+      if(!FanControl.fanIsEnable){
+        return;
+      }
       const fanSetting = Settings.appFanSetting();
       const fanMode = fanSetting?.fanMode;
       if (fanMode == FANMODE.NOCONTROL) {
@@ -292,10 +305,12 @@ export class Backend {
       };
     }
     if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_FANRPM){
+      if(!FanControl.fanIsEnable){
+        return;
+      }
       const fanSetting = Settings.appFanSetting();
       const fanMode = fanSetting?.fanMode;
       if (fanMode == FANMODE.NOCONTROL) {
-
       } else if (fanMode == FANMODE.FIX) {
         Backend.applyFanPercent(FanControl.setPoint.fanRPMpercent!!);
       } else if (fanMode == FANMODE.CURVE) {

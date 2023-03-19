@@ -21,9 +21,8 @@ const pointBlockDis = 5;
 const pointColor = "#1A9FFF";
 const selectColor = "#FF0000";
 const textColor = "#FFFFFF";
-const lineColor = "#1A4AFF";
-const setPointColor = "#03FF09";
-const nowPointColor = "#FF0309";
+const lineColor = "#1E90FF";
+const setPointColor = "#00BFFF";
 
 //选择配置文件下拉框
 const FANSelectProfileComponent: VFC = () =>{
@@ -150,13 +149,13 @@ const FANDisplayComponent: VFC = () =>{
     const width: number = ctx.canvas.width;
     const height: number = ctx.canvas.height;
     ctx.beginPath();
-    ctx.fillStyle = nowPointColor;
+    ctx.fillStyle = setPointColor;
     ctx.textAlign = "left";
-    ctx.fillText(localizationManager.getString(43,"实际坐标"),22,16);
+    ctx.fillText(localizationManager.getString(42,"当前状态"),22,16);
     ctx.arc(12,12,5, 0, Math.PI * 2);
     ctx.fill();
     //绘制实际点
-    ctx.fillStyle = nowPointColor;
+    ctx.fillStyle = setPointColor;
     var nowPointCanPos=FanControl.nowPoint.getCanvasPos(width,height);
     var textPos = getTextPosByCanvasPos(nowPointCanPos[0],nowPointCanPos[1],width,height)
     ctx.fillText(`(${Math.trunc(FanControl.nowPoint.temperature!!)}°C,${Math.trunc(FanControl.nowPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
@@ -174,28 +173,8 @@ const FANDisplayComponent: VFC = () =>{
     ctx.beginPath();
     ctx.fillStyle = setPointColor;
     ctx.textAlign = "left";
-    ctx.fillText(localizationManager.getString(42,"设置坐标"),22,16);
+    ctx.fillText(localizationManager.getString(42,"当前状态"),22,16);
     ctx.arc(12,12,5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.fillStyle = nowPointColor;
-    ctx.textAlign = "left";
-    ctx.fillText(localizationManager.getString(43,"实际坐标"),22,30);
-    ctx.arc(12,26,5, 0, Math.PI * 2);
-    ctx.fill();
-    //绘制实际点和设置点
-    ctx.fillStyle = nowPointColor;
-    var nowPointCanPos=FanControl.nowPoint.getCanvasPos(width,height);
-    var textPos = getTextPosByCanvasPos(nowPointCanPos[0],nowPointCanPos[1],width,height)
-    ctx.fillText(`(${Math.trunc(FanControl.nowPoint.temperature!!)}°C,${Math.trunc(FanControl.nowPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
-    ctx.arc(nowPointCanPos[0],nowPointCanPos[1],5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.fillStyle = setPointColor;
-    var setPointCanPos=FanControl.setPoint.getCanvasPos(width,height);
-    var textPos = getTextPosByCanvasPos(setPointCanPos[0],setPointCanPos[1],width,height)
-    ctx.fillText(`(${Math.trunc(FanControl.setPoint.temperature!!)}°C,${Math.trunc(FanControl.setPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
-    ctx.arc(setPointCanPos[0],setPointCanPos[1],5, 0, Math.PI * 2);
     ctx.fill();
     //点线绘制
     var lineStart=[0,anchorPoint[1]];
@@ -203,10 +182,18 @@ const FANDisplayComponent: VFC = () =>{
     var textPos=getTextPosByCanvasPos(anchorPoint[0],anchorPoint[1],width,height)
     ctx.beginPath();
     ctx.strokeStyle=lineColor;
-    ctx.fillText(`(${Math.trunc(Settings.appFanSetting()?.fixSpeed!!!!)}%)`, textPos[0],textPos[1]);
+    //ctx.fillText(`(${Math.trunc(Settings.appFanSetting()?.fixSpeed!!!!)}%)`, textPos[0],textPos[1]);
     ctx.moveTo(lineStart[0],lineStart[1]);
     ctx.lineTo(lineEnd[0], lineEnd[1]);
     ctx.stroke();
+    //绘制设置点
+    ctx.beginPath();
+    ctx.fillStyle = setPointColor;
+    var setPointCanPos=FanControl.setPoint.getCanvasPos(width,height);
+    var textPos = getTextPosByCanvasPos(setPointCanPos[0],setPointCanPos[1],width,height)
+    ctx.fillText(`(${Math.trunc(FanControl.setPoint.temperature!!)}°C,${Math.trunc(FanControl.setPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
+    ctx.arc(setPointCanPos[0],setPointCanPos[1],5, 0, Math.PI * 2);
+    ctx.fill();
   }
   const drawCurveMode=()=>{
     const canvas = canvasRef.current;
@@ -220,28 +207,8 @@ const FANDisplayComponent: VFC = () =>{
     ctx.beginPath();
     ctx.fillStyle = setPointColor;
     ctx.textAlign = "left";
-    ctx.fillText(localizationManager.getString(42,"设置坐标"),22,16);
+    ctx.fillText(localizationManager.getString(42,"当前状态"),22,16);
     ctx.arc(12,12,5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.fillStyle = nowPointColor;
-    ctx.textAlign = "left";
-    ctx.fillText(localizationManager.getString(43,"实际坐标"),22,30);
-    ctx.arc(12,26,5, 0, Math.PI * 2);
-    ctx.fill();
-    //绘制实际点和设置点
-    ctx.fillStyle = nowPointColor;
-    var nowPointCanPos=FanControl.nowPoint.getCanvasPos(width,height);
-    var textPos = getTextPosByCanvasPos(nowPointCanPos[0],nowPointCanPos[1],width,height)
-    ctx.fillText(`(${Math.trunc(FanControl.nowPoint.temperature!!)}°C,${Math.trunc(FanControl.nowPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
-    ctx.arc(nowPointCanPos[0],nowPointCanPos[1],5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.fillStyle = setPointColor;
-    var setPointCanPos=FanControl.setPoint.getCanvasPos(width,height);
-    var textPos = getTextPosByCanvasPos(setPointCanPos[0],setPointCanPos[1],width,height)
-    ctx.fillText(`(${Math.trunc(FanControl.setPoint.temperature!!)}°C,${Math.trunc(FanControl.setPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
-    ctx.arc(setPointCanPos[0],setPointCanPos[1],5, 0, Math.PI * 2);
     ctx.fill();
     //绘制线段
     ctx.beginPath();
@@ -255,6 +222,15 @@ const FANDisplayComponent: VFC = () =>{
     }
     ctx.lineTo(width,0);
     ctx.stroke();
+
+    //绘制实际点和设置点
+    ctx.beginPath();
+    ctx.fillStyle = setPointColor;
+    var setPointCanPos=FanControl.setPoint.getCanvasPos(width,height);
+    var textPos = getTextPosByCanvasPos(setPointCanPos[0],setPointCanPos[1],width,height)
+    ctx.fillText(`(${Math.trunc(FanControl.setPoint.temperature!!)}°C,${Math.trunc(FanControl.setPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
+    ctx.arc(setPointCanPos[0],setPointCanPos[1],5, 0, Math.PI * 2);
+    ctx.fill();
     //绘制点和坐标
     /*
     for(let pointIndex = 0; pointIndex < curvePoints.current.length;pointIndex++){
@@ -779,6 +755,7 @@ function FANCretateProfileModelComponent({
 }
 export function FANComponent(){
   const [show,setShow] = useState<boolean>(Settings.ensureEnable());
+  const fanEnable = useRef<boolean>(FanControl.fanIsEnable);
   const hide = (ishide:boolean) => {
     setShow(!ishide);
   };
@@ -795,12 +772,12 @@ export function FANComponent(){
           break;
         }
       }
-    })
+    });
   }, []);
   //<FANSelectProfileComponent/>
   return (
     <div>
-      {show&&<PanelSection title="FAN">
+      {show&&fanEnable.current&&<PanelSection title="FAN">
         <FANSelectProfileComponent/>
         <FANDisplayComponent/>
         <FANRPMComponent/>
