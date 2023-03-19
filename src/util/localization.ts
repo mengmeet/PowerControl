@@ -104,8 +104,8 @@ var localizeMap:Map<number,localizeString>= new Map([
     german:"Unbeschränkt",
   }],
   [17,{
-    schinese:"固定",
-    tchinese:"鎖定",
+    schinese:"固定频率",
+    tchinese:"鎖定頻率",
     english:"Fixed",
     german:"fix",
   }],
@@ -140,8 +140,8 @@ var localizeMap:Map<number,localizeString>= new Map([
     german:"Einstellungen aktivieren",
   }],
   [23,{
-    schinese:"范围",
-    tchinese:"範圍",
+    schinese:"范围频率",
+    tchinese:"範圍頻率",
     english:"Range",
     german:"Bereich",
   }],
