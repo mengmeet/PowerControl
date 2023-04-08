@@ -161,13 +161,13 @@ var localizeMap:Map<number,localizeString>= new Map([
     schinese:"网格对齐",
     tchinese:"網格對齊",
     english:"Grid Alignment",
-    german:"",
+    german:"Gitternetz Ausrichtung",
   }],
   [27,{
     schinese:"风扇模式",
     tchinese:"風扇模式",
     english:"Fan Mode",
-    german:"Lüfter-Modus",
+    german:"Lüftermodus",
   }],
   [28,{
     schinese:"不控制",
@@ -191,13 +191,13 @@ var localizeMap:Map<number,localizeString>= new Map([
     schinese:"对齐到网格线交点",
     tchinese:"對齊到網格線交點",
     english:"Snap To The Gridline Intersection",
-    german:"An der Gitternetzlinien-Schnittmenge ausrichten",
+    german:"An der Gitternetzlinien ausrichten",
   }],
   [32,{
     schinese:"风扇转速百分比",
     tchinese:"風扇轉速百分比",
     english:"Fan Speed Percentage",
-    german:"Prozentualer Anteil der Lüftergeschwindigkeit",
+    german:"Prozentanteil der Lüftergeschwindigkeit",
   }],
   [33,{
     schinese:"传感器温度",
@@ -208,14 +208,14 @@ var localizeMap:Map<number,localizeString>= new Map([
   [35,{
     schinese:"创建一个风扇配置文件",
     tchinese:"創建一個風扇配置檔",
-    english:"Create A Fan Profile",
-    german:"Fan-Profil erstellen",
+    english:"Create a Fan Profile",
+    german:"Lüfterprofil erstellen",
   }],
   [36,{
     schinese:"选择一个风扇配置文件",
     tchinese:"選擇一個風扇配置檔",
-    english:"Select A Fan Profile",
-    german:"Wähle ein Fan-Profil aus",
+    english:"Select a Fan Profile",
+    german:"Wähle ein Lüfterprofil aus",
   }],
   [37,{
     schinese:"配置文件名称",
@@ -227,7 +227,7 @@ var localizeMap:Map<number,localizeString>= new Map([
     schinese:"使用",
     tchinese:"使用",
     english:"Use",
-    german:"gebrauchen",
+    german:"Benutzen",
   }],
   [39,{
     schinese:"删除",
@@ -239,7 +239,7 @@ var localizeMap:Map<number,localizeString>= new Map([
     schinese:"创建",
     tchinese:"创建",
     english:"Create",
-    german:"schaffen",
+    german:"Erstellen",
   }],
   [41,{
     schinese:"取消",
