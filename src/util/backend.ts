@@ -131,18 +131,6 @@ export class BackendData{
     return fanPRM!!;
   }
 
-  public async getFanRPMPercent(){
-    var fanRPMpercent:number;
-    await this.serverAPI!.callPluginMethod<{},number>("get_fanRPMPercent",{}).then(res=>{
-      if (res.success){
-        fanRPMpercent=res.result*100;
-      }else{
-        fanRPMpercent=0;
-      }
-    })
-    return fanRPMpercent!!;
-  }
-
   public async getFanTemp(){
     var fanTemp:number;
     await this.serverAPI!.callPluginMethod<{},number>("get_fanTemp",{}).then(res=>{

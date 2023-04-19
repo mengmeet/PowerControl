@@ -56,8 +56,8 @@
 | ONEXPLAYER Mini Pro  | 40 W | 待验证 |
 | AOKZOE A1 AR07       | 40 W | 待验证 |
 | ONEXPLAYER 2 ARP23   | 45 W | 已适配 |
-| GPD WINMAX2     | 45 W | 未适配 |
-| GPD WIN4     | 45 W | 未适配 |
+| GPD WINMAX2     | 45 W | 待验证 |
+| GPD WIN4     | 45 W | 待验证 |
 
 **TDP调整基于ryzenadj,因此只支持ryzenadj支持的cpu列表.如有未列出的cpu或者给出的范围数值不正确,请在[issuse](https://github.com/Gawah/PowerControl/issues)提交**
 
