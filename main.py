@@ -93,8 +93,9 @@ class Plugin:
     
     async def get_fanTemp(self):
         try:
-            if sysInfoManager.get_gpuTemp()!=-1:
-                return sysInfoManager.get_gpuTemp()
+            gpuTemp = sysInfoManager.get_gpuTemp()
+            if gpuTemp!=-1:
+                return gpuTemp
             return sysInfoManager.get_cpuTemp()
         except Exception as e:
             logging.error(e)
