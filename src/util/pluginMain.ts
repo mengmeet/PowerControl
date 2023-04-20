@@ -111,16 +111,17 @@ export class FanControl{
         //每俩点判断是否在这俩点之间
         var lineStart = new fanPosition(fanPosition.tempMin,fanPosition.fanMin);
         if(curvePoints?.length!!>0){
+          //初始点到第一个点
           var lineEnd = curvePoints!![0];
           if(FanControl.nowPoint.temperature!!>lineStart.temperature!!&&FanControl.nowPoint.temperature!!<=lineEnd.temperature!!){
             FanControl.setPoint = calPointInLine(lineStart,lineEnd,FanControl.nowPoint.temperature!!)!!;
-            break;
           }
+
           curvePoints?.forEach((value,index)=>{
-            if(index>=curvePoints?.length!!-1)
+            if(index>curvePoints?.length!!-1)
               return;
             lineStart = value;
-            lineEnd = curvePoints!![index+1];
+            lineEnd = index == curvePoints?.length!!-1?new fanPosition(fanPosition.tempMax,fanPosition.fanMax):curvePoints!![index+1];
             if(FanControl.nowPoint.temperature!!>lineStart.temperature!!&&FanControl.nowPoint.temperature!!<=lineEnd.temperature!!){
               FanControl.setPoint = calPointInLine(lineStart,lineEnd,FanControl.nowPoint.temperature!!)!!;
               return;
