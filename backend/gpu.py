@@ -31,10 +31,14 @@ class GPU_AutoFreqManager (threading.Thread):
         try:
             #可查询gpu设置频率时，判断当前设置是否与系统相同
             if os.path.exists(GPUFREQ_PATH):
-                maxCommand="sudo sh {} get_gpu_nowFreqMaxLimit ".format(SH_PATH)
-                minCommand="sudo sh {} get_gpu_nowFreqMinLimit ".format(SH_PATH)
-                qfreqMax=int(subprocess.getoutput(maxCommand))
-                qfreqMin=int(subprocess.getoutput(minCommand))
+                lines = open(GPUFREQ_PATH,"r")
+                for line in lines:
+                    param=line.replace('\x00','').replace(' ','').replace('Mhz',':').split(':')
+                    if(param[0]=="0"):
+                        qfreqMin=int(param[1])
+                    elif(param[0]=="1"):
+                        qfreqMax=int(param[1])
+
                 logging.debug(f"{self.name}|当前要设置的频率区间 freqMin={freqMin} freqMax={freqMax} 当前系统频率区间 qfreqMin={qfreqMin} qfreMax={qfreqMax}  是否满足设置条件{qfreqMin!=freqMin or qfreqMax != freqMax}")
                 return qfreqMin!=freqMin or qfreqMax != freqMax
             #查不到gpu设置频率时，只要合法则进行设置
@@ -153,10 +157,14 @@ class GPU_RangeFreqManager (threading.Thread):
         try:
             #可查询gpu设置频率时，判断当前设置是否与系统相同
             if os.path.exists(GPUFREQ_PATH):
-                maxCommand="sudo sh {} get_gpu_nowFreqMaxLimit ".format(SH_PATH)
-                minCommand="sudo sh {} get_gpu_nowFreqMinLimit ".format(SH_PATH)
-                qfreqMax=int(subprocess.getoutput(maxCommand))
-                qfreqMin=int(subprocess.getoutput(minCommand))
+                lines = open(GPUFREQ_PATH,"r")
+                for line in lines:
+                    param=line.replace('\x00','').replace(' ','').replace('Mhz',':').split(':')
+                    if(param[0]=="0"):
+                        qfreqMin=int(param[1])
+                    elif(param[0]=="1"):
+                        qfreqMax=int(param[1])
+                
                 #当前设置与查询的设置不相同时设置一次(特殊情况：0，0对应区间最小和区间最大 即不限制)
                 if(((qfreqMin!=freqMin or qfreqMax != freqMax)and freqMin !=0 and freqMax !=0) or (freqMin == 0 and freqMax == 0 and (qfreqMin != gpu_freqMin or qfreqMax != gpu_freqMax))):
                     logging.debug(f"{self.name}|检测到当前设置与系统不同 当前检查的频率 freqMin={freqMin} freqMax={freqMax} 当前系统频率 qfreqMin={qfreqMin}({gpu_freqMin}) qfreMax={qfreqMax}({gpu_freqMax})")
