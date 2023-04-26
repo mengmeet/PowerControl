@@ -59,10 +59,10 @@
 | GPD WINMAX2     | 45 W | 待验证 |
 | GPD WIN4     | 45 W | 待验证 |
 
-**TDP调整基于ryzenadj,因此只支持ryzenadj支持的cpu列表.如有未列出的cpu或者给出的范围数值不正确,请在[issuse](https://github.com/Gawah/PowerControl/issues)提交**
+**TDP调整基于ryzenadj,因此只支持ryzenadj支持的cpu列表.如有未列出的cpu或者给出的范围数值不正确,请在[issues](https://github.com/Gawah/PowerControl/issues)提交**
 
 ## 支持
-   可以加入我们的qq群:487945399反馈问题，或者在[issuse](https://github.com/Gawah/PowerControl/issues)提交
+   可以加入我们的qq群:487945399反馈问题，或者在[issues](https://github.com/Gawah/PowerControl/issues)提交
 
 ## Reference
 [decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)  
