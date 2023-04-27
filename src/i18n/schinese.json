@@ -3,7 +3,7 @@
     "ENABLE_SETTINGS":"启用插件设置",
     "USE_PERGAME_PROFILE":"使用按游戏设置的配置文件",
     "USING":"正在使用",
-    "DEFAULT":"",
+    "DEFAULT":"默认",
     "PROFILE":"配置文件",
     "CPU_BOOST":"睿 频",
     "CPU_BOOST_DESC":"提升最大cpu频率",
