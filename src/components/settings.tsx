@@ -5,7 +5,8 @@ import {
   Marquee,
 } from "decky-frontend-lib";
 import { useEffect, useState, VFC} from "react";
-import { localizationManager, Settings, PluginManager, RunningApps, DEFAULT_APP,ComponentName, UpdateType} from "../util";
+import { Settings, PluginManager, RunningApps, DEFAULT_APP,ComponentName, UpdateType} from "../util";
+import { localizeStrEnum,localizationManager } from "../i18n";
 
 const SettingsEnableComponent:VFC = () =>{
   const [enable, setEnable] = useState<boolean>(Settings.ensureEnable());
@@ -32,7 +33,7 @@ const SettingsEnableComponent:VFC = () =>{
     <div>
       <PanelSectionRow>
         <ToggleField
-          label={localizationManager.getString(22, "启用插件设置")}
+          label={localizationManager.getString(localizeStrEnum.ENABLE_SETTINGS)}
           checked={enable}
           onChange={(enabled) => {
             Settings.setEnable(enabled);
@@ -77,21 +78,21 @@ const SettingsPerAppComponent:VFC = () =>{
     <div>
         {show&&<PanelSectionRow>
           <ToggleField
-            label={localizationManager.getString(2, "使用按游戏设置的配置文件")}
+            label={localizationManager.getString(localizeStrEnum.USE_PERGAME_PROFILE)}
             description={
               <div style={{ display: "flex", justifyContent: "left" }}>
                 <img src={RunningApps.active_appInfo()?.icon_data ? "data:image/" + RunningApps.active_appInfo()?.icon_data_format + ";base64," + RunningApps.active_appInfo()?.icon_data : "/assets/" + RunningApps.active_appInfo()?.appid + "_icon.jpg?v=" + RunningApps.active_appInfo()?.icon_hash} width={20} height={20}
                   style={{ paddingRight:"5px",display: override && overrideable ? "block" : "none" }}
                 />
-                <div style={{lineHeight:"20px",whiteSpace:"pre"}}>{localizationManager.getString(3, "正在使用") + (override && overrideable ?"『":"")}</div>
+                <div style={{lineHeight:"20px",whiteSpace:"pre"}}>{localizationManager.getString(localizeStrEnum.USING) + (override && overrideable ?"『":"")}</div>
                 <Marquee play={true} fadeLength={10} delay={1} style={{
                   maxWidth:"100px",
                   lineHeight:"20px",
                   whiteSpace:"pre",
                 }}>
-                {(override && overrideable ? `${RunningApps.active_appInfo()?.display_name}` : `${localizationManager.getString(4, "默认")}`)}
+                {(override && overrideable ? `${RunningApps.active_appInfo()?.display_name}` : `${localizationManager.getString(localizeStrEnum.DEFAULT)}`)}
                 </Marquee>
-                <div style={{lineHeight:"20px",whiteSpace:"pre",}}>{(override && overrideable ?"』":"")+localizationManager.getString(5, "配置文件")}</div>
+                <div style={{lineHeight:"20px",whiteSpace:"pre",}}>{(override && overrideable ?"』":"")+localizationManager.getString(localizeStrEnum.PROFILE)}</div>
                 
               </div>
             }
@@ -109,7 +110,7 @@ const SettingsPerAppComponent:VFC = () =>{
 export const SettingsComponent: VFC = () => {
   return (
         <div>
-          <PanelSection title={localizationManager.getString(1, "设置")}>
+          <PanelSection title={localizationManager.getString(localizeStrEnum.TITEL_SETTINGS)}>
             <SettingsEnableComponent/>
             <SettingsPerAppComponent/>
           </PanelSection>

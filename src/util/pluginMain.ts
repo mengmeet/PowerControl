@@ -1,7 +1,7 @@
 import { Router, ServerAPI } from "decky-frontend-lib";
 import { APPLYTYPE, ComponentName, FANMODE, PluginState, UpdateType } from "./enum";
 import { Backend} from "./backend";
-import { localizationManager } from "./localization";
+import { localizationManager } from "../i18n";
 import { Settings } from "./settings";
 import { AppOverviewExt } from "./steamClient";
 import { calPointInLine, fanPosition } from "./position";

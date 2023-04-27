@@ -13,7 +13,8 @@ import {
   Focusable,
 } from "decky-frontend-lib";
 import { useEffect, useState,useRef,VFC} from "react";
-import { localizationManager, Settings, PluginManager,ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, fanPosition, FanSetting, FANPROFILEACTION, FanControl} from "../util";
+import { Settings, PluginManager,ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, fanPosition, FanSetting, FANPROFILEACTION, FanControl} from "../util";
+import { localizeStrEnum,localizationManager } from "../i18n";
 import {FanCanvas} from "./fanCanvas";
 var fanRPMIntervalID:any;
 var fanDisplayIntervalID:any;
@@ -32,8 +33,8 @@ const FANSelectProfileComponent: VFC = () =>{
     Object.entries(Settings.getFanSettings()).map(([profileName, fanSetting]) => ({
       label: profileName,
       options:[
-        {label:localizationManager.getString(38,"使用"),data:{profileName:profileName,type:FANPROFILEACTION.USE,setting:fanSetting}},
-        {label:localizationManager.getString(39,"删除"),data:{profileName:profileName,type:FANPROFILEACTION.DELETE,setting:fanSetting}},
+        {label:localizationManager.getString(localizeStrEnum.USE),data:{profileName:profileName,type:FANPROFILEACTION.USE,setting:fanSetting}},
+        {label:localizationManager.getString(localizeStrEnum.DELETE),data:{profileName:profileName,type:FANPROFILEACTION.DELETE,setting:fanSetting}},
       ]
     }))
   );
@@ -47,7 +48,7 @@ const FANSelectProfileComponent: VFC = () =>{
             focusable={true}
             disabled={items.length==0}
             rgOptions={items}
-            strDefaultLabel={selectedItem?selectedItem.label?.toString():(items.length==0?localizationManager.getString(35,"创建一个风扇配置"):localizationManager.getString(36,"选择一个风扇配置"))}
+            strDefaultLabel={selectedItem?selectedItem.label?.toString():(items.length==0?localizationManager.getString(localizeStrEnum.CREATE_FAN_PROFILE_TIP):localizationManager.getString(localizeStrEnum.SELECT_FAN_PROFILE_TIP))}
             selectedOption={selectedItem}
             onChange={(item:DropdownOption)=>{
               //setSelectedItem(item);
@@ -152,7 +153,7 @@ const FANDisplayComponent: VFC = () =>{
     ctx.beginPath();
     ctx.fillStyle = setPointColor;
     ctx.textAlign = "left";
-    ctx.fillText(localizationManager.getString(42,"当前状态"),22,16);
+    ctx.fillText(localizationManager.getString(localizeStrEnum.CURENT_STAT),22,16);
     ctx.arc(12,12,5, 0, Math.PI * 2);
     ctx.fill();
     //绘制实际点
@@ -174,7 +175,7 @@ const FANDisplayComponent: VFC = () =>{
     ctx.beginPath();
     ctx.fillStyle = setPointColor;
     ctx.textAlign = "left";
-    ctx.fillText(localizationManager.getString(42,"当前状态"),22,16);
+    ctx.fillText(localizationManager.getString(localizeStrEnum.CURENT_STAT),22,16);
     ctx.arc(12,12,5, 0, Math.PI * 2);
     ctx.fill();
     //点线绘制
@@ -208,7 +209,7 @@ const FANDisplayComponent: VFC = () =>{
     ctx.beginPath();
     ctx.fillStyle = setPointColor;
     ctx.textAlign = "left";
-    ctx.fillText(localizationManager.getString(42,"当前状态"),22,16);
+    ctx.fillText(localizationManager.getString(localizeStrEnum.CURENT_STAT),22,16);
     ctx.arc(12,12,5, 0, Math.PI * 2);
     ctx.fill();
     //绘制线段
@@ -299,7 +300,7 @@ const FANRPMComponent: VFC = () => {
   return (
       <PanelSectionRow>
             <Field
-              label= {localizationManager.getString(24,"风扇转速")}>
+              label= {localizationManager.getString(localizeStrEnum.FAN_SPEED)}>
               {fanrpm + " RPM"}
             </Field>
       </PanelSectionRow>
@@ -315,7 +316,7 @@ const FANCreateProfileComponent: VFC = ()=>{
           // @ts-ignore
           showModal(<FANCretateProfileModelComponent/>);
         }}>
-        {localizationManager.getString(25,"创建风扇配置文件")}
+        {localizationManager.getString(localizeStrEnum.CREATE_FAN_PROFILE)}
       </ButtonItem>
     </PanelSectionRow>
   )
@@ -634,7 +635,7 @@ function FANCretateProfileModelComponent({
     </style>
     <ModalRoot onCancel={closeModal} onEscKeypress={closeModal} >
       <h1 style={{ marginBlockEnd: "5px", marginBlockStart: "-15px", fontSize:25}}>
-        <div style={{width:180,display:"inline-block"}}>{localizationManager.getString(37, "配置文件名称")}</div>
+        <div style={{width:180,display:"inline-block"}}>{localizationManager.getString(localizeStrEnum.FAN_PROFILE_NAME)}</div>
         <div style={{width:250,height:20,display:"inline-block"}}><TextField
             value={profileName}
             onChange={(e) => {
@@ -675,7 +676,7 @@ function FANCretateProfileModelComponent({
           
           <PanelSection>
             <SliderField
-              label={localizationManager.getString(27, "风扇模式")}
+              label={localizationManager.getString(localizeStrEnum.FAN_MODE)}
               value={fanMode}
               step={1}
               max={2}
@@ -684,15 +685,15 @@ function FANCretateProfileModelComponent({
               notchLabels={
                 [{
                   notchIndex: FANMODE.NOCONTROL,
-                  label: `${localizationManager.getString(28, "不控制")}`,
+                  label: `${localizationManager.getString(localizeStrEnum.NOT_CONTROLLED)}`,
                   value: FANMODE.NOCONTROL,
                 }, {
                   notchIndex: FANMODE.FIX,
-                  label: `${localizationManager.getString(29, "固定")}`,
+                  label: `${localizationManager.getString(localizeStrEnum.FIXED)}`,
                   value: FANMODE.FIX,
                 }, {
                   notchIndex: FANMODE.CURVE,
-                  label: `${localizationManager.getString(30, "曲线")}`,
+                  label: `${localizationManager.getString(localizeStrEnum.CURVE)}`,
                   value: FANMODE.CURVE,
                 }
                 ]
@@ -702,7 +703,7 @@ function FANCretateProfileModelComponent({
                 }}
               />
               {fanMode==FANMODE.FIX&&<SliderField
-                label={localizationManager.getString(32, "风扇转速百分比")}
+                label={localizationManager.getString(localizeStrEnum.FAN_SPEED_PERCENT)}
                 value={fixSpeed}
                 step={1}
                 max={100}
@@ -712,7 +713,7 @@ function FANCretateProfileModelComponent({
                 }}
               />}
               {fanMode==FANMODE.CURVE&&<SliderField
-                label={localizationManager.getString(33, "传感器温度")}
+                label={localizationManager.getString(localizeStrEnum.SENSOR_TEMP)}
                 value={selPointTemp}
                 valueSuffix={"°C"}
                 showValue={true}
@@ -726,7 +727,7 @@ function FANCretateProfileModelComponent({
                 }}
               />}
               {fanMode==FANMODE.CURVE&&<SliderField
-                label={localizationManager.getString(32, "风扇转速百分比")}
+                label={localizationManager.getString(localizeStrEnum.FAN_SPEED_PERCENT)}
                 value={selPointSpeed}
                 valueSuffix={"%"}
                 showValue={true}
@@ -747,8 +748,8 @@ function FANCretateProfileModelComponent({
           if(onCreateProfile()){
             closeModal();
           }
-        }}> {localizationManager.getString(40,"创建")}</DialogButton>
-      <DialogButton onClick={() => {closeModal()}}> {localizationManager.getString(41,"取消")}</DialogButton>
+        }}> {localizationManager.getString(localizeStrEnum.CREATE)}</DialogButton>
+      <DialogButton onClick={() => {closeModal()}}> {localizationManager.getString(localizeStrEnum.CANCEL)}</DialogButton>
       </Focusable>
     </ModalRoot>
     </div>

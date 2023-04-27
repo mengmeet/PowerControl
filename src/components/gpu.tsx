@@ -4,7 +4,8 @@ import {
   SliderField,
 } from "decky-frontend-lib";
 import { useEffect, useState, VFC} from "react";
-import { localizationManager, Settings,Backend, PluginManager,GPUMODE,ComponentName, UpdateType} from "../util";
+import { Settings,Backend, PluginManager,GPUMODE,ComponentName, UpdateType} from "../util";
+import { localizeStrEnum,localizationManager } from "../i18n";
 import {SlowSliderField} from "./SlowSliderField"
 
 //GPUFreq模块
@@ -27,7 +28,7 @@ const GPUFreqComponent: VFC = () => {
   return (
     <PanelSectionRow>
       <SlowSliderField
-        label={localizationManager.getString(19, "GPU 频率")}
+        label={localizationManager.getString(localizeStrEnum.FIXED_FREQ)}
         value={gpuFreq}
         step={50}
         max={Backend.data.getGPUFreqMax()}
@@ -66,7 +67,7 @@ const GPURangeComponent: VFC = () => {
     <div>
     <PanelSectionRow>
       <SlowSliderField
-        label={localizationManager.getString(20, "GPU 最大频率限制")}
+        label={localizationManager.getString(localizeStrEnum.GPU_MAX_FREQ)}
         value={gpuRangeMaxFreq}
         step={50}
         max={Backend.data.getGPUFreqMax()}
@@ -81,7 +82,7 @@ const GPURangeComponent: VFC = () => {
     </PanelSectionRow>
     <PanelSectionRow>
     <SlowSliderField
-        label={localizationManager.getString(21, "GPU 最小频率限制")}
+        label={localizationManager.getString(localizeStrEnum.GPU_MIN_FREQ)}
         value={gpuRangeMinFreq}
         step={50}
         max={Backend.data.getGPUFreqMax()}
@@ -121,7 +122,7 @@ const GPUAutoComponent: VFC = () => {
     <div>
     <PanelSectionRow>
       <SlowSliderField
-        label={localizationManager.getString(20, "GPU 最大频率限制")}
+        label={localizationManager.getString(localizeStrEnum.GPU_MAX_FREQ)}
         value={gpuAutoMaxFreq}
         step={50}
         max={Backend.data.getGPUFreqMax()}
@@ -136,7 +137,7 @@ const GPUAutoComponent: VFC = () => {
     </PanelSectionRow>
     <PanelSectionRow>
     <SlowSliderField
-      label={localizationManager.getString(21, "GPU 最小频率限制")}
+      label={localizationManager.getString(localizeStrEnum.GPU_MIN_FREQ)}
       value={gpuAutoMinFreq}
       step={50}
       max={Backend.data.getGPUFreqMax()}
@@ -174,7 +175,7 @@ const GPUModeComponent: VFC = () => {
         <div>
           <PanelSectionRow>
           <SliderField
-            label={localizationManager.getString(15, "GPU 频率模式")}
+            label={localizationManager.getString(localizeStrEnum.FAN_MODE)}
             value={gpuMode}
             step={1}
             max={3}
@@ -183,19 +184,19 @@ const GPUModeComponent: VFC = () => {
             notchLabels={
               [{
                 notchIndex: GPUMODE.NOLIMIT,
-                label: `${localizationManager.getString(16, "不限制")}`,
+                label: `${localizationManager.getString(localizeStrEnum.UNLIMITED)}`,
                 value: GPUMODE.NOLIMIT,
               }, {
                 notchIndex: GPUMODE.FIX,
-                label: `${localizationManager.getString(17, "固定频率")}`,
+                label: `${localizationManager.getString(localizeStrEnum.FIXED_FREQ)}`,
                 value: GPUMODE.FIX,
               }, {
                 notchIndex: GPUMODE.RANGE,
-                label: `${localizationManager.getString(23, "范围频率")}`,
+                label: `${localizationManager.getString(localizeStrEnum.RANGE_FREQ)}`,
                 value: GPUMODE.RANGE,
               }, {
                 notchIndex: GPUMODE.AUTO,
-                label: `${localizationManager.getString(18, "自动频率")}`,
+                label: `${localizationManager.getString(localizeStrEnum.AUTO_FREQ)}`,
                 value: GPUMODE.AUTO,
               }
               ]

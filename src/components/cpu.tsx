@@ -4,7 +4,8 @@ import {
   ToggleField,
 } from "decky-frontend-lib";
 import { useEffect, useState, VFC} from "react";
-import { localizationManager, Settings,Backend, PluginManager,ComponentName, UpdateType, GPUMODE} from "../util";
+import { Settings,Backend, PluginManager,ComponentName, UpdateType, GPUMODE} from "../util";
+import { localizeStrEnum,localizationManager } from "../i18n";
 import {SlowSliderField} from "./SlowSliderField"
 
 const CPUBoostComponent:VFC = () =>{
@@ -29,8 +30,8 @@ const CPUBoostComponent:VFC = () =>{
     <div>
       <PanelSectionRow>
         <ToggleField
-          label={localizationManager.getString(6, "睿 频")}
-          description={localizationManager.getString(7, "提升最大cpu频率")}
+          label={localizationManager.getString(localizeStrEnum.CPU_BOOST)}
+          description={localizationManager.getString(localizeStrEnum.CPU_BOOST_DESC)}
           disabled={disabled}
           checked={cpuboost}
           onChange={(value) => {
@@ -63,7 +64,7 @@ const CPUSmtComponent:VFC = () =>{
       <PanelSectionRow>
         <ToggleField
           label="SMT"
-          description={localizationManager.getString(8, "启用奇数编号的cpu")}
+          description={localizationManager.getString(localizeStrEnum.SMT_DESC)}
           checked={cpusmt}
           onChange={(smt) => {
             Settings.setSmt(smt);
@@ -93,8 +94,8 @@ const CPUNumComponent:VFC = () =>{
     <div>
       <PanelSectionRow>
           <SlowSliderField
-            label={localizationManager.getString(9, "核 心 数")}
-            description={localizationManager.getString(10, "设置启用的物理核心数量")}
+            label={localizationManager.getString(localizeStrEnum.CPU_NUM)}
+            description={localizationManager.getString(localizeStrEnum.CPU_NUM_DESC)}
             value={cpunum}
             step={1}
             max={Backend.data.getCpuMaxNum()}
@@ -133,8 +134,8 @@ const CPUTDPComponent:VFC = () =>{
     <div>
       <PanelSectionRow>
             <ToggleField
-              label={localizationManager.getString(11, "热设计功耗 (TDP) 限制")}
-              description={Backend.data.HasRyzenadj() ? localizationManager.getString(12, "限制处理器功耗以降低总功耗") : localizationManager.getString(13, "未检测到ryzenAdj")}
+              label={localizationManager.getString(localizeStrEnum.TDP)}
+              description={Backend.data.HasRyzenadj() ? localizationManager.getString(localizeStrEnum.TDP_DESC) : localizationManager.getString(localizeStrEnum.RYZENADJ_NOT_FOUND)}
               checked={tdpEnable}
               disabled={disabled}
               onChange={(value) => {
@@ -144,7 +145,7 @@ const CPUTDPComponent:VFC = () =>{
           </PanelSectionRow>
           {tdpEnable&&<PanelSectionRow>
             <SlowSliderField
-              label={localizationManager.getString(14, "瓦特")}
+              label={localizationManager.getString(localizeStrEnum.WATTS)}
               value={tdp}
               step={1}
               max={Backend.data.getTDPMax()}
