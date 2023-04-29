@@ -175,7 +175,7 @@ const GPUModeComponent: VFC = () => {
         <div>
           <PanelSectionRow>
           <SliderField
-            label={localizationManager.getString(localizeStrEnum.FAN_MODE)}
+            label={localizationManager.getString(localizeStrEnum.GPU_FREQMODE)}
             value={gpuMode}
             step={1}
             max={3}
