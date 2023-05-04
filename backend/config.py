@@ -76,14 +76,13 @@ try:
     FAN_MANUAL_OFFSET=0     #风扇自动控制ec地址
     FAN_RPMWRITE_OFFSET=0   #风扇写入转速ec地址
     FAN_RPMREAD_OFFSET=0    #风扇读取转速ec地址
-    FAN_ECIO_ADAPTED=False      #ECIO是否适配
     FAN_RAM_REG_ADDR=0      #风扇ecRam寄存器地址
     FAN_RAM_REG_DATA=0      #风扇ecRam寄存器数据
     FAN_RAM_MANUAL_OFFSET=0     #风扇自动控制ecRam地址
     FAN_RAM_RPMWRITE_OFFSET=0   #风扇写入转速ecRam地址
     FAN_RAM_RPMREAD_OFFSET=0    #风扇读取转速ecRam地址
     FAN_RAM_RPMREAD_LENGTH=0    #风扇实际转速值长度 0为需要通过计算获得转速
-    FAN_ECRAM_ADAPTED=False     #ECRAM是否适配
+    FAN_IS_ADAPTED=False    #风扇是否适配
 
     #FAN_MAXTEMP=0    #风扇图表最大温度
     #FAN_MINTEMP=0     #风扇图表最小温度
@@ -100,7 +99,6 @@ try:
         FAN_MANUAL_OFFSET=0x4a
         FAN_RPMWRITE_OFFSET=0x4b
         FAN_RPMREAD_OFFSET=0x58
-        FAN_ECIO_ADAPTED=True
 
         FAN_RAM_REG_ADDR=0x4E
         FAN_RAM_REG_DATA=0x4F
@@ -108,36 +106,18 @@ try:
         FAN_RAM_RPMWRITE_OFFSET=0x44b
         FAN_RAM_RPMREAD_OFFSET=0x1809
         FAN_RAM_RPMREAD_LENGTH=0
-        FAN_ECRAM_ADAPTED = True
 
         FAN_RPMWRITE_MAX=184
         FAN_RPMVALUE_MAX=5000
+        FAN_IS_ADAPTED=True
     elif PRODUCT_NAME in (
         "AIR",
         "AIR Pro",
-        ):
-        FAN_MANUAL_OFFSET=0x4a
-        FAN_RPMWRITE_OFFSET=0x4b
-        FAN_RPMREAD_OFFSET=0x76
-        FAN_ECIO_ADAPTED=True
-
-        FAN_RAM_REG_ADDR=0x4E
-        FAN_RAM_REG_DATA=0x4F
-        FAN_RAM_MANUAL_OFFSET=0x44a
-        FAN_RAM_RPMWRITE_OFFSET=0x44b
-        FAN_RAM_RPMREAD_OFFSET=0x1809
-        FAN_RAM_RPMREAD_LENGTH=0
-        FAN_ECRAM_ADAPTED = True
-
-        FAN_RPMWRITE_MAX=100
-        FAN_RPMVALUE_MAX=5811
-    elif PRODUCT_NAME in (
         "AYANEO 2",
         ):
         FAN_MANUAL_OFFSET=0x4a
         FAN_RPMWRITE_OFFSET=0x4b
         FAN_RPMREAD_OFFSET=0x76
-        FAN_ECIO_ADAPTED=True
 
         FAN_RAM_REG_ADDR=0x4E
         FAN_RAM_REG_DATA=0x4F
@@ -145,10 +125,10 @@ try:
         FAN_RAM_RPMWRITE_OFFSET=0x44b
         FAN_RAM_RPMREAD_OFFSET=0x1809
         FAN_RAM_RPMREAD_LENGTH=0
-        FAN_ECRAM_ADAPTED = True
 
         FAN_RPMWRITE_MAX=100
         FAN_RPMVALUE_MAX=5811
+        FAN_IS_ADAPTED=True
     elif PRODUCT_NAME in (
         "ONEXPLAYER Mini Pro",
         "AOKZOE A1 AR07",
@@ -156,7 +136,6 @@ try:
         FAN_MANUAL_OFFSET=0x4a
         FAN_RPMWRITE_OFFSET=0x4b
         FAN_RPMREAD_OFFSET=0x76
-        FAN_ECIO_ADAPTED=True
 
         FAN_RAM_REG_ADDR=0x4E
         FAN_RAM_REG_DATA=0x4F
@@ -164,24 +143,26 @@ try:
         FAN_RAM_RPMWRITE_OFFSET=0x44b
         FAN_RAM_RPMREAD_OFFSET=0x1809
         FAN_RAM_RPMREAD_LENGTH=0
-        FAN_ECRAM_ADAPTED = True
 
         FAN_RPMWRITE_MAX=255
         FAN_RPMVALUE_MAX=4968
+        FAN_IS_ADAPTED=True
     elif PRODUCT_NAME in (
         "G1618-04",
         ):
+        FAN_MANUAL_OFFSET=0x11
+        FAN_RPMWRITE_OFFSET=0x11
+
         FAN_RAM_REG_ADDR=0x2E
         FAN_RAM_REG_DATA=0x2F
-        FAN_RAM_MANUAL_OFFSET=0xC311
-        FAN_RAM_RPMWRITE_OFFSET=0xC311
+        #FAN_RAM_MANUAL_OFFSET=0xC311
+        #FAN_RAM_RPMWRITE_OFFSET=0xC311
         FAN_RAM_RPMREAD_OFFSET=0x880
         FAN_RAM_RPMREAD_LENGTH=2
-        FAN_ECRAM_ADAPTED = True
 
         FAN_RPMWRITE_MAX=127
         FAN_RPMVALUE_MAX=4968
-
+        FAN_IS_ADAPTED=True
     elif PRODUCT_NAME in (
         "G1619-04",
         ):
@@ -191,10 +172,9 @@ try:
         FAN_RAM_RPMWRITE_OFFSET=0x1809
         FAN_RAM_RPMREAD_OFFSET=0x218
         FAN_RAM_RPMREAD_LENGTH=2
-        FAN_ECRAM_ADAPTED = True
 
         FAN_RPMWRITE_MAX=184
         FAN_RPMVALUE_MAX=4968
-    
+        FAN_IS_ADAPTED=True
 except Exception as e:
     logging.error(f"风扇配置异常|{e}")
