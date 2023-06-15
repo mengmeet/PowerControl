@@ -45,3 +45,4 @@ yalc.lock
 # Ignore output folder
 
 backend/out
+Makefile
