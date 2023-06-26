@@ -60,7 +60,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: /tmp/artifacts/PowerControl/PowerControl.tar.gz
-          tag_name: ${{ github.ref }}
+          tag_name: ${{ github.ref_name }}
           body:  |
             PowerControl
           draft: false
