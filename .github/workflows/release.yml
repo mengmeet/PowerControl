@@ -53,15 +53,14 @@ jobs:
 
       - run: ls -R /tmp/artifacts
 
-      - name: publish
-        uses: ncipollo/release-action@v1
+      - name: publish to github release
+        uses: softprops/action-gh-release@v1
         with:
-          artifacts: /tmp/artifacts/PowerControl/PowerControl.tar.gz
-          tag: ${{ github.ref }}
-          prerelease: contains(github.ref, 'pre')
+          files: /tmp/artifacts/PowerControl/PowerControl.tar.gz
+          tag_name: ${{ github.ref }}
+          body:  |
+            PowerControl
           draft: false
-          allowUpdates: true
-          artifactErrorsFailBuild: true
-          replacesArtifacts: true
+          prerelease: contains(github.ref, 'pre')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
