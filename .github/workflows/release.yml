@@ -51,10 +51,12 @@ jobs:
         with:
           path: /tmp/artifacts
 
+      - run: ls -R /tmp/artifacts
+
       - name: publish
         uses: ncipollo/release-action@v1
         with:
-          artifacts: /tmp/artifacts/PowerControl.tar.gz
+          artifacts: /tmp/artifacts/PowerControl/PowerControl.tar.gz
           tag: ${{ github.ref }}
           prerelease: contains(github.ref, 'pre')
           draft: false
