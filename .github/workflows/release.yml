@@ -22,7 +22,7 @@ jobs:
       - name: build plugin
         run: |
           npm i -g pnpm@8.5.1
-          pnpm i
+          pnpm install --no-frozen-lockfile
           pnpm update decky-frontend-lib --latest
           pnpm run build
       
