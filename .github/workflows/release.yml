@@ -7,14 +7,14 @@ on:
             - 'v*.*.*'
 
 jobs:
-  update:
+  build_plugin:
     runs-on: ubuntu-latest
     container:
         image: archlinux:latest
     steps:
       - name: set git global safe directory
         run: |
-          pacman -Syu git node --noconfirm
+          pacman -Syu git npm --noconfirm
           git config --global --add safe.directory $(realpath .)
 
       - uses: actions/checkout@v3
