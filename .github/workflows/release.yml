@@ -25,8 +25,8 @@ jobs:
           pnpm install --no-frozen-lockfile
           pnpm update decky-frontend-lib --latest
           pnpm run build
+          tar -czvf PowerControl.tar.gz --transform 's,^,PowerControl/,' dist backend bin *.py *.json *.md *.js LICENSE
       
       - name: show files
         run: |
-          ls -la
-          ls -la dist
+          tar -tzvf PowerControl.tar.gz
