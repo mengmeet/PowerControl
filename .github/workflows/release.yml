@@ -1,0 +1,32 @@
+name: Release
+
+on:
+    workflow_dispatch:
+    push:
+        tags:
+            - 'v*.*.*'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    container:
+        image: archlinux:latest
+    steps:
+      - name: set git global safe directory
+        run: |
+          pacman -Syu git node --noconfirm
+          git config --global --add safe.directory $(realpath .)
+
+      - uses: actions/checkout@v3
+
+      - name: build plugin
+        run: |
+          npm i -g pnpm@8.5.1
+          pnpm i
+          pnpm update decky-frontend-lib --latest
+          pnpm run build
+      
+      - name: show files
+        run: |
+          ls -la
+          ls -la dist
