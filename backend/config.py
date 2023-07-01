@@ -48,6 +48,7 @@ try:
         "ONEXPLAYER 2 ARP23":45,
         "G1619-04":45,     #GPD WINMAX2
         "G1618-04":45,     #GPD WIN4
+        "ROG Ally RC71L_RC71L":35,
     }
     TDP_LIMIT_CONFIG_CPU={
         "AMD Ryzen 7 7735HS with Radeon Graphics":45,
@@ -60,6 +61,7 @@ try:
         "AMD Ryzen 7 4800U with Radeon Graphics":25,
         "AMD Ryzen 5 4500U with Radeon Graphics":25,
         "AMD Athlon Silver 3050e with Radeon Graphics":12,
+        "AMD Ryzen Z1 Extreme":35,
     }
 except Exception as e:
     logging.error(f"TDP配置异常|{e}")
