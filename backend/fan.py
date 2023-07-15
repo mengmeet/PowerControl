@@ -39,6 +39,14 @@ class FAN_Manager ():
             except Exception as e:
                 logging.error(e)
 
+        if PRODUCT_NAME == "G1618-04":
+            # Initialize GPD WIN4 EC
+            ec_chip_id = EC.RamRead(FAN_RAM_REG_ADDR, FAN_RAM_REG_DATA, 0x2000)
+            if ec_chip_id == 0x55:
+                ec_chip_ver = EC.RamRead(FAN_RAM_REG_ADDR, FAN_RAM_REG_DATA, 0x1060)
+                ec_chip_ver |= 0x80
+                EC.RamWrite(FAN_RAM_REG_ADDR, FAN_RAM_REG_DATA, 0x1060, ec_chip_ver)
+
 
     def get_fanRPM(self):
         try:
