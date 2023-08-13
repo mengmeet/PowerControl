@@ -214,10 +214,12 @@ export class PluginManager{
     Settings.loadSettingsFromLocalStorage();
     Backend.applySettings(APPLYTYPE.SET_ALL);
     PluginManager.suspendEndHook = SteamClient.System.RegisterForOnResumeFromSuspend(async () => {
-      if (Settings.ensureEnable()) {
-        Backend.throwSuspendEvt()
-      }
-      Backend.applySettings(APPLYTYPE.SET_ALL);
+      setTimeout(() => {
+        if (Settings.ensureEnable()) {
+          Backend.throwSuspendEvt()
+        }
+        Backend.applySettings(APPLYTYPE.SET_ALL);
+      }, 10000)
     });
     PluginManager.state = PluginState.RUN;
   }
