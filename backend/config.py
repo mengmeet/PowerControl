@@ -36,10 +36,12 @@ except Exception as e:
 try:
     TDP_LIMIT_CONFIG_PRODUCT={
         "AIR":18,
+        "AIR 1S":25,
         "AIR Pro":20,
         "AIR Plus":30,
         "AYANEO 2":30,
         "GEEK":30,
+        "GEEK 1S":30,
         "AYANEO 2S":30,
         "ONEXPLAYER Mini":30,
         "NEXT":35,
@@ -62,6 +64,7 @@ try:
         "AMD Ryzen 5 4500U with Radeon Graphics":25,
         "AMD Athlon Silver 3050e with Radeon Graphics":12,
         "AMD Ryzen Z1 Extreme":40,
+        "AMD Ryzen 7 7840U w/ Radeon 780M Graphics": 40,
     }
 except Exception as e:
     logging.error(f"TDP配置异常|{e}")

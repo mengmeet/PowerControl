@@ -40,6 +40,7 @@
 | AMD 5700U       | 28 W |
 | AMD 5800U 5825U | 30 W |
 | AMD 6800U       | 40 W |
+| AMD 7840U       | 40 W |
 | AMD 7735U       | 40 W |
 | AMD 7735HS      | 45 W |
 | 其他             | 18 W |
@@ -49,8 +50,13 @@
 |      机型        | TDP | 风扇适配 | 
 | --------------- | ---- | ------ |
 | AYA AIR         | 18 W | 待验证 |
-| AYA AIR Pro     | 20 W | 待验证 | 
+| AYA AIR 1S      | 25 W | 未适配 |
+| AYA AIR Pro     | 20 W | 待验证 |
+| AYA AIR Plus    | 30 W | 未适配 | 
 | AYANEO 2        | 30 W | 待验证 |
+| AYANEO 2S       | 30 W | 待验证 |
+| AYANEO GEEK     | 30 W | 待验证 |
+| AYANEO GEEK 1S  | 30 W | 待验证 |
 | ONEXPLAYER Mini | 30 W | 待验证 |
 | AYA NEXT        | 35 W | 未适配 |
 | ONEXPLAYER Mini Pro  | 40 W | 待验证 |
@@ -58,6 +64,7 @@
 | ONEXPLAYER 2 ARP23   | 45 W | 已适配 |
 | GPD WINMAX2     | 45 W | 待验证 |
 | GPD WIN4     | 45 W | 待验证 |
+| ROG Ally        | 40 W | 未适配 |
 
 **TDP调整基于ryzenadj,因此只支持ryzenadj支持的cpu列表.如有未列出的cpu或者给出的范围数值不正确,请在[issues](https://github.com/Gawah/PowerControl/issues)提交**
 
