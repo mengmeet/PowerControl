@@ -124,6 +124,7 @@ try:
         "AYANEO 2",
         "AYANEO 2S",
         "GEEK",
+        "GEEK 1S",
         ):
         FAN_MANUAL_OFFSET=0x4a
         FAN_RPMWRITE_OFFSET=0x4b
