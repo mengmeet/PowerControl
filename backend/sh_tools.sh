@@ -1,5 +1,18 @@
  #!/bin/bash
 
+function get_gpu_device()
+{
+    for gpu_device in /sys/class/drm/card?/device; do
+        if [ -d "$gpu_device" ]; then
+            echo "$gpu_device"
+            return
+        fi
+    done
+}
+
+gpu_device=$(get_gpu_device)
+    
+
 function set_cpu_Freq()
 {
     cpu_index=$1
@@ -67,38 +80,38 @@ function set_clock_limits()
     let min=$1
     let max=$2
     if(($min==0 || $max==0));then
-        sudo echo "auto">/sys/class/drm/card0/device/power_dpm_force_performance_level
+        sudo echo "auto" > "${gpu_device}/power_dpm_force_performance_level"
     else
-        sudo echo "manual">/sys/class/drm/card0/device/power_dpm_force_performance_level
-        sudo echo "s 0 ${min}" > /sys/class/drm/card0/device/pp_od_clk_voltage
-        sudo echo "s 1 ${max}" > /sys/class/drm/card0/device/pp_od_clk_voltage
-        sudo echo "c" > /sys/class/drm/card0/device/pp_od_clk_voltage
+        sudo echo "manual" > "${gpu_device}/power_dpm_force_performance_level"
+        sudo echo "s 0 ${min}" > "${gpu_device}/pp_od_clk_voltage"
+        sudo echo "s 1 ${max}" > "${gpu_device}/pp_od_clk_voltage"
+        sudo echo "c" > "${gpu_device}/pp_od_clk_voltage"
     fi
     sudo echo "gpu_clock_limit "$1 $2 >> /tmp/powerControl_sh.log
 }
 
 function get_gpuFreqMin()
 {
-    sudo echo "manual">/sys/class/drm/card0/device/power_dpm_force_performance_level
-    echo "$(sudo cat /sys/class/drm/card0/device/pp_od_clk_voltage|grep -a "SCLK:"|awk '{print $2}'|sed -e 's/Mhz//g'|xargs)"
+    sudo echo "manual"> "${gpu_device}/power_dpm_force_performance_level"
+    echo "$(sudo cat ${gpu_device}/pp_od_clk_voltage|grep -a "SCLK:"|awk '{print $2}'|sed -e 's/Mhz//g'|xargs)"
 }
 
 function get_gpuFreqMax()
 {
-    sudo echo "manual">/sys/class/drm/card0/device/power_dpm_force_performance_level
-    echo "$(sudo cat /sys/class/drm/card0/device/pp_od_clk_voltage|grep -a "SCLK:"|awk '{print $3}'|sed -e 's/Mhz//g'|xargs)"
+    sudo echo "manual" > "${gpu_device}/power_dpm_force_performance_level"
+    echo "$(sudo cat ${gpu_device}/pp_od_clk_voltage|grep -a "SCLK:"|awk '{print $3}'|sed -e 's/Mhz//g'|xargs)"
 }
 
 function set_gpu_flk()
 {
     flk=$1
     index=$(((1600-$flk)/400))
-    now_mode=$(cat /sys/class/drm/card0/device/power_dpm_force_performance_level)
+    now_mode=$(cat ${gpu_device}/power_dpm_force_performance_level)
     if [[ "$now_mode"!="manual" ]];then
-        sudo echo "manual" >/sys/class/drm/card0/device/power_dpm_force_performance_level
-        sudo echo "$index" >/sys/class/drm/card0/device/pp_dpm_fclk
+        sudo echo "manual" > "${gpu_device}/power_dpm_force_performance_level"
+        sudo echo "$index" > "${gpu_device}/pp_dpm_fclk"
     else
-        sudo echo "$index" > /sys/class/drm/card0/device/pp_dpm_fclk
+        sudo echo "$index" > "${gpu_device}/pp_dpm_fclk"
     fi
     sudo echo "gpu_flk_limit " $index >> /tmp/powerControl_sh.log
 }
@@ -106,15 +119,15 @@ function set_gpu_flk()
 function check_clock_limits()
 {
     mode=$1
-    now_mode=$(cat /sys/class/drm/card0/device/power_dpm_force_performance_level)
+    now_mode=$(cat ${gpu_device}/power_dpm_force_performance_level)
     if [[ "$now_mode"!="$mode" ]];then
         if(( "$1" == "manual"));then
-            sudo echo "manual" >/sys/class/drm/card0/device/power_dpm_force_performance_level
-            sudo echo "s 0 $2" > /sys/class/drm/card0/device/pp_od_clk_voltage
-            sudo echo "s 1 $3" > /sys/class/drm/card0/device/pp_od_clk_voltage
-            sudo echo "c" > /sys/class/drm/card0/device/pp_od_clk_voltage
+            sudo echo "manual" > "${gpu_device}/power_dpm_force_performance_level"
+            sudo echo "s 0 $2" > "${gpu_device}/pp_od_clk_voltage"
+            sudo echo "s 1 $3" > "${gpu_device}/pp_od_clk_voltage"
+            sudo echo "c" > "${gpu_device}/pp_od_clk_voltage"
         else
-            sudo echo "auto" >/sys/class/drm/card0/device/power_dpm_force_performance_level
+            sudo echo "auto" > "${gpu_device}/power_dpm_force_performance_level"
         fi
     fi
 }

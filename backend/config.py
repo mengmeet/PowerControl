@@ -1,5 +1,6 @@
 import logging
 import subprocess
+import glob
 import os
 from helpers import get_homebrew_path,get_home_path,get_user
 
@@ -20,7 +21,8 @@ try:
     HOMEBREW_PATH = get_homebrew_path(get_home_path(get_user()))   
     SH_PATH="{}/plugins/PowerControl/backend/sh_tools.sh".format(HOMEBREW_PATH)
     RYZENADJ_PATH="{}/plugins/PowerControl/bin/ryzenadj".format(HOMEBREW_PATH)
-    GPUFREQ_PATH = "/sys/class/drm/card0/device/pp_od_clk_voltage"
+    GPU_DEVICE_PATH = glob.glob("/sys/class/drm/card?/device")[0]
+    GPUFREQ_PATH = "{}/pp_od_clk_voltage".format(GPU_DEVICE_PATH)
 except Exception as e:
     logging.error(f"路径配置异常|{e}")
 

@@ -155,6 +155,7 @@ class GPU_RangeFreqManager (threading.Thread):
         global gpu_freqMax
         global gpu_freqMin
         try:
+            logging.debug(f"GPUFREQ_PATH = {GPUFREQ_PATH}")
             #可查询gpu设置频率时，判断当前设置是否与系统相同
             if os.path.exists(GPUFREQ_PATH):
                 lines = open(GPUFREQ_PATH,"r")
