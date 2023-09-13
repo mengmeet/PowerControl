@@ -135,11 +135,19 @@ function check_clock_limits()
 function set_cpu_boost()
 {
     boost=$1
+    boost_path="/sys/devices/system/cpu/cpufreq/boost"
+    amd_pstate_path="/sys/devices/system/cpu/amd_pstate/status"
     if (($boost == 1)); then
-        echo 1 > "/sys/devices/system/cpu/cpufreq/boost"
+        echo 1 > "${boost_path}"
+        if [ -f "${amd_pstate_path}" ]; then
+            echo "active" > "${amd_pstate_path}"
+        fi
     else
-        echo 1 > "/sys/devices/system/cpu/cpufreq/boost"
-        echo 0 > "/sys/devices/system/cpu/cpufreq/boost"
+        if [ -f "${amd_pstate_path}" ]; then
+            echo "passive" > "${amd_pstate_path}"
+        fi
+        echo 1 > "${boost_path}"
+        echo 0 > "${boost_path}"
     fi
 }
 
