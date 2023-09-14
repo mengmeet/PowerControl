@@ -136,16 +136,15 @@ function set_cpu_boost()
 {
     boost=$1
     boost_path="/sys/devices/system/cpu/cpufreq/boost"
-    amd_pstate_path="/sys/devices/system/cpu/amd_pstate/status"
+    amd_pstate_path="/sys/devices/system/cpu/amd_pstate/status"\
+
+    if [ -f "${amd_pstate_path}" ]; then
+        echo "passive" > "${amd_pstate_path}"
+    fi
+
     if (($boost == 1)); then
         echo 1 > "${boost_path}"
-        if [ -f "${amd_pstate_path}" ]; then
-            echo "active" > "${amd_pstate_path}"
-        fi
     else
-        if [ -f "${amd_pstate_path}" ]; then
-            echo "passive" > "${amd_pstate_path}"
-        fi
         echo 1 > "${boost_path}"
         echo 0 > "${boost_path}"
     fi
