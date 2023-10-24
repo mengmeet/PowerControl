@@ -6,7 +6,7 @@ import os
 import asyncio
 from ec import EC
 from config import logging,SH_PATH,PRODUCT_NAME
-from config import FAN_GPUTEMP_PATH,FAN_CPUTEMP_PATH
+from config import FAN_GPUTEMP_PATH,FAN_CPUTEMP_PATH,GPU_DEVICE_PATH
 from helpers import get_user
 
 cpu_busyPercent = 0
@@ -18,8 +18,9 @@ gpu_DataErrCnt=0
 has_gpuData = True
 
 statPath="/proc/stat"
-gpu_busy_percentPath="/sys/class/drm/card0/device/gpu_busy_percent"
+gpu_busy_percentPath="{}/gpu_busy_percent".format(GPU_DEVICE_PATH)
 hwmon_path="/sys/class/hwmon"
+
 #GPU单次监控数据
 class GPUData:
     def __init__(self):

@@ -8,7 +8,7 @@ from helpers import get_homebrew_path,get_home_path,get_user
 try:
     LOG_LOCATION = "/tmp/PowerControl_py.log"
     logging.basicConfig(
-        level = logging.DEBUG,
+        level = logging.INFO,
         filename = LOG_LOCATION,
         format="[%(asctime)s | %(filename)s:%(lineno)s:%(funcName)s] %(levelname)s: %(message)s",
         filemode = 'w',

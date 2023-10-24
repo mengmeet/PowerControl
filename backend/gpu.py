@@ -155,7 +155,7 @@ class GPU_RangeFreqManager (threading.Thread):
         global gpu_freqMax
         global gpu_freqMin
         try:
-            logging.debug(f"GPUFREQ_PATH = {GPUFREQ_PATH}")
+            # logging.debug(f"GPUFREQ_PATH = {GPUFREQ_PATH}")
             #可查询gpu设置频率时，判断当前设置是否与系统相同
             if os.path.exists(GPUFREQ_PATH):
                 lines = open(GPUFREQ_PATH,"r")
@@ -172,7 +172,8 @@ class GPU_RangeFreqManager (threading.Thread):
                     command="sudo sh {} set_clock_limits {} {}".format(SH_PATH,freqMin,freqMax)
                     os.system(command)
                 else:
-                    logging.debug(f"{self.name}|检测到当前设置与系统相同 当前系统频率 qfreqMin={qfreqMin} qfreMax={qfreqMax}")
+                    # logging.debug(f"{self.name}|检测到当前设置与系统相同 当前系统频率 qfreqMin={qfreqMin} qfreMax={qfreqMax}")
+                    pass
             #查不到gpu设置频率时，只要合法则进行设置
             else:
                 logging.debug(f"{self.name}|无法查询当前系统GPU频率")
