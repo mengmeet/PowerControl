@@ -187,5 +187,18 @@ try:
         FAN_RPMWRITE_MAX=184
         FAN_RPMVALUE_MAX=4968
         FAN_IS_ADAPTED=True
+    elif PRODUCT_NAME in (
+        "G1617-01",
+        ):
+        FAN_RAM_REG_ADDR=0x4E
+        FAN_RAM_REG_DATA=0x4F
+        FAN_RAM_MANUAL_OFFSET=0x47A
+        FAN_RAM_RPMWRITE_OFFSET=0x47A
+        FAN_RAM_RPMREAD_OFFSET=0x478
+        FAN_RAM_RPMREAD_LENGTH=2
+
+        FAN_RPMWRITE_MAX=244
+        FAN_RPMVALUE_MAX=6286
+        FAN_IS_ADAPTED=True
 except Exception as e:
     logging.error(f"风扇配置异常|{e}")
