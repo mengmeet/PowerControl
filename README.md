@@ -71,6 +71,7 @@ curl -L https://raw.githubusercontent.com/mengmeet/PowerControl/main/install.sh 
 | ONEXPLAYER 2 ARP23   | 45 W | 已适配 |
 | GPD WINMAX2     | 45 W | 待验证 |
 | GPD WIN4     | 45 W | 待验证 |
+| GPD WIN Mini     | 30 W | 已适配 |
 | ROG Ally        | 40 W | 未适配 |
 
 **TDP调整基于ryzenadj,因此只支持ryzenadj支持的cpu列表.如有未列出的cpu或者给出的范围数值不正确,请在[issues](https://github.com/Gawah/PowerControl/issues)提交**
