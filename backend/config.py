@@ -52,6 +52,7 @@ try:
         "ONEXPLAYER 2 ARP23":45,
         "G1619-04":45,     #GPD WINMAX2
         "G1618-04":45,     #GPD WIN4
+        "G1617-01":30,    #GPD WIN mini
         "ROG Ally RC71L_RC71L":40,
     }
     TDP_LIMIT_CONFIG_CPU={
