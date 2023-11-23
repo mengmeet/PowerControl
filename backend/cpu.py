@@ -15,6 +15,13 @@ cpu_avaMinFreq=1600000
 cpu_nowLimitFreq=0
 
 class CPU_Manager ():
+    def __init__(self):
+        self.get_cpuMaxNum() # 获取 cpu_maxNum
+        # 获取 cpu_topology
+        self.set_enable_All() # 先开启所有cpu, 否则拓扑信息不全
+        self.cpu_topology = self.get_cpu_topology()
+
+    cpu_topology = {}
 
     def get_hasRyzenadj(self):
         try:
@@ -130,9 +137,7 @@ class CPU_Manager ():
             global cpu_num
             cpu_num=value
 
-            # 获取当前cpu拓扑
-            self.set_enable_All() # 先开启所有cpu, 否则拓扑信息不全
-            cpu_topology = self.get_cpu_topology()
+            cpu_topology = self.cpu_topology
             enabled_cores = list(set(int(core) for core in cpu_topology.values()))
         
             # 初始化关闭 Set
