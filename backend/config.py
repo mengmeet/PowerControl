@@ -54,6 +54,7 @@ try:
         "G1618-04":45,     #GPD WIN4
         "G1617-01":30,    #GPD WIN mini
         "ROG Ally RC71L_RC71L":40,
+        "Jupiter":20,
     }
     TDP_LIMIT_CONFIG_CPU={
         "AMD Ryzen 7 7735HS with Radeon Graphics":45,

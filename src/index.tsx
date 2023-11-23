@@ -50,7 +50,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
     content: <Content/>,
     icon: <FaSuperpowers />,
     onDismount() {
-      PluginManager.unregister();
+      PluginManager?.unregister();
     }
   };
 });

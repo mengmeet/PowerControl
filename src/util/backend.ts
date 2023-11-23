@@ -11,7 +11,6 @@ export class BackendData{
   private has_cpuMaxNum = false;
   private tdpMax = 0;
   private has_tdpMax= false;
-  private has_ryzenadj = false;
   private gpuMax = 0;
   private has_gpuMax = false;
   private gpuMin = 0;
@@ -33,12 +32,6 @@ export class BackendData{
         console.info("tdpMax = " + res.result);
         this.tdpMax = res.result;
         this.has_tdpMax = true;
-      }
-    })
-    await serverAPI!.callPluginMethod<{},boolean>("get_hasRyzenadj",{}).then(res=>{
-      if (res.success){
-        console.info("has_ryzenadj = " + res.result);
-        this.has_ryzenadj= res.result;
       }
     })
     await serverAPI!.callPluginMethod<{},number>("get_gpuFreqMax",{}).then(res=>{
@@ -101,10 +94,6 @@ export class BackendData{
 
   public HasTDPMax(){
     return this.has_tdpMax;
-  }
-
-  public HasRyzenadj(){
-    return this.has_ryzenadj;
   }
 
   public getFanMAXPRM(){
@@ -181,10 +170,7 @@ export class Backend {
     this.serverAPI!.callPluginMethod("set_cpuBoost", { "value": cpuBoost });
   }
 
-  private static applyTDP(tdp: number) {
-    console.log("Applying tdp " + tdp.toString());
-    this.serverAPI!.callPluginMethod("set_cpuTDP", {"value":tdp});
-  }
+  
   
   private static applyGPUFreq(freq: number){
     console.log("Applying gpuFreq " + freq.toString());
@@ -236,6 +222,7 @@ export class Backend {
       const cpuBoost = Settings.appCpuboost();
       Backend.applyCpuBoost(cpuBoost);
     }
+    /*
     if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_TDP) {
       const tdp = Settings.appTDP();
       const tdpEnable = Settings.appTDPEnable();
@@ -246,6 +233,7 @@ export class Backend {
         Backend.applyTDP(Backend.data.getTDPMax());
       }
     }
+    */
     if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_GPUMODE) {
       const gpuMode = Settings.appGPUMode();
       const gpuFreq = Settings.appGPUFreq();
@@ -261,7 +249,7 @@ export class Backend {
         Backend.applyGPUFreq(gpuFreq);
       } else if (gpuMode == GPUMODE.AUTO) {
         console.log(`开始自动优化GPU频率`)
-        Settings.setTDPEnable(false);
+        //Settings.setTDPEnable(false);
         Settings.setCpuboost(false);
         Backend.applyGPUAutoMax(gpuAutoMaxFreq);
         Backend.applyGPUAutoMin(gpuAutoMinFreq);
@@ -318,7 +306,7 @@ export class Backend {
     Backend.applySmt(true);
     Backend.applyCpuNum(Backend.data.getCpuMaxNum());
     Backend.applyCpuBoost(true);
-    Backend.applyTDP(Backend.data.getTDPMax());
+    //Backend.applyTDP(Backend.data.getTDPMax());
     Backend.applyGPUFreq(0);
     Backend.applyFanAuto(true);
   };

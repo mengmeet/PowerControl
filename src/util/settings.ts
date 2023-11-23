@@ -17,10 +17,12 @@ export class AppSetting {
   cpuNum?: number;
   @JsonProperty()
   cpuboost?: boolean;
+  /*
   @JsonProperty()
   tdp?:number;
   @JsonProperty()
   tdpEnable?:boolean
+  */
   @JsonProperty()
   gpuMode?:number
   @JsonProperty()
@@ -40,8 +42,8 @@ export class AppSetting {
     this.smt=false;
     this.cpuNum=Backend.data?.HasCpuMaxNum()?Backend.data?.getCpuMaxNum():4;
     this.cpuboost=false;
-    this.tdpEnable=true;
-    this.tdp=Backend.data?.HasTDPMax()?Math.trunc(Backend.data?.getTDPMax()/2):15;
+    //this.tdpEnable=true;
+    //this.tdp=Backend.data?.HasTDPMax()?Math.trunc(Backend.data?.getTDPMax()/2):15;
     this.gpuMode=GPUMODE.NOLIMIT;
     this.gpuFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
     this.gpuAutoMaxFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
@@ -54,8 +56,8 @@ export class AppSetting {
     this.smt=copyTarget.smt;
     this.cpuNum=copyTarget.cpuNum;
     this.cpuboost=copyTarget.cpuboost;
-    this.tdpEnable=copyTarget.tdpEnable;
-    this.tdp=copyTarget.tdp;
+    //this.tdpEnable=copyTarget.tdpEnable;
+    //this.tdp=copyTarget.tdp;
     this.gpuMode=copyTarget.gpuMode;
     this.gpuFreq=copyTarget.gpuFreq;
     this.gpuAutoMaxFreq=copyTarget.gpuAutoMaxFreq;
@@ -202,6 +204,7 @@ export class Settings {
     }
   }
 
+  /*
   static appTDP() {
     return Settings.ensureApp().tdp!!;
   }
@@ -227,6 +230,7 @@ export class Settings {
       PluginManager.updateComponent(ComponentName.CPU_TDP,UpdateType.UPDATE);
     }
   }
+  */
 
   static appGPUMode(){
     return Settings.ensureApp().gpuMode!!;

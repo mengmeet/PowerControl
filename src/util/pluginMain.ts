@@ -5,6 +5,7 @@ import { localizationManager } from "../i18n";
 import { Settings } from "./settings";
 import { AppOverviewExt } from "./steamClient";
 import { calPointInLine, fanPosition } from "./position";
+import { QAMPatch } from "./patch";
 
 type ActiveAppChangedHandler = (newAppId: string, oldAppId: string) => void;
 type ComponentUpdateHandler = (componentsName: ComponentName,updateType:UpdateType) => void;
@@ -169,6 +170,7 @@ export class PluginManager{
     PluginManager.state = PluginState.INIT; 
     await Backend.init(serverAPI);
     await localizationManager.init(serverAPI);
+    await QAMPatch.init(serverAPI);
     RunningApps.register();
     FanControl.register();
     RunningApps.listenActiveChange((newAppId, oldAppId) => {
@@ -193,12 +195,13 @@ export class PluginManager{
     return PluginManager.state==PluginState.INIT
   }
 
-  public static unregister = ()=>{
-    PluginManager.suspendEndHook!.unregister();
+  public static unregister(){
+    PluginManager.suspendEndHook?.unregister();
     PluginManager.updateAllComponent(UpdateType.DISMOUNT);
-    RunningApps.unregister();
-    FanControl.unregister();
-    Backend.resetSettings();
+    QAMPatch?.unpatch();
+    RunningApps?.unregister();
+    FanControl?.unregister();
+    Backend?.resetSettings();
     PluginManager.state = PluginState.QUIT; 
   }
 

@@ -111,6 +111,7 @@ const CPUNumComponent:VFC = () =>{
 );
 }
 
+/*
 const CPUTDPComponent:VFC = () =>{
   const [tdpEnable, setTDPEnable] = useState<boolean>(Settings.appTDPEnable());
   const [tdp,setTDP] = useState<number>(Settings.appTDP());
@@ -160,6 +161,7 @@ const CPUTDPComponent:VFC = () =>{
     </div>
 );
 }
+*/
 
 export const CPUComponent: VFC = () => {
   const [show,setShow] = useState<boolean>(Settings.ensureEnable());
@@ -187,7 +189,6 @@ export const CPUComponent: VFC = () => {
           <CPUBoostComponent/>
           <CPUSmtComponent/>
           <CPUNumComponent/>
-          <CPUTDPComponent/>
         </PanelSection>}
         </div>
     );
