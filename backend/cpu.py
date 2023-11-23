@@ -1,5 +1,6 @@
 import subprocess
 import os
+import re
 from config import logging,SH_PATH,RYZENADJ_PATH
 from config import TDP_LIMIT_CONFIG_CPU,TDP_LIMIT_CONFIG_PRODUCT,PRODUCT_NAME,CPU_ID
 #初始参数
@@ -102,7 +103,7 @@ class CPU_Manager ():
             logging.error(e)
             return False
 
-    def set_cpuOnline(self, value: int):
+    def set_cpuOnline_Old(self, value: int):
         try:
             logging.debug("set_cpuOnline {} {}".format(value,cpu_maxNum))
             global cpu_num
@@ -117,6 +118,63 @@ class CPU_Manager ():
             #开启的物理核心数*2以后的cpu全部关闭
             for cpu in range(cpu_num*2,cpu_maxNum*2):
                 command="sudo sh {} set_cpu_online {} {}".format(SH_PATH,cpu,0)
+                os.system(command)
+            return True
+        except Exception as e:
+            logging.error(e)
+            return False
+        
+    def set_cpuOnline(self, value: int):
+        try:
+            logging.debug("set_cpuOnline {} {}".format(value,cpu_maxNum))
+            global cpu_num
+            cpu_num=value
+
+            # 获取当前cpu拓扑
+            self.set_enable_All() # 先开启所有cpu, 否则拓扑信息不全
+            cpu_topology = self.get_cpu_topology()
+            enabled_cores = list(set(int(core) for core in cpu_topology.values()))
+        
+            # 初始化关闭 Set
+            to_offline = set()
+        
+            # 超过cpu_num个核心之外的线程, 都关闭
+            if cpu_num is not None and cpu_num < len(enabled_cores):
+                for processor_id, core_id in cpu_topology.items():
+                    if int(core_id) >= cpu_num:
+                        to_offline.add(processor_id)
+                    
+        
+            # 如果关闭SMT，关闭每个核心中数字更大的线程
+            if not cpu_smt:
+                for core_id in enabled_cores[:cpu_num]:
+                    core_threads = [cpu for cpu, core in cpu_topology.items() if int(core) == core_id]
+                    core_threads = sorted(core_threads, key=lambda x: int(x))
+                    core_to_keep = core_threads[0]
+                    to_offline.update(set(core_threads[1:]))
+        
+            
+            logging.debug(f"to_offline {sorted(to_offline)}")
+        
+            # 遍历判断，执行关闭和启用操作
+            for cpu in cpu_topology.keys():
+                if cpu == '0': # cpu0不可操作
+                    continue
+                if cpu in to_offline:
+                    self.offline_cpu(cpu)
+                else:
+                    self.online_cpu(cpu)
+            return True
+        except Exception as e:
+            logging.error(e)
+            return False
+
+    
+    def set_enable_All(self):
+        try:
+            logging.debug("set_enable_All")
+            for cpu in range(0, cpu_maxNum*2):
+                command="sudo sh {} set_cpu_online {} {}".format(SH_PATH,cpu,1)
                 os.system(command)
             return True
         except Exception as e:
@@ -192,5 +250,38 @@ class CPU_Manager ():
         except Exception as e:
             logging.error(e)
             return False
+    
+    def get_cpu_topology():
+        cpu_topology = {}
+    
+        # 遍历每个 CPU
+        cpu_path = '/sys/devices/system/cpu/'
+        cpu_pattern = re.compile(r'^cpu(\d+)$')
+    
+        for cpu_dir in os.listdir(cpu_path):
+            match = cpu_pattern.match(cpu_dir)
+            if match:
+                cpu_number = match.group(1)  # 提取匹配到的数字部分
+                cpu_full_path = os.path.join(cpu_path, cpu_dir)
+    
+                # 获取核心信息
+                core_id_path = os.path.join(cpu_full_path, 'topology/core_id')
+    
+                with open(core_id_path, 'r') as file:
+                    core_id = file.read().strip()
+    
+                cpu_topology[cpu_number] = core_id
+    
+        return cpu_topology
+    
+    def offline_cpu(cpu_number):
+        cpu_online_path = f'/sys/devices/system/cpu/cpu{cpu_number}/online'
+        with open(cpu_online_path, 'w') as file:
+            file.write('0')
+
+    def online_cpu(cpu_number):
+        cpu_online_path = f'/sys/devices/system/cpu/cpu{cpu_number}/online'
+        with open(cpu_online_path, 'w') as file:
+            file.write('1')
 
 cpuManager = CPU_Manager()
