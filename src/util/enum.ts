@@ -13,6 +13,9 @@ export enum FANMODE{
 export enum FANPROFILEACTION{
     DELETE="DELETE",    //删除风扇配置
     USE="USE",  //使用风扇配置
+    EDIT="EDIT", //编辑风扇配置
+    ADD="ADD", //添加风扇配置
+    CANCEL="CANCEL" //取消当前配置
 }
 
 export enum APPLYTYPE{

@@ -7,7 +7,7 @@
     "PROFILE":"Profile",
     "CPU_BOOST":"CPU Boost",
     "CPU_BOOST_DESC":"Increase the maximum CPU frequency",
-    "SMT_DESC":"Enables odd-numbered CPUs",
+    "SMT_DESC":"Enable hyper-threading",
     "CPU_NUM":"Number Of CPU Cores",
     "CPU_NUM_DESC":"Set the enabled physical core",
     "TDP":"Thermal Power (TDP) Limit",
@@ -39,5 +39,7 @@
     "DELETE":"Delete",
     "CREATE":"Create",
     "CANCEL":"Cancel",
-    "CURENT_STAT":"Current status"
+    "CURENT_STAT":"Current status",
+    "EDIT":"Edit",
+    "SAVE":"Save"
 }

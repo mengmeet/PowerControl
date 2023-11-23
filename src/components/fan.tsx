@@ -2,7 +2,6 @@ import {
   PanelSection,
   PanelSectionRow,
   Field,
-  ButtonItem,
   showModal,
   ModalRoot,
   DialogButton,
@@ -13,6 +12,7 @@ import {
   Focusable,
 } from "decky-frontend-lib";
 import { useEffect, useState,useRef,VFC} from "react";
+import { FiPlusCircle }from "react-icons/fi"
 import { Settings, PluginManager,ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, fanPosition, FanSetting, FANPROFILEACTION, FanControl} from "../util";
 import { localizeStrEnum,localizationManager } from "../i18n";
 import {FanCanvas} from "./fanCanvas";
@@ -30,13 +30,20 @@ const setPointColor = "#00BFFF";
 const FANSelectProfileComponent: VFC = () =>{
   //@ts-ignore
   const [items, setItems] = useState<DropdownOption[]>(
-    Object.entries(Settings.getFanSettings()).map(([profileName, fanSetting]) => ({
-      label: profileName,
-      options:[
-        {label:localizationManager.getString(localizeStrEnum.USE),data:{profileName:profileName,type:FANPROFILEACTION.USE,setting:fanSetting}},
-        {label:localizationManager.getString(localizeStrEnum.DELETE),data:{profileName:profileName,type:FANPROFILEACTION.DELETE,setting:fanSetting}},
-      ]
-    }))
+    Object.entries(Settings.getFanSettings()).map(([profileName, fanSetting]) => {
+      var useOption = {label:localizationManager.getString(localizeStrEnum.USE),data:{profileName:profileName,type:FANPROFILEACTION.USE,setting:fanSetting}};
+      if (profileName==Settings.appFanSettingName()) {
+        useOption ={label:localizationManager.getString(localizeStrEnum.CANCEL),data:{profileName:profileName,type:FANPROFILEACTION.CANCEL,setting:fanSetting}};
+      }
+      return {
+        label: profileName,
+        options:[
+          useOption,
+          {label:localizationManager.getString(localizeStrEnum.EDIT),data:{profileName:profileName,type:FANPROFILEACTION.EDIT,setting:fanSetting}},
+          {label:localizationManager.getString(localizeStrEnum.DELETE),data:{profileName:profileName,type:FANPROFILEACTION.DELETE,setting:fanSetting}}
+        ]
+      };
+    })
   );
   //@ts-ignore
   const [selectedItem,setSelectedItem] = useState<DropdownOption|undefined>(items.find((item)=>{
@@ -46,17 +53,44 @@ const FANSelectProfileComponent: VFC = () =>{
     <PanelSectionRow>
           <Dropdown
             focusable={true}
-            disabled={items.length==0}
-            rgOptions={items}
+            rgOptions={[
+              ...items,
+              {
+                data: FANPROFILEACTION.ADD,
+                label: (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "start",
+                      gap: "1em",
+                    }}
+                  >
+                    <FiPlusCircle />
+                    <span>{localizationManager.getString(localizeStrEnum.CREATE_FAN_PROFILE_TIP)}</span>
+                  </div>
+                ),
+              },
+            ]}
             strDefaultLabel={selectedItem?selectedItem.label?.toString():(items.length==0?localizationManager.getString(localizeStrEnum.CREATE_FAN_PROFILE_TIP):localizationManager.getString(localizeStrEnum.SELECT_FAN_PROFILE_TIP))}
             selectedOption={selectedItem}
             onChange={(item:DropdownOption)=>{
+              if(item.data==FANPROFILEACTION.ADD){
+                // @ts-ignore
+                showModal(<FANCretateProfileModelComponent fanProfileName={item.data.profileName} fanSetting={Settings.getFanSetting(item.data.profileName)}/>);
+                return;
+              }
               //setSelectedItem(item);
               if(item.data.type==FANPROFILEACTION.USE){
                 Settings.setAppFanSettingName(item.data.profileName)
               }else if(item.data.type==FANPROFILEACTION.DELETE){
                 Settings.removeFanSetting(item.data.profileName)
-              }
+              }else if(item.data.type==FANPROFILEACTION.EDIT){
+                 // @ts-ignore
+                showModal(<FANCretateProfileModelComponent fanProfileName={item.data.profileName} fanSetting={Settings.getFanSetting(item.data.profileName)}/>);
+              }else if(item.data.type==FANPROFILEACTION.CANCEL){
+                Settings.setAppFanSettingName(undefined);
+             }
             }}
           />
     </PanelSectionRow>
@@ -307,39 +341,28 @@ const FANRPMComponent: VFC = () => {
   );
 };
 
-const FANCreateProfileComponent: VFC = ()=>{
-  return(
-    <PanelSectionRow>
-      <ButtonItem
-        layout="below"
-        onClick={() => {
-          // @ts-ignore
-          showModal(<FANCretateProfileModelComponent/>);
-        }}>
-        {localizationManager.getString(localizeStrEnum.CREATE_FAN_PROFILE)}
-      </ButtonItem>
-    </PanelSectionRow>
-  )
-}
-
 function FANCretateProfileModelComponent({
+  fanProfileName,
+  fanSetting,
   closeModal,
 }: {
+  fanProfileName:string,
+  fanSetting:FanSetting,
   closeModal: () => void;
 }){
   const canvasRef: any = useRef(null);
-  const curvePoints : any = useRef([]);
+  const curvePoints : any = useRef(fanSetting?.curvePoints??[]);
   //drag
   const dragPoint : any = useRef(null);
   //select
   const selectedPoint: any = useRef(null);
   
 
-  const [profileName,setProfileName]=useState<string>();
+  const [profileName,setProfileName]=useState<string>(fanProfileName??undefined);
   //@ts-ignore
   const [snapToGrid,setSnapToGrid] = useState(true);
-  const [fanMode,setFanMode] = useState(FANMODE.NOCONTROL);
-  const [fixSpeed,setFixSpeed] = useState(50);
+  const [fanMode,setFanMode] = useState(fanSetting?.fanMode??FANMODE.NOCONTROL);
+  const [fixSpeed,setFixSpeed] = useState(fanSetting?.fixSpeed??50);
   const [selPointTemp,setSelPointTemp] = useState(0);
   const [selPointSpeed,setSelPointSpeed] = useState(0);
   const initDraw=(ref:any)=>{
@@ -440,8 +463,11 @@ function FANCretateProfileModelComponent({
       ctx.fill();
     }
   }
-  const onCreateProfile=()=>{
-    return Settings.addFanSetting(profileName!!,new FanSetting(snapToGrid,fanMode,fixSpeed,curvePoints.current))
+  const onCreateProfile=(isEdit:boolean)=>{
+    if(isEdit){
+      Settings.editFanSetting(fanProfileName,profileName,new FanSetting(snapToGrid,fanMode,fixSpeed,curvePoints.current))
+    }
+    return Settings.addFanSetting(profileName,new FanSetting(snapToGrid,fanMode,fixSpeed,curvePoints.current))
   }
   useEffect(()=>{
     refreshCanvas();
@@ -588,6 +614,7 @@ function FANCretateProfileModelComponent({
       }
       return false;
     }
+    return false;
   }
   function onPointerDraging(fanClickPos:fanPosition):void{
     switch(fanMode){
@@ -745,10 +772,10 @@ function FANCretateProfileModelComponent({
       </div>
       <Focusable style={{marginBlockEnd: "-25px", marginBlockStart: "-5px", display: "grid", gridTemplateColumns: "repeat(2, 1fr)",gridTemplateRows: "repeat(1, 1fr)",gridGap: "0.5rem", padding: "8px 0"}}>
       <DialogButton onClick={() => {
-          if(onCreateProfile()){
+          if(onCreateProfile(fanSetting!=undefined)){
             closeModal();
           }
-        }}> {localizationManager.getString(localizeStrEnum.CREATE)}</DialogButton>
+        }}> {localizationManager.getString(fanSetting?localizeStrEnum.SAVE:localizeStrEnum.CREATE)}</DialogButton>
       <DialogButton onClick={() => {closeModal()}}> {localizationManager.getString(localizeStrEnum.CANCEL)}</DialogButton>
       </Focusable>
     </ModalRoot>
@@ -780,10 +807,9 @@ export function FANComponent(){
   return (
     <div>
       {show&&fanEnable.current&&<PanelSection title="FAN">
-        <FANSelectProfileComponent/>
         <FANDisplayComponent/>
         <FANRPMComponent/>
-        <FANCreateProfileComponent/>
+        <FANSelectProfileComponent/>
       </PanelSection>}
     </div>
   );

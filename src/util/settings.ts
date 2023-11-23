@@ -323,7 +323,7 @@ export class Settings {
   }
 
   //设置使用的风扇配置文件名称
-  static setAppFanSettingName(fanProfileName:string){
+  static setAppFanSettingName(fanProfileName:string|undefined){
     if(Settings.ensureApp().fanProfileName!=fanProfileName){
       Settings.ensureApp().fanProfileName=fanProfileName;
       Settings.saveSettingsToLocalStorage();
@@ -341,6 +341,27 @@ export class Settings {
       return false;
     }
   }
+
+  //修改一个风扇配置
+  static editFanSetting(fanProfileName:string,newfanProfileName:string,fanSetting:FanSetting){
+    if(newfanProfileName&&(fanProfileName in this._instance.fanSettings)){
+      if(fanProfileName==newfanProfileName){
+        this._instance.fanSettings[fanProfileName] = fanSetting;
+      }else{
+        this._instance.fanSettings[newfanProfileName] = fanSetting;
+        Object.entries(this._instance.perApp).forEach(([_appID, appSettings]) => {
+          if(appSettings.fanProfileName==fanProfileName){
+            appSettings.fanProfileName=newfanProfileName;
+          }
+        })
+        delete this._instance.fanSettings[fanProfileName];
+      }
+      return true;
+    }else{
+      return false;
+    }
+  }
+
   //删除一个风扇配置
   static removeFanSetting(fanProfileName:string){
     if(fanProfileName in this._instance.fanSettings){
@@ -358,6 +379,11 @@ export class Settings {
   //获取风扇配置列表
   static getFanSettings():{[fanProfile: string]:FanSetting}{
     return this._instance.fanSettings;
+  }
+
+  //获取风扇配置
+  static getFanSetting(fanProfileName:string):FanSetting{
+    return this._instance.fanSettings?.[fanProfileName];
   }
 
   static loadSettingsFromLocalStorage(){

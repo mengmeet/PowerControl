@@ -36,8 +36,10 @@
     "SELECT_FAN_PROFILE_TIP":"選擇一個風扇配置檔",
     "FAN_PROFILE_NAME":"配置檔名稱",
     "USE":"使用",
-    "DELETE":"删除",
-    "CREATE":"创建",
+    "DELETE":"刪除",
+    "CREATE":"創建",
     "CANCEL":"取消",
-    "CURENT_STAT":"当前状态"
+    "CURENT_STAT":"當前狀態",
+    "EDIT":"編輯",
+    "SAVE":"儲存"
 }

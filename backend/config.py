@@ -82,7 +82,12 @@ try:
             "pwm_enable":"pwm1_enable",   
             "pwm":"pwm1",
             "fan_input":"fan1_input"
-        },}
+        },
+        "steamdeck_hwmon":{
+            "pwm_enable":"fan1_target",   
+            "pwm":"fan1_target",
+            "fan_input":"fan1_input"
+        }}
 
     #风扇ec配置
     FAN_MANUAL_OFFSET=0     #风扇自动控制ec地址
@@ -200,6 +205,12 @@ try:
 
         FAN_RPMWRITE_MAX=244
         FAN_RPMVALUE_MAX=6286
+        FAN_IS_ADAPTED=True
+    elif PRODUCT_NAME in (
+        "Jupiter",
+        ):
+        FAN_RPMWRITE_MAX=7300
+        FAN_RPMVALUE_MAX=7309
         FAN_IS_ADAPTED=True
 except Exception as e:
     logging.error(f"风扇配置异常|{e}")

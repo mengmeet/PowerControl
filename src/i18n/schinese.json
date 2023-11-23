@@ -39,5 +39,7 @@
     "DELETE":"删除",
     "CREATE":"创建",
     "CANCEL":"取消",
-    "CURENT_STAT":"当前状态"
+    "CURENT_STAT":"当前状态",
+    "EDIT":"编辑",
+    "SAVE":"保存"
 }

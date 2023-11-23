@@ -102,6 +102,8 @@ export enum localizeStrEnum {
     DELETE="DELETE",
     CREATE="CREATE",
     CANCEL="CANCEL",
-    CURENT_STAT="CURENT_STAT"
+    CURENT_STAT="CURENT_STAT",
+    EDIT="EDIT",
+    SAVE="SAVE",
 }
     
