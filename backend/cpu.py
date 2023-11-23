@@ -251,7 +251,7 @@ class CPU_Manager ():
             logging.error(e)
             return False
     
-    def get_cpu_topology():
+    def get_cpu_topology(self):
         cpu_topology = {}
     
         # 遍历每个 CPU
@@ -274,12 +274,12 @@ class CPU_Manager ():
     
         return cpu_topology
     
-    def offline_cpu(cpu_number):
+    def offline_cpu(self, cpu_number):
         cpu_online_path = f'/sys/devices/system/cpu/cpu{cpu_number}/online'
         with open(cpu_online_path, 'w') as file:
             file.write('0')
 
-    def online_cpu(cpu_number):
+    def online_cpu(self, cpu_number):
         cpu_online_path = f'/sys/devices/system/cpu/cpu{cpu_number}/online'
         with open(cpu_online_path, 'w') as file:
             file.write('1')
