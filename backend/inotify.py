@@ -9,6 +9,7 @@ import threading
 import re
 from ctypes import CDLL, get_errno
 from threading import Thread, Timer
+from config import logging
 
 IN_ACCESS        = 0x00000001  # 文件被访问
 IN_MODIFY        = 0x00000002  # 文件被修改
@@ -37,11 +38,11 @@ class Inotify:
             self.fd = self._libc.inotify_init()
 
             self._wdMap = {}
-            self._delay = 0.002
-            self._delaytimer = None
+            self._delay = 0.5
+            self._delaytimer = {}
             self._runThread = None
         except Exception as e:
-            print(e)
+            logging.error(e)
 
     def _process(self):
         try:
@@ -58,23 +59,26 @@ class Inotify:
                     pos += name_len
                     item = wdMap.get(wd)
                     if item and self._runThread and self._runThread.name == nowThread:
-                        print(f"callback path:{item['path']}, mask:{mask}")
-                        self._delayCall(item['callback'], item['path'], mask)
+                        self._delayCall(wd,item['callback'], item['path'], mask)
         except Exception as e:
-            print(e)
+            logging.error(e)
 
-    def _delayCall(self, callfunc, *args):
+    def _delayCall(self,wd,callfunc, *args):
         try:
-            if self._delaytimer is not None and self._delaytimer.is_alive():
-                self._delaytimer.cancel()
-            self._delaytimer = Timer(self._delay, lambda: callfunc(*args))
-            self._delaytimer.start()
+            if wd in self._delaytimer and self._delaytimer[wd] is not None and self._delaytimer[wd].is_alive():
+                self._delaytimer[wd].cancel()
+            self._delaytimer[wd] = Timer(self._delay, lambda: self._onCallBack(callfunc,*args))
+            self._delaytimer[wd].start()
         except Exception as e:
-            print(e)
+            logging.error(e)
+
+    def _onCallBack(self, callfunc, *args):
+        logging.debug(f"callback path:{args[0]}, mask:{args[1]}")
+        callfunc(*args)
 
     def add_watch(self, path, mask, callback):
         try:
-            print(f"add_watch(self, path:{path}, mask:{mask}, callback:{callback})")
+            logging.debug(f"add_watch(self, path:{path}, mask:{mask}, callback:{callback})")
             path_buf = ctypes.create_string_buffer(path.encode(sys.getfilesystemencoding()))
             wd = self._libc.inotify_add_watch(self.fd, path_buf, mask)
             self._wdMap[wd] = {'path': path, 'callback': callback}
@@ -82,7 +86,7 @@ class Inotify:
                 sys.stderr.write(f"can't add watch for {path_buf}: {os.strerror(get_errno())}\n")
             return wd
         except Exception as e:
-            print(e)
+            logging.error(e)
 
     def remove_watch(self, path):
         try:
@@ -93,7 +97,7 @@ class Inotify:
                     else:
                         self._wdMap.pop(wd)
         except Exception as e:
-            print(e)
+            logging.error(e)
 
     def run(self):
         try:
@@ -103,7 +107,7 @@ class Inotify:
                 self._runThread =  Thread(target=self._process)
                 self._runThread.start()
         except Exception as e:
-            print(e)
+            logging.error(e)
 
     def stop(self):
         self._runThread = None

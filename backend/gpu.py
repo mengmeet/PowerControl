@@ -213,7 +213,7 @@ class GPUManager ():
 
     def set_gpuFreq(self, value1: int,value2: int):
         try:
-            if value1 >= self.gpu_freqRange[0] and value2<= self.gpu_freqRange[1] and value2 >= value1:
+            if ((value1 >= self.gpu_freqRange[0] and value2<= self.gpu_freqRange[1]) or (value1==0 and value2==0)) and value2 >= value1:
                 self.gpu_nowFreq = [value1,value2]
                 command="sudo sh {} set_clock_limits {} {}".format(SH_PATH,value1,value2)
                 os.system(command)
