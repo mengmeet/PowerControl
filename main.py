@@ -13,14 +13,17 @@ try:
     from cpu import cpuManager
     from fan import fanManager
     from sysInfo import sysInfoManager
-    logging.info("PowerControl main.py")
+    
 except Exception as e:
     logging.error(e)
 
 class Plugin:
     async def _main(self):
-        while True:
-            await asyncio.sleep(3)
+        logging.info("PowerControl main.py")
+    
+    async def _unload(self):
+        gpuManager.unload()
+        logging.info("End PowerControl")
 
     async def get_hasRyzenadj(self):
         try:
@@ -43,23 +46,9 @@ class Plugin:
             logging.error(e)
             return 0
     
-    async def get_gpuFreqMax(self):
+    async def get_gpuFreqRange(self):
         try:
-            return gpuManager.get_gpuFreqMax()
-        except Exception as e:
-            logging.error(e)
-            return 0
-    
-    async def get_gpuFreqMin(self):
-        try:
-            return gpuManager.get_gpuFreqMin()
-        except Exception as e:
-            logging.error(e)
-            return 0
-    
-    async def get_gpuFreqMin(self):
-        try:
-            return gpuManager.get_gpuFreqMin()
+            return gpuManager.get_gpuFreqRange()
         except Exception as e:
             logging.error(e)
             return 0
@@ -143,23 +132,16 @@ class Plugin:
             logging.error(e)
             return False
 
-    def set_gpuAutoMaxFreq(self, value: int):
+    def set_gpuAutoFreqRange(self, min: int,max:int):
         try:
-            return gpuManager.set_gpuAutoMaxFreq(value)
-        except Exception as e:
-            logging.error(e)
-            return False
-    
-    def set_gpuAutoMinFreq(self, value: int):
-        try:
-            return gpuManager.set_gpuAutoMinFreq(value)
+            return gpuManager.set_gpuAutoFreqRange(min,max)
         except Exception as e:
             logging.error(e)
             return False
 
     def set_gpuFreq(self, value: int):
         try:
-            return gpuManager.set_gpuFreq(value)
+            return gpuManager.set_gpuFreqFix(value)
         except Exception as e:
             logging.error(e)
             return False

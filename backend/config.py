@@ -23,6 +23,7 @@ try:
     RYZENADJ_PATH="{}/plugins/PowerControl/bin/ryzenadj".format(HOMEBREW_PATH)
     GPU_DEVICE_PATH = glob.glob("/sys/class/drm/card?/device")[0]
     GPUFREQ_PATH = "{}/pp_od_clk_voltage".format(GPU_DEVICE_PATH)
+    GPULEVEL_PATH = "{}/power_dpm_force_performance_level".format(GPU_DEVICE_PATH)
 except Exception as e:
     logging.error(f"路径配置异常|{e}")
 

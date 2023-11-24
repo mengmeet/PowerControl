@@ -6,7 +6,7 @@ from config import FAN_HWMON_LIST,FAN_MANUAL_OFFSET,FAN_RPMREAD_OFFSET,FAN_RPMWR
 from config import FAN_RAM_REG_ADDR,FAN_RAM_REG_DATA,FAN_RAM_MANUAL_OFFSET,FAN_RAM_RPMWRITE_OFFSET,FAN_RAM_RPMREAD_OFFSET,FAN_RAM_RPMREAD_LENGTH
 
 
-class FAN_Manager ():
+class FanManager ():
     def __init__(self):
         self.FAN_ISFIND_HWMON=False  #是否找到风扇hwmon
         self.FAN_HWMON_NAME=""       #风扇hwmon名字
@@ -218,4 +218,4 @@ class FAN_Manager ():
             logging.error(f"获取机型适配异常:{e}")
             return 0
 
-fanManager = FAN_Manager()
+fanManager = FanManager()

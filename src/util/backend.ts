@@ -34,18 +34,13 @@ export class BackendData{
         this.has_tdpMax = true;
       }
     })
-    await serverAPI!.callPluginMethod<{},number>("get_gpuFreqMax",{}).then(res=>{
+    await serverAPI!.callPluginMethod<{},number[]>("get_gpuFreqRange",{}).then(res=>{
       if (res.success){
-        console.info("gpuMax = " + res.result);
-        this.gpuMax = res.result;
-        this.has_gpuMax = true;
-      }
-    })
-    await serverAPI!.callPluginMethod<{},number>("get_gpuFreqMin",{}).then(res=>{
-      if (res.success){
-        console.info("gpuMin = " + res.result);
-        this.gpuMin = res.result;
+        console.info("gpuRange = " + res.result);
+        this.gpuMin = res.result[0];
+        this.gpuMax = res.result[1];
         this.has_gpuMin = true;
+        this.has_gpuMax = true;
       }
     })
     await this.serverAPI!.callPluginMethod<{},number>("get_fanMAXRPM",{}).then(res=>{
@@ -187,15 +182,11 @@ export class Backend {
     this.serverAPI!.callPluginMethod("set_gpuAuto", {"value":auto});
   }
 
-  private static applyGPUAutoMax(maxAutoFreq:number){
+  private static applyGPUAutoRange(minAutoFreq:number,maxAutoFreq:number){
     console.log("Applying gpuAuto" + maxAutoFreq.toString());
-    this.serverAPI!.callPluginMethod("set_gpuAutoMaxFreq", {"value":maxAutoFreq});
+    this.serverAPI!.callPluginMethod("set_gpuAutoFreqRange", {"min":minAutoFreq,"max":maxAutoFreq});
   }
 
-  private static applyGPUAutoMin(minAutoFreq:number){
-    console.log("Applying gpuAuto" + minAutoFreq.toString());
-    this.serverAPI!.callPluginMethod("set_gpuAutoMinFreq", {"value":minAutoFreq});
-  }
   private static applyFanAuto(auto:boolean){
     this.serverAPI!.callPluginMethod("set_fanAuto", {"value":auto});
   }
@@ -251,8 +242,7 @@ export class Backend {
         console.log(`开始自动优化GPU频率`)
         //Settings.setTDPEnable(false);
         Settings.setCpuboost(false);
-        Backend.applyGPUAutoMax(gpuAutoMaxFreq);
-        Backend.applyGPUAutoMin(gpuAutoMinFreq);
+        Backend.applyGPUAutoRange(gpuAutoMinFreq,gpuAutoMaxFreq);
         Backend.applyGPUAuto(true);
       } else if (gpuMode == GPUMODE.RANGE) {
         Backend.applyGPUAuto(false);

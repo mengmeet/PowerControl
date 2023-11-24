@@ -14,7 +14,7 @@ cpu_avaMaxFreq=1600000
 cpu_avaMinFreq=1600000
 cpu_nowLimitFreq=0
 
-class CPU_Manager ():
+class CPUManager ():
     def __init__(self):
         self.get_cpuMaxNum() # 获取 cpu_maxNum
         # 获取 cpu_topology
@@ -289,4 +289,4 @@ class CPU_Manager ():
         with open(cpu_online_path, 'w') as file:
             file.write('1')
 
-cpuManager = CPU_Manager()
+cpuManager = CPUManager()
