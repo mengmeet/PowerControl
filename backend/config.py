@@ -131,6 +131,22 @@ try:
     elif PRODUCT_NAME in (
         "AIR",
         "AIR Pro",
+        ):
+        FAN_MANUAL_OFFSET=0x4a
+        FAN_RPMWRITE_OFFSET=0x4b
+        FAN_RPMREAD_OFFSET=0x76
+
+        FAN_RAM_REG_ADDR=0x4E
+        FAN_RAM_REG_DATA=0x4F
+        FAN_RAM_MANUAL_OFFSET=0x44a
+        FAN_RAM_RPMWRITE_OFFSET=0x44b
+        FAN_RAM_RPMREAD_OFFSET=0x1809
+        FAN_RAM_RPMREAD_LENGTH=0
+
+        FAN_RPMWRITE_MAX=255
+        FAN_RPMVALUE_MAX=5811
+        FAN_IS_ADAPTED=True
+    elif PRODUCT_NAME in (
         "AYANEO 2",
         "AYANEO 2S",
         "GEEK",
@@ -147,8 +163,8 @@ try:
         FAN_RAM_RPMREAD_OFFSET=0x1809
         FAN_RAM_RPMREAD_LENGTH=0
 
-        FAN_RPMWRITE_MAX=100
-        FAN_RPMVALUE_MAX=5811
+        FAN_RPMWRITE_MAX=200
+        FAN_RPMVALUE_MAX=5530
         FAN_IS_ADAPTED=True
     elif PRODUCT_NAME in (
         "ONEXPLAYER Mini Pro",
@@ -205,7 +221,7 @@ try:
         FAN_RAM_RPMREAD_LENGTH=2
 
         FAN_RPMWRITE_MAX=244
-        FAN_RPMVALUE_MAX=6286
+        FAN_RPMVALUE_MAX=6379
         FAN_IS_ADAPTED=True
     elif PRODUCT_NAME in (
         "Jupiter",
