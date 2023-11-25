@@ -39,7 +39,7 @@ export class AppSetting {
   fanProfileName?:string;
   constructor(){
     this.overwrite=false;
-    this.smt=false;
+    this.smt=true;
     this.cpuNum=Backend.data?.HasCpuMaxNum()?Backend.data?.getCpuMaxNum():4;
     this.cpuboost=false;
     //this.tdpEnable=true;
