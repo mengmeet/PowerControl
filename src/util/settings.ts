@@ -17,16 +17,14 @@ export class AppSetting {
   cpuNum?: number;
   @JsonProperty()
   cpuboost?: boolean;
-  /*
   @JsonProperty()
   tdp?:number;
   @JsonProperty()
   tdpEnable?:boolean
-  */
   @JsonProperty()
   gpuMode?:number
-  @JsonProperty()
-  gpuFreq?:number
+  //@JsonProperty()
+  //gpuFreq?:number
   @JsonProperty()
   gpuAutoMaxFreq?:number
   @JsonProperty()
@@ -44,8 +42,8 @@ export class AppSetting {
     this.cpuboost=false;
     //this.tdpEnable=true;
     //this.tdp=Backend.data?.HasTDPMax()?Math.trunc(Backend.data?.getTDPMax()/2):15;
-    this.gpuMode=GPUMODE.NOLIMIT;
-    this.gpuFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
+    this.gpuMode=GPUMODE.NATIVE;
+    //this.gpuFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
     this.gpuAutoMaxFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
     this.gpuAutoMinFreq=Backend.data?.HasGPUFreqMin()?Backend.data.getGPUFreqMin():200;
     this.gpuRangeMaxFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
@@ -59,7 +57,7 @@ export class AppSetting {
     //this.tdpEnable=copyTarget.tdpEnable;
     //this.tdp=copyTarget.tdp;
     this.gpuMode=copyTarget.gpuMode;
-    this.gpuFreq=copyTarget.gpuFreq;
+    //this.gpuFreq=copyTarget.gpuFreq;
     this.gpuAutoMaxFreq=copyTarget.gpuAutoMaxFreq;
     this.gpuAutoMinFreq=copyTarget.gpuAutoMinFreq;
     this.gpuRangeMaxFreq=copyTarget.gpuRangeMaxFreq;
@@ -95,6 +93,7 @@ export class Settings {
   public perApp: { [appId: string]: AppSetting } = {};
   @JsonProperty({isDictionary:true, type: FanSetting })
   public fanSettings: { [fanProfile: string]: FanSetting } = {};
+  public settingChangeEvent = new EventTarget();
   //插件是否开启
   public static ensureEnable():boolean{
     return this._instance.enabled;
@@ -204,7 +203,6 @@ export class Settings {
     }
   }
 
-  /*
   static appTDP() {
     return Settings.ensureApp().tdp!!;
   }
@@ -230,11 +228,11 @@ export class Settings {
       PluginManager.updateComponent(ComponentName.CPU_TDP,UpdateType.UPDATE);
     }
   }
-  */
 
   static appGPUMode(){
     return Settings.ensureApp().gpuMode!!;
   }
+
   //写入gpu模式配置并应用
   static setGPUMode(gpuMode:GPUMODE){
     if(Settings.ensureApp().gpuMode!=gpuMode){
@@ -242,10 +240,19 @@ export class Settings {
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
       PluginManager.updateComponent(ComponentName.GPU_FREQMODE,UpdateType.UPDATE);
-      
+      this._instance.settingChangeEvent.dispatchEvent(new Event("GPU_FREQ_Change"))
     }
   }
 
+  //监听gpu模式变化
+  static addGpuModeEventListener(callback:()=>void){
+    this._instance.settingChangeEvent.addEventListener("GPU_FREQ_Change",callback)
+  }
+
+  static removeGpuModeEventListener(callback: () => void) {
+    this._instance.settingChangeEvent.removeEventListener("GPU_FREQ_Change", callback);
+  }
+  /*
   static appGPUFreq(){
     return Settings.ensureApp().gpuFreq!!;
   }
@@ -259,6 +266,7 @@ export class Settings {
       PluginManager.updateComponent(ComponentName.GPU_FREQFIX,UpdateType.UPDATE);
     }
   }
+  */
 
   static appGPUAutoMaxFreq(){
     return Settings.ensureApp().gpuAutoMaxFreq!!;

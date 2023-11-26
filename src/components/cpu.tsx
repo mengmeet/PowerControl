@@ -4,7 +4,7 @@ import {
   ToggleField,
 } from "decky-frontend-lib";
 import { useEffect, useState, VFC} from "react";
-import { Settings,Backend, PluginManager,ComponentName, UpdateType, GPUMODE} from "../util";
+import { Settings,Backend, PluginManager,ComponentName, UpdateType, GPUMODE, Patch} from "../util";
 import { localizeStrEnum,localizationManager } from "../i18n";
 import {SlowSliderField} from "./SlowSliderField"
 
@@ -111,15 +111,15 @@ const CPUNumComponent:VFC = () =>{
 );
 }
 
-/*
+
 const CPUTDPComponent:VFC = () =>{
   const [tdpEnable, setTDPEnable] = useState<boolean>(Settings.appTDPEnable());
   const [tdp,setTDP] = useState<number>(Settings.appTDP());
-  const [disabled,setDisable] = useState<boolean>(!Backend.data.HasRyzenadj()||Settings.appGPUMode()==GPUMODE.AUTO);
+  const [disabled,setDisable] = useState<boolean>(Settings.appGPUMode()==GPUMODE.AUTO);
   const refresh = () => {
     setTDPEnable(Settings.appTDPEnable());
     setTDP(Settings.appTDP());
-    setDisable(!Backend.data.HasRyzenadj()||Settings.appGPUMode()==GPUMODE.AUTO);
+    setDisable(Settings.appGPUMode()==GPUMODE.AUTO);
   };
   useEffect(() => {
     PluginManager.listenUpdateComponent(ComponentName.CPU_TDP,[ComponentName.CPU_TDP,ComponentName.GPU_FREQMODE],(_ComponentName,updateType)=>{
@@ -136,7 +136,7 @@ const CPUTDPComponent:VFC = () =>{
       <PanelSectionRow>
             <ToggleField
               label={localizationManager.getString(localizeStrEnum.TDP)}
-              description={Backend.data.HasRyzenadj() ? localizationManager.getString(localizeStrEnum.TDP_DESC) : localizationManager.getString(localizeStrEnum.RYZENADJ_NOT_FOUND)}
+              description={localizationManager.getString(localizeStrEnum.TDP_DESC)}
               checked={tdpEnable}
               disabled={disabled}
               onChange={(value) => {
@@ -161,7 +161,7 @@ const CPUTDPComponent:VFC = () =>{
     </div>
 );
 }
-*/
+
 
 export const CPUComponent: VFC = () => {
   const [show,setShow] = useState<boolean>(Settings.ensureEnable());
@@ -189,6 +189,7 @@ export const CPUComponent: VFC = () => {
           <CPUBoostComponent/>
           <CPUSmtComponent/>
           <CPUNumComponent/>
+          {!PluginManager.isPatchSuccess(Patch.TDPPatch)&& <CPUTDPComponent/>}
         </PanelSection>}
         </div>
     );

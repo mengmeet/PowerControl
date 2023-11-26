@@ -41,5 +41,6 @@
     "CANCEL":"取消",
     "CURENT_STAT":"當前狀態",
     "EDIT":"編輯",
-    "SAVE":"儲存"
+    "SAVE":"儲存",
+    "NATIVE_FREQ":"本機設定"
 }

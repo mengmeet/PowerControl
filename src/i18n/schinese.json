@@ -41,5 +41,6 @@
     "CANCEL":"取消",
     "CURENT_STAT":"当前状态",
     "EDIT":"编辑",
-    "SAVE":"保存"
+    "SAVE":"保存",
+    "NATIVE_FREQ":"原生设置"
 }

@@ -41,5 +41,6 @@
     "CANCEL":"Cancel",
     "CURENT_STAT":"Current status",
     "EDIT":"Edit",
-    "SAVE":"Save"
+    "SAVE":"Save",
+    "NATIVE_FREQ":"Native"
 }

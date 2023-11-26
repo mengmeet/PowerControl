@@ -249,4 +249,45 @@ class GPUManager ():
             logging.error(e)
             return False
 
+    def fix_gpuFreqSlider(self):
+        try:
+            gpu_file_path=["power_dpm_force_performance_level","pp_od_clk_voltage"]
+            steamos_priv_path="/usr/bin/steamos-polkit-helpers/steamos-priv-write"
+            # 读取sh文件内容
+            with open(steamos_priv_path, 'r') as file:
+                sh_code = file.read()
+
+            for path in gpu_file_path:
+                # 匹配目标if语句，并检查then部分的代码
+                if_match = re.search(r'if([\s\S]*?)\[\[([\s\S]*?){}([\s\S]*?)]]([\s\S]*?)then([\s\S]*?)fi'.format(path), sh_code, flags=re.DOTALL)
+                if if_match:
+                    # 获取then部分的代码
+                    then_code = if_match.group(5)
+                    new_then_code = '''   WRITE_PATH=$(ls /sys/class/drm/*/device/{} | head -n 1)
+   CommitWrite'''.format(path)
+
+                    # 如果then部分的代码与目标不同，则将其替换
+                    if then_code.strip() != new_then_code.strip():
+                        new_if_code = re.sub(r'if([\s\S]*?)\[\[([\s\S]*?){}([\s\S]*?)]]([\s\S]*?)then([\s\S]*?)fi'.format(path), r'if\1[[\2{}\3]]\4then\n{}\nfi'.format(path,new_then_code), sh_code)
+
+                        sh_code = new_if_code
+                else:
+                    # 没有匹配到目标if语句，在文件能匹配到的最后一个if [[ ]] then fi后面添加代码
+                    last_if_match = re.findall(r'if[\s\S]*?\[\[[\s\S]*?]][\s\S]*?then[\s\S]*?fi', sh_code, flags=re.DOTALL)
+                    add_code='''
+if [[ "$WRITE_PATH" == /sys/class/drm/card*/device/{} ]]; then
+   WRITE_PATH=$(ls /sys/class/drm/*/device/{} | head -n 1)
+   CommitWrite
+fi'''.format(path,path)
+                    # 文件最后一个if，换行后添加
+                    if last_if_match:
+                        sh_code = sh_code.replace(last_if_match[-1], f'{last_if_match[-1]}\n{add_code}')
+
+            # 将修改后的代码写回文件
+            with open(steamos_priv_path, 'w') as file:
+                file.write(sh_code)
+        except:
+            logging.error(e)
+
 gpuManager = GPUManager()
+gpuManager.fix_gpuFreqSlider()

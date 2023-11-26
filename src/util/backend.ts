@@ -1,6 +1,6 @@
 import {ServerAPI } from "decky-frontend-lib";
-import { APPLYTYPE, FANMODE, GPUMODE } from "./enum";
-import { FanControl } from "./pluginMain";
+import { APPLYTYPE, FANMODE, GPUMODE, Patch} from "./enum";
+import { FanControl, PluginManager} from "./pluginMain";
 import { Settings } from "./settings";
 
 
@@ -165,9 +165,12 @@ export class Backend {
     this.serverAPI!.callPluginMethod("set_cpuBoost", { "value": cpuBoost });
   }
 
-  
-  
-  private static applyGPUFreq(freq: number){
+  public static applyTDP = (tdp:number)=>{
+      console.log("Applying tdp " + tdp.toString());
+      this.serverAPI!.callPluginMethod("set_cpuTDP", {"value":tdp});
+  }
+
+  public static applyGPUFreq(freq: number){
     console.log("Applying gpuFreq " + freq.toString());
     this.serverAPI!.callPluginMethod("set_gpuFreq", {"value":freq});
   }
@@ -190,6 +193,7 @@ export class Backend {
   private static applyFanAuto(auto:boolean){
     this.serverAPI!.callPluginMethod("set_fanAuto", {"value":auto});
   }
+  
   private static applyFanPercent(percent:number){
     this.serverAPI!.callPluginMethod("set_fanPercent", {"value":percent});
   }
@@ -213,34 +217,29 @@ export class Backend {
       const cpuBoost = Settings.appCpuboost();
       Backend.applyCpuBoost(cpuBoost);
     }
-    /*
     if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_TDP) {
-      const tdp = Settings.appTDP();
-      const tdpEnable = Settings.appTDPEnable();
-      if (tdpEnable) {
-        Backend.applyTDP(tdp);
-      }
-      else {
-        Backend.applyTDP(Backend.data.getTDPMax());
+      if(!PluginManager.isPatchSuccess(Patch.TDPPatch)){
+        const tdp = Settings.appTDP();
+        const tdpEnable = Settings.appTDPEnable();
+        if (tdpEnable) {
+          Backend.applyTDP(tdp);
+        }
+        else {
+          Backend.applyTDP(Backend.data.getTDPMax());
+        }
       }
     }
-    */
     if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_GPUMODE) {
       const gpuMode = Settings.appGPUMode();
-      const gpuFreq = Settings.appGPUFreq();
       const gpuAutoMaxFreq = Settings.appGPUAutoMaxFreq();
       const gpuAutoMinFreq = Settings.appGPUAutoMinFreq();
       const gpuRangeMaxFreq = Settings.appGPURangeMaxFreq();
       const gpuRangeMinFreq = Settings.appGPURangeMinFreq();
-      if (gpuMode == GPUMODE.NOLIMIT) {
-        Backend.applyGPUAuto(false);
-        Backend.applyGPUFreq(0);
-      } else if (gpuMode == GPUMODE.FIX) {
-        Backend.applyGPUAuto(false);
-        Backend.applyGPUFreq(gpuFreq);
-      } else if (gpuMode == GPUMODE.AUTO) {
+      if (gpuMode == GPUMODE.NATIVE) {
+        console.log(`原生设置无需处理`)
+      }else if (gpuMode == GPUMODE.AUTO) {
         console.log(`开始自动优化GPU频率`)
-        //Settings.setTDPEnable(false);
+        Settings.setTDPEnable(false);
         Settings.setCpuboost(false);
         Backend.applyGPUAutoRange(gpuAutoMinFreq,gpuAutoMaxFreq);
         Backend.applyGPUAuto(true);
@@ -296,7 +295,7 @@ export class Backend {
     Backend.applySmt(true);
     Backend.applyCpuNum(Backend.data.getCpuMaxNum());
     Backend.applyCpuBoost(true);
-    //Backend.applyTDP(Backend.data.getTDPMax());
+    Backend.applyTDP(Backend.data.getTDPMax());
     Backend.applyGPUFreq(0);
     Backend.applyFanAuto(true);
   };

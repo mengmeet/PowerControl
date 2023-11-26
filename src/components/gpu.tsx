@@ -9,6 +9,7 @@ import { localizeStrEnum,localizationManager } from "../i18n";
 import {SlowSliderField} from "./SlowSliderField"
 
 //GPUFreq模块
+/*
 const GPUFreqComponent: VFC = () => {
   const [gpuFreq, setGPUFreq] = useState<number>(Settings.appGPUFreq());
   const refresh = () => {
@@ -42,6 +43,7 @@ const GPUFreqComponent: VFC = () => {
     </PanelSectionRow>
   );
 };
+*/
 
 //GPURange模块
 const GPURangeComponent: VFC = () => {
@@ -174,22 +176,18 @@ const GPUModeComponent: VFC = () => {
   return (
         <div>
           <PanelSectionRow>
-          <SliderField
+            <SliderField
             label={localizationManager.getString(localizeStrEnum.GPU_FREQMODE)}
             value={gpuMode}
             step={1}
-            max={3}
+            max={2}
             min={0}
-            notchCount={4}
+            notchCount={3}
             notchLabels={
               [{
-                notchIndex: GPUMODE.NOLIMIT,
-                label: `${localizationManager.getString(localizeStrEnum.UNLIMITED)}`,
-                value: GPUMODE.NOLIMIT,
-              }, {
-                notchIndex: GPUMODE.FIX,
-                label: `${localizationManager.getString(localizeStrEnum.FIXED_FREQ)}`,
-                value: GPUMODE.FIX,
+                notchIndex: GPUMODE.NATIVE,
+                label: `${localizationManager.getString(localizeStrEnum.NATIVE_FREQ)}`,
+                value: GPUMODE.NATIVE,
               }, {
                 notchIndex: GPUMODE.RANGE,
                 label: `${localizationManager.getString(localizeStrEnum.RANGE_FREQ)}`,
@@ -205,7 +203,6 @@ const GPUModeComponent: VFC = () => {
               Settings.setGPUMode(value);
             }}
           />
-          {gpuMode==GPUMODE.FIX&&<GPUFreqComponent/>}
           {gpuMode==GPUMODE.RANGE&&<GPURangeComponent/>}
           {gpuMode==GPUMODE.AUTO&&<GPUAutoComponent/>}
           </PanelSectionRow>

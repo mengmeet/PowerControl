@@ -1,8 +1,7 @@
 export enum GPUMODE{
-    NOLIMIT=0, //不限制
-    FIX=1, //固定频率
-    RANGE=2, //系统调度
-    AUTO=3,  //自动频率
+    NATIVE=0, //系统原生设置
+    RANGE=1, //系统调度
+    AUTO=2,  //自动频率
 }
 export enum FANMODE{
     NOCONTROL=0, //不控制
@@ -59,4 +58,18 @@ export enum PluginState{
     INIT="0",
     RUN="1",
     QUIT="2",
-  }
+}
+
+export enum Patch{
+    TDPPatch="TDPPatch",
+    GPUPerformancePatch="GPUPerformancePatch",
+}
+
+export enum GPUPerformanceLevel{
+    DISABLE=1,
+    ENABLE=2,
+}
+
+export enum SettingChangeEvent{
+    GPUMODE="GPUMODE"
+}

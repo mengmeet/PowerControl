@@ -105,5 +105,6 @@ export enum localizeStrEnum {
     CURENT_STAT="CURENT_STAT",
     EDIT="EDIT",
     SAVE="SAVE",
+    NATIVE_FREQ="NATIVE_FREQ"
 }
     

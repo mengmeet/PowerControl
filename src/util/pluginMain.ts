@@ -1,5 +1,5 @@
 import { Router, ServerAPI } from "decky-frontend-lib";
-import { APPLYTYPE, ComponentName, FANMODE, PluginState, UpdateType } from "./enum";
+import { APPLYTYPE, ComponentName, FANMODE, Patch, PluginState, UpdateType } from "./enum";
 import { Backend} from "./backend";
 import { localizationManager } from "../i18n";
 import { Settings } from "./settings";
@@ -170,7 +170,7 @@ export class PluginManager{
     PluginManager.state = PluginState.INIT; 
     await Backend.init(serverAPI);
     await localizationManager.init(serverAPI);
-    await QAMPatch.init(serverAPI);
+    await QAMPatch.init();
     RunningApps.register();
     FanControl.register();
     RunningApps.listenActiveChange((newAppId, oldAppId) => {
@@ -188,6 +188,10 @@ export class PluginManager{
       Backend.applySettings(APPLYTYPE.SET_ALL);
     });
     PluginManager.state = PluginState.RUN;
+  }
+
+  public static isPatchSuccess(patch:Patch){
+    return QAMPatch.getPatchResult(patch);
   }
 
   public static isIniting()
