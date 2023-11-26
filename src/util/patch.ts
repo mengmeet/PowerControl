@@ -6,6 +6,14 @@ import { Backend } from "./backend";
 import { GPUMODE, GPUPerformanceLevel, Patch } from "./enum";
 import { Settings } from "./settings";
   
+interface SteamBattery {
+    bHasBattery: boolean;
+    bShutdownRequested: boolean;
+    eACState: number;
+    eBatteryState: number;
+    flLevel: number;
+    nSecondsRemaining: number;
+}
 
 export class QAMPatch {
     private static TDP_Patch: TDPPatch;
@@ -60,11 +68,13 @@ class TDPPatch{
     private perfStoreClass:any;
     private perfStore:any;
     private stateChangeHook:any;
+    private batteryChangeHook:any;
     private suspendEndHook:any;
     private tdpPatch:any;
     private applyCount:number=0;
     private last_tdp_limit:number=0;
     private last_is_tdp_limit_enabled:boolean=false;
+    private last_ac_state:number=0;
     public init(perfStoreClass:any){
         this.perfStoreClass = perfStoreClass;
         this.perfStore = perfStoreClass.Get();
@@ -98,7 +108,9 @@ class TDPPatch{
             
             //挂起结束时修改一次TDP
             this.suspendEndHook = SteamClient.System.RegisterForOnResumeFromSuspend(async () => {
-                this.applyTDP();
+                setTimeout(()=>{
+                    this.applyTDP();
+                },1000)
             });
 
             //状态改变时tdp发生变化，则应用一次tdp
@@ -119,6 +131,26 @@ class TDPPatch{
                 },500)
                 
             })
+
+            //某些机型充电状态改变时tdp会重置，应用一次tdp
+            this.batteryChangeHook = SteamClient.System.RegisterForBatteryStateChanges((steamBattery:SteamBattery)=>{
+                /*
+                console.log("SteamBattery Information:");
+                console.log("bHasBattery:", steamBattery.bHasBattery);
+                console.log("bShutdownRequested:", steamBattery.bShutdownRequested);
+                console.log("eACState:", steamBattery.eACState);
+                console.log("eBatteryState:", steamBattery.eBatteryState);
+                console.log("flLevel:", steamBattery.flLevel);
+                console.log("nSecondsRemaining:", steamBattery.nSecondsRemaining);
+                console.log("\n");
+                */
+               if(this.last_ac_state!=steamBattery.eACState){
+                    this.last_ac_state = steamBattery.eACState;
+                    setTimeout(()=>{
+                        this.applyTDP()
+                    },500)
+               }
+            })
             patchCallBack(true);
         }catch(e){
             console.error(e)
@@ -130,6 +162,7 @@ class TDPPatch{
     public unpatch(){
         this.stateChangeHook?.unregister();
         this.suspendEndHook?.unregister();
+        this.batteryChangeHook?.unregister();
         this.tdpPatch?.unpatch();
     }
 }
