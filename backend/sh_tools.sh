@@ -136,10 +136,13 @@ function set_cpu_boost()
 {
     boost=$1
     boost_path="/sys/devices/system/cpu/cpufreq/boost"
-    amd_pstate_path="/sys/devices/system/cpu/amd_pstate/status"\
+    amd_pstate_path="/sys/devices/system/cpu/amd_pstate/status"
 
+    
     if [ -f "${amd_pstate_path}" ]; then
-        echo "passive" > "${amd_pstate_path}"
+        echo "disable" > "${amd_pstate_path}"
+        # modprobe -r amd_pstate_ut
+        modprobe acpi_cpufreq
     fi
 
     if (($boost == 1)); then
