@@ -221,7 +221,7 @@ try:
         FAN_RAM_RPMREAD_LENGTH=2
 
         FAN_RPMWRITE_MAX=244
-        FAN_RPMVALUE_MAX=6379
+        FAN_RPMVALUE_MAX=6500
         FAN_IS_ADAPTED=True
     elif PRODUCT_NAME in (
         "Jupiter",
