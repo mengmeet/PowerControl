@@ -84,6 +84,31 @@ try:
             "pwm":"pwm1",
             "fan_input":"fan1_input"
         },
+        "asus_custom_fan_curve":{
+            "manual_value": 1,
+            "auto_value": 2,
+            "pwm_enable_list":["pwm1_enable","pwm2_enable"],   
+            "temp_first_list":["pwm1_auto_point1_temp","pwm2_auto_point1_temp"],
+            "pwm_list":[
+                "pwm1_auto_point1_pwm",
+                "pwm1_auto_point2_pwm",
+                "pwm1_auto_point3_pwm",
+                "pwm1_auto_point4_pwm",
+                "pwm1_auto_point5_pwm",
+                "pwm1_auto_point6_pwm",
+                "pwm1_auto_point7_pwm",
+                "pwm1_auto_point8_pwm",
+                "pwm2_auto_point1_pwm",
+                "pwm2_auto_point2_pwm",
+                "pwm2_auto_point3_pwm",
+                "pwm2_auto_point4_pwm",
+                "pwm2_auto_point5_pwm",
+                "pwm2_auto_point6_pwm",
+                "pwm2_auto_point7_pwm",
+                "pwm2_auto_point8_pwm"
+                ],
+            "fan_input":"../hwmon6/fan1_input"
+        },
         "steamdeck_hwmon":{
             "pwm_enable":"fan1_target",   
             "pwm":"fan1_target",
@@ -228,6 +253,12 @@ try:
         ):
         FAN_RPMWRITE_MAX=7300
         FAN_RPMVALUE_MAX=7309
+        FAN_IS_ADAPTED=True
+    elif PRODUCT_NAME in (
+        "ROG Ally RC71L_RC71L",
+        ):
+        FAN_RPMWRITE_MAX=255
+        FAN_RPMVALUE_MAX=8000
         FAN_IS_ADAPTED=True
 except Exception as e:
     logging.error(f"风扇配置异常|{e}")

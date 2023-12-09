@@ -1,5 +1,6 @@
 import subprocess
 import os
+import time
 from ec import EC
 from config import logging,SH_PATH,RYZENADJ_PATH,PRODUCT_NAME,FAN_IS_ADAPTED
 from config import FAN_HWMON_LIST,FAN_MANUAL_OFFSET,FAN_RPMREAD_OFFSET,FAN_RPMWRITE_MAX,FAN_RPMWRITE_OFFSET,FAN_RPMVALUE_MAX
@@ -13,6 +14,12 @@ class FanManager ():
         self.FAN_HWMON_PWMENABLE_PATH=""     #风扇自动控制hwmon地址
         self.FAN_HWMON_PWM_PATH=""       #风扇写入转速hwmon地址
         self.FAN_HWMON_INPUT_PATH=""     #风扇读取转速hwmon地址
+        self.FAN_HWMON_PWMENABLE_PATH_LIST=[]     #风扇自动控制hwmon地址列表
+        self.FAN_HWMON_PWM_PATH_LIST=[]       #风扇写入转速hwmon地址列表
+        self.FAN_HWMON_IS_MULTI_PWM=False    #风扇是否有多个PWM
+        self.FAN_HWMON_MANUAL_VALUE=1    #风扇手动控制值
+        self.FAN_HWMON_AUTO_VALUE=0    #风扇自动控制值
+        self.FAN_HWMON_TEMP_FIRST_LIST=[]    #风扇自动控制温度初始点列表
         hwmon_path="/sys/class/hwmon"
         hwmon_files=os.listdir(hwmon_path)
         for file in hwmon_files:
@@ -28,14 +35,47 @@ class FanManager ():
                 if(name in FAN_HWMON_LIST):
                     self.FAN_HWMON_NAME=name
                     self.FAN_ISFIND_HWMON=True
-                    self.FAN_HWMON_PWMENABLE_PATH=path+"/"+FAN_HWMON_LIST[name]["pwm_enable"]
-                    self.FAN_HWMON_PWM_PATH=path+"/"+FAN_HWMON_LIST[name]["pwm"]
-                    self.FAN_HWMON_INPUT_PATH=path+"/"+FAN_HWMON_LIST[name]["fan_input"]
+                    pwm_enable_list=FAN_HWMON_LIST[name]["pwm_enable_list"]
+                    pwm_list=FAN_HWMON_LIST[name]["pwm_list"]
+                    temp_first_list=FAN_HWMON_LIST[name]["temp_first_list"]
+
+                    self.FAN_HWMON_PRECENT_VALUE = FAN_HWMON_LIST[name]["percent_value"] if "percent_value" in FAN_HWMON_LIST[name] else False
+
+                    self.FAN_HWMON_MANUAL_VALUE = FAN_HWMON_LIST[name]["manual_value"] if "manual_value" in FAN_HWMON_LIST[name] else 1
+                    self.FAN_HWMON_AUTO_VALUE = FAN_HWMON_LIST[name]["auto_value"] if "auto_value" in FAN_HWMON_LIST[name] else 0
+
+                    # for each temp_first_list item, check if it exists, if it does, add it to the list
+                    for temp_first in temp_first_list:
+                        temp_first_path = path+"/"+temp_first
+                        if os.path.exists(temp_first_path):
+                            logging.debug(f"找到风扇自动控制温度初始点 当前机型:{PRODUCT_NAME} hwmon地址:{temp_first_path}")
+                            self.FAN_HWMON_TEMP_FIRST_LIST.append(temp_first_path)
+
+                    # for each pwm_enable_list item, check if it exists, if it does, add it to the list
+                    for pwm_enable in pwm_enable_list:
+                        pwm_enable_path = path+"/"+pwm_enable
+                        if os.path.exists(pwm_enable_path):
+                            logging.debug(f"找到风扇自动控制hwmon 当前机型:{PRODUCT_NAME} hwmon地址:{pwm_enable_path}")
+                            self.FAN_HWMON_PWMENABLE_PATH_LIST.append(pwm_enable_path)
+
+                    # for each pwm_list item, check if it exists, if it does, add it to the list
+                    for pwm in pwm_list:
+                        pwm_path = path+"/"+pwm
+                        if os.path.exists(pwm_path):
+                            logging.debug(f"找到风扇写入转速hwmon 当前机型:{PRODUCT_NAME} hwmon地址:{pwm_path}")
+                            self.FAN_HWMON_PWM_PATH_LIST.append(pwm_path)
+                    if len(self.FAN_HWMON_PWM_PATH_LIST) > 1:
+                        self.FAN_HWMON_IS_MULTI_PWM=True
+
+                    self.FAN_HWMON_PWMENABLE_PATH=path+"/"+FAN_HWMON_LIST[name]["pwm_enable"] if "pwm_enable" in FAN_HWMON_LIST[name] else ""
+                    self.FAN_HWMON_PWM_PATH=path+"/"+FAN_HWMON_LIST[name]["pwm"] if "pwm" in FAN_HWMON_LIST[name] else ""
+                    self.FAN_HWMON_INPUT_PATH=path+"/"+FAN_HWMON_LIST[name]["fan_input"] if "fan_input" in FAN_HWMON_LIST[name] else ""
                     logging.debug(f"FAN_HWMON_NAME={self.FAN_HWMON_NAME}")
                     logging.debug(f"FAN_ISFIND_HWMON={self.FAN_ISFIND_HWMON}")
                     logging.debug(f"FAN_HWMON_PWMENABLE_PATH={self.FAN_HWMON_PWMENABLE_PATH}")
                     logging.debug(f"FAN_HWMON_PWM_PATH={self.FAN_HWMON_PWM_PATH}")
                     logging.debug(f"FAN_HWMON_INPUT_PATH={self.FAN_HWMON_INPUT_PATH}")
+
             except Exception as e:
                 logging.error(e)
 
@@ -94,7 +134,8 @@ class FanManager ():
                     if self.FAN_ISFIND_HWMON:
                         fanIsManual=int(open(self.FAN_HWMON_PWMENABLE_PATH).read().strip())
                         logging.debug(f"使用hwmon数据 当前机型:{PRODUCT_NAME} 读取hwmon地址:{self.FAN_HWMON_INPUT_PATH} 风扇是否控制:{fanIsManual}")
-                        return not fanIsManual
+                        # return not fanIsManual
+                        return fanIsManual == self.FAN_HWMON_AUTO_VALUE
                 except Exception as e:
                     logging.error(f"使用hwmon获取风扇状态异常:{e}")
                 
@@ -126,10 +167,28 @@ class FanManager ():
         try:
             if FAN_IS_ADAPTED:
                 try:
-                    if self.FAN_ISFIND_HWMON:
+                    if self.FAN_ISFIND_HWMON and not self.FAN_HWMON_IS_MULTI_PWM:
                         fanIsManual = int(not value)
                         open(self.FAN_HWMON_PWMENABLE_PATH,'w').write(str(fanIsManual))
                         logging.debug(f"写入hwmon数据 当前机型:{PRODUCT_NAME} 写入hwmon地址:{self.FAN_HWMON_PWMENABLE_PATH} 写入风扇是否控制:{fanIsManual}")
+                        return True
+                except Exception as e:
+                    logging.error(f"使用hwmon写入风扇状态异常:{e}")
+
+                try:
+                    if self.FAN_HWMON_IS_MULTI_PWM and self.FAN_HWMON_PWMENABLE_PATH_LIST:
+                        # 设置风扇自动控制温度初始点 10度, 温度写入要在风扇自动控制之前。因为写入后控制位会复位
+                        if self.FAN_HWMON_TEMP_FIRST_LIST:
+                            temp = 10;
+                            for temp_first in self.FAN_HWMON_TEMP_FIRST_LIST:
+                                open(temp_first,'w').write(str(temp))
+                                logging.debug(f"写入hwmon数据 当前机型:{PRODUCT_NAME} 写入hwmon地址:{temp_first} 写入值:{temp}")
+
+                        # fanIsManual = int(not value)
+                        fanIsManual = self.FAN_HWMON_MANUAL_VALUE if not value else self.FAN_HWMON_AUTO_VALUE
+                        for pwm_enable_path in self.FAN_HWMON_PWMENABLE_PATH_LIST:
+                            open(pwm_enable_path,'w').write(str(fanIsManual))
+                            logging.debug(f"写入hwmon数据 当前机型:{PRODUCT_NAME} 写入hwmon地址:{pwm_enable_path} 写入风扇是否控制:{fanIsManual}")
                         return True
                 except Exception as e:
                     logging.error(f"使用hwmon写入风扇状态异常:{e}")
@@ -162,10 +221,22 @@ class FanManager ():
         try:
             if FAN_IS_ADAPTED:
                 try:
-                    if self.FAN_ISFIND_HWMON:
+                    if self.FAN_ISFIND_HWMON and not self.FAN_HWMON_IS_MULTI_PWM:
                         fanWriteValue = max(min(int(value/100*FAN_RPMWRITE_MAX),FAN_RPMWRITE_MAX),0)
                         open(self.FAN_HWMON_PWM_PATH,'w').write(str(fanWriteValue))
                         logging.debug(f"写入hwmon数据 写入hwmon地址:{self.FAN_HWMON_PWM_PATH} 风扇转速百分比{value} 风扇最大值{FAN_RPMWRITE_MAX} 风扇转速写入值:{fanWriteValue}")
+                        return True
+                except Exception as e:
+                    logging.error(f"使用hwmon写入风扇转速异常:{e}")
+
+                try:
+                    if self.FAN_HWMON_IS_MULTI_PWM and self.FAN_HWMON_PWM_PATH_LIST:
+                        time.sleep(0.9) # sleep 不能超过1秒，否则循环会堆积
+                        fanWriteValue = max(min(int(value/100*FAN_RPMWRITE_MAX),FAN_RPMWRITE_MAX),0)
+                        for pwm_path in self.FAN_HWMON_PWM_PATH_LIST:
+                            open(pwm_path,'w').write(str(fanWriteValue))
+                            logging.debug(f"写入hwmon数据 写入hwmon地址:{pwm_path} 风扇转速百分比{value} 风扇最大值{FAN_RPMWRITE_MAX} 风扇转速写入值:{fanWriteValue}")
+                        self.set_fanAuto(False)
                         return True
                 except Exception as e:
                     logging.error(f"使用hwmon写入风扇转速异常:{e}")
