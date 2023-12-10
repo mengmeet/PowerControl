@@ -2,7 +2,7 @@ import logging
 import subprocess
 import glob
 import os
-from helpers import get_homebrew_path
+from helpers import get_homebrew_path,get_home_path,get_user
 
 #日志配置
 try:
@@ -18,7 +18,8 @@ except Exception as e:
 
 #路径配置
 try:
-    HOMEBREW_PATH = get_homebrew_path()   
+    HOMEBREW_PATH = get_homebrew_path()
+    logging.info(f"HOMEBREW_PATH: {HOMEBREW_PATH}")
     SH_PATH="{}/plugins/PowerControl/backend/sh_tools.sh".format(HOMEBREW_PATH)
     RYZENADJ_PATH="{}/plugins/PowerControl/bin/ryzenadj".format(HOMEBREW_PATH)
     GPU_DEVICE_PATH = glob.glob("/sys/class/drm/card?/device")[0]

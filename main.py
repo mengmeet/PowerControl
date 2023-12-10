@@ -6,7 +6,7 @@ import sys
 #获取插件路径 加载backend中各个py文件
 try:
     from helpers import get_homebrew_path
-    HOMEBREW_PATH = get_homebrew_path()   
+    HOMEBREW_PATH = get_homebrew_path()
     sys.path.append("{}/plugins/PowerControl/backend".format(HOMEBREW_PATH))
     from config import logging
     from gpu import gpuManager

@@ -107,8 +107,11 @@ class SysInfoManager (threading.Thread):
         try:
             lang_path=f"/home/{get_user()}/.steam/registry.vdf"
             if os.path.exists(lang_path):
-                command="sudo sh {} get_language {}".format(SH_PATH, lang_path)
-                self._language=subprocess.getoutput(command)
+                with open(lang_path, "r") as f:
+                    for line in f.readlines():
+                        if "language" in line:
+                            self._language = line.split('"')[3]
+                            break
             else:
                 logging.error(f"語言檢測路徑{lang_path}不存在該文件")
             logging.info(f"get_language {self._language} path={lang_path}")

@@ -173,13 +173,11 @@ class GPUManager ():
 
     def get_gpuFreqRange(self):
         try:
-            minCommand="sudo sh {} get_gpuFreqMin".format(SH_PATH)
-            self.gpu_freqRange[0]=int(subprocess.getoutput(minCommand))
-            logging.info("get_gpuFreqMin {}".format(self.gpu_freqRange[0]))
-            maxCommand="sudo sh {} get_gpuFreqMax".format(SH_PATH)
-            self.gpu_freqRange[1]=int(subprocess.getoutput(maxCommand))
-            logging.info("get_gpuFreqMax {}".format(self.gpu_freqRange[1]))
+            gpuFreqMin,gpuFreqMax = self.get_gpuFreq()
+            self.gpu_freqRange[0]=gpuFreqMin
+            self.gpu_freqRange[1]=gpuFreqMax
             return self.gpu_freqRange
+
         except Exception as e:
             logging.error(e)
             return 0
@@ -288,6 +286,31 @@ fi'''.format(path,path)
                 file.write(sh_code)
         except:
             logging.error(e)
+
+    def get_gpuFreq(self):
+        try:
+            # write "manual" to power_dpm_force_performance_level
+            open(GPULEVEL_PATH,'w').write("manual")
+
+            freq_string = open(GPUFREQ_PATH,"r").read()
+            # 使用正则表达式提取频率信息
+            od_sclk_matches = re.findall(r"OD_SCLK:\s*0:\s*(\d+)Mhz\s*1:\s*(\d+)Mhz", freq_string)
+            if od_sclk_matches:
+                return int(od_sclk_matches[0][0]),int(od_sclk_matches[0][1])
+            else:
+                return 0
+
+        except Exception as e:
+            logging.error(e)
+            return 0
+        
+    def get_gpuFreqMin(self):
+        gpuFreqMin,_ = self.get_gpuFreq()
+        return gpuFreqMin
+    
+    def get_gpuFreqMax(self):
+        _,gpuFreqMax = self.get_gpuFreq()
+        return gpuFreqMax
 
 gpuManager = GPUManager()
 gpuManager.fix_gpuFreqSlider()
