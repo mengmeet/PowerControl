@@ -169,6 +169,8 @@ class CPUManager ():
         try:
             logging.debug("set_enable_All")
             for cpu in range(0, cpu_maxNum*2):
+                if cpu == '0':
+                    continue
                 self.online_cpu(cpu)
             return True
         except Exception as e:
@@ -283,11 +285,15 @@ class CPUManager ():
         return cpu_topology
     
     def offline_cpu(self, cpu_number):
+        if cpu_number == '0':
+            return
         cpu_online_path = f'/sys/devices/system/cpu/cpu{cpu_number}/online'
         with open(cpu_online_path, 'w') as file:
             file.write('0')
 
     def online_cpu(self, cpu_number):
+        if cpu_number == '0':
+            return
         cpu_online_path = f'/sys/devices/system/cpu/cpu{cpu_number}/online'
         with open(cpu_online_path, 'w') as file:
             file.write('1')
