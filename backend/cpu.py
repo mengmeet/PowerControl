@@ -26,7 +26,7 @@ class CPUManager ():
     def get_hasRyzenadj(self):
         try:
             #查看ryzenadj路径是否有该文件
-            if os.path.exists(RYZENADJ_PATH):
+            if os.path.exists(RYZENADJ_PATH) or os.path.exists("/usr/bin/ryzenadj"):
                 logging.info("get_hasRyzenadj {}".format(True))
                 return True
             else:
@@ -149,12 +149,10 @@ class CPUManager ():
                     to_offline.update(set(core_threads[1:]))
         
             
-            logging.debug(f"to_offline {sorted(to_offline)}")
+            logging.info(f"to_offline {sorted(to_offline)}")
         
             # 遍历判断，执行关闭和启用操作
             for cpu in cpu_topology.keys():
-                if cpu == '0': # cpu0不可操作
-                    continue
                 if cpu in to_offline:
                     self.offline_cpu(cpu)
                 else:
@@ -169,8 +167,6 @@ class CPUManager ():
         try:
             logging.debug("set_enable_All")
             for cpu in range(0, cpu_maxNum*2):
-                if cpu == '0':
-                    continue
                 self.online_cpu(cpu)
             return True
         except Exception as e:
