@@ -112,12 +112,15 @@ class CPUManager ():
                 slow_limit = tdp
                 tctl_temp = 90
 
-                command = f"sudo {sys_ryzenadj_path} -a {stapm_limit} -b {fast_minit} -c {slow_limit} -f {tctl_temp}"
+                command = f"{sys_ryzenadj_path} -a {stapm_limit} -b {fast_minit} -c {slow_limit} -f {tctl_temp}"
+                command_args = command.split()
                 logging.info(f"set_cpuTDP command: {command}")
                 logging.info(f"set_cpuTDP {value}")
-                # os.system(command)
-                result = subprocess.getoutput(command)
-                logging.info(f"set_cpuTDP result: {result}")
+                process = subprocess.run(command_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                stdout, stderr = process.stdout.decode('utf-8'), process.stderr.decode('utf-8')
+                logging.info(f"set_cpuTDP result:\n{stdout}")
+                if stderr:
+                    logging.error(f"set_cpuTDP error:\n{stderr}")
 
                 return True
             else:
