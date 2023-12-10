@@ -209,12 +209,18 @@ class GPUManager ():
             logging.error(e)
             return False
 
-    def set_gpuFreq(self, value1: int,value2: int):
+    def set_gpuFreq(self, minValue: int,maxValue: int):
         try:
-            if ((value1 >= self.gpu_freqRange[0] and value2<= self.gpu_freqRange[1]) or (value1==0 and value2==0)) and value2 >= value1:
-                self.gpu_nowFreq = [value1,value2]
-                command="sudo sh {} set_clock_limits {} {}".format(SH_PATH,value1,value2)
-                os.system(command)
+            if ((minValue >= self.gpu_freqRange[0] and maxValue<= self.gpu_freqRange[1]) or (minValue==0 and maxValue==0)) and maxValue >= minValue:
+                self.gpu_nowFreq = [minValue,maxValue]
+                if minValue==0 and maxValue==0:
+                    open(GPULEVEL_PATH,'w').write("auto")
+                else:
+                    open(GPULEVEL_PATH,'w').write("manual")
+                    open(GPUFREQ_PATH,'w').write("s 0 {}".format(minValue))
+                    open(GPUFREQ_PATH,'w').write("s 1 {}".format(maxValue))
+                    open(GPUFREQ_PATH,'w').write("c")
+                logging.debug(f"set_gpuFreq: [{minValue}, {maxValue}]")
                 return True
             else:
                 return False

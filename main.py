@@ -53,6 +53,7 @@ class Plugin:
             logging.error(e)
             return 0
 
+    # 弃用
     async def get_cpu_AvailableFreq(self):
         try:
             return cpuManager.get_cpu_AvailableFreq()

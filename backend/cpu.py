@@ -72,6 +72,7 @@ class CPUManager ():
             logging.error(e)
             return 0
 
+    # 弃用
     def get_cpu_AvailableFreq(self):
         try:
             global cpu_avaFreq
@@ -101,32 +102,21 @@ class CPUManager ():
     def set_cpuTDP(self, value: int):
         try:
             if value >= 3:
-                command="sudo sh {} set_cpu_tdp {} {} {}".format(SH_PATH,RYZENADJ_PATH,value,value)
+                tdp = value * 1000
+                sys_ryzenadj_path = "/usr/bin/ryzenadj"
+                if not os.path.exists(sys_ryzenadj_path):
+                    sys_ryzenadj_path = RYZENADJ_PATH
+
+                stapm_limit = tdp
+                fast_minit = tdp
+                tctl_temp = 90
+
+                command = f"{sys_ryzenadj_path} --stapm-limit={stapm_limit} --fast-limit={fast_minit} --tctl-temp={tctl_temp}"
                 os.system(command)
+                logging.info(f"set_cpuTDP {value}")
                 return True
             else:
                 return False
-        except Exception as e:
-            logging.error(e)
-            return False
-
-    def set_cpuOnline_Old(self, value: int):
-        try:
-            logging.debug("set_cpuOnline {} {}".format(value,cpu_maxNum))
-            global cpu_num
-            cpu_num=value
-            #cpu0不可操作，从cpu1到开启物理核心数*2-1进行设置，如果关闭smt则只开启偶数编号的cpu
-            for cpu in range(1, cpu_num*2):
-                if cpu_smt or cpu%2==0:
-                    command="sudo sh {} set_cpu_online {} {}".format(SH_PATH,cpu,1)
-                else:
-                    command="sudo sh {} set_cpu_online {} {}".format(SH_PATH,cpu,0)
-                os.system(command)
-            #开启的物理核心数*2以后的cpu全部关闭
-            for cpu in range(cpu_num*2,cpu_maxNum*2):
-                command="sudo sh {} set_cpu_online {} {}".format(SH_PATH,cpu,0)
-                os.system(command)
-            return True
         except Exception as e:
             logging.error(e)
             return False
@@ -179,8 +169,7 @@ class CPUManager ():
         try:
             logging.debug("set_enable_All")
             for cpu in range(0, cpu_maxNum*2):
-                command="sudo sh {} set_cpu_online {} {}".format(SH_PATH,cpu,1)
-                os.system(command)
+                self.online_cpu(cpu)
             return True
         except Exception as e:
             logging.error(e)
@@ -197,15 +186,26 @@ class CPUManager ():
             return False
     
     def set_cpuBoost(self, value: bool):
+        boost_path="/sys/devices/system/cpu/cpufreq/boost"
+        amd_pstate_path="/sys/devices/system/cpu/amd_pstate/status"
         try:
             logging.debug("set_cpuBoost {}".format(value))
             global cpu_boost
             cpu_boost=value
-            if cpu_boost:
-                command="sudo sh {} set_cpu_boost {}".format(SH_PATH,1)
-            else:
-                command="sudo sh {} set_cpu_boost {}".format(SH_PATH,0)
-            os.system(command)
+
+            # 关闭 amd_pstate 使用 acpi_cpufreq
+            if os.path.exists(amd_pstate_path):
+                with open(amd_pstate_path, 'w') as file:
+                        file.write('disable')
+                os.system("modprobe acpi_cpufreq")
+            # 设置 boost
+            if os.path.exists(boost_path):
+                with open(boost_path, 'w') as file:
+                    if cpu_boost:
+                        file.write('1')
+                    else:
+                        file.write('0')
+            
             return True
         except Exception as e:
             logging.error(e)
@@ -220,8 +220,11 @@ class CPUManager ():
             #检测已开启的cpu的频率是否全部低于限制频率
             for cpu in range(0, cpu_num*2):
                 if cpu_smt or cpu%2==0:
-                    command="sudo sh {} get_cpu_nowFreq {}".format(SH_PATH, cpu)
-                    cpu_freq=int(subprocess.getoutput(command))
+                    # command="sudo sh {} get_cpu_nowFreq {}".format(SH_PATH, cpu)
+                    # cpu_freq=int(subprocess.getoutput(command))
+                    cpu_path="/sys/devices/system/cpu/cpu{}/cpufreq/scaling_cur_freq".format(cpu)
+                    with open(cpu_path, 'r') as file:
+                        cpu_freq=int(file.read().strip())
                     if cpu_freq > cpu_nowLimitFreq:
                         need_set=True
                         return True
@@ -288,5 +291,11 @@ class CPUManager ():
         cpu_online_path = f'/sys/devices/system/cpu/cpu{cpu_number}/online'
         with open(cpu_online_path, 'w') as file:
             file.write('1')
+    
+    def set_cpu_online(self, cpu_number, online):
+        if online:
+            self.online_cpu(cpu_number)
+        else:
+            self.offline_cpu(cpu_number)
 
 cpuManager = CPUManager()

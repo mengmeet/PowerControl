@@ -12,7 +12,7 @@ function get_gpu_device()
 
 gpu_device=$(get_gpu_device)
     
-
+# 弃用
 function set_cpu_Freq()
 {
     cpu_index=$1
@@ -43,17 +43,20 @@ function set_cpu_Freq()
     fi
 }
 
+# not need
 function get_cpu_nowFreq()
 {
     cpu_index=$1
     echo "$(cat /sys/devices/system/cpu/cpufreq/policy${cpu_index}/scaling_cur_freq)"
 }
 
+# 弃用
 function get_cpu_AvailableFreq()
 {
     echo "$(cat /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies)"
 }
 
+# not need
 function set_cpu_online()
 {
     cpu_index=$1
@@ -61,11 +64,13 @@ function set_cpu_online()
     echo $cpu_online > "/sys/devices/system/cpu/cpu${cpu_index}/online"
 }
 
+# not need
 function get_cpuID()
 {
     cat /proc/cpuinfo | grep "model name" | sed -n '1p'| cut -d : -f 2 | xargs
 }
 
+# not need
 function set_cpu_tdp()
 {
     ryzenadj_path=$1
@@ -75,6 +80,7 @@ function set_cpu_tdp()
     sudo echo "${ryzenadj_path}  --stapm-limit=${fast} --fast-limit=${fast}   --slow-limit=${slow}" >>  /tmp/powerControl_sh.log
 }
 
+# not need
 function set_clock_limits()
 {
     let min=$1
@@ -90,18 +96,21 @@ function set_clock_limits()
     sudo echo "gpu_clock_limit "$1 $2 >> /tmp/powerControl_sh.log
 }
 
+# not need
 function get_gpuFreqMin()
 {
     sudo echo "manual"> "${gpu_device}/power_dpm_force_performance_level"
     echo "$(sudo cat ${gpu_device}/pp_od_clk_voltage|grep -a "SCLK:"|awk '{print $2}'|sed -e 's/Mhz//g'|xargs)"
 }
 
+# not need
 function get_gpuFreqMax()
 {
     sudo echo "manual" > "${gpu_device}/power_dpm_force_performance_level"
     echo "$(sudo cat ${gpu_device}/pp_od_clk_voltage|grep -a "SCLK:"|awk '{print $3}'|sed -e 's/Mhz//g'|xargs)"
 }
 
+# 忽略
 function set_gpu_flk()
 {
     flk=$1
@@ -116,6 +125,7 @@ function set_gpu_flk()
     sudo echo "gpu_flk_limit " $index >> /tmp/powerControl_sh.log
 }
 
+# 忽略
 function check_clock_limits()
 {
     mode=$1
@@ -132,6 +142,7 @@ function check_clock_limits()
     fi
 }
 
+# not need
 function set_cpu_boost()
 {
     boost=$1
@@ -153,6 +164,7 @@ function set_cpu_boost()
     fi
 }
 
+# not need
 function get_language()
 {
     language_path=$1

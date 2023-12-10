@@ -30,8 +30,10 @@ except Exception as e:
 
 #设备信息获取配置
 try:
-    command="sudo sh {} get_cpuID ".format(SH_PATH)
-    CPU_ID=subprocess.getoutput(command)
+    cpuinfo_path = "/proc/cpuinfo"
+    cpuinfo = open(cpuinfo_path, "r").read()
+    CPU_ID = cpuinfo.split("model name")[1].split(":")[1].strip()
+
     PRODUCT_NAME = open("/sys/devices/virtual/dmi/id/product_name", "r").read().strip()
 except Exception as e:
     logging.error(f"设备信息配置异常|{e}")
