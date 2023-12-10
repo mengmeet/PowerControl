@@ -137,7 +137,7 @@ class CPUManager ():
             if cpu_num is not None and cpu_num < len(enabled_cores):
                 for processor_id, core_id in cpu_topology.items():
                     if int(core_id) >= cpu_num:
-                        to_offline.add(processor_id)
+                        to_offline.add(int(processor_id))
                     
         
             # 如果关闭SMT，关闭每个核心中数字更大的线程
@@ -154,9 +154,9 @@ class CPUManager ():
             # 遍历判断，执行关闭和启用操作
             for cpu in cpu_topology.keys():
                 if cpu in to_offline:
-                    self.offline_cpu(cpu)
+                    self.offline_cpu(int(cpu))
                 else:
-                    self.online_cpu(cpu)
+                    self.online_cpu(int(cpu))
             return True
         except Exception as e:
             logging.error(e)
@@ -276,19 +276,19 @@ class CPUManager ():
                 with open(core_id_path, 'r') as file:
                     core_id = file.read().strip()
     
-                cpu_topology[cpu_number] = core_id
+                cpu_topology[int(cpu_number)] = int(core_id)
     
         return cpu_topology
     
-    def offline_cpu(self, cpu_number):
-        if cpu_number == '0':
+    def offline_cpu(self, cpu_number: int):
+        if int(cpu_number) == 0:
             return
         cpu_online_path = f'/sys/devices/system/cpu/cpu{cpu_number}/online'
         with open(cpu_online_path, 'w') as file:
             file.write('0')
 
-    def online_cpu(self, cpu_number):
-        if cpu_number == '0':
+    def online_cpu(self, cpu_number: int):
+        if int(cpu_number) == 0:
             return
         cpu_online_path = f'/sys/devices/system/cpu/cpu{cpu_number}/online'
         with open(cpu_online_path, 'w') as file:
