@@ -257,19 +257,21 @@ class GPUManager ():
     def fix_gpuFreqSlider(self):
         try:
             # 执行 lsb_release 命令并捕获输出
-            result = subprocess.run(['lsb_release', '-is'], stdout=subprocess.PIPE, text=True, check=True)
+            result = subprocess.run(['/usr/bin/lsb_release', '-is'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
             # 获取输出并去除空白字符
             distribution = result.stdout.strip()
-            stderr = ''
+            logging.info(f"当前系统为 {distribution}")
+            result = None
             # 判断是否为 ChimeraOS
             if distribution == 'chimeraos':
                 result = subprocess.run(['frzr-unlock'])
             elif distribution == 'steamos':
                 result = subprocess.run(['steamos-readonly', 'disable'])
-            stderr = result.stderr.strip()
+            if result.stdout:
+                logging.info(f"stdout {result.stdout.strip()}")
             # 如果有错误输出，则打印错误信息
-            if stderr:
-                logging.error(stderr)
+            if result.stderr:
+                logging.error(result.stderr.strip())
                 return
 
             gpu_file_path=["power_dpm_force_performance_level","pp_od_clk_voltage"]
