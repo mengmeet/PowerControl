@@ -260,9 +260,17 @@ class GPUManager ():
             result = subprocess.run(['lsb_release', '-is'], stdout=subprocess.PIPE, text=True, check=True)
             # 获取输出并去除空白字符
             distribution = result.stdout.strip()
+            stderr = ''
             # 判断是否为 ChimeraOS
             if distribution == 'chimeraos':
                 result = subprocess.run(['frzr-unlock'])
+            elif distribution == 'steamos':
+                result = subprocess.run(['steamos-readonly', 'disable'])
+            stderr = result.stderr.strip()
+            # 如果有错误输出，则打印错误信息
+            if stderr:
+                logging.error(stderr)
+                return
 
             gpu_file_path=["power_dpm_force_performance_level","pp_od_clk_voltage"]
             steamos_priv_path="/usr/bin/steamos-polkit-helpers/steamos-priv-write"
