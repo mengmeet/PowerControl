@@ -4,6 +4,7 @@ import threading
 import time
 import os
 import re
+import platform
 from config import logging,SH_PATH,GPUFREQ_PATH,GPULEVEL_PATH
 import sysInfo
 from inotify import notify,IN_MODIFY
@@ -255,6 +256,14 @@ class GPUManager ():
 
     def fix_gpuFreqSlider(self):
         try:
+            # 执行 lsb_release 命令并捕获输出
+            result = subprocess.run(['lsb_release', '-is'], stdout=subprocess.PIPE, text=True, check=True)
+            # 获取输出并去除空白字符
+            distribution = result.stdout.strip()
+            # 判断是否为 ChimeraOS
+            if distribution == 'chimeraos':
+                result = subprocess.run(['frzr-unlock'])
+
             gpu_file_path=["power_dpm_force_performance_level","pp_od_clk_voltage"]
             steamos_priv_path="/usr/bin/steamos-polkit-helpers/steamos-priv-write"
             # 读取sh文件内容
