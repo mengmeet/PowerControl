@@ -290,7 +290,7 @@ fi'''.format(path,path)
             # 将修改后的代码写回文件
             with open(steamos_priv_path, 'w') as file:
                 file.write(sh_code)
-        except:
+        except Exception as e:
             logging.error(e)
 
     def get_gpuFreq(self):
