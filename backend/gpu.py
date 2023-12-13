@@ -265,7 +265,7 @@ class GPUManager ():
             # 判断是否为 ChimeraOS
             if distribution == 'chimeraos':
                 result = subprocess.run(['frzr-unlock'])
-            elif distribution == 'steamos':
+            elif distribution == 'SteamOS':
                 result = subprocess.run(['steamos-readonly', 'disable'])
             if result.stdout:
                 logging.info(f"stdout {result.stdout.strip()}")

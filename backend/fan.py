@@ -231,7 +231,6 @@ class FanManager ():
 
                 try:
                     if self.FAN_HWMON_IS_MULTI_PWM and self.FAN_HWMON_PWM_PATH_LIST:
-                        time.sleep(0.9) # sleep 不能超过1秒，否则循环会堆积
                         fanWriteValue = max(min(int(value/100*FAN_RPMWRITE_MAX),FAN_RPMWRITE_MAX),0)
                         for pwm_path in self.FAN_HWMON_PWM_PATH_LIST:
                             open(pwm_path,'w').write(str(fanWriteValue))
