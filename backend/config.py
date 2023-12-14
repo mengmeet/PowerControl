@@ -366,7 +366,7 @@ try:
             "FAN_RAM_RPMREAD_LENGTH":2,
 
             "FAN_RPMWRITE_MAX":244,
-            "FAN_RPMVALUE_MAX":6500
+            "FAN_RPMVALUE_MAX":6700
         }]
     
 except Exception as e:

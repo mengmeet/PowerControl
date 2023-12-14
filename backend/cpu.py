@@ -201,9 +201,16 @@ class CPUManager ():
 
             # 关闭 amd_pstate 使用 acpi_cpufreq
             if os.path.exists(amd_pstate_path):
-                with open(amd_pstate_path, 'w') as file:
-                        file.write('disable')
+                open(amd_pstate_path, 'w').write('guided')
+                open(amd_pstate_path, 'w').write('disable')
                 os.system("modprobe acpi_cpufreq")
+                result = subprocess.run(["modprobe", "acpi_cpufreq"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+                if result.stderr:
+                    logging.error(f"modprobe acpi_cpufreq error:\n{result.stderr}")
+                    open(amd_pstate_path, 'w').write('active')
+                    return False
+
             # 设置 boost
             if os.path.exists(boost_path):
                 with open(boost_path, 'w') as file:
