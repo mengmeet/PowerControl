@@ -67,61 +67,51 @@ class Plugin:
             logging.error(e)
             return ""
 
-    async def get_fanRPM(self):
+    async def get_fanRPM(self,index):
         try:
-            return fanManager.get_fanRPM()
+            return fanManager.get_fanRPM(index)
         except Exception as e:
             logging.error(e)
             return 0
     
-    async def get_fanRPMPercent(self):
+    async def get_fanRPMPercent(self,index):
         try:
-            return fanManager.get_fanRPMPercent()
+            return fanManager.get_fanRPMPercent(index)
         except Exception as e:
             logging.error(e)
             return 0
     
-    async def get_fanTemp(self):
+    async def get_fanTemp(self,index):
         try:
-            gpuTemp = sysInfoManager.get_gpuTemp()
-            if gpuTemp!=-1:
-                return gpuTemp
-            return sysInfoManager.get_cpuTemp()
+            return fanManager.get_fanTemp(index)
         except Exception as e:
             logging.error(e)
             return 0
     
-    async def get_fanIsAuto(self):
+    async def get_fanIsAuto(self,index):
         try:
-            return fanManager.get_fanIsAuto()
+            return fanManager.get_fanIsAuto(index)
         except Exception as e:
             logging.error(e)
             return 0
     
-    async def get_fanMAXRPM(self):
+    async def get_fanConfigList(self):
         try:
-            return fanManager.get_fanMAXRPM()
+            return fanManager.get_fanConfigList()
         except Exception as e:
             logging.error(e)
-            return 0
+            return []
     
-    async def get_fanIsAdapted(self):
+    def set_fanAuto(self, index:int, value:bool):
         try:
-            return fanManager.get_fanIsAdapted()
-        except Exception as e:
-            logging.error(e)
-            return 0
-    
-    def set_fanAuto(self, value:bool):
-        try:
-            return fanManager.set_fanAuto(value)       
+            return fanManager.set_fanAuto(index,value)       
         except Exception as e:
             logging.error(e)
             return False
 
-    def set_fanPercent(self, value:int):
+    def set_fanPercent(self,index:int, value:int):
         try:
-            return fanManager.set_fanPercent(value)         
+            return fanManager.set_fanPercent(index,value)         
         except Exception as e:
             logging.error(e)
             return False

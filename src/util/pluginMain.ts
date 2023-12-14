@@ -19,7 +19,7 @@ export class RunningApps {
     private static pollActive() {
       const newApp = RunningApps.active();
       if (this.lastAppId != newApp) {
-        this.listeners.forEach((h) => h(newApp, this.lastAppId));
+        this.listeners?.forEach((h) => h(newApp, this.lastAppId));
       }
       this.lastAppId = newApp;
     }
@@ -54,15 +54,16 @@ export class RunningApps {
 
 export class FanControl{
   private static intervalId: any;
-  public static nowPoint:fanPosition=new fanPosition(0,0);
-  public static setPoint:fanPosition=new fanPosition(0,0);
-  public static fanMode:FANMODE;
-  public static fanRPM:number=0;
   public static fanIsEnable:boolean=false;
+  public static fanInfo:{nowPoint:fanPosition,setPoint:fanPosition,lastSetPoint:fanPosition,fanMode:FANMODE,fanRPM:number,bFanNotSet:Boolean}[]=[];
+
   static async register() {
-    if(!Backend.data.getFanIsAdapt()){
+    if(Backend.data.getFanCount()==0){
       this.disableFan();
       return;
+    }
+    for(var index = 0;index<Backend.data.getFanCount();index++){
+      this.fanInfo[index] = {nowPoint:new fanPosition(0,0),setPoint:new fanPosition(0,0),lastSetPoint:new fanPosition(0,0),fanMode:FANMODE.NOCONTROL,fanRPM:0,bFanNotSet:false}
     }
     if (this.intervalId == undefined)
       this.intervalId = setInterval(() => this.updateFan(), 1000);
@@ -70,78 +71,109 @@ export class FanControl{
   }
   
   static async updateFan(){
-    FanControl.updateFanMode();
+    //FanControl.updateFanMode();
     FanControl.updateFanInfo();
-    PluginManager.updateComponent(ComponentName.FAN_DISPLAY,UpdateType.UPDATE);
   }
 
+  /*
   static async updateFanMode(){
-    const fanSetting = Settings.appFanSetting();
-    const fanMode = fanSetting?.fanMode;
-    if(FanControl.fanMode==undefined||FanControl.fanMode!=fanMode)
-    {
-      FanControl.fanMode = fanMode!!;
-      Backend.applySettings(APPLYTYPE.SET_FANMODE);
+    var settings = Settings.appFanSettings()
+    for(var index=0;index<=settings.length;index++){
+      var fanSetting = Settings.appFanSettings()?.[index];
+      console.log("index = ",index,"fanSetiing = ",fanSetting)
+      if(!fanSetting){
+        //未设置
+        if(!FanControl.fanInfo[index].bFanNotSet){
+          FanControl.fanInfo[index].bFanNotSet = true;
+          Backend.applySettings(APPLYTYPE.SET_FANMODE);
+        }
+      }else{
+        const fanMode = fanSetting?.fanMode;
+        if(FanControl.fanInfo[index].fanMode==undefined||FanControl.fanInfo[index].fanMode!=fanMode)
+        {
+          FanControl.fanInfo[index].fanMode = fanMode!!;
+          Backend.applySettings(APPLYTYPE.SET_FANMODE);
+        }
+      }
+      
     }
-  }
+  }*/
 
   static async updateFanInfo(){
-    await Backend.data.getFanRPM().then((value)=>{
-      this.fanRPM=value;
-      FanControl.nowPoint.fanRPMpercent=Backend.data.HasFanMAXPRM()?value/Backend.data.getFanMAXPRM()*100:-273;
-    });
-    await Backend.data.getFanTemp().then((value)=>{
-      FanControl.nowPoint.temperature=value;
-    });
-    const fanSetting = Settings.appFanSetting();
-    const fanMode = fanSetting?.fanMode;
-    switch(fanMode){
-      case(FANMODE.NOCONTROL):{
-        break;
-      }
-      case(FANMODE.FIX):{
-        var fixSpeed = fanSetting?.fixSpeed;
-        FanControl.setPoint.temperature=FanControl.nowPoint.temperature;
-        FanControl.setPoint.fanRPMpercent=fixSpeed;
-        break;
-      }
-      case(FANMODE.CURVE):{
-        var curvePoints = fanSetting?.curvePoints!!.sort((a:fanPosition,b:fanPosition)=>{
-          return a.temperature==b.temperature?a.fanRPMpercent!!-b.fanRPMpercent!!:a.temperature!!-b.temperature!!
-        });
-        //每俩点判断是否在这俩点之间
-        var lineStart = new fanPosition(fanPosition.tempMin,fanPosition.fanMin);
-        if(curvePoints?.length!!>0){
-          //初始点到第一个点
-          var lineEnd = curvePoints!![0];
-          if(FanControl.nowPoint.temperature!!>lineStart.temperature!!&&FanControl.nowPoint.temperature!!<=lineEnd.temperature!!){
-            FanControl.setPoint = calPointInLine(lineStart,lineEnd,FanControl.nowPoint.temperature!!)!!;
+    Backend.data.getFanConfigs()?.forEach(async (_config,index)=>{
+      await Backend.data.getFanRPM(index).then((value)=>{
+        FanControl.fanInfo[index].fanRPM=value;
+        FanControl.fanInfo[index].nowPoint.fanRPMpercent=value/Backend.data.getFanMAXPRM(index)*100;
+      });
+    })
+    Settings.appFanSettings()?.forEach(async (fanSetting,index)=>{
+      await Backend.data.getFanTemp(index).then((value)=>{
+        FanControl.fanInfo[index].nowPoint.temperature=value;
+      });
+      const fanMode = fanSetting?.fanMode;
+      switch(fanMode){
+        case(FANMODE.NOCONTROL):{
+          FanControl.fanInfo[index].setPoint.fanRPMpercent = 0;
+          FanControl.fanInfo[index].setPoint.temperature = -10;
+          break;
+        }
+        case(FANMODE.FIX):{
+          var fixSpeed = fanSetting?.fixSpeed;
+          FanControl.fanInfo[index].setPoint.temperature=FanControl.fanInfo[index].nowPoint.temperature;
+          FanControl.fanInfo[index].setPoint.fanRPMpercent=fixSpeed;
+          break;
+        }
+        case(FANMODE.CURVE):{
+          var curvePoints = fanSetting?.curvePoints!!.sort((a:fanPosition,b:fanPosition)=>{
+            return a.temperature==b.temperature?a.fanRPMpercent!!-b.fanRPMpercent!!:a.temperature!!-b.temperature!!
+          });
+          //每俩点判断是否在这俩点之间
+          var lineStart = new fanPosition(fanPosition.tempMin,fanPosition.fanMin);
+          if(curvePoints?.length!!>0){
+            //初始点到第一个点
+            var lineEnd = curvePoints!![0];
+            if(FanControl.fanInfo[index].nowPoint.temperature!!>lineStart.temperature!!&&FanControl.fanInfo[index].nowPoint.temperature!!<=lineEnd.temperature!!){
+              FanControl.fanInfo[index].setPoint = calPointInLine(lineStart,lineEnd,FanControl.fanInfo[index].nowPoint.temperature!!)!!;
+            }
+
+            curvePoints?.forEach((value,pointIndex)=>{
+            if(pointIndex>curvePoints?.length!!-1)
+                return;
+              lineStart = value;
+              lineEnd = pointIndex == curvePoints?.length!!-1?new fanPosition(fanPosition.tempMax,fanPosition.fanMax):curvePoints!![pointIndex+1];
+              if(FanControl.fanInfo[index].nowPoint.temperature!!>lineStart.temperature!!&&FanControl.fanInfo[index].nowPoint.temperature!!<=lineEnd.temperature!!){
+                FanControl.fanInfo[index].setPoint = calPointInLine(lineStart,lineEnd,FanControl.fanInfo[index].nowPoint.temperature!!)!!;
+                return;
+              }
+            })
+          }else{
+            var lineEnd = new fanPosition(fanPosition.tempMax,fanPosition.fanMax);
+            if(FanControl.fanInfo[index].nowPoint.temperature!!>lineStart.temperature!!&&FanControl.fanInfo[index].nowPoint.temperature!!<=lineEnd.temperature!!){
+              FanControl.fanInfo[index].setPoint = calPointInLine(lineStart,lineEnd,FanControl.fanInfo[index].nowPoint.temperature!!)!!;
+              break;
+            }
           }
 
-          curvePoints?.forEach((value,index)=>{
-            if(index>curvePoints?.length!!-1)
-              return;
-            lineStart = value;
-            lineEnd = index == curvePoints?.length!!-1?new fanPosition(fanPosition.tempMax,fanPosition.fanMax):curvePoints!![index+1];
-            if(FanControl.nowPoint.temperature!!>lineStart.temperature!!&&FanControl.nowPoint.temperature!!<=lineEnd.temperature!!){
-              FanControl.setPoint = calPointInLine(lineStart,lineEnd,FanControl.nowPoint.temperature!!)!!;
-              return;
-            }
-          })
-        }else{
-          var lineEnd = new fanPosition(fanPosition.tempMax,fanPosition.fanMax);
-          if(FanControl.nowPoint.temperature!!>lineStart.temperature!!&&FanControl.nowPoint.temperature!!<=lineEnd.temperature!!){
-            FanControl.setPoint = calPointInLine(lineStart,lineEnd,FanControl.nowPoint.temperature!!)!!;
-            break;
-          }
+          break;
         }
-        break;
       }
-      default:{
-        console.error(`错误的fanmode = ${fanMode}`)
+      
+    })
+    const fanSettings = Settings.appFanSettings();
+    for(var index=0;index<fanSettings.length;index++){
+      if(!fanSettings?.[index]){
+        FanControl.fanInfo[index].setPoint.temperature = 0;
+        FanControl.fanInfo[index].setPoint.fanRPMpercent = -10;
       }
+      //console.log("判断转速变化 index=",index,"lastRPM=",FanControl.fanInfo[index].lastSetPoint.fanRPMpercent,"nowRPM=",FanControl.fanInfo[index].setPoint.fanRPMpercent,"result=",(Math.abs((FanControl.fanInfo[index].lastSetPoint.fanRPMpercent??0) - (FanControl.fanInfo[index].setPoint.fanRPMpercent??0))>=3))
+      //转速变化超过3%才进行设置
+      if(Math.abs((FanControl.fanInfo[index].lastSetPoint.fanRPMpercent??0) - (FanControl.fanInfo[index].setPoint.fanRPMpercent??0))>=3){
+        FanControl.fanInfo[index].lastSetPoint.fanRPMpercent = FanControl.fanInfo[index].setPoint.fanRPMpercent;
+        FanControl.fanInfo[index].lastSetPoint.temperature = FanControl.fanInfo[index].setPoint.temperature;
+        Backend.applySettings(APPLYTYPE.SET_FANRPM);
     }
-    Backend.applySettings(APPLYTYPE.SET_FANRPM);
+    }
+    
   }
 
   static enableFan(){
@@ -221,8 +253,8 @@ export class PluginManager{
 
   //下发所有更新事件
   static updateAllComponent(updateType:UpdateType) {
-    this.listeners.forEach((listenList,lisComName) => {
-      listenList.forEach((fn)=>{
+    this.listeners?.forEach((listenList,lisComName) => {
+      listenList?.forEach((fn)=>{
         fn(lisComName, updateType);
         //console.log(`test_fn:comName=${lisComName} updateType=${updateType}`);
       })
@@ -231,7 +263,7 @@ export class PluginManager{
 
   //监听组件更新事件（哪个组件监听，被监听组件，监听事件）
   static listenUpdateComponent(whoListen:ComponentName,lisComponentNames:ComponentName[],lisfn: ComponentUpdateHandler) {
-    lisComponentNames.forEach((lisComponentName)=>{
+    lisComponentNames?.forEach((lisComponentName)=>{
       if(this.listeners.has(lisComponentName)&&this.listeners.get(lisComponentName)!=undefined){
         this.listeners.get(lisComponentName)?.set(whoListen,lisfn);
       }else{

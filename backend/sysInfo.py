@@ -6,7 +6,7 @@ import os
 import asyncio
 from ec import EC
 from config import logging,SH_PATH,PRODUCT_NAME
-from config import FAN_GPUTEMP_PATH,FAN_CPUTEMP_PATH,GPU_DEVICE_PATH
+from config import GPU_DEVICE_PATH
 from helpers import get_user
 
 cpu_busyPercent = 0
@@ -119,34 +119,6 @@ class SysInfoManager (threading.Thread):
         except Exception as e:
             logging.error(e)
             return self._language
-
-    
-    def get_gpuTemp(self):
-        try:
-            global FAN_GPUTEMP_PATH
-            if(FAN_GPUTEMP_PATH==""):
-                hwmon_path="/sys/class/hwmon"
-                hwmon_files=os.listdir(hwmon_path)
-                for file in hwmon_files:
-                    path=hwmon_path+"/"+file
-                    name = open(path+"/name").read().strip()
-                    if(name=="amdgpu"):
-                        FAN_GPUTEMP_PATH=path+"/temp1_input"
-            temp = int(open(FAN_GPUTEMP_PATH).read().strip())
-            logging.debug(f"获取gpu温度:{temp}")
-            return temp
-        except Exception as e:
-            logging.error(f"获取gpu温度异常:{e}")
-            return -1
-    
-    def get_cpuTemp(self):
-        try:
-            temp = int(open(FAN_CPUTEMP_PATH).read().strip())
-            logging.debug(f"获取cpu温度:{temp}")
-            return temp
-        except Exception as e:
-            logging.error(f"获取cpu温度异常:{e}")
-            return -1
 
     def updateCpuData(self):
         global cpu_DataErrCnt

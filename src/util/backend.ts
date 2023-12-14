@@ -3,8 +3,6 @@ import { APPLYTYPE, FANMODE, GPUMODE, Patch} from "./enum";
 import { FanControl, PluginManager} from "./pluginMain";
 import { Settings } from "./settings";
 
-
-
 export class BackendData{
   private serverAPI:ServerAPI | undefined;
   private cpuMaxNum = 0;
@@ -15,9 +13,8 @@ export class BackendData{
   private has_gpuMax = false;
   private gpuMin = 0;
   private has_gpuMin = false;
-  private fanMaxRPM = 0;
-  private has_fanMaxRPM = false;
-  private fanIsAdapted = false;
+  private fanConfigs:any[] = [];
+  private has_fanConfigs = false;
   public async init(serverAPI:ServerAPI){
     this.serverAPI=serverAPI;
     await serverAPI!.callPluginMethod<{},number>("get_cpuMaxNum",{}).then(res=>{
@@ -43,19 +40,13 @@ export class BackendData{
         this.has_gpuMax = true;
       }
     })
-    await this.serverAPI!.callPluginMethod<{},number>("get_fanMAXRPM",{}).then(res=>{
+    await this.serverAPI!.callPluginMethod<{},[]>("get_fanConfigList",{}).then(res=>{
       if (res.success){
-        this.fanMaxRPM=res.result;
-        this.has_fanMaxRPM=true;
+        console.info("fanConfigList",res.result)
+        this.fanConfigs = res.result;
+        this.has_fanConfigs=true;
       }else{
-        this.fanMaxRPM=1;
-      }
-    })
-    await this.serverAPI!.callPluginMethod<{},boolean>("get_fanIsAdapted",{}).then(res=>{
-      if (res.success){
-        this.fanIsAdapted=res.result;
-      }else{
-        this.fanIsAdapted=false;
+        this.has_fanConfigs=false;
       }
     })
   }
@@ -91,21 +82,46 @@ export class BackendData{
     return this.has_tdpMax;
   }
 
-  public getFanMAXPRM(){
-    return this.fanMaxRPM;
+  public getFanMAXPRM(index:number){
+    if (this.has_fanConfigs){
+      return this.fanConfigs?.[index]?.fan_max_rpm??0;
+    }
+    return 0;
   }
 
-  public HasFanMAXPRM(){
-    return this.has_fanMaxRPM;
+  public getFanCount(){
+    if (this.has_fanConfigs){
+      return this.fanConfigs?.length??0;
+    }
+    return 0;
   }
 
-  public getFanIsAdapt(){
-    return this.fanIsAdapted;
+  public getFanName(index:number){
+    if (this.has_fanConfigs){
+      return this.fanConfigs?.[index]?.fan_name??"Fan";
+    }
+    return "Fan";
   }
 
-  public async getFanRPM(){
+  public getFanConfigs(){
+    if (this.has_fanConfigs){
+      return this.fanConfigs;
+    }
+    return [];
+  }
+
+  public getFanHwmonMode(index:number){
+    if (this.has_fanConfigs){
+      return this.fanConfigs?.[index]?.fan_hwmon_mode??0;
+    }
+    return 0;
+  }
+
+
+  public async getFanRPM(index:number){
     var fanPRM:number;
-    await this.serverAPI!.callPluginMethod<{},number>("get_fanRPM",{}).then(res=>{
+    await this.serverAPI!.callPluginMethod<{"index":number},number>("get_fanRPM",{"index":index}).then(res=>{
+      //console.log("get_fanRPM res=",res,"index=",index)
       if (res.success){
         fanPRM=res.result;
       }else{
@@ -115,9 +131,9 @@ export class BackendData{
     return fanPRM!!;
   }
 
-  public async getFanTemp(){
+  public async getFanTemp(index:number){
     var fanTemp:number;
-    await this.serverAPI!.callPluginMethod<{},number>("get_fanTemp",{}).then(res=>{
+    await this.serverAPI!.callPluginMethod<{"index":number},number>("get_fanTemp",{"index":index}).then(res=>{
       if (res.success){
         fanTemp=res.result/1000;
       }else{
@@ -127,9 +143,9 @@ export class BackendData{
     return fanTemp!!;
   }
 
-  public async getFanIsAuto(){
+  public async getFanIsAuto(index:number){
     var fanIsAuto:boolean;
-    await this.serverAPI!.callPluginMethod<{},boolean>("get_fanIsAuto",{}).then(res=>{
+    await this.serverAPI!.callPluginMethod<{"index":number},boolean>("get_fanIsAuto",{"index":index}).then(res=>{
       if (res.success){
         fanIsAuto=res.result;
       }else{
@@ -190,12 +206,12 @@ export class Backend {
     this.serverAPI!.callPluginMethod("set_gpuAutoFreqRange", {"min":minAutoFreq,"max":maxAutoFreq});
   }
 
-  private static applyFanAuto(auto:boolean){
-    this.serverAPI!.callPluginMethod("set_fanAuto", {"value":auto});
+  private static applyFanAuto(index:number,auto:boolean){
+    this.serverAPI!.callPluginMethod("set_fanAuto", {"index":index,"value":auto});
   }
   
-  private static applyFanPercent(percent:number){
-    this.serverAPI!.callPluginMethod("set_fanPercent", {"value":percent});
+  private static applyFanPercent(index:number,percent:number){
+    this.serverAPI!.callPluginMethod("set_fanPercent", {"index":index,"value":percent});
   }
   public static throwSuspendEvt(){
     console.log("throwSuspendEvt");
@@ -252,42 +268,66 @@ export class Backend {
         Backend.applyGPUFreq(0);
       }
     }
+    /*
     if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_FANMODE){
       if(!FanControl.fanIsEnable){
         return;
       }
-      const fanSetting = Settings.appFanSetting();
-      const fanMode = fanSetting?.fanMode;
-      if (fanMode == FANMODE.NOCONTROL) {
-          Backend.applyFanAuto(true);
-      } else if (fanMode == FANMODE.FIX) {
-        Backend.applyFanAuto(false);
-      } else if (fanMode == FANMODE.CURVE) {
-        Backend.applyFanAuto(false);
-      } else {
-          Backend.applyFanAuto(true);
-          console.log(`出现意外的FanMode = ${fanMode}`)
-      };
-    }
+      const fanSettings = Settings.appFanSettings();
+      fanSettings?.forEach((fanSetting,index)=>{
+        const fanMode = fanSetting?.fanMode;
+        if (fanMode == FANMODE.NOCONTROL) {
+            Backend.applyFanAuto(index,true);
+        } else if (fanMode == FANMODE.FIX) {
+          Backend.applyFanAuto(index,false);
+        } else if (fanMode == FANMODE.CURVE) {
+          Backend.applyFanAuto(index,false);
+        } else {
+            Backend.applyFanAuto(index,true);
+            console.log(`出现意外的FanMode = ${fanMode}`)
+        };
+      })
+      
+    }*/
+
     if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_FANRPM){
       if(!FanControl.fanIsEnable){
         return;
       }
-      const fanSetting = Settings.appFanSetting();
-      const fanMode = fanSetting?.fanMode;
-      if (fanMode == FANMODE.NOCONTROL) {
-      } else if (fanMode == FANMODE.FIX) {
-        Backend.applyFanPercent(FanControl.setPoint.fanRPMpercent!!);
-      } else if (fanMode == FANMODE.CURVE) {
-        Backend.applyFanPercent(FanControl.setPoint.fanRPMpercent!!);
-      } else {
-        console.log(`出现意外的FanMode = ${fanMode}`)
+      const fanSettings = Settings.appFanSettings();
+      for(var index=0;index<fanSettings.length;index++){
+        var fanSetting = Settings.appFanSettings()?.[index];
+        //没有配置时转自动
+        if(!fanSetting){
+          Backend.applyFanAuto(index,true);
+          console.log(`没有配置 index= ${index}`)
+          continue;
+        }
+        const fanMode = fanSetting.fanMode;
+        //写入转速后再写入控制位
+        if (fanMode == FANMODE.NOCONTROL) {
+          console.log(`不控制 index= ${index}`)
+          Backend.applyFanAuto(index,true);
+        } else if (fanMode == FANMODE.FIX) {
+          console.log(`直线 index= ${index}`)
+          Backend.applyFanPercent(index,FanControl.fanInfo[index].setPoint.fanRPMpercent!!);
+          Backend.applyFanAuto(index,false);
+        } else if (fanMode == FANMODE.CURVE) {
+          console.log(`曲线 index= ${index}`)
+          Backend.applyFanPercent(index,FanControl.fanInfo[index].setPoint.fanRPMpercent!!);
+          Backend.applyFanAuto(index,false);
+        } else {
+          console.log(`出现意外的FanMode = ${fanMode}`)
+        }
       }
     }
   };
 
   public static resetFanSettings = () =>{
-    Backend.applyFanAuto(true);
+    FanControl.fanInfo.forEach((_value,index)=>{
+      Backend.applyFanAuto(index,true);
+    })
+   
   }
 
   public static resetSettings = () => {
@@ -297,6 +337,8 @@ export class Backend {
     Backend.applyCpuBoost(true);
     Backend.applyTDP(Backend.data.getTDPMax());
     Backend.applyGPUFreq(0);
-    Backend.applyFanAuto(true);
+    FanControl.fanInfo.forEach((_value,index)=>{
+      Backend.applyFanAuto(index,true);
+    })
   };
 }

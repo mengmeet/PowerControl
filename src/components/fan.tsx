@@ -7,17 +7,15 @@ import {
   DialogButton,
   TextField,
   SliderField,
-  Dropdown,
   DropdownOption,
   Focusable,
+  DropdownItem,
 } from "decky-frontend-lib";
 import { useEffect, useState,useRef,VFC} from "react";
 import { FiPlusCircle }from "react-icons/fi"
-import { Settings, PluginManager,ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, fanPosition, FanSetting, FANPROFILEACTION, FanControl} from "../util";
+import { Settings, PluginManager,ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, fanPosition, FanSetting, FANPROFILEACTION, FanControl, Backend} from "../util";
 import { localizeStrEnum,localizationManager } from "../i18n";
 import {FanCanvas} from "./fanCanvas";
-var fanRPMIntervalID:any;
-var fanDisplayIntervalID:any;
 const totalLines = 9;
 const pointBlockDis = 5;
 const pointColor = "#1A9FFF";
@@ -27,12 +25,12 @@ const lineColor = "#1E90FF";
 const setPointColor = "#00BFFF";
 
 //选择配置文件下拉框
-const FANSelectProfileComponent: VFC = () =>{
+const FANSelectProfileComponent:VFC<{fanIndex:number}> = ({fanIndex}) =>{
   //@ts-ignore
   const [items, setItems] = useState<DropdownOption[]>(
     Object.entries(Settings.getFanSettings()).map(([profileName, fanSetting]) => {
       var useOption = {label:localizationManager.getString(localizeStrEnum.USE),data:{profileName:profileName,type:FANPROFILEACTION.USE,setting:fanSetting}};
-      if (profileName==Settings.appFanSettingName()) {
+      if (profileName==Settings.appFanSettingNameList()?.[fanIndex]) {
         useOption ={label:localizationManager.getString(localizeStrEnum.CANCEL),data:{profileName:profileName,type:FANPROFILEACTION.CANCEL,setting:fanSetting}};
       }
       return {
@@ -47,12 +45,12 @@ const FANSelectProfileComponent: VFC = () =>{
   );
   //@ts-ignore
   const [selectedItem,setSelectedItem] = useState<DropdownOption|undefined>(items.find((item)=>{
-    return item.label==Settings.appFanSettingName(); 
+    return item.label==Settings.appFanSettingNameList()?.[fanIndex]; 
   }));
   return (
+    <div>
     <PanelSectionRow>
-          <Dropdown
-            focusable={true}
+          <DropdownItem
             rgOptions={[
               ...items,
               {
@@ -74,6 +72,7 @@ const FANSelectProfileComponent: VFC = () =>{
             ]}
             strDefaultLabel={selectedItem?selectedItem.label?.toString():(items.length==0?localizationManager.getString(localizeStrEnum.CREATE_FAN_PROFILE_TIP):localizationManager.getString(localizeStrEnum.SELECT_FAN_PROFILE_TIP))}
             selectedOption={selectedItem}
+            bottomSeparator={"none"}
             onChange={(item:DropdownOption)=>{
               if(item.data==FANPROFILEACTION.ADD){
                 // @ts-ignore
@@ -82,57 +81,42 @@ const FANSelectProfileComponent: VFC = () =>{
               }
               //setSelectedItem(item);
               if(item.data.type==FANPROFILEACTION.USE){
-                Settings.setAppFanSettingName(item.data.profileName)
+                Settings.setAppFanSettingName(item.data.profileName,fanIndex)
               }else if(item.data.type==FANPROFILEACTION.DELETE){
                 Settings.removeFanSetting(item.data.profileName)
               }else if(item.data.type==FANPROFILEACTION.EDIT){
                  // @ts-ignore
                 showModal(<FANCretateProfileModelComponent fanProfileName={item.data.profileName} fanSetting={Settings.getFanSetting(item.data.profileName)}/>);
               }else if(item.data.type==FANPROFILEACTION.CANCEL){
-                Settings.setAppFanSettingName(undefined);
+                Settings.setAppFanSettingName(undefined,fanIndex);
              }
             }}
           />
-    </PanelSectionRow>
+          </PanelSectionRow>
+          </div>
 );
 }
 
 //显示当前风扇配置和温度转速信息
-const FANDisplayComponent: VFC = () =>{
+const FANDisplayComponent: VFC<{fanIndex:number}> = ({fanIndex}) =>{
   const canvasRef: any = useRef(null);
   const curvePoints : any = useRef([]);
   const initDraw=(ref:any)=>{
     canvasRef.current=ref;
-    curvePoints.current=Settings.appFanSetting()?.curvePoints;
+    curvePoints.current=Settings.appFanSettings()?.[fanIndex]?.curvePoints;
   }
   const refresh = () => {
     refreshCanvas(); 
   };
-  const dismount = () =>{
-    if(fanDisplayIntervalID!=null){
-      clearInterval(fanDisplayIntervalID);
-    }
-  }
   useEffect(() => {
     refresh();
-    if(fanDisplayIntervalID!=null){
-      clearInterval(fanDisplayIntervalID);
-    }
-    fanDisplayIntervalID=setInterval(()=>{
+    
+    const fanDisplayIntervalID=setInterval(()=>{
       refresh();
     },1000)
-    PluginManager.listenUpdateComponent(ComponentName.FAN_DISPLAY,[ComponentName.FAN_DISPLAY],(_ComponentName,updateType)=>{
-      switch(updateType){
-        case(UpdateType.UPDATE):{
-          refresh();
-          break;
-        }
-        case(UpdateType.DISMOUNT):{
-          dismount();
-          break;
-        }
-      }
-    })
+    return ()=>{
+      clearInterval(fanDisplayIntervalID);
+    }
   }, []);
   const refreshCanvas=()=>{
     const canvas = canvasRef.current;
@@ -164,7 +148,7 @@ const FANDisplayComponent: VFC = () =>{
       ctx.fillText(fanText, 2, height-lineDistance * i * height + 10);
     }
     ctx.stroke();*/
-    switch(Settings.appFanSetting()?.fanMode){
+    switch(Settings.appFanSettings()?.[fanIndex]?.fanMode){
       case(FANMODE.NOCONTROL):{
         drawNoControlMode();
         break;
@@ -192,9 +176,9 @@ const FANDisplayComponent: VFC = () =>{
     ctx.fill();
     //绘制实际点
     ctx.fillStyle = setPointColor;
-    var nowPointCanPos=FanControl.nowPoint.getCanvasPos(width,height);
+    var nowPointCanPos=FanControl.fanInfo[fanIndex].nowPoint.getCanvasPos(width,height);
     var textPos = getTextPosByCanvasPos(nowPointCanPos[0],nowPointCanPos[1],width,height)
-    ctx.fillText(`(${Math.trunc(FanControl.nowPoint.temperature!!)}°C,${Math.trunc(FanControl.nowPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
+    ctx.fillText(`(${Math.trunc(FanControl.fanInfo[fanIndex].nowPoint.temperature!!)}°C,${Math.trunc(FanControl.fanInfo[fanIndex].nowPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
     ctx.arc(nowPointCanPos[0],nowPointCanPos[1],5, 0, Math.PI * 2);
     ctx.fill();
     ctx.beginPath();
@@ -204,7 +188,7 @@ const FANDisplayComponent: VFC = () =>{
     const ctx = canvas?.getContext('2d');
     const width: number = ctx.canvas.width;
     const height: number = ctx.canvas.height;
-    const anchorPoint = new fanPosition(fanPosition.tempMax/2,Settings.appFanSetting()?.fixSpeed!!).getCanvasPos(width,height);
+    const anchorPoint = new fanPosition(fanPosition.tempMax/2,Settings.appFanSettings()?.[fanIndex].fixSpeed!!).getCanvasPos(width,height);
     //说明绘制
     ctx.beginPath();
     ctx.fillStyle = setPointColor;
@@ -225,9 +209,9 @@ const FANDisplayComponent: VFC = () =>{
     //绘制设置点
     ctx.beginPath();
     ctx.fillStyle = setPointColor;
-    var setPointCanPos=FanControl.setPoint.getCanvasPos(width,height);
+    var setPointCanPos=FanControl.fanInfo[fanIndex].setPoint.getCanvasPos(width,height);
     var textPos = getTextPosByCanvasPos(setPointCanPos[0],setPointCanPos[1],width,height)
-    ctx.fillText(`(${Math.trunc(FanControl.setPoint.temperature!!)}°C,${Math.trunc(FanControl.setPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
+    ctx.fillText(`(${Math.trunc(FanControl.fanInfo[fanIndex].setPoint.temperature!!)}°C,${Math.trunc(FanControl.fanInfo[fanIndex].setPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
     ctx.arc(setPointCanPos[0],setPointCanPos[1],5, 0, Math.PI * 2);
     ctx.fill();
   }
@@ -262,9 +246,9 @@ const FANDisplayComponent: VFC = () =>{
     //绘制实际点和设置点
     ctx.beginPath();
     ctx.fillStyle = setPointColor;
-    var setPointCanPos=FanControl.setPoint.getCanvasPos(width,height);
+    var setPointCanPos=FanControl.fanInfo[fanIndex].setPoint.getCanvasPos(width,height);
     var textPos = getTextPosByCanvasPos(setPointCanPos[0],setPointCanPos[1],width,height)
-    ctx.fillText(`(${Math.trunc(FanControl.setPoint.temperature!!)}°C,${Math.trunc(FanControl.setPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
+    ctx.fillText(`(${Math.trunc(FanControl.fanInfo[fanIndex].setPoint.temperature!!)}°C,${Math.trunc(FanControl.fanInfo[fanIndex].setPoint.fanRPMpercent!!)}%)`, textPos[0],textPos[1]);
     ctx.arc(setPointCanPos[0],setPointCanPos[1],5, 0, Math.PI * 2);
     ctx.fill();
     //绘制点和坐标
@@ -305,35 +289,23 @@ const FANDisplayComponent: VFC = () =>{
 
 
 //FANRPM模块
-const FANRPMComponent: VFC = () => {
+const FANRPMComponent: VFC<{fanIndex:number}> = ({fanIndex}) =>{
   const [fanrpm, setFanRPM] = useState<number>(0);
   const refresh = async() => {
-      setFanRPM(FanControl.fanRPM);
+      setFanRPM(FanControl.fanInfo[fanIndex].fanRPM);
   };
-  const dismount = () =>{
-    if(fanRPMIntervalID!=null){
-      clearInterval(fanRPMIntervalID);
-    }
-  }
+  
   useEffect(() => {
-    if(fanRPMIntervalID!=null){
-      clearInterval(fanRPMIntervalID);
-    }
-    fanRPMIntervalID=setInterval(()=>{
+    const fanRPMIntervalID=setInterval(()=>{
       refresh();
     },1000)
-    PluginManager.listenUpdateComponent(ComponentName.FAN_RPM,[ComponentName.FAN_RPM],(_ComponentName,updateType)=>{
-      switch(updateType){
-        case(UpdateType.DISMOUNT):{
-          dismount()
-          break;
-        }
-      }
-    })
+    return ()=>{
+      clearInterval(fanRPMIntervalID);
+    }
   }, []);
   return (
       <PanelSectionRow>
-            <Field
+            <Field focusable={true}
               label= {localizationManager.getString(localizeStrEnum.FAN_SPEED)}>
               {fanrpm + " RPM"}
             </Field>
@@ -782,9 +754,12 @@ function FANCretateProfileModelComponent({
     </div>
   );
 }
+
 export function FANComponent(){
   const [show,setShow] = useState<boolean>(Settings.ensureEnable());
+  const [index,setIndex] = useState<number>(0);
   const fanEnable = useRef<boolean>(FanControl.fanIsEnable);
+  const fanCount = useRef<number>(Backend.data.getFanCount());
   const hide = (ishide:boolean) => {
     setShow(!ishide);
   };
@@ -806,10 +781,37 @@ export function FANComponent(){
   //<FANSelectProfileComponent/>
   return (
     <div>
-      {show&&fanEnable.current&&<PanelSection title="FAN">
-        <FANDisplayComponent/>
-        <FANRPMComponent/>
-        <FANSelectProfileComponent/>
+      {show&&fanEnable.current&&fanCount.current>=0&&<PanelSection title="FAN">
+      {
+        fanCount.current==1&&(<div>
+          <FANSelectProfileComponent fanIndex={0} />
+          <FANDisplayComponent fanIndex={0} />
+          <FANRPMComponent fanIndex={0} />
+        </div>)
+      }
+      {
+        fanCount.current==2&&(<div>
+          <PanelSectionRow>
+            <SliderField value={index} min={0} max={fanCount.current-1} step={1} notchCount={fanCount.current} notchLabels={
+                Backend.data.getFanConfigs().map((config,index) => {
+                  return {notchIndex:index,label:config.fan_name,value:index}
+                })
+            } onChange={(value)=>{
+              setIndex(value);
+            }}>
+            </SliderField>
+           
+          </PanelSectionRow>
+          {Backend.data.getFanConfigs().map((_config,configIndex) => {
+            return index==configIndex&&(<div>
+              <FANSelectProfileComponent key={configIndex} fanIndex={index} />
+              <FANDisplayComponent key={configIndex} fanIndex={index} />
+              <FANRPMComponent key={configIndex} fanIndex={index} />
+            </div>)
+          })}
+        </div>)
+      }
+      
       </PanelSection>}
     </div>
   );

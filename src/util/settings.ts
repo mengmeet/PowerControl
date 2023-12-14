@@ -34,7 +34,7 @@ export class AppSetting {
   @JsonProperty()
   gpuRangeMinFreq?:number
   @JsonProperty()
-  fanProfileName?:string;
+  fanProfileNameList?:string[]|undefined[];
   constructor(){
     this.overwrite=false;
     this.smt=true;
@@ -48,6 +48,7 @@ export class AppSetting {
     this.gpuAutoMinFreq=Backend.data?.HasGPUFreqMin()?Backend.data.getGPUFreqMin():200;
     this.gpuRangeMaxFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
     this.gpuRangeMinFreq=Backend.data?.HasGPUFreqMin()?Backend.data.getGPUFreqMin():200;
+    this.fanProfileNameList=[]
   }
   deepCopy(copyTarget:AppSetting){
     this.overwrite=copyTarget.overwrite;
@@ -62,7 +63,7 @@ export class AppSetting {
     this.gpuAutoMinFreq=copyTarget.gpuAutoMinFreq;
     this.gpuRangeMaxFreq=copyTarget.gpuRangeMaxFreq;
     this.gpuRangeMinFreq=copyTarget.gpuAutoMinFreq;
-    this.fanProfileName=copyTarget.fanProfileName;
+    this.fanProfileNameList=copyTarget.fanProfileNameList?.slice();
   }
 }
 
@@ -316,24 +317,34 @@ export class Settings {
   }
 
   //风扇配置文件名称
-  static appFanSettingName(){
-    return Settings.ensureApp().fanProfileName
+  static appFanSettingNameList(){
+    //长度不一致时补齐或截断
+    if((Settings.ensureApp().fanProfileNameList?.length??0)<=Backend.data.getFanCount()){
+      var newArray = new Array(Backend.data.getFanCount())
+      Settings.ensureApp().fanProfileNameList?.forEach((value,index)=>{
+        newArray[index] = value;
+      })
+      Settings.ensureApp().fanProfileNameList = newArray;
+    }
+    return Settings.ensureApp().fanProfileNameList!!
   }
 
   //风扇配置文件内容
-  static appFanSetting(){
-    var fanProfileName = Settings.ensureApp().fanProfileName!!;
-    if(fanProfileName in this._instance.fanSettings){
-      return this._instance.fanSettings[fanProfileName];
-    }else{
-      return undefined; 
-    }
+  static appFanSettings(){
+    var fanProfileName = Settings.appFanSettingNameList();
+    var fanSettings:FanSetting[] = new Array(Backend.data.getFanCount());
+    fanProfileName?.forEach((fanProfileName,index)=>{
+      if(fanProfileName){
+        fanSettings[index] = this._instance.fanSettings[fanProfileName]
+      }
+    })
+    return fanSettings
   }
 
   //设置使用的风扇配置文件名称
-  static setAppFanSettingName(fanProfileName:string|undefined){
-    if(Settings.ensureApp().fanProfileName!=fanProfileName){
-      Settings.ensureApp().fanProfileName=fanProfileName;
+  static setAppFanSettingName(fanProfileName:string|undefined,index:number){
+    if(Settings.appFanSettingNameList()[index]!=fanProfileName){
+      Settings.appFanSettingNameList()[index]=fanProfileName;
       Settings.saveSettingsToLocalStorage();
       //Backend.applySettings(APPLYTYPE.SET_FAN);
     }
@@ -357,10 +368,12 @@ export class Settings {
         this._instance.fanSettings[fanProfileName] = fanSetting;
       }else{
         this._instance.fanSettings[newfanProfileName] = fanSetting;
-        Object.entries(this._instance.perApp).forEach(([_appID, appSettings]) => {
-          if(appSettings.fanProfileName==fanProfileName){
-            appSettings.fanProfileName=newfanProfileName;
-          }
+        Object.entries(this._instance.perApp)?.forEach(([_appID, appSettings]) => {
+          appSettings.fanProfileNameList?.forEach((value,index)=>{
+            if(fanProfileName==value){
+              appSettings.fanProfileNameList!![index]=newfanProfileName;
+            }
+          })
         })
         delete this._instance.fanSettings[fanProfileName];
       }
@@ -374,10 +387,12 @@ export class Settings {
   static removeFanSetting(fanProfileName:string){
     if(fanProfileName in this._instance.fanSettings){
       delete this._instance.fanSettings[fanProfileName];
-      Object.entries(this._instance.perApp).forEach(([_appID, appSettings]) => {
-        if(appSettings.fanProfileName==fanProfileName){
-          appSettings.fanProfileName=this._instance.perApp[DEFAULT_APP].fanProfileName;
-        }
+      Object.entries(this._instance.perApp)?.forEach(([_appID, appSettings]) => {
+        appSettings.fanProfileNameList?.forEach((value,index)=>{
+          if(fanProfileName==value){
+            appSettings.fanProfileNameList!![index]=this._instance.perApp[DEFAULT_APP].fanProfileNameList?.[index];
+          }
+        })
       })
       Settings.saveSettingsToLocalStorage();
     }
