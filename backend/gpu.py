@@ -174,15 +174,21 @@ class GPUManager ():
 
     def get_gpuFreqRange(self):
         try:
-            gpuFreqMin,gpuFreqMax = self.get_gpuFreq()
-            self.gpu_freqRange[0]=gpuFreqMin
-            self.gpu_freqRange[1]=gpuFreqMax
-            return self.gpu_freqRange
+            # write "manual" to power_dpm_force_performance_level
+            open(GPULEVEL_PATH,'w').write("manual")
+            freq_string = open(GPUFREQ_PATH,"r").read()
+            # 使用正则表达式提取频率信息
+            od_sclk_matches = re.findall(r"OD_RANGE:\s*SCLK:\s*(\d+)Mhz\s*(\d+)Mhz", freq_string)
+            logging.debug(f"get_gpuFreqRange {od_sclk_matches[0][0]} {od_sclk_matches[0][1]}")
+            if od_sclk_matches:
+                self.gpu_freqRange = [int(od_sclk_matches[0][0]),int(od_sclk_matches[0][1])]
+                return self.gpu_freqRange[0],self.gpu_freqRange[1]
+            else:
+                return 0
 
         except Exception as e:
             logging.error(e)
             return 0
-
     def set_gpuAuto(self, value:bool):
         try:
             logging.debug(f"set_gpuAuto  isAuto: {value}")
@@ -212,16 +218,28 @@ class GPUManager ():
 
     def set_gpuFreq(self, minValue: int,maxValue: int):
         try:
+            logging.debug(f"set_gpuFreq: [{minValue}, {maxValue}]")
             if ((minValue >= self.gpu_freqRange[0] and maxValue<= self.gpu_freqRange[1]) or (minValue==0 and maxValue==0)) and maxValue >= minValue:
                 self.gpu_nowFreq = [minValue,maxValue]
-                if minValue==0 and maxValue==0:
-                    open(GPULEVEL_PATH,'w').write("auto")
-                else:
-                    open(GPULEVEL_PATH,'w').write("manual")
-                    open(GPUFREQ_PATH,'w').write("s 0 {}".format(minValue))
-                    open(GPUFREQ_PATH,'w').write("s 1 {}".format(maxValue))
-                    open(GPUFREQ_PATH,'w').write("c")
-                logging.debug(f"set_gpuFreq: [{minValue}, {maxValue}]")
+                #尝试sh的方式写入
+                try:
+                    if minValue==0 and maxValue==0:
+                        open(GPULEVEL_PATH,'w').write("auto")
+                    else:
+                        subprocess.run(["sh","-c",f"echo 'manual' > '{GPULEVEL_PATH}'"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        subprocess.run(["sh","-c",f"echo 's 0 {minValue}' > '{GPUFREQ_PATH}'"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        subprocess.run(["sh","-c",f"echo 's 1 {maxValue}' > '{GPUFREQ_PATH}'"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        subprocess.run(["sh","-c",f"echo 'c' > '{GPUFREQ_PATH}'"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    return True
+                except:
+                    logging.debug(f"set_gpuFreq: gpu_nowFreq={self.gpu_nowFreq}")
+                    if minValue==0 and maxValue==0:
+                        open(GPULEVEL_PATH,'w').write("auto")
+                    else:
+                        open(GPULEVEL_PATH,'w').write("manual")
+                        open(GPUFREQ_PATH,'w').write("s 0 {}".format(minValue))
+                        open(GPUFREQ_PATH,'w').write("s 1 {}".format(maxValue))
+                        open(GPUFREQ_PATH,'w').write("c")
                 return True
             else:
                 return False
@@ -311,30 +329,14 @@ fi'''.format(path,path)
                 file.write(sh_code)
         except Exception as e:
             logging.error(e)
-
-    def get_gpuFreq(self):
-        try:
-            # write "manual" to power_dpm_force_performance_level
-            open(GPULEVEL_PATH,'w').write("manual")
-
-            freq_string = open(GPUFREQ_PATH,"r").read()
-            # 使用正则表达式提取频率信息
-            od_sclk_matches = re.findall(r"OD_SCLK:\s*0:\s*(\d+)Mhz\s*1:\s*(\d+)Mhz", freq_string)
-            if od_sclk_matches:
-                return int(od_sclk_matches[0][0]),int(od_sclk_matches[0][1])
-            else:
-                return 0
-
-        except Exception as e:
-            logging.error(e)
-            return 0
+        
         
     def get_gpuFreqMin(self):
-        gpuFreqMin,_ = self.get_gpuFreq()
+        gpuFreqMin,_ = self.get_gpuFreqRange()
         return gpuFreqMin
     
     def get_gpuFreqMax(self):
-        _,gpuFreqMax = self.get_gpuFreq()
+        _,gpuFreqMax = self.get_gpuFreqRange()
         return gpuFreqMax
 
 gpuManager = GPUManager()
