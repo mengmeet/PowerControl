@@ -100,7 +100,7 @@ class FanManager ():
                     fan_pwm_input = hwmon_config["pwm_input"]
                     fan_hwmon_label_input = fan_pwm_input["hwmon_label"]
                     fan_config.FAN_HWMON_INPUT_PATH = name_path_map[fan_hwmon_label_input]+"/"+fan_pwm_input["pwm_read_path"]
-                    fan_config.FAN_RPMVALUE_MAX = fan_pwm_input["pwm_read_max"]
+                    fan_config.FAN_RPMVALUE_MAX = fan_pwm_input["pwm_read_max"] if "pwm_read_max" in fan_pwm_input else 0
                     fan_config.TEMP_MODE = hwmon_config["temp_mode"]
                     self.fan_config_list.append(fan_config)
                 except:

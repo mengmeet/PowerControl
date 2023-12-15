@@ -29,9 +29,9 @@ except Exception as e:
 try:
     cpuinfo_path = "/proc/cpuinfo"
     cpuinfo = open(cpuinfo_path, "r").read()
-    CPU_ID = cpuinfo.split("model name")[1].split(":")[1].strip()
-
+    CPU_ID = cpuinfo.split("model name")[1].split(":")[1].split("\n")[0].strip()
     PRODUCT_NAME = open("/sys/devices/virtual/dmi/id/product_name", "r").read().strip()
+    logging.info(f"CPU_ID: {CPU_ID}, PRODUCT_NAME: {PRODUCT_NAME}")
 except Exception as e:
     logging.error(f"设备信息配置异常|{e}")
 
