@@ -51,6 +51,8 @@ try:
         "ONEXPLAYER Mini Pro":40,
         "AOKZOE A1 AR07":40,
         "ONEXPLAYER 2 ARP23":45,
+        "ONEXPLAYER F1":35,
+        "ONEXPLAYER F1 EVA-01":35,
         "G1619-04":45,     #GPD WINMAX2
         "G1618-04":45,     #GPD WIN4
         "G1617-01":30,    #GPD WIN mini

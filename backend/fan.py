@@ -61,10 +61,16 @@ class FanManager ():
             path=hwmon_path+"/"+file
             name = open(path+"/name").read().strip()
             name_path_map[name]=path
-            if(name=="amdgpu"):
-                self.FAN_GPUTEMP_PATH=path+"/temp1_input"
-            if(name=="k10temp" or name == "acpitz"):
-                self.FAN_CPUTEMP_PATH=path+"/temp1_input"
+            if(name == "amdgpu"):
+                self.FAN_GPUTEMP_PATH = path + "/temp1_input"
+            # if(name == "k10temp" or name == "acpitz"):
+            #     self.FAN_CPUTEMP_PATH = path + "/temp1_input"
+            
+            # 优先读取 k10temp
+            if (not self.FAN_CPUTEMP_PATH and name == "k10temp"):
+                self.FAN_CPUTEMP_PATH = path + "/temp1_input"
+            if (not self.FAN_CPUTEMP_PATH and name == "acpitz"):
+                self.FAN_CPUTEMP_PATH = path + "/temp1_input"
 
         for hwmon_name in FAN_HWMON_LIST:
             if hwmon_name not in name_path_map:
@@ -442,7 +448,7 @@ class FanManager ():
                 temp = int(open(self.FAN_CPUTEMP_PATH).read().strip())
             else:
                 temp = -1
-            logging.debug(f"获取cpu温度:{temp}")
+            logging.debug(f"获取cpu温度: path:{self.FAN_CPUTEMP_PATH} temp:{temp}")
             return temp
         except Exception as e:
             logging.error(f"获取cpu温度异常:{e}")
