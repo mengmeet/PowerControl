@@ -87,7 +87,11 @@ try:
                 "pwm_enable_path":"pwm1_enable"    #写入数值的文件路径(数值模式)
             },
             "pwm_write":{
-                "pwm_write_max":100,     #写入转速最大值
+                "pwm_write_max":{
+                    "default":100,
+                    "product_name1":255,
+                    "product_name2":64
+                },     #写入转速最大值(根据不同产品名写入不同的最大值，没有则使用默认)
                 "pwm_write_path":"pwm1",   #写入转速路径
                 "pwm_mode1_write_path":[
                     {"pwm_write":"xxxxxxxxxx","temp_write":"xxxxxxxx"}, #写入转速和温度的文件名
@@ -118,7 +122,11 @@ try:
                 "pwm_enable_path":"pwm1_enable"
             },
             "pwm_write":{
-                "pwm_write_max":100,
+                "pwm_write_max":{
+                    "default":100,
+                    "ONEXPLAYER F1":255,
+                    "ONEXPLAYER F1 EVA-01":255
+                },
                 "pwm_write_path":"pwm1"
             },
             "pwm_input":{
@@ -137,7 +145,10 @@ try:
                 "pwm_enable_path":"pwm1_enable"
             },
             "pwm_write":{
-                "pwm_write_max":255, 
+                "pwm_write_max":{
+                    "default":255,
+                    "ROG Ally RC71L_RC71L":255
+                }, 
                 "pwm_mode1_write_path":[
                     {"pwm_write":"pwm1_auto_point1_pwm","temp_write":"pwm1_auto_point1_temp"},
                     {"pwm_write":"pwm1_auto_point2_pwm","temp_write":"pwm1_auto_point2_temp"},
@@ -174,7 +185,9 @@ try:
                 "pwm_enable_path":"pwm2_enable"
             },
             "pwm_write":{
-                "pwm_write_max":255,
+                "pwm_write_max":{
+                    "default":255
+                },
                 "pwm_mode1_write_path":[
                     {"pwm_write":"pwm2_auto_point1_pwm","temp_write":"pwm2_auto_point1_temp"},
                     {"pwm_write":"pwm2_auto_point2_pwm","temp_write":"pwm2_auto_point2_temp"},

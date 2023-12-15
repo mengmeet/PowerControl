@@ -83,7 +83,11 @@ class FanManager ():
                     fan_config.FAN_HWMON_PWMENABLE_PATH = name_path_map[hwmon_name]+"/"+fan_pwm_enable["pwm_enable_path"]
                         
                     fan_pwm_write = hwmon_config["pwm_write"]
-                    fan_config.FAN_RPMWRITE_MAX = fan_pwm_write["pwm_write_max"]
+                    pwm_write_max = fan_pwm_write["pwm_write_max"]
+                    if PRODUCT_NAME in pwm_write_max:
+                        fan_config.FAN_RPMWRITE_MAX = pwm_write_max[PRODUCT_NAME]
+                    else:
+                        fan_config.FAN_RPMWRITE_MAX = pwm_write_max["default"]
                     if fan_config.FAN_HWMON_MODE == 0:   
                         fan_config.FAN_HWMON_PWM_PATH = name_path_map[hwmon_name]+"/"+fan_pwm_write["pwm_write_path"] if "pwm_write_path" in fan_pwm_write and fan_pwm_write["pwm_write_path"] != "" else None
                     elif fan_config.FAN_HWMON_MODE == 1:
