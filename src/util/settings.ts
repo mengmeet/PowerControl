@@ -319,13 +319,16 @@ export class Settings {
   //风扇配置文件名称
   static appFanSettingNameList(){
     //长度不一致时补齐或截断
-    if((Settings.ensureApp().fanProfileNameList?.length??0)<=Backend.data.getFanCount()){
+    if((Settings.ensureApp().fanProfileNameList?.length??0)!=Backend.data.getFanCount()){
       var newArray = new Array(Backend.data.getFanCount())
       Settings.ensureApp().fanProfileNameList?.forEach((value,index)=>{
+        if(index>=newArray.length)
+          return;
         newArray[index] = value;
       })
       Settings.ensureApp().fanProfileNameList = newArray;
     }
+    //console.log("appFanSettingNameList=",Settings.ensureApp().fanProfileNameList,"(Settings.ensureApp().fanProfileNameList?.length??0)=",(Settings.ensureApp().fanProfileNameList?.length??0),"Backend.data.getFanCount()=",Backend.data.getFanCount())
     return Settings.ensureApp().fanProfileNameList!!
   }
 
