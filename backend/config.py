@@ -133,7 +133,8 @@ try:
             },
             "pwm_input":{
                 "hwmon_label":"oxpec",
-                "pwm_read_path":"fan1_input"
+                "pwm_read_path":"fan1_input",
+                "pwm_read_max": 5030
             },
             "temp_mode":0
         }],
