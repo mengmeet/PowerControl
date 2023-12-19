@@ -196,6 +196,7 @@ class FanManager ():
                 ram_rpm_read_length = self.fan_config_list[index].FAN_RAM_RPMREAD_LENGTH
                 rpm_write_max = self.fan_config_list[index].FAN_RPMWRITE_MAX
                 rpm_value_max = self.fan_config_list[index].FAN_RPMVALUE_MAX
+                ram_manual_offset = self.fan_config_list[index].FAN_RAM_MANUAL_OFFSET
                 try:
                     if ram_read_offset:
                         if ram_rpm_read_length > 0:
@@ -203,6 +204,8 @@ class FanManager ():
                         else:
                             fanRPM=int(EC.RamRead(ram_reg_addr,ram_reg_data,ram_read_offset) * rpm_value_max / rpm_write_max)
                         logging.debug(f"使用ECRAM数据 当前机型:{PRODUCT_NAME} EC_ADDR:{hex(ram_reg_addr)} EC_DATA={hex(ram_reg_data)} EC地址:{hex(ram_read_offset)} 风扇转速:{fanRPM}")
+                        fanIsManual=EC.RamRead(ram_reg_addr,ram_reg_data,ram_manual_offset)
+                        logging.debug(f"使用ECRAM数据 读取EC地址:{hex(ram_manual_offset)} 风扇控制位:{fanIsManual}")
                         return fanRPM
                 except:
                         logging.error(f"使用ECRAM获取风扇转速异常:",exc_info=True)
@@ -233,6 +236,7 @@ class FanManager ():
                 ram_manual_offset = self.fan_config_list[index].FAN_RAM_MANUAL_OFFSET
                 ram_reg_addr = self.fan_config_list[index].FAN_RAM_REG_ADDR
                 ram_reg_data = self.fan_config_list[index].FAN_RAM_REG_DATA
+                logging.debug(f"ram_manual_offset:{ram_manual_offset}");
                 try:
                     if ram_manual_offset:
                         fanIsManual=EC.RamRead(ram_reg_addr,ram_reg_data,ram_manual_offset)
@@ -298,7 +302,6 @@ class FanManager ():
                         open(hwmon_pwm_enable_path,'w').write(str(fanIsManual))
                         logging.debug(f"写入hwmon数据 写入hwmon地址:{hwmon_pwm_enable_path} 写入风扇是否控制:{fanIsManual}")
                         return True
-                    return False
                 except:
                     logging.error(f"使用hwmon写入风扇状态异常:",exc_info=True)
                 
@@ -317,7 +320,7 @@ class FanManager ():
                 except:
                     logging.error(f"使用ECRAM写入风扇状态异常:",exc_info=True)
                 
-                manual_offset = self.fan_config_list[index].FAN_RAM_MANUAL_OFFSET
+                manual_offset = self.fan_config_list[index].FAN_MANUAL_OFFSET
                 rpm_write_offset = self.fan_config_list[index].FAN_RPMWRITE_OFFSET
                 try:
                     if manual_offset:
