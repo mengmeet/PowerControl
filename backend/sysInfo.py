@@ -4,7 +4,6 @@ import threading
 import time
 import os
 import asyncio
-from ec import EC
 from config import logging,SH_PATH,PRODUCT_NAME
 from config import GPU_DEVICE_PATH
 from helpers import get_user
