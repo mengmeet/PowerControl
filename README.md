@@ -1,3 +1,4 @@
+[English](https://github.com/mengmeet/PowerControl/blob/main/README_en.md)
 # PowerControl
 用于[decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)的插件  
 为安装了[holoiso](https://github.com/theVakhovskeIsTaken/holoiso)的手持设备提供性能设置调整  
@@ -25,16 +26,6 @@ curl -L https://raw.githubusercontent.com/mengmeet/PowerControl/main/install.sh 
 6. 自动GPU频率
 7. 风扇控制
 
-**- 自动GPU频率根据GPU使用率自动调整频率，强制关闭睿频和不限制TDP，以实现TDP浮动达到省电的目的**  
-
-
-## 已知问题
-- 6800U在休眠后GPU监控文件会冻结，导致无法正常使用自动GPU频率功能,默认由系统在最小最大频率限制之间调度。该问题是由内核问题导致的，使用6.1以上的内核即可  
-
-## 演示
-![](assets/20230110153822_1.jpg)
-![](assets/20230111054307_1.jpg)
-![](assets/20230319145542_1.jpg)
 
 ## 性能调整范围预设
 > 以下为各个芯片对应的预设TDP
@@ -77,7 +68,7 @@ curl -L https://raw.githubusercontent.com/mengmeet/PowerControl/main/install.sh 
 **TDP调整基于ryzenadj,因此只支持ryzenadj支持的cpu列表.如有未列出的cpu或者给出的范围数值不正确,请在[issues](https://github.com/Gawah/PowerControl/issues)提交**
 
 ## 支持
-   可以加入我们的qq群:487945399反馈问题，或者在[issues](https://github.com/Gawah/PowerControl/issues)提交
+可以加入我们的qq群:487945399反馈问题，或者在[issues](https://github.com/Gawah/PowerControl/issues)提交
 
 ## Reference
 [decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)  
