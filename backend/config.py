@@ -125,7 +125,7 @@ try:
             },
             "pwm_write":{
                 "pwm_write_max":{
-                    "default":100,
+                    "default":255,
                     "ONEXPLAYER F1":255,
                     "ONEXPLAYER F1 EVA-01":255
                 },
@@ -320,7 +320,7 @@ try:
             "FAN_RAM_RPMREAD_OFFSET":0x1809,
             "FAN_RAM_RPMREAD_LENGTH":0,
 
-            "FAN_RPMWRITE_MAX":200,
+            "FAN_RPMWRITE_MAX":255,
             "FAN_RPMVALUE_MAX":5530
         }]
     elif PRODUCT_NAME in (
