@@ -116,36 +116,41 @@ class FanManager ():
                 except:
                     logging.error(f"获取风扇({hwmon_name})hwmon信息失败:",exc_info=True)
         
-        #转化ec信息
-        for ec_info in FAN_EC_CONFIG:
-            try:
-                fan_config = FanConfig()
-                #EC配置变量
-                fan_config.FAN_MANUAL_OFFSET = ec_info["FAN_MANUAL_OFFSET"] if "FAN_MANUAL_OFFSET" in ec_info else None #风扇自动控制ec地址
-                fan_config.FAN_RPMWRITE_OFFSET = ec_info["FAN_RPMWRITE_OFFSET"] if "FAN_RPMWRITE_OFFSET" in ec_info else None   #风扇写入转速ec地址
-                fan_config.FAN_RPMREAD_OFFSET = ec_info["FAN_RPMREAD_OFFSET"] if "FAN_RPMREAD_OFFSET" in ec_info else None    #风扇读取转速ec地址
-                #ECRAM配置变量
-                fan_config.FAN_RAM_REG_ADDR = ec_info["FAN_RAM_REG_ADDR"] if "FAN_RAM_REG_ADDR" in ec_info else None  #风扇ecRam寄存器地址
-                fan_config.FAN_RAM_REG_DATA = ec_info["FAN_RAM_REG_DATA"] if "FAN_RAM_REG_DATA" in ec_info else None  #风扇ecRam寄存器数据
-                fan_config.FAN_RAM_MANUAL_OFFSET = ec_info["FAN_RAM_MANUAL_OFFSET"] if "FAN_RAM_MANUAL_OFFSET" in ec_info else None #风扇自动控制ecRam地址
-                fan_config.FAN_RAM_RPMWRITE_OFFSET = ec_info["FAN_RAM_RPMWRITE_OFFSET"] if "FAN_RAM_RPMWRITE_OFFSET" in ec_info else None    #风扇写入转速ecRam地址
-                fan_config.FAN_RAM_RPMREAD_OFFSET = ec_info["FAN_RAM_RPMREAD_OFFSET"] if "FAN_RAM_RPMREAD_OFFSET" in ec_info else None    #风扇读取转速ecRam地址
-                fan_config.FAN_RAM_RPMREAD_LENGTH = ec_info["FAN_RAM_RPMREAD_LENGTH"] if "FAN_RAM_RPMREAD_LENGTH" in ec_info else 0    #风扇实际转速值长度 0为需要通过计算获得转速
-                #其他变量
-                fan_config.FAN_RPMWRITE_MAX = ec_info["FAN_RPMWRITE_MAX"] if "FAN_RPMWRITE_MAX" in ec_info else 0  #风扇最大转速写入值
-                fan_config.FAN_RPMVALUE_MAX = ec_info["FAN_RPMVALUE_MAX"] if "FAN_RPMVALUE_MAX" in ec_info else 0  #风扇最大转速读取数值
-                fan_config.FAN_ENABLE_MANUAL_VALUE = 1
-                fan_config.FAN_ENABLE_AUTO_VALUE = 0
-                fan_config.TEMP_MODE = 0
-                #判断是否配置好ec(控制地址、读和写至少各有一种方法,最大写入和最大读取必须有配置数值)
-                fan_config.FAN_IS_EC_CONFIGURED = (fan_config.FAN_MANUAL_OFFSET!=None or fan_config.FAN_RAM_MANUAL_OFFSET!=None)\
-                                                and  (fan_config.FAN_RPMWRITE_OFFSET!=None or fan_config.FAN_RAM_RPMWRITE_OFFSET!=None)\
-                                                and  (fan_config.FAN_RPMREAD_OFFSET!=None or fan_config.FAN_RAM_RPMREAD_OFFSET!=None)\
-                                                and  (fan_config.FAN_RPMWRITE_MAX!=0 and fan_config.FAN_RPMVALUE_MAX!=0)
-                if fan_config.FAN_IS_EC_CONFIGURED:
-                    self.fan_config_list.append(fan_config)                               
-            except:
-                logging.error(f"获取风扇({hwmon_name})ec信息失败:",exc_info=True)
+        #若已获取到风扇hwmon信息则不再获取ec信息
+        if len(self.fan_config_list) > 0:
+            logging.debug(f"已获取到风扇hwmon信息:{[config.FAN_HWMON_NAME for config in self.fan_config_list]}")
+        else:
+            logging.debug(f"未获取到风扇hwmon信息,开始获取风扇ec信息")
+            #转化ec信息
+            for ec_info in FAN_EC_CONFIG:
+                try:
+                    fan_config = FanConfig()
+                    #EC配置变量
+                    fan_config.FAN_MANUAL_OFFSET = ec_info["FAN_MANUAL_OFFSET"] if "FAN_MANUAL_OFFSET" in ec_info else None #风扇自动控制ec地址
+                    fan_config.FAN_RPMWRITE_OFFSET = ec_info["FAN_RPMWRITE_OFFSET"] if "FAN_RPMWRITE_OFFSET" in ec_info else None   #风扇写入转速ec地址
+                    fan_config.FAN_RPMREAD_OFFSET = ec_info["FAN_RPMREAD_OFFSET"] if "FAN_RPMREAD_OFFSET" in ec_info else None    #风扇读取转速ec地址
+                    #ECRAM配置变量
+                    fan_config.FAN_RAM_REG_ADDR = ec_info["FAN_RAM_REG_ADDR"] if "FAN_RAM_REG_ADDR" in ec_info else None  #风扇ecRam寄存器地址
+                    fan_config.FAN_RAM_REG_DATA = ec_info["FAN_RAM_REG_DATA"] if "FAN_RAM_REG_DATA" in ec_info else None  #风扇ecRam寄存器数据
+                    fan_config.FAN_RAM_MANUAL_OFFSET = ec_info["FAN_RAM_MANUAL_OFFSET"] if "FAN_RAM_MANUAL_OFFSET" in ec_info else None #风扇自动控制ecRam地址
+                    fan_config.FAN_RAM_RPMWRITE_OFFSET = ec_info["FAN_RAM_RPMWRITE_OFFSET"] if "FAN_RAM_RPMWRITE_OFFSET" in ec_info else None    #风扇写入转速ecRam地址
+                    fan_config.FAN_RAM_RPMREAD_OFFSET = ec_info["FAN_RAM_RPMREAD_OFFSET"] if "FAN_RAM_RPMREAD_OFFSET" in ec_info else None    #风扇读取转速ecRam地址
+                    fan_config.FAN_RAM_RPMREAD_LENGTH = ec_info["FAN_RAM_RPMREAD_LENGTH"] if "FAN_RAM_RPMREAD_LENGTH" in ec_info else 0    #风扇实际转速值长度 0为需要通过计算获得转速
+                    #其他变量
+                    fan_config.FAN_RPMWRITE_MAX = ec_info["FAN_RPMWRITE_MAX"] if "FAN_RPMWRITE_MAX" in ec_info else 0  #风扇最大转速写入值
+                    fan_config.FAN_RPMVALUE_MAX = ec_info["FAN_RPMVALUE_MAX"] if "FAN_RPMVALUE_MAX" in ec_info else 0  #风扇最大转速读取数值
+                    fan_config.FAN_ENABLE_MANUAL_VALUE = 1
+                    fan_config.FAN_ENABLE_AUTO_VALUE = 0
+                    fan_config.TEMP_MODE = 0
+                    #判断是否配置好ec(控制地址、读和写至少各有一种方法,最大写入和最大读取必须有配置数值)
+                    fan_config.FAN_IS_EC_CONFIGURED = (fan_config.FAN_MANUAL_OFFSET!=None or fan_config.FAN_RAM_MANUAL_OFFSET!=None)\
+                                                    and  (fan_config.FAN_RPMWRITE_OFFSET!=None or fan_config.FAN_RAM_RPMWRITE_OFFSET!=None)\
+                                                    and  (fan_config.FAN_RPMREAD_OFFSET!=None or fan_config.FAN_RAM_RPMREAD_OFFSET!=None)\
+                                                    and  (fan_config.FAN_RPMWRITE_MAX!=0 and fan_config.FAN_RPMVALUE_MAX!=0)
+                    if fan_config.FAN_IS_EC_CONFIGURED:
+                        self.fan_config_list.append(fan_config)                               
+                except:
+                    logging.error(f"获取风扇({hwmon_name})ec信息失败:",exc_info=True)
 
     #设备特殊初始化
     def device_init_quirks(self):
