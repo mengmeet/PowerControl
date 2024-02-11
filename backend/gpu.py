@@ -127,7 +127,7 @@ class GPUFreqNotifier ():
                 if os.path.exists(GPUFREQ_PATH):
                     freq_string = open(GPUFREQ_PATH,"r").read()
                     # 使用正则表达式提取频率信息
-                    od_sclk_matches = re.findall(r"OD_SCLK:\s*0:\s*(\d+)Mhz\s*1:\s*(\d+)Mhz", freq_string)
+                    od_sclk_matches = re.findall(r"OD_SCLK:?\s*0:\s*(\d+)Mhz\s*1:\s*(\d+)Mhz", freq_string)
                     if od_sclk_matches:
                         qfreqMin = int(od_sclk_matches[0][0])
                         qfreqMax = int(od_sclk_matches[0][1])
@@ -178,7 +178,7 @@ class GPUManager ():
             open(GPULEVEL_PATH,'w').write("manual")
             freq_string = open(GPUFREQ_PATH,"r").read()
             # 使用正则表达式提取频率信息
-            od_sclk_matches = re.findall(r"OD_RANGE:\s*SCLK:\s*(\d+)Mhz\s*(\d+)Mhz", freq_string)
+            od_sclk_matches = re.findall(r"OD_RANGE:?\s*SCLK:\s*(\d+)Mhz\s*(\d+)Mhz", freq_string)
             logging.debug(f"get_gpuFreqRange {od_sclk_matches[0][0]} {od_sclk_matches[0][1]}")
             if od_sclk_matches:
                 self.gpu_freqRange = [int(od_sclk_matches[0][0]),int(od_sclk_matches[0][1])]
