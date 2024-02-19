@@ -165,6 +165,7 @@ const CPUTDPComponent:VFC = () =>{
 
 export const CPUComponent: VFC = () => {
   const [show,setShow] = useState<boolean>(Settings.ensureEnable());
+  const isSpportSMT = Settings.appIsSupportSMT();
   const hide = (ishide:boolean) => {
     setShow(!ishide);
   };
@@ -187,7 +188,7 @@ export const CPUComponent: VFC = () => {
         <div>
           {show&&<PanelSection title="CPU">
           <CPUBoostComponent/>
-          <CPUSmtComponent/>
+          {isSpportSMT && <CPUSmtComponent/>}
           <CPUNumComponent/>
           {!PluginManager.isPatchSuccess(Patch.TDPPatch)&& <CPUTDPComponent/>}
         </PanelSection>}

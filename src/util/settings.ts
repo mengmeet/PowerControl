@@ -14,6 +14,8 @@ export class AppSetting {
   @JsonProperty()
   smt?: boolean;
   @JsonProperty()
+  isSupportSMT?: boolean;
+  @JsonProperty()
   cpuNum?: number;
   @JsonProperty()
   cpuboost?: boolean;
@@ -38,6 +40,7 @@ export class AppSetting {
   constructor(){
     this.overwrite=false;
     this.smt=true;
+    this.isSupportSMT=Backend.data?.HasSupportSMT()?Backend.data?.getSupportSMT():true;
     this.cpuNum=Backend.data?.HasCpuMaxNum()?Backend.data?.getCpuMaxNum():4;
     this.cpuboost=false;
     //this.tdpEnable=true;
@@ -53,6 +56,7 @@ export class AppSetting {
   deepCopy(copyTarget:AppSetting){
     this.overwrite=copyTarget.overwrite;
     this.smt=copyTarget.smt;
+    this.isSupportSMT=copyTarget.isSupportSMT;
     this.cpuNum=copyTarget.cpuNum;
     this.cpuboost=copyTarget.cpuboost;
     //this.tdpEnable=copyTarget.tdpEnable;
@@ -174,6 +178,18 @@ export class Settings {
       Settings.ensureApp().smt=smt;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_CPUCORE);
+      PluginManager.updateComponent(ComponentName.CPU_SMT,UpdateType.UPDATE);
+    }
+  }
+
+  static appIsSupportSMT(): boolean {
+    return Settings.ensureApp().isSupportSMT!!;
+  }
+
+  static setIsSupportSMT(isSupportSMT:boolean) {
+    if(Settings.ensureApp().isSupportSMT!=isSupportSMT){
+      Settings.ensureApp().isSupportSMT=isSupportSMT;
+      Settings.saveSettingsToLocalStorage();
       PluginManager.updateComponent(ComponentName.CPU_SMT,UpdateType.UPDATE);
     }
   }

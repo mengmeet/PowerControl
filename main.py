@@ -38,6 +38,13 @@ class Plugin:
         except Exception as e:
             logging.error(e)
             return 0
+        
+    async def get_isSupportSMT(self):
+        try:
+            return cpuManager.get_isSupportSMT()
+        except Exception as e:
+            logging.error(e)
+            return False
 
     async def get_tdpMax(self):
         try:

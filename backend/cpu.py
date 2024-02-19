@@ -16,10 +16,13 @@ cpu_nowLimitFreq=0
 
 class CPUManager ():
     def __init__(self):
-        self.get_cpuMaxNum() # 获取 cpu_maxNum
         # 获取 cpu_topology
         self.set_enable_All() # 先开启所有cpu, 否则拓扑信息不全
+        self.is_support_smt = None
+        self.get_isSupportSMT() # 获取 is_support_smt
+        self.get_cpuMaxNum() # 获取 cpu_maxNum
         self.cpu_topology = self.get_cpu_topology()
+        logging.info(f"cpu_topology {self.cpu_topology}")
 
     cpu_topology = {}
 
@@ -48,8 +51,11 @@ class CPUManager ():
                     cpu_index=cpu_index + 1
                 else:
                     break
-            #去掉超线程部分，物理核心只有cpu文件夹数量的一半
-            cpu_maxNum = int(cpu_index/2)
+            if self.get_isSupportSMT():
+                #去掉超线程部分，物理核心只有cpu文件夹数量的一半
+                cpu_maxNum = int(cpu_index/2)
+            else:
+                cpu_maxNum = cpu_index
             logging.info("get_cpuMaxNum {}".format(cpu_maxNum))
             return cpu_maxNum
         except Exception as e:
@@ -62,10 +68,13 @@ class CPUManager ():
             global cpu_tdpMax
             if PRODUCT_NAME in TDP_LIMIT_CONFIG_PRODUCT:
                 cpu_tdpMax=TDP_LIMIT_CONFIG_PRODUCT[PRODUCT_NAME]
-            elif CPU_ID in TDP_LIMIT_CONFIG_CPU:
-                cpu_tdpMax=TDP_LIMIT_CONFIG_CPU[CPU_ID]
             else:
-                cpu_tdpMax=15
+                for model in TDP_LIMIT_CONFIG_CPU:
+                    if model in CPU_ID:
+                        cpu_tdpMax=TDP_LIMIT_CONFIG_CPU[model]
+                        break
+                    else:
+                        cpu_tdpMax=15
             logging.info("get_tdpMax {}".format(cpu_tdpMax))
             return cpu_tdpMax
         except Exception as e:
@@ -174,15 +183,43 @@ class CPUManager ():
     def set_enable_All(self):
         try:
             logging.debug("set_enable_All")
-            for cpu in range(0, cpu_maxNum*2):
-                self.online_cpu(cpu)
+            cpu_path = '/sys/devices/system/cpu/'
+            cpu_pattern = re.compile(r'^cpu(\d+)$')
+    
+            for cpu_dir in os.listdir(cpu_path):
+                match = cpu_pattern.match(cpu_dir)
+                if match:
+                    cpu_number = match.group(1)
+                    self.online_cpu(int(cpu_number))
             return True
         except Exception as e:
             logging.error(e)
             return False
+    
+    # 不能在cpu offline 之后进行判断，会不准确
+    def get_isSupportSMT(self):
+        try:
+            if self.is_support_smt is not None:
+                return self.is_support_smt
+
+            command = "LANG=en_US.UTF-8 lscpu | grep 'Thread(s) per core' | awk '{print $4}'"
+            process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            stdout, stderr = process.stdout, process.stderr
+            if stderr:
+                logging.error(f"is_support_smt error:\n{stderr}")
+                self.is_support_smt = False
+            else:
+                self.is_support_smt = int(stdout) > 1
+        except Exception as e:
+            logging.error(e)
+            self.is_support_smt = False
+        return self.is_support_smt
 
     def set_smt(self, value: bool):
         try:
+            if not self.get_isSupportSMT():
+                logging.info("set_smt not support")
+                return False
             logging.debug("set_smt {}".format(value))
             global cpu_smt
             cpu_smt=value

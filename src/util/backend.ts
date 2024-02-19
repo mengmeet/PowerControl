@@ -7,6 +7,8 @@ export class BackendData{
   private serverAPI:ServerAPI | undefined;
   private cpuMaxNum = 0;
   private has_cpuMaxNum = false;
+  private isSupportSMT = false;
+  private has_isSupportSMT = false;
   private tdpMax = 0;
   private has_tdpMax= false;
   private gpuMax = 0;
@@ -49,6 +51,14 @@ export class BackendData{
         this.has_fanConfigs=false;
       }
     })
+
+    await this.serverAPI!.callPluginMethod<{},boolean>("get_isSupportSMT",{}).then(res=>{
+      if (res.success){
+        console.info("isSupportSMT = " + res.result);
+        this.isSupportSMT = res.result;
+        this.has_isSupportSMT = true;
+      }
+    })
   }
   public getCpuMaxNum(){
     return this.cpuMaxNum;
@@ -56,6 +66,14 @@ export class BackendData{
 
   public HasCpuMaxNum(){
     return this.has_cpuMaxNum;
+  }
+
+  public getSupportSMT(){
+    return this.isSupportSMT;
+  }
+
+  public HasSupportSMT(){
+    return this.has_isSupportSMT;
   }
 
   public getTDPMax(){

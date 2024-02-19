@@ -40,6 +40,7 @@ try:
     TDP_LIMIT_CONFIG_PRODUCT={
         "AIR":18,
         "AIR 1S":25,
+        "AIR 1S Limited":20,
         "AIR Pro":20,
         "AIR Plus":30,
         "AYANEO 2":30,
@@ -61,18 +62,21 @@ try:
         "Jupiter":20,
     }
     TDP_LIMIT_CONFIG_CPU={
-        "AMD Ryzen 7 7735HS with Radeon Graphics":45,
-        "AMD Ryzen 7 7735U with Radeon Graphics":40,
-        "AMD Ryzen 5 5560U with Radeon Graphics":18,
-        "AMD Ryzen 7 5700U with Radeon Graphics":28,
-        "AMD Ryzen 7 5800U with Radeon Graphics":30,
-        "AMD Ryzen 7 5825U with Radeon Graphics":30,
-        "AMD Ryzen 7 6800U with Radeon Graphics":40,
-        "AMD Ryzen 7 4800U with Radeon Graphics":25,
-        "AMD Ryzen 5 4500U with Radeon Graphics":25,
-        "AMD Athlon Silver 3050e with Radeon Graphics":12,
-        "AMD Ryzen Z1 Extreme":40,
-        "AMD Ryzen 7 7840U w/ Radeon 780M Graphics": 40,
+        "7735HS":65,
+        "7735U":40,
+        "7735":45,
+        "5560U":18,
+        "5700U":28,
+        "5800U":30,
+        "5825U":30,
+        "6800U":40,
+        "4800U":25,
+        "4500U":25,
+        "3050e":12,
+        "Z1 Extreme":40,
+        "7840HS": 65,
+        "7840U": 40,
+        "7840": 45,
     }
 except Exception as e:
     logging.error(f"TDP配置异常|{e}")
