@@ -236,7 +236,7 @@ class CPUManager ():
             global cpu_boost
             cpu_boost=value
 
-            # 关闭 amd_pstate 使用 acpi_cpufreq
+            # 切换为 passive 模式
             if os.path.exists(amd_pstate_path):
                 open(amd_pstate_path, 'w').write('passive')
 

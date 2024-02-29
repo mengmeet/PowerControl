@@ -42,5 +42,10 @@
     "CURENT_STAT":"Current status",
     "EDIT":"Edit",
     "SAVE":"Save",
-    "NATIVE_FREQ":"Native"
+    "NATIVE_FREQ":"Native",
+    "VERSION":"Version",
+    "REINSTALL_PLUGIN": "Reinstall Plugin",
+    "UPDATE_PLUGIN": "Update Plugin To",
+    "INSTALLED_VERSION": "Installed Version",
+    "LATEST_VERSION": "Latest Version"
 }

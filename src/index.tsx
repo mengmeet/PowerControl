@@ -25,7 +25,8 @@ import {
 import { VFC} from "react";
 import { FaSuperpowers } from "react-icons/fa";
 import { PluginManager} from "./util";
-import { GPUComponent,CPUComponent,SettingsComponent,FANComponent} from "./components";
+import { GPUComponent,CPUComponent,SettingsComponent,FANComponent, MoreComponent} from "./components";
+
 const Content: VFC<{}> = ({}) => {
   return (
       <div>
@@ -37,6 +38,7 @@ const Content: VFC<{}> = ({}) => {
           <CPUComponent />
           <GPUComponent />
           <FANComponent />
+          <MoreComponent/>
         </div>}
       </div>
     );

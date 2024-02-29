@@ -1,6 +1,3 @@
-import subprocess
-import asyncio
-import os
 import sys
 
 #获取插件路径 加载backend中各个py文件
@@ -13,6 +10,7 @@ try:
     from cpu import cpuManager
     from fan import fanManager
     from sysInfo import sysInfoManager
+    import update
     
 except Exception as e:
     logging.error(e)
@@ -192,3 +190,13 @@ class Plugin:
         except Exception as e:
             logging.error(e)
             return False
+        
+    async def update_latest(self):
+        logging.info("Updating latest")
+        return update.update_latest()
+    
+    async def get_version(self):
+        return update.get_version()
+    
+    async def get_latest_version(self):
+        return update.get_latest_version()

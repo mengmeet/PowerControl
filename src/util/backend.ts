@@ -17,7 +17,9 @@ export class BackendData{
   private has_gpuMin = false;
   private fanConfigs:any[] = [];
   private has_fanConfigs = false;
-  public async init(serverAPI:ServerAPI){
+  private current_version = "1.0.0";
+  private latest_version = "1.0.0";
+  public async init(serverAPI:ServerAPI) {
     this.serverAPI=serverAPI;
     await serverAPI!.callPluginMethod<{},number>("get_cpuMaxNum",{}).then(res=>{
       if (res.success){
@@ -57,6 +59,13 @@ export class BackendData{
         console.info("isSupportSMT = " + res.result);
         this.isSupportSMT = res.result;
         this.has_isSupportSMT = true;
+      }
+    })
+
+    await this.serverAPI!.callPluginMethod<{},string>("get_version",{}).then(res=>{
+      if (res.success){
+        console.info("current_version = " + res.result);
+        this.current_version = res.result;
       }
     })
   }
@@ -135,6 +144,13 @@ export class BackendData{
     return 0;
   }
 
+  public getCurrentVersion() {
+    return this.current_version;
+  }
+
+  public getLatestVersion() {
+    return this.latest_version;
+  }
 
   public async getFanRPM(index:number){
     var fanPRM:number;
@@ -172,6 +188,7 @@ export class BackendData{
     })
     return fanIsAuto!!;
   }
+  
 }
 
 
@@ -234,6 +251,16 @@ export class Backend {
   public static throwSuspendEvt(){
     console.log("throwSuspendEvt");
     this.serverAPI!.callPluginMethod("receive_suspendEvent", {});
+  }
+
+  public static async getLatestVersion(): Promise<string> {
+    return (await this.serverAPI!.callPluginMethod("get_latest_version", {}))
+      .result as string;
+  }
+
+  // updateLatest
+  public static async updateLatest() {
+    await this.serverAPI!.callPluginMethod("update_latest", {});
   }
 
   public static applySettings = (applyTarget: string) => {

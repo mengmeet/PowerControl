@@ -1,9 +1,6 @@
 import logging
-import subprocess
 import glob
-import os
 from helpers import get_homebrew_path
-from enum import Enum
 
 #日志配置
 LOG_LOCATION = "/tmp/PowerControl_py.log"
@@ -34,6 +31,8 @@ try:
     logging.info(f"CPU_ID: {CPU_ID}, PRODUCT_NAME: {PRODUCT_NAME}")
 except Exception as e:
     logging.error(f"设备信息配置异常|{e}")
+
+API_URL = "https://api.github.com/repos/mengmeet/PowerControl/releases/latest"
 
 #TDP上限配置
 try:
