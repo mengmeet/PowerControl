@@ -61,9 +61,8 @@ jobs:
         with:
           files: /tmp/artifacts/PowerControl/PowerControl.tar.gz
           tag_name: ${{ github.ref_name }}
-          body:  |
-            PowerControl
           draft: false
+          generate_release_notes: true
           prerelease: contains(github.ref, 'pre')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
