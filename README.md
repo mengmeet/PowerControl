@@ -1,4 +1,4 @@
-[English](https://github.com/mengmeet/PowerControl/blob/main/README_en.md)
+[English](./README_en.md) | 简体中文
 # PowerControl
 用于[decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)的插件  
 为安装了[holoiso](https://github.com/theVakhovskeIsTaken/holoiso)的手持设备提供性能设置调整  

@@ -1,3 +1,4 @@
+English | [简体中文](./README.md)
 # PowerControl
 Plugin for [decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)  
 Provide performance settings adjustments for handheld installed with [holoiso](https://github.com/theVakhovskeIsTaken/holoiso)
