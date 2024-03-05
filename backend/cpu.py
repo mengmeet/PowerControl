@@ -6,7 +6,7 @@ from config import TDP_LIMIT_CONFIG_CPU,TDP_LIMIT_CONFIG_PRODUCT,PRODUCT_NAME,CP
 #初始参数
 cpu_boost=True
 cpu_smt=True
-cpu_num=4
+enable_cpu_num=4
 cpu_maxNum=0
 cpu_tdpMax=15
 cpu_avaFreq=[]
@@ -16,15 +16,20 @@ cpu_nowLimitFreq=0
 
 class CPUManager ():
     def __init__(self):
+        self.cpu_topology= {}
+
         # 获取 cpu_topology
         self.set_enable_All() # 先开启所有cpu, 否则拓扑信息不全
         self.is_support_smt = None
         self.get_isSupportSMT() # 获取 is_support_smt
         self.get_cpuMaxNum() # 获取 cpu_maxNum
-        self.cpu_topology = self.get_cpu_topology()
-        logging.info(f"cpu_topology {self.cpu_topology}")
 
-    cpu_topology = {}
+        _cpu_topology : dict = self.get_cpu_topology()
+        self.cpu_topology = _cpu_topology
+        self.cps_ids = sorted(list(set(_cpu_topology.values())))
+
+        logging.info(f"self.cpu_topology {self.cpu_topology}")
+        logging.info(f"cpu_ids {self.cps_ids}")
 
     def get_hasRyzenadj(self):
         try:
@@ -140,9 +145,9 @@ class CPUManager ():
         
     def set_cpuOnline(self, value: int):
         try:
-            logging.debug("set_cpuOnline {} {}".format(value,cpu_maxNum))
-            global cpu_num
-            cpu_num=value
+            logging.info("set_cpuOnline {} {}".format(value,cpu_maxNum))
+            global enable_cpu_num
+            enable_cpu_num = value
 
             cpu_topology = self.cpu_topology
             enabled_cores = list(set(int(core) for core in cpu_topology.values()))
@@ -150,23 +155,35 @@ class CPUManager ():
             # 初始化关闭 Set
             to_offline = set()
         
-            # 超过cpu_num个核心之外的线程, 都关闭
-            if cpu_num is not None and cpu_num < len(enabled_cores):
+            # 超过 enable_cpu_num 个核心之外的线程, 都关闭
+            # if enable_cpu_num is not None and enable_cpu_num < len(enabled_cores):
+            #     for processor_id, core_id in cpu_topology.items():
+            #         if int(core_id) >= enable_cpu_num:
+            #             to_offline.add(int(processor_id))
+
+            # cpuid 可能存在不连续的情况
+            # 如 4500u 为 [0, 1, 2, 4, 5, 6] {0: 0, 1: 1, 2: 2, 3: 4, 4: 5, 5: 6}
+            # 所以不能直接关掉 大于 enable_cpu_num 的线程
+            #
+            # cpu_num 作为索引, 取出对应的核心, 作为开启的最大 cpuid, 关闭大于最大 cpuid 的线程
+            max_enable_cpuid = self.cps_ids[enable_cpu_num - 1]
+            logging.info(f"enable_cpu_num {enable_cpu_num}, max_enable_cpuid {max_enable_cpuid}")
+            if enable_cpu_num is not None and enable_cpu_num < len(enabled_cores):
                 for processor_id, core_id in cpu_topology.items():
-                    if int(core_id) >= cpu_num:
+                    if int(core_id) > max_enable_cpuid:
+                        logging.info(f"add offline - processor_id:{processor_id}, core_id:{core_id}")
                         to_offline.add(int(processor_id))
                     
         
             # 如果关闭SMT，关闭每个核心中数字更大的线程
             if not cpu_smt:
-                for core_id in enabled_cores[:cpu_num]:
+                for core_id in enabled_cores[:enable_cpu_num]:
                     core_threads = [cpu for cpu, core in cpu_topology.items() if int(core) == core_id]
                     core_threads = sorted(core_threads, key=lambda x: int(x))
                     core_to_keep = core_threads[0]
                     to_offline.update(set(core_threads[1:]))
         
-            
-            logging.info(f"to_offline {sorted(to_offline)}")
+            logging.debug(f"to_offline {sorted(to_offline)}")
         
             # 遍历判断，执行关闭和启用操作
             for cpu in cpu_topology.keys():
@@ -270,7 +287,7 @@ class CPUManager ():
                 return False
             need_set=False
             #检测已开启的cpu的频率是否全部低于限制频率
-            for cpu in range(0, cpu_num*2):
+            for cpu in range(0, enable_cpu_num*2):
                 if cpu_smt or cpu%2==0:
                     # command="sudo sh {} get_cpu_nowFreq {}".format(SH_PATH, cpu)
                     # cpu_freq=int(subprocess.getoutput(command))
