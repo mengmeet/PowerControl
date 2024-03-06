@@ -189,6 +189,13 @@ class Plugin:
             return True
         except Exception as e:
             logging.error(e)
+            return False        
+
+    def fix_gpuFreqSlider(self):
+        try:
+            return gpuManager.fix_gpuFreqSlider()
+        except Exception as e:
+            logging.error(e)
             return False
         
     async def update_latest(self):

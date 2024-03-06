@@ -24,9 +24,9 @@ export class AppSetting {
   @JsonProperty()
   tdpEnable?:boolean
   @JsonProperty()
-  gpuMode?:number
+  gpuMode?:string
   //@JsonProperty()
-  //gpuFreq?:number
+  gpuFreq?:number
   @JsonProperty()
   gpuAutoMaxFreq?:number
   @JsonProperty()
@@ -37,6 +37,8 @@ export class AppSetting {
   gpuRangeMinFreq?:number
   @JsonProperty()
   fanProfileNameList?:string[]|undefined[];
+  @JsonProperty()
+  gpuSliderFix?:boolean;
   constructor(){
     this.overwrite=false;
     this.smt=true;
@@ -46,6 +48,7 @@ export class AppSetting {
     //this.tdpEnable=true;
     //this.tdp=Backend.data?.HasTDPMax()?Math.trunc(Backend.data?.getTDPMax()/2):15;
     this.gpuMode=GPUMODE.NATIVE;
+    this.gpuSliderFix=false;
     //this.gpuFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
     this.gpuAutoMaxFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
     this.gpuAutoMinFreq=Backend.data?.HasGPUFreqMin()?Backend.data.getGPUFreqMin():200;
@@ -62,7 +65,8 @@ export class AppSetting {
     //this.tdpEnable=copyTarget.tdpEnable;
     //this.tdp=copyTarget.tdp;
     this.gpuMode=copyTarget.gpuMode;
-    //this.gpuFreq=copyTarget.gpuFreq;
+    this.gpuFreq=copyTarget.gpuFreq;
+    this.gpuSliderFix=copyTarget.gpuSliderFix;
     this.gpuAutoMaxFreq=copyTarget.gpuAutoMaxFreq;
     this.gpuAutoMinFreq=copyTarget.gpuAutoMinFreq;
     this.gpuRangeMaxFreq=copyTarget.gpuRangeMaxFreq;
@@ -269,7 +273,7 @@ export class Settings {
   static removeGpuModeEventListener(callback: () => void) {
     this._instance.settingChangeEvent.removeEventListener("GPU_FREQ_Change", callback);
   }
-  /*
+  
   static appGPUFreq(){
     return Settings.ensureApp().gpuFreq!!;
   }
@@ -283,7 +287,6 @@ export class Settings {
       PluginManager.updateComponent(ComponentName.GPU_FREQFIX,UpdateType.UPDATE);
     }
   }
-  */
 
   static appGPUAutoMaxFreq(){
     return Settings.ensureApp().gpuAutoMaxFreq!!;
@@ -329,6 +332,20 @@ export class Settings {
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
       Settings.saveSettingsToLocalStorage();
       PluginManager.updateComponent(ComponentName.GPU_FREQRANGE,UpdateType.UPDATE);
+    }
+  }
+
+  static appGPUSliderFix(): boolean {
+    return Settings.ensureApp().gpuSliderFix!!;
+  }
+
+  static setGPUSliderFix(gpuSliderFix:boolean) {
+    if(Settings.ensureApp().gpuSliderFix!=gpuSliderFix){
+      Settings.ensureApp().gpuSliderFix=gpuSliderFix;
+      Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_GPUSLIDERFIX);
+      PluginManager.updateComponent(ComponentName.GPU_SLIDERFIX,UpdateType.UPDATE);
+      PluginManager.updateComponent(ComponentName.GPU_FREQMODE,UpdateType.UPDATE);
     }
   }
 

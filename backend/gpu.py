@@ -273,6 +273,7 @@ class GPUManager ():
             return False
 
     def fix_gpuFreqSlider(self):
+        logging.info("修复GPU频率滑块")
         try:
             # 执行 lsb_release 命令并捕获输出
             result = subprocess.run(['/usr/bin/lsb_release', '-is'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
@@ -340,4 +341,4 @@ fi'''.format(path,path)
         return gpuFreqMax
 
 gpuManager = GPUManager()
-gpuManager.fix_gpuFreqSlider()
+# gpuManager.fix_gpuFreqSlider()
