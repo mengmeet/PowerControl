@@ -107,91 +107,91 @@ class Plugin:
             logging.error(e)
             return []
     
-    def set_fanAuto(self, index:int, value:bool):
+    async def set_fanAuto(self, index:int, value:bool):
         try:
             return fanManager.set_fanAuto(index,value)       
         except Exception as e:
             logging.error(e)
             return False
 
-    def set_fanPercent(self,index:int, value:int):
+    async def set_fanPercent(self,index:int, value:int):
         try:
             return fanManager.set_fanPercent(index,value)         
         except Exception as e:
             logging.error(e)
             return False
 
-    def set_gpuAuto(self, value:bool):
+    async def set_gpuAuto(self, value:bool):
         try:
             return gpuManager.set_gpuAuto(value)        
         except Exception as e:
             logging.error(e)
             return False
 
-    def set_gpuAutoFreqRange(self, min: int,max:int):
+    async def set_gpuAutoFreqRange(self, min: int,max:int):
         try:
             return gpuManager.set_gpuAutoFreqRange(min,max)
         except Exception as e:
             logging.error(e)
             return False
 
-    def set_gpuFreq(self, value: int):
+    async def set_gpuFreq(self, value: int):
         try:
             return gpuManager.set_gpuFreqFix(value)
         except Exception as e:
             logging.error(e)
             return False
     
-    def set_gpuFreqRange(self, value: int, value2: int):
+    async def set_gpuFreqRange(self, value: int, value2: int):
         try:
             return gpuManager.set_gpuFreqRange(value,value2)
         except Exception as e:
             logging.error(e)
             return False
 
-    def set_cpuTDP(self, value: int):
+    async def set_cpuTDP(self, value: int):
         try:
             return cpuManager.set_cpuTDP(value)
         except Exception as e:
             logging.error(e)
             return False
 
-    def set_cpuOnline(self, value: int):
+    async def set_cpuOnline(self, value: int):
         try:
             return cpuManager.set_cpuOnline(value)
         except Exception as e:
             logging.error(e)
             return False
 
-    def set_smt(self, value: bool):
+    async def set_smt(self, value: bool):
         try:
             return cpuManager.set_smt(value)
         except Exception as e:
             logging.error(e)
             return False
     
-    def set_cpuBoost(self, value: bool):
+    async def set_cpuBoost(self, value: bool):
         try:
             return cpuManager.set_cpuBoost(value)
         except Exception as e:
             logging.error(e)
             return False
 
-    def set_cpuFreq(self, value: int):
+    async def set_cpuFreq(self, value: int):
         try:
             return cpuManager.set_cpuFreq(value)
         except Exception as e:
             logging.error(e)
             return False
     
-    def receive_suspendEvent(self):
+    async def receive_suspendEvent(self):
         try:
             return True
         except Exception as e:
             logging.error(e)
             return False        
 
-    def fix_gpuFreqSlider(self):
+    async def fix_gpuFreqSlider(self):
         try:
             return gpuManager.fix_gpuFreqSlider()
         except Exception as e:
