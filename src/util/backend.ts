@@ -303,13 +303,13 @@ export class Backend {
       const gpuAutoMinFreq = Settings.appGPUAutoMinFreq();
       const gpuRangeMaxFreq = Settings.appGPURangeMaxFreq();
       const gpuRangeMinFreq = Settings.appGPURangeMinFreq();
-      if (gpuMode == GPUMODE.NOLIMIT && gpuSliderFix) {
+      if (gpuMode == GPUMODE.NOLIMIT ) {
         Backend.applyGPUAuto(false);
         Backend.applyGPUFreq(0);
-      } else if (gpuMode == GPUMODE.FIX && gpuSliderFix) {
+      } else if (gpuMode == GPUMODE.FIX ) {
         Backend.applyGPUAuto(false);
         Backend.applyGPUFreq(gpuFreq);
-      } else if (gpuMode == GPUMODE.NATIVE) {
+      } else if (gpuMode == GPUMODE.NATIVE && gpuSliderFix ) {
         console.log(`原生设置无需处理`)
       } else if (gpuMode == GPUMODE.AUTO) {
         console.log(`开始自动优化GPU频率`)

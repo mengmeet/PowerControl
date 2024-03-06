@@ -181,7 +181,10 @@ class GPUPerformancePatch{
     }
     private applyGPUFreq = ()=>{
         //其他模式时防止原生设置改变频率
-        if(Settings.appGPUMode()==GPUMODE.RANGE||Settings.appGPUMode()==GPUMODE.AUTO){
+        // if(Settings.appGPUMode()==GPUMODE.RANGE||Settings.appGPUMode()==GPUMODE.AUTO){
+        //     return;
+        // }
+        if ( Settings.appGPUMode() != GPUMODE.NATIVE ) {
             return;
         }
         if(GPUPerformanceLevel.ENABLE == this.perfStore?.msgSettingsPerApp?.gpu_performance_level){

@@ -1,4 +1,4 @@
-export enum GPUMODE{
+export enum GPUMODE {
     NATIVE="NATIVE", //系统原生设置
     NOLIMIT="NOLIMIT", //不限制
     FIX="FIX", //固定频率

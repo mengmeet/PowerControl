@@ -25,7 +25,7 @@ export class AppSetting {
   tdpEnable?:boolean
   @JsonProperty()
   gpuMode?:string
-  //@JsonProperty()
+  @JsonProperty()
   gpuFreq?:number
   @JsonProperty()
   gpuAutoMaxFreq?:number
@@ -346,6 +346,7 @@ export class Settings {
       Backend.applySettings(APPLYTYPE.SET_GPUSLIDERFIX);
       PluginManager.updateComponent(ComponentName.GPU_SLIDERFIX,UpdateType.UPDATE);
       PluginManager.updateComponent(ComponentName.GPU_FREQMODE,UpdateType.UPDATE);
+      this._instance.settingChangeEvent.dispatchEvent(new Event("GPU_FREQ_Change"))
     }
   }
 
