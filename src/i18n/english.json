@@ -48,6 +48,6 @@
     "UPDATE_PLUGIN": "Update Plugin To",
     "INSTALLED_VERSION": "Installed Version",
     "LATEST_VERSION": "Latest Version",
-    "GPU_NATIVE_SLIDER_FIX": "GPU Native Slider Fix",
-    "GPU_NATIVE_SLIDER_FIX_DESC": "Enable the native GPU control slider"
+    "GPU_NATIVE_SLIDER": "Native GPU Slider",
+    "GPU_NATIVE_SLIDER_DESC": "Enable the native GPU control slider"
 }

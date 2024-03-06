@@ -5,10 +5,10 @@ import {
   SliderField,
   ToggleField,
 } from "decky-frontend-lib";
-import { useEffect, useState, VFC} from "react";
-import { Settings,Backend, PluginManager,GPUMODE,ComponentName, UpdateType} from "../util";
-import { localizeStrEnum,localizationManager } from "../i18n";
-import {SlowSliderField} from "./SlowSliderField"
+import { useEffect, useState, VFC } from "react";
+import { Settings, Backend, PluginManager, GPUMODE, ComponentName, UpdateType } from "../util";
+import { localizeStrEnum, localizationManager } from "../i18n";
+import { SlowSliderField } from "./SlowSliderField"
 
 //GPUFreq模块
 const GPUFreqComponent: VFC = () => {
@@ -18,9 +18,9 @@ const GPUFreqComponent: VFC = () => {
   };
   //listen Settings
   useEffect(() => {
-    PluginManager.listenUpdateComponent(ComponentName.GPU_FREQFIX,[ComponentName.GPU_FREQFIX],(_ComponentName,updateType)=>{
-      switch(updateType){
-        case(UpdateType.UPDATE):{
+    PluginManager.listenUpdateComponent(ComponentName.GPU_FREQFIX, [ComponentName.GPU_FREQFIX], (_ComponentName, updateType) => {
+      switch (updateType) {
+        case (UpdateType.UPDATE): {
           refresh();
           break;
         }
@@ -56,9 +56,9 @@ const GPURangeComponent: VFC = () => {
   };
   //listen Settings
   useEffect(() => {
-    PluginManager.listenUpdateComponent(ComponentName.GPU_FREQRANGE,[ComponentName.GPU_FREQRANGE],(_ComponentName,updateType)=>{
-      switch(updateType){
-        case(UpdateType.UPDATE):{
+    PluginManager.listenUpdateComponent(ComponentName.GPU_FREQRANGE, [ComponentName.GPU_FREQRANGE], (_ComponentName, updateType) => {
+      switch (updateType) {
+        case (UpdateType.UPDATE): {
           refresh();
           break;
         }
@@ -67,36 +67,36 @@ const GPURangeComponent: VFC = () => {
   }, []);
   return (
     <div>
-    <PanelSectionRow>
-      <SlowSliderField
-        label={localizationManager.getString(localizeStrEnum.GPU_MAX_FREQ)}
-        value={gpuRangeMaxFreq}
-        step={50}
-        max={Backend.data.getGPUFreqMax()}
-        min={Backend.data.getGPUFreqMin()}
-        changeMin={gpuRangeMinFreq}
-        disabled={!Backend.data.HasGPUFreqMax()}
-        showValue={true}
-        onChangeEnd={(value: number) => {
-          Settings.setGPURangeFreq(value,gpuRangeMinFreq);
-        }}
-      />
-    </PanelSectionRow>
-    <PanelSectionRow>
-    <SlowSliderField
-        label={localizationManager.getString(localizeStrEnum.GPU_MIN_FREQ)}
-        value={gpuRangeMinFreq}
-        step={50}
-        max={Backend.data.getGPUFreqMax()}
-        min={Backend.data.getGPUFreqMin()}
-        changeMax={gpuRangeMaxFreq}
-        disabled={!Backend.data.HasGPUFreqMax()}
-        showValue={true}
-        onChangeEnd={(value: number) => {
-          Settings.setGPURangeFreq(gpuRangeMaxFreq,value);
-        }}
-      />
-    </PanelSectionRow>
+      <PanelSectionRow>
+        <SlowSliderField
+          label={localizationManager.getString(localizeStrEnum.GPU_MAX_FREQ)}
+          value={gpuRangeMaxFreq}
+          step={50}
+          max={Backend.data.getGPUFreqMax()}
+          min={Backend.data.getGPUFreqMin()}
+          changeMin={gpuRangeMinFreq}
+          disabled={!Backend.data.HasGPUFreqMax()}
+          showValue={true}
+          onChangeEnd={(value: number) => {
+            Settings.setGPURangeFreq(value, gpuRangeMinFreq);
+          }}
+        />
+      </PanelSectionRow>
+      <PanelSectionRow>
+        <SlowSliderField
+          label={localizationManager.getString(localizeStrEnum.GPU_MIN_FREQ)}
+          value={gpuRangeMinFreq}
+          step={50}
+          max={Backend.data.getGPUFreqMax()}
+          min={Backend.data.getGPUFreqMin()}
+          changeMax={gpuRangeMaxFreq}
+          disabled={!Backend.data.HasGPUFreqMax()}
+          showValue={true}
+          onChangeEnd={(value: number) => {
+            Settings.setGPURangeFreq(gpuRangeMaxFreq, value);
+          }}
+        />
+      </PanelSectionRow>
     </div>
   );
 };
@@ -111,9 +111,9 @@ const GPUAutoComponent: VFC = () => {
   };
   //listen Settings
   useEffect(() => {
-    PluginManager.listenUpdateComponent(ComponentName.GPU_FREQAUTO,[ComponentName.GPU_FREQAUTO],(_ComponentName,updateType)=>{
-      switch(updateType){
-        case(UpdateType.UPDATE):{
+    PluginManager.listenUpdateComponent(ComponentName.GPU_FREQAUTO, [ComponentName.GPU_FREQAUTO], (_ComponentName, updateType) => {
+      switch (updateType) {
+        case (UpdateType.UPDATE): {
           refresh();
           break;
         }
@@ -122,36 +122,36 @@ const GPUAutoComponent: VFC = () => {
   }, []);
   return (
     <div>
-    <PanelSectionRow>
-      <SlowSliderField
-        label={localizationManager.getString(localizeStrEnum.GPU_MAX_FREQ)}
-        value={gpuAutoMaxFreq}
-        step={50}
-        max={Backend.data.getGPUFreqMax()}
-        min={Backend.data.getGPUFreqMin()}
-        changeMin={gpuAutoMinFreq}
-        disabled={!Backend.data.HasGPUFreqMax()}
-        showValue={true}
-        onChangeEnd={(value: number) => {
-          Settings.setGPUAutoMaxFreq(value);
-        }}
-      />
-    </PanelSectionRow>
-    <PanelSectionRow>
-    <SlowSliderField
-      label={localizationManager.getString(localizeStrEnum.GPU_MIN_FREQ)}
-      value={gpuAutoMinFreq}
-      step={50}
-      max={Backend.data.getGPUFreqMax()}
-      min={Backend.data.getGPUFreqMin()}
-      changeMax={gpuAutoMaxFreq}
-      disabled={!Backend.data.HasGPUFreqMax()}
-      showValue={true}
-      onChangeEnd={(value: number) => {
-        Settings.setGPUAutoMinFreq(value);
-      }}
-    />
-    </PanelSectionRow>
+      <PanelSectionRow>
+        <SlowSliderField
+          label={localizationManager.getString(localizeStrEnum.GPU_MAX_FREQ)}
+          value={gpuAutoMaxFreq}
+          step={50}
+          max={Backend.data.getGPUFreqMax()}
+          min={Backend.data.getGPUFreqMin()}
+          changeMin={gpuAutoMinFreq}
+          disabled={!Backend.data.HasGPUFreqMax()}
+          showValue={true}
+          onChangeEnd={(value: number) => {
+            Settings.setGPUAutoMaxFreq(value);
+          }}
+        />
+      </PanelSectionRow>
+      <PanelSectionRow>
+        <SlowSliderField
+          label={localizationManager.getString(localizeStrEnum.GPU_MIN_FREQ)}
+          value={gpuAutoMinFreq}
+          step={50}
+          max={Backend.data.getGPUFreqMax()}
+          min={Backend.data.getGPUFreqMin()}
+          changeMax={gpuAutoMaxFreq}
+          disabled={!Backend.data.HasGPUFreqMax()}
+          showValue={true}
+          onChangeEnd={(value: number) => {
+            Settings.setGPUAutoMinFreq(value);
+          }}
+        />
+      </PanelSectionRow>
     </div>
   );
 };
@@ -217,13 +217,13 @@ const GPUModeComponent: VFC = () => {
 
 
 const GPUModeSliderComponent: VFC = () => {
-  const modesWithNative : GPUMODE[] = [GPUMODE.NATIVE, GPUMODE.RANGE, GPUMODE.AUTO];
+  const modesWithNative: GPUMODE[] = [GPUMODE.NATIVE, GPUMODE.RANGE, GPUMODE.AUTO];
   const localizedModesWithNative = [
     localizationManager.getString(localizeStrEnum.NATIVE_FREQ),
     localizationManager.getString(localizeStrEnum.RANGE_FREQ),
     localizationManager.getString(localizeStrEnum.AUTO_FREQ)
   ]
-  const modesLegacy : GPUMODE[] = [GPUMODE.NOLIMIT, GPUMODE.FIX, GPUMODE.RANGE, GPUMODE.AUTO];
+  const modesLegacy: GPUMODE[] = [GPUMODE.NOLIMIT, GPUMODE.FIX, GPUMODE.RANGE, GPUMODE.AUTO];
   const localizedModes = [
     localizationManager.getString(localizeStrEnum.UNLIMITED),
     localizationManager.getString(localizeStrEnum.FIXED_FREQ),
@@ -231,16 +231,17 @@ const GPUModeSliderComponent: VFC = () => {
     localizationManager.getString(localizeStrEnum.AUTO_FREQ)
   ]
 
-  const notchLabelsWithNative : NotchLabel[] = modesWithNative.map((mode: GPUMODE, index) => {
-    return {
-      notchIndex: index,
-      label: localizedModesWithNative[index],
-      value: modesWithNative.indexOf(mode),
+  const notchLabelsWithNative: NotchLabel[] = modesWithNative.map(
+    (mode: GPUMODE, index) => {
+      return {
+        notchIndex: index,
+        label: localizedModesWithNative[index],
+        value: modesWithNative.indexOf(mode),
+      }
     }
-  }
   );
 
-  const notchLabelsLegacy : NotchLabel[] = modesLegacy.map((mode, index) => {
+  const notchLabelsLegacy: NotchLabel[] = modesLegacy.map((mode, index) => {
     return {
       notchIndex: index,
       label: localizedModes[index],
@@ -249,16 +250,20 @@ const GPUModeSliderComponent: VFC = () => {
   }
   );
 
+  const [gpuSliderFix, setGPUSliderFix] = useState<boolean>(Settings.appGPUSliderFix());
   const [gpuMode, setGPUMode] = useState<string>(Settings.appGPUMode());
+
   //GPU模式设置
   const refresh = () => {
     setGPUMode(Settings.appGPUMode());
+    setGPUSliderFix(Settings.appGPUSliderFix());
   };
+
   //listen Settings
   useEffect(() => {
-    PluginManager.listenUpdateComponent(ComponentName.GPU_FREQMODE,[ComponentName.GPU_FREQMODE],(_ComponentName,updateType)=>{
-      switch(updateType){
-        case(UpdateType.UPDATE):{
+    PluginManager.listenUpdateComponent(ComponentName.GPU_FREQMODE, [ComponentName.GPU_FREQMODE], (_ComponentName, updateType) => {
+      switch (updateType) {
+        case (UpdateType.UPDATE): {
           refresh();
           break;
         }
@@ -266,82 +271,59 @@ const GPUModeSliderComponent: VFC = () => {
     })
   }, []);
 
-  const gpuSliderFix = Settings.appGPUSliderFix();
   const notchLabels = gpuSliderFix ? notchLabelsWithNative : notchLabelsLegacy;
   const modes = gpuSliderFix ? modesWithNative : modesLegacy;
 
   return (
-        <div>
-          <PanelSectionRow>
-            <SliderField
-            label={localizationManager.getString(localizeStrEnum.GPU_FREQMODE)}
-            value={modes.findIndex((mode) => mode == gpuMode)}
-            step={1}
-            max={notchLabels.length - 1}
-            min={0}
-            notchCount={notchLabels.length}
-            notchLabels={notchLabels}
-            onChange={(value: number) => {
-              const mode = gpuSliderFix ? modesWithNative[value] : modes[value];
-              Settings.setGPUMode(mode);
-            }}
-          />
-          {gpuMode==GPUMODE.FIX&&<GPUFreqComponent/>}
-          {gpuMode==GPUMODE.RANGE&&<GPURangeComponent/>}
-          {gpuMode==GPUMODE.AUTO&&<GPUAutoComponent/>}
-          
-          </PanelSectionRow>
-        </div>
-    );
-};
-
-
-const GPUSliderFixComponent:VFC = () =>{
-  const [gpuSliderFix, setGPUSliderFix] = useState<boolean>(Settings.appGPUSliderFix());
-  const refresh = () => {
-    setGPUSliderFix(Settings.appGPUSliderFix());
-  };
-
-  useEffect(() => {
-    PluginManager.listenUpdateComponent(ComponentName.GPU_SLIDERFIX,[ComponentName.GPU_SLIDERFIX, ComponentName.GPU_FREQMODE],(_ComponentName,updateType)=>{
-      switch(updateType){
-        case(UpdateType.UPDATE):{
-          refresh();
-          break;
-        }
-      }
-    })
-  }, []);
-  return (
     <div>
       <PanelSectionRow>
         <ToggleField
-          label={localizationManager.getString(localizeStrEnum.GPU_NATIVE_SLIDER_FIX)}
-          description={localizationManager.getString(localizeStrEnum.GPU_NATIVE_SLIDER_FIX_DESC)}
+          label={localizationManager.getString(localizeStrEnum.GPU_NATIVE_SLIDER)}
+          description={localizationManager.getString(localizeStrEnum.GPU_NATIVE_SLIDER_DESC)}
           checked={gpuSliderFix}
           onChange={(fix) => {
             Settings.setGPUSliderFix(fix);
           }}
         />
       </PanelSectionRow>
-    </div>
-);
-}
+      <PanelSectionRow>
+        <SliderField
+          label={localizationManager.getString(localizeStrEnum.GPU_FREQMODE)}
+          value={modes.findIndex((mode) => mode == gpuMode)}
+          step={1}
+          max={notchLabels.length - 1}
+          min={0}
+          notchCount={notchLabels.length}
+          notchLabels={notchLabels}
+          onChange={(value: number) => {
+            const mode = gpuSliderFix ? modesWithNative[value] : modes[value];
+            Settings.setGPUMode(mode);
+          }}
+        />
+        {gpuMode == GPUMODE.FIX && <GPUFreqComponent />}
+        {gpuMode == GPUMODE.RANGE && <GPURangeComponent />}
+        {gpuMode == GPUMODE.AUTO && <GPUAutoComponent />}
 
-export function GPUComponent(){
-  const [show,setShow] = useState<boolean>(Settings.ensureEnable());
-  const hide = (ishide:boolean) => {
+      </PanelSectionRow>
+    </div>
+  );
+};
+
+
+export function GPUComponent() {
+  const [show, setShow] = useState<boolean>(Settings.ensureEnable());
+  const hide = (ishide: boolean) => {
     setShow(!ishide);
   };
   //listen Settings
   useEffect(() => {
-    PluginManager.listenUpdateComponent(ComponentName.GPU_ALL,[ComponentName.GPU_ALL],(_ComponentName,updateType)=>{
-      switch(updateType){
-        case(UpdateType.HIDE):{
+    PluginManager.listenUpdateComponent(ComponentName.GPU_ALL, [ComponentName.GPU_ALL], (_ComponentName, updateType) => {
+      switch (updateType) {
+        case (UpdateType.HIDE): {
           hide(true);
           break;
         }
-        case(UpdateType.SHOW):{
+        case (UpdateType.SHOW): {
           hide(false);
           break;
         }
@@ -350,9 +332,8 @@ export function GPUComponent(){
   }, []);
   return (
     <div>
-      {show&&<PanelSection title="GPU">
-        <GPUSliderFixComponent/>
-        <GPUModeSliderComponent/>
+      {show && <PanelSection title="GPU">
+        <GPUModeSliderComponent />
       </PanelSection>}
     </div>
   );
