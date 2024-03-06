@@ -263,6 +263,11 @@ export class Backend {
     await this.serverAPI!.callPluginMethod("update_latest", {});
   }
 
+  public static applyGPUSliderFix(){
+    console.log("applyGPUSliderFix");
+    this.serverAPI!.callPluginMethod("fix_gpuFreqSlider", {});
+  }
+
   public static applySettings = (applyTarget: string) => {
     if (!Settings.ensureEnable()) {
       Backend.resetSettings();
@@ -292,13 +297,21 @@ export class Backend {
     }
     if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_GPUMODE) {
       const gpuMode = Settings.appGPUMode();
+      const gpuFreq = Settings.appGPUFreq();
+      const gpuSliderFix = Settings.appGPUSliderFix();
       const gpuAutoMaxFreq = Settings.appGPUAutoMaxFreq();
       const gpuAutoMinFreq = Settings.appGPUAutoMinFreq();
       const gpuRangeMaxFreq = Settings.appGPURangeMaxFreq();
       const gpuRangeMinFreq = Settings.appGPURangeMinFreq();
-      if (gpuMode == GPUMODE.NATIVE) {
+      if (gpuMode == GPUMODE.NOLIMIT && gpuSliderFix) {
+        Backend.applyGPUAuto(false);
+        Backend.applyGPUFreq(0);
+      } else if (gpuMode == GPUMODE.FIX && gpuSliderFix) {
+        Backend.applyGPUAuto(false);
+        Backend.applyGPUFreq(gpuFreq);
+      } else if (gpuMode == GPUMODE.NATIVE) {
         console.log(`原生设置无需处理`)
-      }else if (gpuMode == GPUMODE.AUTO) {
+      } else if (gpuMode == GPUMODE.AUTO) {
         console.log(`开始自动优化GPU频率`)
         Settings.setTDPEnable(false);
         Settings.setCpuboost(false);
@@ -313,6 +326,14 @@ export class Backend {
         Backend.applyGPUFreq(0);
       }
     }
+
+    if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_GPUSLIDERFIX) {
+      const gpuSlideFix = Settings.appGPUSliderFix();
+      if (gpuSlideFix) {
+        Backend.applyGPUSliderFix();
+      }
+    }
+
     /*
     if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_FANMODE){
       if(!FanControl.fanIsEnable){

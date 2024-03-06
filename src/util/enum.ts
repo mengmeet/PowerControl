@@ -1,7 +1,9 @@
 export enum GPUMODE{
-    NATIVE=0, //系统原生设置
-    RANGE=1, //系统调度
-    AUTO=2,  //自动频率
+    NATIVE="NATIVE", //系统原生设置
+    NOLIMIT="NOLIMIT", //不限制
+    FIX="FIX", //固定频率
+    RANGE="RANGE", //系统调度
+    AUTO="AUTO",  //自动频率
 }
 export enum FANMODE{
     NOCONTROL=0, //不控制
@@ -25,6 +27,7 @@ export enum APPLYTYPE{
     SET_GPUMODE = "SET_GPUMODE",
     SET_FANMODE = "SET_FANMODE",
     SET_FANRPM = "SET_FANRPM",
+    SET_GPUSLIDERFIX = "SET_GPUSLIDEFIX",
 }
 
 export enum ComponentName{
@@ -40,6 +43,7 @@ export enum ComponentName{
     GPU_FREQFIX="GPU_FREQFIX",
     GPU_FREQRANGE="GPU_FREQRANGE",
     GPU_FREQAUTO="GPU_FREQAUTO",
+    GPU_SLIDERFIX="GPU_SLIDERFIX",
     FAN_ALL="FAN_ALL",
     FAN_RPM="FAN_RPM",
     FAN_DISPLAY="FAN_DISPLAY"
