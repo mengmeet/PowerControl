@@ -48,6 +48,6 @@
     "UPDATE_PLUGIN": "更新插件到",
     "INSTALLED_VERSION": "当前版本",
     "LATEST_VERSION": "最新版本",
-    "GPU_NATIVE_SLIDER_FIX": "原生GPU控制条修复",
-    "GPU_NATIVE_SLIDER_FIX_DESC": "修复并启用原生控制条"
+    "GPU_NATIVE_SLIDER": "原生GPU控制条",
+    "GPU_NATIVE_SLIDER_DESC": "修复并启用原生控制条"
 }
