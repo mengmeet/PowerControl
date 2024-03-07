@@ -1,9 +1,18 @@
-import { JsonObject, JsonProperty, JsonSerializer } from 'typescript-json-serializer';
-import { APPLYTYPE, ComponentName, FANMODE, GPUMODE, UpdateType } from './enum';
-import { Backend } from './backend';
-import { fanPosition } from './position';
-import { ACStateManager, DEFAULT_APP, PluginManager, RunningApps } from './pluginMain';
-import { ACState } from './steamClient';
+import {
+  JsonObject,
+  JsonProperty,
+  JsonSerializer,
+} from "typescript-json-serializer";
+import { APPLYTYPE, ComponentName, FANMODE, GPUMODE, UpdateType } from "./enum";
+import { Backend } from "./backend";
+import { fanPosition } from "./position";
+import {
+  ACStateManager,
+  DEFAULT_APP,
+  PluginManager,
+  RunningApps,
+} from "./pluginMain";
+import { ACState } from "./steamClient";
 
 const SETTINGS_KEY = "PowerControl";
 const serializer = new JsonSerializer();
@@ -12,8 +21,6 @@ const serializer = new JsonSerializer();
 export class AppSetting {
   // @JsonProperty()
   // overwrite?: boolean;
-  // @JsonProperty()
-  // acStateOverwrite?: boolean;
   @JsonProperty()
   smt?: boolean;
   @JsonProperty()
@@ -23,126 +30,146 @@ export class AppSetting {
   @JsonProperty()
   cpuboost?: boolean;
   @JsonProperty()
-  tdp?:number;
+  tdp?: number;
   @JsonProperty()
-  tdpEnable?:boolean
+  tdpEnable?: boolean;
   @JsonProperty()
-  gpuMode?:string
+  gpuMode?: string;
   @JsonProperty()
-  gpuFreq?:number
+  gpuFreq?: number;
   @JsonProperty()
-  gpuAutoMaxFreq?:number
+  gpuAutoMaxFreq?: number;
   @JsonProperty()
-  gpuAutoMinFreq?:number
+  gpuAutoMinFreq?: number;
   @JsonProperty()
-  gpuRangeMaxFreq?:number
+  gpuRangeMaxFreq?: number;
   @JsonProperty()
-  gpuRangeMinFreq?:number
+  gpuRangeMinFreq?: number;
   @JsonProperty()
-  fanProfileNameList?:string[]|undefined[];
+  fanProfileNameList?: string[] | undefined[];
   @JsonProperty()
-  gpuSliderFix?:boolean;
-  constructor(){
+  gpuSliderFix?: boolean;
+  constructor() {
     // this.overwrite=false;
-    // this.acStateOverwrite=false;
-    this.smt=true;
-    this.isSupportSMT=Backend.data?.HasSupportSMT()?Backend.data?.getSupportSMT():true;
-    this.cpuNum=Backend.data?.HasCpuMaxNum()?Backend.data?.getCpuMaxNum():4;
-    this.cpuboost=false;
-    //this.tdpEnable=true;
-    //this.tdp=Backend.data?.HasTDPMax()?Math.trunc(Backend.data?.getTDPMax()/2):15;
-    this.gpuMode=GPUMODE.NATIVE;
-    this.gpuSliderFix=false;
+    this.smt = true;
+    this.isSupportSMT = Backend.data?.HasSupportSMT()
+      ? Backend.data?.getSupportSMT()
+      : true;
+    this.cpuNum = Backend.data?.HasCpuMaxNum()
+      ? Backend.data?.getCpuMaxNum()
+      : 4;
+    this.cpuboost = false;
+    this.tdpEnable = true;
+    this.tdp = Backend.data?.HasTDPMax()
+      ? Math.trunc(Backend.data?.getTDPMax() / 2)
+      : 15;
+    this.gpuMode = GPUMODE.NATIVE;
+    this.gpuSliderFix = false;
     //this.gpuFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
-    this.gpuAutoMaxFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
-    this.gpuAutoMinFreq=Backend.data?.HasGPUFreqMin()?Backend.data.getGPUFreqMin():200;
-    this.gpuRangeMaxFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
-    this.gpuRangeMinFreq=Backend.data?.HasGPUFreqMin()?Backend.data.getGPUFreqMin():200;
-    this.fanProfileNameList=[]
+    this.gpuAutoMaxFreq = Backend.data?.HasGPUFreqMax()
+      ? Backend.data.getGPUFreqMax()
+      : 1600;
+    this.gpuAutoMinFreq = Backend.data?.HasGPUFreqMin()
+      ? Backend.data.getGPUFreqMin()
+      : 200;
+    this.gpuRangeMaxFreq = Backend.data?.HasGPUFreqMax()
+      ? Backend.data.getGPUFreqMax()
+      : 1600;
+    this.gpuRangeMinFreq = Backend.data?.HasGPUFreqMin()
+      ? Backend.data.getGPUFreqMin()
+      : 200;
+    this.fanProfileNameList = [];
   }
-  deepCopy(copyTarget:AppSetting){
+  deepCopy(copyTarget: AppSetting) {
     // this.overwrite=copyTarget.overwrite;
-    // this.acStateOverwrite=copyTarget.acStateOverwrite;
-    this.smt=copyTarget.smt;
-    this.isSupportSMT=copyTarget.isSupportSMT;
-    this.cpuNum=copyTarget.cpuNum;
-    this.cpuboost=copyTarget.cpuboost;
-    //this.tdpEnable=copyTarget.tdpEnable;
-    //this.tdp=copyTarget.tdp;
-    this.gpuMode=copyTarget.gpuMode;
-    this.gpuFreq=copyTarget.gpuFreq;
-    this.gpuSliderFix=copyTarget.gpuSliderFix;
-    this.gpuAutoMaxFreq=copyTarget.gpuAutoMaxFreq;
-    this.gpuAutoMinFreq=copyTarget.gpuAutoMinFreq;
-    this.gpuRangeMaxFreq=copyTarget.gpuRangeMaxFreq;
-    this.gpuRangeMinFreq=copyTarget.gpuAutoMinFreq;
-    this.fanProfileNameList=copyTarget.fanProfileNameList?.slice();
+    this.smt = copyTarget.smt;
+    this.isSupportSMT = copyTarget.isSupportSMT;
+    this.cpuNum = copyTarget.cpuNum;
+    this.cpuboost = copyTarget.cpuboost;
+    this.tdpEnable = copyTarget.tdpEnable;
+    this.tdp = copyTarget.tdp;
+    this.gpuMode = copyTarget.gpuMode;
+    this.gpuFreq = copyTarget.gpuFreq;
+    this.gpuSliderFix = copyTarget.gpuSliderFix;
+    this.gpuAutoMaxFreq = copyTarget.gpuAutoMaxFreq;
+    this.gpuAutoMinFreq = copyTarget.gpuAutoMinFreq;
+    this.gpuRangeMaxFreq = copyTarget.gpuRangeMaxFreq;
+    this.gpuRangeMinFreq = copyTarget.gpuAutoMinFreq;
+    this.fanProfileNameList = copyTarget.fanProfileNameList?.slice();
   }
 }
 
 @JsonObject()
-export class FanSetting{
+export class FanSetting {
   @JsonProperty()
-  snapToGrid?:boolean = false;
+  snapToGrid?: boolean = false;
   @JsonProperty()
-  fanMode?:number = FANMODE.NOCONTROL
+  fanMode?: number = FANMODE.NOCONTROL;
   @JsonProperty()
-  fixSpeed?:number = 50;
-  @JsonProperty({type:fanPosition})
-  curvePoints?:fanPosition[] = []
-  constructor(snapToGrid:boolean,fanMode:number,fixSpeed:number,curvePoints:fanPosition[]){
-    this.snapToGrid=snapToGrid;
-    this.fanMode=fanMode;
-    this.fixSpeed=fixSpeed;
+  fixSpeed?: number = 50;
+  @JsonProperty({ type: fanPosition })
+  curvePoints?: fanPosition[] = [];
+  constructor(
+    snapToGrid: boolean,
+    fanMode: number,
+    fixSpeed: number,
+    curvePoints: fanPosition[]
+  ) {
+    this.snapToGrid = snapToGrid;
+    this.fanMode = fanMode;
+    this.fixSpeed = fixSpeed;
     this.curvePoints = curvePoints;
   }
 }
 
 @JsonObject()
 export class AppSettingData {
+  // 电源模式覆盖， app配置
   @JsonProperty()
   acStateOverwrite?: boolean;
+  // 默认配置
   @JsonProperty()
   public defaultSettig: AppSetting = new AppSetting();
+  // 电源模式配置
   @JsonProperty()
   public acStting: AppSetting = new AppSetting();
+  // 电池模式配置
   @JsonProperty()
   public batSetting: AppSetting = new AppSetting();
 }
 
 @JsonObject()
 export class Settings {
-  private static _instance:Settings = new Settings();
+  private static _instance: Settings = new Settings();
+
   @JsonProperty()
   public enabled: boolean = true;
 
+  // 依据 appID 覆盖配置，作为全局开关而不是单个配置中的开关
   @JsonProperty()
   overwrite?: boolean;
 
-  // @JsonProperty({isDictionary:true, type: AppSetting })
-  // public perApp: { [appId: string]: AppSetting } = {};
-
-  @JsonProperty({isDictionary:true, type: AppSettingData })
+  @JsonProperty({ isDictionary: true, type: AppSettingData })
   public perApp: { [appId: string]: AppSettingData } = {};
 
-  @JsonProperty({isDictionary:true, type: FanSetting })
+  @JsonProperty({ isDictionary: true, type: FanSetting })
   public fanSettings: { [fanProfile: string]: FanSetting } = {};
 
   public settingChangeEvent = new EventTarget();
   //插件是否开启
-  public static ensureEnable():boolean{
+  public static ensureEnable(): boolean {
     return this._instance.enabled;
   }
 
   //设置开启关闭
-  public static setEnable(enabled:boolean){
-    if(this._instance.enabled != enabled){
+  public static setEnable(enabled: boolean) {
+    if (this._instance.enabled != enabled) {
       this._instance.enabled = enabled;
       Settings.saveSettingsToLocalStorage();
-      if(enabled){
+      if (enabled) {
         Backend.applySettings(APPLYTYPE.SET_ALL);
         PluginManager.updateAllComponent(UpdateType.SHOW);
-      }else{
+      } else {
         Backend.resetSettings();
         PluginManager.updateAllComponent(UpdateType.HIDE);
       }
@@ -154,10 +181,6 @@ export class Settings {
   public static ensureApp(): AppSetting {
     const appId = RunningApps.active();
 
-    // const acState : string = `${this._instance.perApp[appId].acStateOverwrite ? ACStateManager.getACState() : ""}`;
-    // console.log(`appId = ${appId}, acState = ${acState}`)
-    // const key = `${appId}${acState}`;
-
     //没有配置文件的时候新生成一个
     if (!(appId in this._instance.perApp)) {
       this._instance.perApp[appId].defaultSettig = new AppSetting();
@@ -166,63 +189,32 @@ export class Settings {
 
       // 新生成后如果有默认配置文件，则拷贝默认配置文件
       if (DEFAULT_APP in this._instance.perApp) {
-        this._instance.perApp[appId].defaultSettig.deepCopy(this._instance.perApp[DEFAULT_APP].defaultSettig);
-        this._instance.perApp[appId].acStting.deepCopy(this._instance.perApp[DEFAULT_APP].acStting);
-        this._instance.perApp[appId].batSetting.deepCopy(this._instance.perApp[DEFAULT_APP].batSetting);
+        this._instance.perApp[appId].defaultSettig.deepCopy(
+          this._instance.perApp[DEFAULT_APP].defaultSettig
+        );
+        this._instance.perApp[appId].acStting.deepCopy(
+          this._instance.perApp[DEFAULT_APP].acStting
+        );
+        this._instance.perApp[appId].batSetting.deepCopy(
+          this._instance.perApp[DEFAULT_APP].batSetting
+        );
       }
     }
 
-    // if (!(appId in this._instance.preAppWithAcMode)) {
-    //   this._instance.preAppWithAcMode[appId] = new AppSetting();
-
-    //   if (DEFAULT_APP in this._instance.preAppWithAcMode) {
-    //     this._instance.preAppWithAcMode[appId].deepCopy(this._instance.preAppWithAcMode[DEFAULT_APP]);
-    //   }
-    // }
-
-    // if (!(appId in this._instance.preAppWithBatMode)) {
-    //   this._instance.preAppWithBatMode[appId] = new AppSetting();
-
-    //   if (DEFAULT_APP in this._instance.preAppWithBatMode) {
-    //     this._instance.preAppWithBatMode[appId].deepCopy(this._instance.preAppWithBatMode[DEFAULT_APP]);
-    //   }
-    // }
-
-    // if (!this._instance.perApp[appId].overwrite) {
-    //   if (ACStateManager.getACState() === ACState.Connected) {
-    //     return this._instance.perApp[DEFAULT_APP].acStting;
-    //   } else {
-    //     return this._instance.perApp[DEFAULT_APP].batSetting;
-    //   }
-    // } else {
-    //   if (ACStateManager.getACState() === ACState.Connected) {
-    //     return this._instance.perApp[appId].acStting;
-    //   } else {
-    //     return this._instance.perApp[appId].batSetting;
-    //   }
-    // }
-
+    // 根据是否覆盖确定配置 id
     const _appId = this._instance.overwrite ? appId : DEFAULT_APP;
 
+    // 不开启电源模式覆盖时，返回 id 默认配置
+    if (!this._instance.perApp[_appId].acStateOverwrite) {
+      return this._instance.perApp[_appId].defaultSettig;
+    }
+
+    // 根据电源模式返回 id 对应的配置
     if (ACStateManager.getACState() === ACState.Connected) {
       return this._instance.perApp[_appId].acStting;
     } else {
       return this._instance.perApp[_appId].batSetting;
     }
-
-    // if (ACStateManager.getACState() === ACState.Connected) {
-
-    // } else {
-
-    // }
-
-    // //如果未开启覆盖，则使用默认配置文件
-    // if(!this._instance.perApp[appId].overwrite){
-    //   return this._instance.perApp[DEFAULT_APP];
-    // }
-
-    // //使用appID配置文件
-    // return this._instance.perApp[appId];
   }
 
   // static ensureAppID():string{
@@ -241,24 +233,24 @@ export class Settings {
   //   return appId;
   // }
 
-  static ensureAppID() : string {
+  static ensureAppID(): string {
     return this._instance.overwrite ? RunningApps.active() : DEFAULT_APP;
   }
 
-  static appOverWrite():boolean {
-    if(RunningApps.active()==DEFAULT_APP){
+  static appOverWrite(): boolean {
+    if (RunningApps.active() == DEFAULT_APP) {
       return false;
     }
     // return Settings.ensureApp().overwrite!!;
     return this._instance.overwrite ?? false;
   }
-  static setOverWrite(overwrite:boolean){
-    if(RunningApps.active()!=DEFAULT_APP&&Settings.appOverWrite()!=overwrite){
+  static setOverWrite(overwrite: boolean) {
+    if (
+      RunningApps.active() != DEFAULT_APP &&
+      Settings.appOverWrite() != overwrite
+    ) {
       // Settings._instance.perApp[RunningApps.active()].overwrite=overwrite;
-      this._instance.overwrite=overwrite;
-
-      // Settings._instance.preAppWithAcMode[RunningApps.active()].overwrite=overwrite;
-      // Settings._instance.preAppWithBatMode[RunningApps.active()].overwrite=overwrite;
+      this._instance.overwrite = overwrite;
 
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_ALL);
@@ -266,15 +258,19 @@ export class Settings {
     }
   }
 
-  static appACStateOverWrite():boolean {
-    // return Settings.ensureApp().acStateOverwrite!!;
-    return this._instance.perApp[Settings.ensureAppID()].acStateOverwrite ?? false;
-
+  static appACStateOverWrite(): boolean {
+    return (
+      this._instance.perApp[Settings.ensureAppID()].acStateOverwrite ?? false
+    );
   }
 
-  static setACStateOverWrite(acStateOverwrite:boolean) {
-    if (this._instance.perApp[Settings.ensureAppID()].acStateOverwrite != acStateOverwrite) {
-      this._instance.perApp[Settings.ensureAppID()].acStateOverwrite = acStateOverwrite;
+  static setACStateOverWrite(acStateOverwrite: boolean) {
+    if (
+      this._instance.perApp[Settings.ensureAppID()].acStateOverwrite !=
+      acStateOverwrite
+    ) {
+      this._instance.perApp[Settings.ensureAppID()].acStateOverwrite =
+        acStateOverwrite;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_ALL);
       PluginManager.updateAllComponent(UpdateType.UPDATE);
@@ -285,12 +281,12 @@ export class Settings {
     return Settings.ensureApp().smt!!;
   }
 
-  static setSmt(smt:boolean) {
-    if(Settings.ensureApp().smt!=smt){
-      Settings.ensureApp().smt=smt;
+  static setSmt(smt: boolean) {
+    if (Settings.ensureApp().smt != smt) {
+      Settings.ensureApp().smt = smt;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_CPUCORE);
-      PluginManager.updateComponent(ComponentName.CPU_SMT,UpdateType.UPDATE);
+      PluginManager.updateComponent(ComponentName.CPU_SMT, UpdateType.UPDATE);
     }
   }
 
@@ -298,24 +294,24 @@ export class Settings {
     return Settings.ensureApp().isSupportSMT!!;
   }
 
-  static setIsSupportSMT(isSupportSMT:boolean) {
-    if(Settings.ensureApp().isSupportSMT!=isSupportSMT){
-      Settings.ensureApp().isSupportSMT=isSupportSMT;
+  static setIsSupportSMT(isSupportSMT: boolean) {
+    if (Settings.ensureApp().isSupportSMT != isSupportSMT) {
+      Settings.ensureApp().isSupportSMT = isSupportSMT;
       Settings.saveSettingsToLocalStorage();
-      PluginManager.updateComponent(ComponentName.CPU_SMT,UpdateType.UPDATE);
+      PluginManager.updateComponent(ComponentName.CPU_SMT, UpdateType.UPDATE);
     }
   }
-  
+
   static appCpuNum() {
     return Settings.ensureApp().cpuNum!!;
   }
 
-  static setCpuNum(cpuNum:number) {
-    if(Settings.ensureApp().cpuNum!=cpuNum){
-      Settings.ensureApp().cpuNum=cpuNum;
+  static setCpuNum(cpuNum: number) {
+    if (Settings.ensureApp().cpuNum != cpuNum) {
+      Settings.ensureApp().cpuNum = cpuNum;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_CPUCORE);
-      PluginManager.updateComponent(ComponentName.CPU_NUM,UpdateType.UPDATE);
+      PluginManager.updateComponent(ComponentName.CPU_NUM, UpdateType.UPDATE);
     }
   }
 
@@ -323,12 +319,12 @@ export class Settings {
     return Settings.ensureApp().cpuboost!!;
   }
 
-  static setCpuboost(cpuboost:boolean) {
-    if(Settings.ensureApp().cpuboost!=cpuboost){
-      Settings.ensureApp().cpuboost=cpuboost;
+  static setCpuboost(cpuboost: boolean) {
+    if (Settings.ensureApp().cpuboost != cpuboost) {
+      Settings.ensureApp().cpuboost = cpuboost;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_CPUBOOST);
-      PluginManager.updateComponent(ComponentName.CPU_BOOST,UpdateType.UPDATE);
+      PluginManager.updateComponent(ComponentName.CPU_BOOST, UpdateType.UPDATE);
     }
   }
 
@@ -336,110 +332,149 @@ export class Settings {
     return Settings.ensureApp().tdp!!;
   }
 
-  static setTDP(tdp:number) {
-    if(Settings.ensureApp().tdp!=tdp){
-      Settings.ensureApp().tdp=tdp;
+  static setTDP(tdp: number) {
+    if (Settings.ensureApp().tdp != tdp) {
+      Settings.ensureApp().tdp = tdp;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_TDP);
-      PluginManager.updateComponent(ComponentName.CPU_TDP,UpdateType.UPDATE);
+      PluginManager.updateComponent(ComponentName.CPU_TDP, UpdateType.UPDATE);
     }
   }
 
-  static appTDPEnable(){
+  static appTDPEnable() {
     return Settings.ensureApp().tdpEnable!!;
   }
 
-  static setTDPEnable(tdpEnable:boolean) {
-    if(Settings.ensureApp().tdpEnable!=tdpEnable){
-      Settings.ensureApp().tdpEnable=tdpEnable;
+  static setTDPEnable(tdpEnable: boolean) {
+    if (Settings.ensureApp().tdpEnable != tdpEnable) {
+      Settings.ensureApp().tdpEnable = tdpEnable;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_TDP);
-      PluginManager.updateComponent(ComponentName.CPU_TDP,UpdateType.UPDATE);
+      PluginManager.updateComponent(ComponentName.CPU_TDP, UpdateType.UPDATE);
     }
   }
 
-  static appGPUMode(){
+  static saveTDPFromQAM(tdp: number, tdpEnable: boolean) {
+    // 仅保存，不应用。避免和qam监听中的应用逻辑冲突，或者重复应用
+    if (
+      Settings.ensureApp().tdp != tdp ||
+      Settings.ensureApp().tdpEnable != tdpEnable
+    ) {
+      console.log("saveTDP", tdp, tdpEnable);
+      Settings.ensureApp().tdp = tdp;
+      Settings.ensureApp().tdpEnable = tdpEnable;
+      Settings.saveSettingsToLocalStorage();
+    }
+  }
+
+  static appGPUMode() {
     return Settings.ensureApp().gpuMode!!;
   }
 
   //写入gpu模式配置并应用
-  static setGPUMode(gpuMode:GPUMODE){
-    if(Settings.ensureApp().gpuMode!=gpuMode){
-      Settings.ensureApp().gpuMode=gpuMode;
+  static setGPUMode(gpuMode: GPUMODE) {
+    if (Settings.ensureApp().gpuMode != gpuMode) {
+      Settings.ensureApp().gpuMode = gpuMode;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
-      PluginManager.updateComponent(ComponentName.GPU_FREQMODE,UpdateType.UPDATE);
-      this._instance.settingChangeEvent.dispatchEvent(new Event("GPU_FREQ_Change"))
+      PluginManager.updateComponent(
+        ComponentName.GPU_FREQMODE,
+        UpdateType.UPDATE
+      );
+      this._instance.settingChangeEvent.dispatchEvent(
+        new Event("GPU_FREQ_Change")
+      );
     }
   }
 
   //监听gpu模式变化
-  static addGpuModeEventListener(callback:()=>void){
-    this._instance.settingChangeEvent.addEventListener("GPU_FREQ_Change",callback)
+  static addGpuModeEventListener(callback: () => void) {
+    this._instance.settingChangeEvent.addEventListener(
+      "GPU_FREQ_Change",
+      callback
+    );
   }
 
   static removeGpuModeEventListener(callback: () => void) {
-    this._instance.settingChangeEvent.removeEventListener("GPU_FREQ_Change", callback);
+    this._instance.settingChangeEvent.removeEventListener(
+      "GPU_FREQ_Change",
+      callback
+    );
   }
-  
-  static appGPUFreq(){
+
+  static appGPUFreq() {
     return Settings.ensureApp().gpuFreq!!;
   }
 
   //写入gpu固定频率并配置
-  static setGPUFreq(gpuFreq:number){
-    if(Settings.ensureApp().gpuFreq!=gpuFreq){
-      Settings.ensureApp().gpuFreq=gpuFreq;
+  static setGPUFreq(gpuFreq: number) {
+    if (Settings.ensureApp().gpuFreq != gpuFreq) {
+      Settings.ensureApp().gpuFreq = gpuFreq;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
-      PluginManager.updateComponent(ComponentName.GPU_FREQFIX,UpdateType.UPDATE);
+      PluginManager.updateComponent(
+        ComponentName.GPU_FREQFIX,
+        UpdateType.UPDATE
+      );
     }
   }
 
-  static appGPUAutoMaxFreq(){
+  static appGPUAutoMaxFreq() {
     return Settings.ensureApp().gpuAutoMaxFreq!!;
   }
 
   //写入自动gpu最大频率
-  static setGPUAutoMaxFreq(gpuAutoMaxFreq:number){
-    if(Settings.ensureApp().gpuAutoMaxFreq!=gpuAutoMaxFreq){
-      Settings.ensureApp().gpuAutoMaxFreq=gpuAutoMaxFreq;
+  static setGPUAutoMaxFreq(gpuAutoMaxFreq: number) {
+    if (Settings.ensureApp().gpuAutoMaxFreq != gpuAutoMaxFreq) {
+      Settings.ensureApp().gpuAutoMaxFreq = gpuAutoMaxFreq;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
-      PluginManager.updateComponent(ComponentName.GPU_FREQRANGE,UpdateType.UPDATE);
+      PluginManager.updateComponent(
+        ComponentName.GPU_FREQRANGE,
+        UpdateType.UPDATE
+      );
     }
   }
 
-  static appGPUAutoMinFreq(){
+  static appGPUAutoMinFreq() {
     return Settings.ensureApp().gpuAutoMinFreq!!;
   }
 
   //写入自动gpu最小频率
-  static setGPUAutoMinFreq(gpuAutoMinFreq:number){
-    if(Settings.ensureApp().gpuAutoMinFreq!=gpuAutoMinFreq){
-      Settings.ensureApp().gpuAutoMinFreq=gpuAutoMinFreq;
+  static setGPUAutoMinFreq(gpuAutoMinFreq: number) {
+    if (Settings.ensureApp().gpuAutoMinFreq != gpuAutoMinFreq) {
+      Settings.ensureApp().gpuAutoMinFreq = gpuAutoMinFreq;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
-      PluginManager.updateComponent(ComponentName.GPU_FREQRANGE,UpdateType.UPDATE);
+      PluginManager.updateComponent(
+        ComponentName.GPU_FREQRANGE,
+        UpdateType.UPDATE
+      );
     }
   }
 
-  static appGPURangeMaxFreq(){
+  static appGPURangeMaxFreq() {
     return Settings.ensureApp().gpuRangeMaxFreq!!;
   }
 
-  static appGPURangeMinFreq(){
+  static appGPURangeMinFreq() {
     return Settings.ensureApp().gpuRangeMinFreq!!;
   }
 
   //写入gpu范围频率
-  static setGPURangeFreq(gpuRangeMaxFreq:number,gpuRangeMinFreq:number){
-    if(Settings.ensureApp().gpuRangeMaxFreq!=gpuRangeMaxFreq||Settings.ensureApp().gpuRangeMinFreq!=gpuRangeMinFreq){
-      Settings.ensureApp().gpuRangeMaxFreq=gpuRangeMaxFreq;
-      Settings.ensureApp().gpuRangeMinFreq=gpuRangeMinFreq;
+  static setGPURangeFreq(gpuRangeMaxFreq: number, gpuRangeMinFreq: number) {
+    if (
+      Settings.ensureApp().gpuRangeMaxFreq != gpuRangeMaxFreq ||
+      Settings.ensureApp().gpuRangeMinFreq != gpuRangeMinFreq
+    ) {
+      Settings.ensureApp().gpuRangeMaxFreq = gpuRangeMaxFreq;
+      Settings.ensureApp().gpuRangeMinFreq = gpuRangeMinFreq;
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
       Settings.saveSettingsToLocalStorage();
-      PluginManager.updateComponent(ComponentName.GPU_FREQRANGE,UpdateType.UPDATE);
+      PluginManager.updateComponent(
+        ComponentName.GPU_FREQRANGE,
+        UpdateType.UPDATE
+      );
     }
   }
 
@@ -447,146 +482,182 @@ export class Settings {
     return Settings.ensureApp().gpuSliderFix!!;
   }
 
-  static setGPUSliderFix(gpuSliderFix:boolean) {
-    if(Settings.ensureApp().gpuSliderFix!=gpuSliderFix){
-      Settings.ensureApp().gpuSliderFix=gpuSliderFix;
+  static setGPUSliderFix(gpuSliderFix: boolean) {
+    if (Settings.ensureApp().gpuSliderFix != gpuSliderFix) {
+      Settings.ensureApp().gpuSliderFix = gpuSliderFix;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_GPUSLIDERFIX);
-      PluginManager.updateComponent(ComponentName.GPU_SLIDERFIX,UpdateType.UPDATE);
-      PluginManager.updateComponent(ComponentName.GPU_FREQMODE,UpdateType.UPDATE);
-      this._instance.settingChangeEvent.dispatchEvent(new Event("GPU_FREQ_Change"))
+      PluginManager.updateComponent(
+        ComponentName.GPU_SLIDERFIX,
+        UpdateType.UPDATE
+      );
+      PluginManager.updateComponent(
+        ComponentName.GPU_FREQMODE,
+        UpdateType.UPDATE
+      );
+      this._instance.settingChangeEvent.dispatchEvent(
+        new Event("GPU_FREQ_Change")
+      );
     }
   }
 
   //风扇配置文件名称
-  static appFanSettingNameList(){
+  static appFanSettingNameList() {
     //长度不一致时补齐或截断
-    if((Settings.ensureApp().fanProfileNameList?.length??0)!=Backend.data.getFanCount()){
-      var newArray = new Array(Backend.data.getFanCount())
-      Settings.ensureApp().fanProfileNameList?.forEach((value,index)=>{
-        if(index>=newArray.length)
-          return;
+    if (
+      (Settings.ensureApp().fanProfileNameList?.length ?? 0) !=
+      Backend.data.getFanCount()
+    ) {
+      var newArray = new Array(Backend.data.getFanCount());
+      Settings.ensureApp().fanProfileNameList?.forEach((value, index) => {
+        if (index >= newArray.length) return;
         newArray[index] = value;
-      })
+      });
       Settings.ensureApp().fanProfileNameList = newArray;
     }
     //console.log("appFanSettingNameList=",Settings.ensureApp().fanProfileNameList,"(Settings.ensureApp().fanProfileNameList?.length??0)=",(Settings.ensureApp().fanProfileNameList?.length??0),"Backend.data.getFanCount()=",Backend.data.getFanCount())
-    return Settings.ensureApp().fanProfileNameList!!
+    return Settings.ensureApp().fanProfileNameList!!;
   }
 
   //风扇配置文件内容
-  static appFanSettings(){
+  static appFanSettings() {
     var fanProfileName = Settings.appFanSettingNameList();
-    var fanSettings:FanSetting[] = new Array(Backend.data.getFanCount());
-    fanProfileName?.forEach((fanProfileName,index)=>{
-      if(fanProfileName){
-        fanSettings[index] = this._instance.fanSettings[fanProfileName]
+    var fanSettings: FanSetting[] = new Array(Backend.data.getFanCount());
+    fanProfileName?.forEach((fanProfileName, index) => {
+      if (fanProfileName) {
+        fanSettings[index] = this._instance.fanSettings[fanProfileName];
       }
-    })
-    return fanSettings
+    });
+    return fanSettings;
   }
 
   //设置使用的风扇配置文件名称
-  static setAppFanSettingName(fanProfileName:string|undefined,index:number){
-    if(Settings.appFanSettingNameList()[index]!=fanProfileName){
-      Settings.appFanSettingNameList()[index]=fanProfileName;
+  static setAppFanSettingName(
+    fanProfileName: string | undefined,
+    index: number
+  ) {
+    if (Settings.appFanSettingNameList()[index] != fanProfileName) {
+      Settings.appFanSettingNameList()[index] = fanProfileName;
       Settings.saveSettingsToLocalStorage();
       //Backend.applySettings(APPLYTYPE.SET_FAN);
     }
   }
 
   //添加一个风扇配置
-  static addFanSetting(fanProfileName:string,fanSetting:FanSetting){
-    if(fanProfileName!=undefined){
+  static addFanSetting(fanProfileName: string, fanSetting: FanSetting) {
+    if (fanProfileName != undefined) {
       this._instance.fanSettings[fanProfileName] = fanSetting;
       Settings.saveSettingsToLocalStorage();
       return true;
-    }else{
+    } else {
       return false;
     }
   }
 
   //修改一个风扇配置
-  static editFanSetting(fanProfileName:string,newfanProfileName:string,fanSetting:FanSetting){
-    if(newfanProfileName&&(fanProfileName in this._instance.fanSettings)){
-      if(fanProfileName==newfanProfileName){
+  static editFanSetting(
+    fanProfileName: string,
+    newfanProfileName: string,
+    fanSetting: FanSetting
+  ) {
+    if (newfanProfileName && fanProfileName in this._instance.fanSettings) {
+      if (fanProfileName == newfanProfileName) {
         this._instance.fanSettings[fanProfileName] = fanSetting;
-      }else{
+      } else {
         this._instance.fanSettings[newfanProfileName] = fanSetting;
-        Object.entries(this._instance.perApp)?.forEach(([_appID, appSettings]) => {
+        Object.entries(this._instance.perApp)?.forEach(
+          ([_appID, appSettings]) => {
+            appSettings.defaultSettig.fanProfileNameList?.forEach(
+              (value, index) => {
+                if (fanProfileName == value) {
+                  appSettings.defaultSettig.fanProfileNameList!![index] =
+                    newfanProfileName;
+                }
+              }
+            );
 
-          appSettings.defaultSettig.fanProfileNameList?.forEach((value,index)=>{
-            if(fanProfileName==value){
-              appSettings.defaultSettig.fanProfileNameList!![index]=newfanProfileName;
-            }
-          })
+            appSettings.acStting.fanProfileNameList?.forEach((value, index) => {
+              if (fanProfileName == value) {
+                appSettings.acStting.fanProfileNameList!![index] =
+                  newfanProfileName;
+              }
+            });
 
-          appSettings.acStting.fanProfileNameList?.forEach((value,index)=>{
-            if(fanProfileName==value){
-              appSettings.acStting.fanProfileNameList!![index]=newfanProfileName;
-            }
-          })
-
-          appSettings.batSetting.fanProfileNameList?.forEach((value,index)=>{
-            if(fanProfileName==value){
-              appSettings.batSetting.fanProfileNameList!![index]=newfanProfileName;
-            }
-          })
-
-        })
+            appSettings.batSetting.fanProfileNameList?.forEach(
+              (value, index) => {
+                if (fanProfileName == value) {
+                  appSettings.batSetting.fanProfileNameList!![index] =
+                    newfanProfileName;
+                }
+              }
+            );
+          }
+        );
         delete this._instance.fanSettings[fanProfileName];
       }
       return true;
-    }else{
+    } else {
       return false;
     }
   }
 
   //删除一个风扇配置
-  static removeFanSetting(fanProfileName:string){
-    if(fanProfileName in this._instance.fanSettings){
+  static removeFanSetting(fanProfileName: string) {
+    if (fanProfileName in this._instance.fanSettings) {
       delete this._instance.fanSettings[fanProfileName];
-      Object.entries(this._instance.perApp)?.forEach(([_appID, appSettings]) => {
-        appSettings.defaultSettig.fanProfileNameList?.forEach((value,index)=>{
-          if(fanProfileName==value){
-            appSettings.defaultSettig.fanProfileNameList!![index]=this._instance.perApp[DEFAULT_APP].defaultSettig.fanProfileNameList?.[index];
-          }
-        })
+      Object.entries(this._instance.perApp)?.forEach(
+        ([_appID, appSettings]) => {
+          appSettings.defaultSettig.fanProfileNameList?.forEach(
+            (value, index) => {
+              if (fanProfileName == value) {
+                appSettings.defaultSettig.fanProfileNameList!![index] =
+                  this._instance.perApp[
+                    DEFAULT_APP
+                  ].defaultSettig.fanProfileNameList?.[index];
+              }
+            }
+          );
 
-        appSettings.acStting.fanProfileNameList?.forEach((value,index)=>{
-          if(fanProfileName==value){
-            appSettings.acStting.fanProfileNameList!![index]=this._instance.perApp[DEFAULT_APP].acStting.fanProfileNameList?.[index];
-          }
-        })
+          appSettings.acStting.fanProfileNameList?.forEach((value, index) => {
+            if (fanProfileName == value) {
+              appSettings.acStting.fanProfileNameList!![index] =
+                this._instance.perApp[
+                  DEFAULT_APP
+                ].acStting.fanProfileNameList?.[index];
+            }
+          });
 
-        appSettings.batSetting.fanProfileNameList?.forEach((value,index)=>{
-          if(fanProfileName==value){
-            appSettings.batSetting.fanProfileNameList!![index]=this._instance.perApp[DEFAULT_APP].batSetting.fanProfileNameList?.[index];
-          }
-        })
-      })
+          appSettings.batSetting.fanProfileNameList?.forEach((value, index) => {
+            if (fanProfileName == value) {
+              appSettings.batSetting.fanProfileNameList!![index] =
+                this._instance.perApp[
+                  DEFAULT_APP
+                ].batSetting.fanProfileNameList?.[index];
+            }
+          });
+        }
+      );
       Settings.saveSettingsToLocalStorage();
     }
   }
 
-
   //获取风扇配置列表
-  static getFanSettings():{[fanProfile: string]:FanSetting}{
+  static getFanSettings(): { [fanProfile: string]: FanSetting } {
     return this._instance.fanSettings;
   }
 
   //获取风扇配置
-  static getFanSetting(fanProfileName:string):FanSetting{
+  static getFanSetting(fanProfileName: string): FanSetting {
     return this._instance.fanSettings?.[fanProfileName];
   }
 
-  static loadSettingsFromLocalStorage(){
+  static loadSettingsFromLocalStorage() {
     const settingsString = localStorage.getItem(SETTINGS_KEY) || "{}";
     const settingsJson = JSON.parse(settingsString);
-    const loadSetting=serializer.deserializeObject(settingsJson, Settings);
-    this._instance.enabled = loadSetting?loadSetting.enabled:false;
-    this._instance.perApp = loadSetting?loadSetting.perApp:{};
-    this._instance.fanSettings=loadSetting?loadSetting.fanSettings:{};
+    const loadSetting = serializer.deserializeObject(settingsJson, Settings);
+    this._instance.enabled = loadSetting ? loadSetting.enabled : false;
+    this._instance.perApp = loadSetting ? loadSetting.perApp : {};
+    this._instance.fanSettings = loadSetting ? loadSetting.fanSettings : {};
   }
 
   static saveSettingsToLocalStorage() {
@@ -594,5 +665,4 @@ export class Settings {
     const settingsString = JSON.stringify(settingsJson);
     localStorage.setItem(SETTINGS_KEY, settingsString);
   }
-
 }

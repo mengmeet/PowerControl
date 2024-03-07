@@ -53,14 +53,24 @@ export class RunningApps {
 }
 
 export class ACStateManager {
+  // 电源状态
   private static acState: ACState = ACState.Unknown;
 
+  private static acStateListeners : any;
+
   static register() {
-    SteamClient.System.RegisterForBatteryStateChanges((batteryStateChange: BatteryStateChange) => {
+    this.acStateListeners = SteamClient.System.RegisterForBatteryStateChanges((batteryStateChange: BatteryStateChange) => {
+      // 监听电源状态变化, 更新所有组件，应用全部设置一次
       this.acState = batteryStateChange.eACState;
-      // PluginManager.updateComponent(ComponentName.SET_PERACMODE, UpdateType.UPDATE);
       PluginManager.updateAllComponent(UpdateType.UPDATE);
+      if (Settings.ensureEnable()) {
+        Backend.applySettings(APPLYTYPE.SET_ALL);
+      }
     });
+  }
+
+  public static unregister(){
+    this.acStateListeners?.unregister();
   }
 
   static getACState() {
@@ -254,6 +264,7 @@ export class PluginManager{
   public static unregister(){
     PluginManager.suspendEndHook?.unregister();
     PluginManager.updateAllComponent(UpdateType.DISMOUNT);
+    ACStateManager?.unregister();
     QAMPatch?.unpatch();
     RunningApps?.unregister();
     FanControl?.unregister();
