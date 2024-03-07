@@ -3,7 +3,7 @@ import { APPLYTYPE, ComponentName, FANMODE, Patch, PluginState, UpdateType } fro
 import { Backend} from "./backend";
 import { localizationManager } from "../i18n";
 import { Settings } from "./settings";
-import { AppOverviewExt } from "./steamClient";
+import { ACState, AppOverviewExt, BatteryStateChange } from "./steamClient";
 import { calPointInLine, fanPosition } from "./position";
 import { QAMPatch } from "./patch";
 
@@ -50,6 +50,23 @@ export class RunningApps {
     static active_appInfo() {
       return Router.MainRunningApp as unknown as AppOverviewExt || null;
     }
+}
+
+export class ACStateManager {
+  private static acState: ACState = ACState.Unknown;
+
+  static register() {
+    SteamClient.System.RegisterForBatteryStateChanges((batteryStateChange: BatteryStateChange) => {
+      this.acState = batteryStateChange.eACState;
+      // PluginManager.updateComponent(ComponentName.SET_PERACMODE, UpdateType.UPDATE);
+      PluginManager.updateAllComponent(UpdateType.UPDATE);
+    });
+  }
+
+  static getACState() {
+    return this.acState;
+  }
+
 }
 
 export class FanControl{
@@ -211,6 +228,7 @@ export class PluginManager{
         Backend.applySettings(APPLYTYPE.SET_ALL);
       }
     });
+    ACStateManager.register();
     Settings.loadSettingsFromLocalStorage();
     Backend.applySettings(APPLYTYPE.SET_ALL);
     PluginManager.suspendEndHook = SteamClient.System.RegisterForOnResumeFromSuspend(async () => {

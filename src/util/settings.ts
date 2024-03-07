@@ -2,15 +2,18 @@ import { JsonObject, JsonProperty, JsonSerializer } from 'typescript-json-serial
 import { APPLYTYPE, ComponentName, FANMODE, GPUMODE, UpdateType } from './enum';
 import { Backend } from './backend';
 import { fanPosition } from './position';
-import { DEFAULT_APP, PluginManager, RunningApps } from './pluginMain';
+import { ACStateManager, DEFAULT_APP, PluginManager, RunningApps } from './pluginMain';
+import { ACState } from './steamClient';
 
 const SETTINGS_KEY = "PowerControl";
 const serializer = new JsonSerializer();
 
 @JsonObject()
 export class AppSetting {
-  @JsonProperty()
-  overwrite?: boolean;
+  // @JsonProperty()
+  // overwrite?: boolean;
+  // @JsonProperty()
+  // acStateOverwrite?: boolean;
   @JsonProperty()
   smt?: boolean;
   @JsonProperty()
@@ -40,7 +43,8 @@ export class AppSetting {
   @JsonProperty()
   gpuSliderFix?:boolean;
   constructor(){
-    this.overwrite=false;
+    // this.overwrite=false;
+    // this.acStateOverwrite=false;
     this.smt=true;
     this.isSupportSMT=Backend.data?.HasSupportSMT()?Backend.data?.getSupportSMT():true;
     this.cpuNum=Backend.data?.HasCpuMaxNum()?Backend.data?.getCpuMaxNum():4;
@@ -57,7 +61,8 @@ export class AppSetting {
     this.fanProfileNameList=[]
   }
   deepCopy(copyTarget:AppSetting){
-    this.overwrite=copyTarget.overwrite;
+    // this.overwrite=copyTarget.overwrite;
+    // this.acStateOverwrite=copyTarget.acStateOverwrite;
     this.smt=copyTarget.smt;
     this.isSupportSMT=copyTarget.isSupportSMT;
     this.cpuNum=copyTarget.cpuNum;
@@ -94,14 +99,35 @@ export class FanSetting{
 }
 
 @JsonObject()
+export class AppSettingData {
+  @JsonProperty()
+  acStateOverwrite?: boolean;
+  @JsonProperty()
+  public defaultSettig: AppSetting = new AppSetting();
+  @JsonProperty()
+  public acStting: AppSetting = new AppSetting();
+  @JsonProperty()
+  public batSetting: AppSetting = new AppSetting();
+}
+
+@JsonObject()
 export class Settings {
   private static _instance:Settings = new Settings();
   @JsonProperty()
   public enabled: boolean = true;
-  @JsonProperty({isDictionary:true, type: AppSetting })
-  public perApp: { [appId: string]: AppSetting } = {};
+
+  @JsonProperty()
+  overwrite?: boolean;
+
+  // @JsonProperty({isDictionary:true, type: AppSetting })
+  // public perApp: { [appId: string]: AppSetting } = {};
+
+  @JsonProperty({isDictionary:true, type: AppSettingData })
+  public perApp: { [appId: string]: AppSettingData } = {};
+
   @JsonProperty({isDictionary:true, type: FanSetting })
   public fanSettings: { [fanProfile: string]: FanSetting } = {};
+
   public settingChangeEvent = new EventTarget();
   //插件是否开启
   public static ensureEnable():boolean{
@@ -126,47 +152,129 @@ export class Settings {
 
   //获取当前配置文件
   public static ensureApp(): AppSetting {
-    const appId = RunningApps.active(); 
+    const appId = RunningApps.active();
+
+    // const acState : string = `${this._instance.perApp[appId].acStateOverwrite ? ACStateManager.getACState() : ""}`;
+    // console.log(`appId = ${appId}, acState = ${acState}`)
+    // const key = `${appId}${acState}`;
+
     //没有配置文件的时候新生成一个
     if (!(appId in this._instance.perApp)) {
-      this._instance.perApp[appId]=new AppSetting();
-      //新生成后如果有默认配置文件，则拷贝默认配置文件
-      if(DEFAULT_APP in this._instance.perApp)
-        this._instance.perApp[appId].deepCopy(this._instance.perApp[DEFAULT_APP]);
+      this._instance.perApp[appId].defaultSettig = new AppSetting();
+      this._instance.perApp[appId].acStting = new AppSetting();
+      this._instance.perApp[appId].batSetting = new AppSetting();
+
+      // 新生成后如果有默认配置文件，则拷贝默认配置文件
+      if (DEFAULT_APP in this._instance.perApp) {
+        this._instance.perApp[appId].defaultSettig.deepCopy(this._instance.perApp[DEFAULT_APP].defaultSettig);
+        this._instance.perApp[appId].acStting.deepCopy(this._instance.perApp[DEFAULT_APP].acStting);
+        this._instance.perApp[appId].batSetting.deepCopy(this._instance.perApp[DEFAULT_APP].batSetting);
+      }
     }
-    //如果未开启覆盖，则使用默认配置文件
-    if(!this._instance.perApp[appId].overwrite){
-      return this._instance.perApp[DEFAULT_APP];
+
+    // if (!(appId in this._instance.preAppWithAcMode)) {
+    //   this._instance.preAppWithAcMode[appId] = new AppSetting();
+
+    //   if (DEFAULT_APP in this._instance.preAppWithAcMode) {
+    //     this._instance.preAppWithAcMode[appId].deepCopy(this._instance.preAppWithAcMode[DEFAULT_APP]);
+    //   }
+    // }
+
+    // if (!(appId in this._instance.preAppWithBatMode)) {
+    //   this._instance.preAppWithBatMode[appId] = new AppSetting();
+
+    //   if (DEFAULT_APP in this._instance.preAppWithBatMode) {
+    //     this._instance.preAppWithBatMode[appId].deepCopy(this._instance.preAppWithBatMode[DEFAULT_APP]);
+    //   }
+    // }
+
+    // if (!this._instance.perApp[appId].overwrite) {
+    //   if (ACStateManager.getACState() === ACState.Connected) {
+    //     return this._instance.perApp[DEFAULT_APP].acStting;
+    //   } else {
+    //     return this._instance.perApp[DEFAULT_APP].batSetting;
+    //   }
+    // } else {
+    //   if (ACStateManager.getACState() === ACState.Connected) {
+    //     return this._instance.perApp[appId].acStting;
+    //   } else {
+    //     return this._instance.perApp[appId].batSetting;
+    //   }
+    // }
+
+    const _appId = this._instance.overwrite ? appId : DEFAULT_APP;
+
+    if (ACStateManager.getACState() === ACState.Connected) {
+      return this._instance.perApp[_appId].acStting;
+    } else {
+      return this._instance.perApp[_appId].batSetting;
     }
-    //使用appID配置文件
-    return this._instance.perApp[appId];
+
+    // if (ACStateManager.getACState() === ACState.Connected) {
+
+    // } else {
+
+    // }
+
+    // //如果未开启覆盖，则使用默认配置文件
+    // if(!this._instance.perApp[appId].overwrite){
+    //   return this._instance.perApp[DEFAULT_APP];
+    // }
+
+    // //使用appID配置文件
+    // return this._instance.perApp[appId];
   }
 
-  static ensureAppID():string{
-    const appId = RunningApps.active();
-    if (!(appId in this._instance.perApp)) {
-      this._instance.perApp[appId]=new AppSetting();
-      if(DEFAULT_APP in this._instance.perApp){
-        this._instance.perApp[appId].deepCopy(this._instance.perApp[DEFAULT_APP]);
-        return DEFAULT_APP;
-      }
-      return appId;
-    }
-    if(!this._instance.perApp[appId].overwrite){
-      return DEFAULT_APP;
-    }
-    return appId;
+  // static ensureAppID():string{
+  //   const appId = RunningApps.active();
+  //   if (!(appId in this._instance.perApp)) {
+  //     this._instance.perApp[appId]=new AppSetting();
+  //     if(DEFAULT_APP in this._instance.perApp){
+  //       this._instance.perApp[appId].deepCopy(this._instance.perApp[DEFAULT_APP]);
+  //       return DEFAULT_APP;
+  //     }
+  //     return appId;
+  //   }
+  //   if(!this._instance.perApp[appId].overwrite){
+  //     return DEFAULT_APP;
+  //   }
+  //   return appId;
+  // }
+
+  static ensureAppID() : string {
+    return this._instance.overwrite ? RunningApps.active() : DEFAULT_APP;
   }
 
   static appOverWrite():boolean {
     if(RunningApps.active()==DEFAULT_APP){
       return false;
     }
-    return Settings.ensureApp().overwrite!!;
+    // return Settings.ensureApp().overwrite!!;
+    return this._instance.overwrite ?? false;
   }
   static setOverWrite(overwrite:boolean){
     if(RunningApps.active()!=DEFAULT_APP&&Settings.appOverWrite()!=overwrite){
-      Settings._instance.perApp[RunningApps.active()].overwrite=overwrite;
+      // Settings._instance.perApp[RunningApps.active()].overwrite=overwrite;
+      this._instance.overwrite=overwrite;
+
+      // Settings._instance.preAppWithAcMode[RunningApps.active()].overwrite=overwrite;
+      // Settings._instance.preAppWithBatMode[RunningApps.active()].overwrite=overwrite;
+
+      Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_ALL);
+      PluginManager.updateAllComponent(UpdateType.UPDATE);
+    }
+  }
+
+  static appACStateOverWrite():boolean {
+    // return Settings.ensureApp().acStateOverwrite!!;
+    return this._instance.perApp[Settings.ensureAppID()].acStateOverwrite ?? false;
+
+  }
+
+  static setACStateOverWrite(acStateOverwrite:boolean) {
+    if (this._instance.perApp[Settings.ensureAppID()].acStateOverwrite != acStateOverwrite) {
+      this._instance.perApp[Settings.ensureAppID()].acStateOverwrite = acStateOverwrite;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_ALL);
       PluginManager.updateAllComponent(UpdateType.UPDATE);
@@ -406,11 +514,25 @@ export class Settings {
       }else{
         this._instance.fanSettings[newfanProfileName] = fanSetting;
         Object.entries(this._instance.perApp)?.forEach(([_appID, appSettings]) => {
-          appSettings.fanProfileNameList?.forEach((value,index)=>{
+
+          appSettings.defaultSettig.fanProfileNameList?.forEach((value,index)=>{
             if(fanProfileName==value){
-              appSettings.fanProfileNameList!![index]=newfanProfileName;
+              appSettings.defaultSettig.fanProfileNameList!![index]=newfanProfileName;
             }
           })
+
+          appSettings.acStting.fanProfileNameList?.forEach((value,index)=>{
+            if(fanProfileName==value){
+              appSettings.acStting.fanProfileNameList!![index]=newfanProfileName;
+            }
+          })
+
+          appSettings.batSetting.fanProfileNameList?.forEach((value,index)=>{
+            if(fanProfileName==value){
+              appSettings.batSetting.fanProfileNameList!![index]=newfanProfileName;
+            }
+          })
+
         })
         delete this._instance.fanSettings[fanProfileName];
       }
@@ -425,9 +547,21 @@ export class Settings {
     if(fanProfileName in this._instance.fanSettings){
       delete this._instance.fanSettings[fanProfileName];
       Object.entries(this._instance.perApp)?.forEach(([_appID, appSettings]) => {
-        appSettings.fanProfileNameList?.forEach((value,index)=>{
+        appSettings.defaultSettig.fanProfileNameList?.forEach((value,index)=>{
           if(fanProfileName==value){
-            appSettings.fanProfileNameList!![index]=this._instance.perApp[DEFAULT_APP].fanProfileNameList?.[index];
+            appSettings.defaultSettig.fanProfileNameList!![index]=this._instance.perApp[DEFAULT_APP].defaultSettig.fanProfileNameList?.[index];
+          }
+        })
+
+        appSettings.acStting.fanProfileNameList?.forEach((value,index)=>{
+          if(fanProfileName==value){
+            appSettings.acStting.fanProfileNameList!![index]=this._instance.perApp[DEFAULT_APP].acStting.fanProfileNameList?.[index];
+          }
+        })
+
+        appSettings.batSetting.fanProfileNameList?.forEach((value,index)=>{
+          if(fanProfileName==value){
+            appSettings.batSetting.fanProfileNameList!![index]=this._instance.perApp[DEFAULT_APP].batSetting.fanProfileNameList?.[index];
           }
         })
       })

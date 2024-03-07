@@ -5,15 +5,7 @@ import {
 import { Backend } from "./backend";
 import { GPUMODE, GPUPerformanceLevel, Patch } from "./enum";
 import { Settings } from "./settings";
-  
-interface SteamBattery {
-    bHasBattery: boolean;
-    bShutdownRequested: boolean;
-    eACState: number;
-    eBatteryState: number;
-    flLevel: number;
-    nSecondsRemaining: number;
-}
+import { BatteryStateChange } from ".";
 
 export class QAMPatch {
     private static TDP_Patch: TDPPatch;
@@ -133,7 +125,7 @@ class TDPPatch{
             })
 
             //某些机型充电状态改变时tdp会重置，应用一次tdp
-            this.batteryChangeHook = SteamClient.System.RegisterForBatteryStateChanges((steamBattery:SteamBattery)=>{
+            this.batteryChangeHook = SteamClient.System.RegisterForBatteryStateChanges((steamBattery:BatteryStateChange)=>{
                 /*
                 console.log("SteamBattery Information:");
                 console.log("bHasBattery:", steamBattery.bHasBattery);
