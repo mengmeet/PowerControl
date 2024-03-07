@@ -204,6 +204,7 @@ const GPUModeNaviteComponent: VFC = () => {
           notchLabels={notchLabelsWithNative}
           onChange={(value: number) => {
             const mode = modesWithNative[value];
+            setGPUMode(mode);
             Settings.setGPUMode(mode);
           }}
         />
@@ -264,6 +265,7 @@ const GPUModeLegacyComponent: VFC = () => {
         notchCount={notchLabelsLegacy.length}
         notchLabels={notchLabelsLegacy}
         onChange={(value: number) => {
+          setGPUMode(modesLegacy[value]);
           Settings.setGPUMode(modesLegacy[value]);
         }}
       />
