@@ -138,12 +138,29 @@ const SettingsPerAcStateComponent: VFC = () => {
     });
   });
 
+  const getAcSteteName = (acstate: ACState) => {
+    if (acstate === ACState.Connected) {
+      return localizationManager.getString(localizeStrEnum.AC_MODE);
+    } else if (acstate === ACState.Disconnected) {
+      return localizationManager.getString(localizeStrEnum.BAT_MODE);
+    }
+    return acstate;
+  }
+
+  const getDescription = (acstate: ACState) => {
+    return localizationManager.getString(localizeStrEnum.USING) + 
+      (appACStateOverWrite ? "『" : "") +
+      (appACStateOverWrite ? getAcSteteName(acstate) : localizationManager.getString(localizeStrEnum.DEFAULT)) +
+      (appACStateOverWrite ? "』" : "") +
+      localizationManager.getString(localizeStrEnum.PROFILE);
+  }
+
   return (
     <div>
     {show && <PanelSectionRow>
       <ToggleField
-        label = {"Use AC state profile"}
-        description = {`Current AC state ${acstate}`}
+        label = {localizationManager.getString(localizeStrEnum.USE_PERACMODE_PROFILE)}
+        description = {getDescription(acstate)}
         checked = {appACStateOverWrite}
         onChange = {(override) => {
           Settings.setACStateOverWrite(override);
