@@ -1,145 +1,160 @@
-import {ServerAPI } from "decky-frontend-lib";
-import { APPLYTYPE, FANMODE, GPUMODE, Patch} from "./enum";
-import { FanControl, PluginManager} from "./pluginMain";
+import { ServerAPI } from "decky-frontend-lib";
+import { APPLYTYPE, FANMODE, GPUMODE, Patch } from "./enum";
+import { FanControl, PluginManager } from "./pluginMain";
 import { Settings } from "./settings";
+import { QAMPatch } from ".";
 
-export class BackendData{
-  private serverAPI:ServerAPI | undefined;
+export class BackendData {
+  private serverAPI: ServerAPI | undefined;
   private cpuMaxNum = 0;
   private has_cpuMaxNum = false;
   private isSupportSMT = false;
   private has_isSupportSMT = false;
   private tdpMax = 0;
-  private has_tdpMax= false;
+  private has_tdpMax = false;
   private gpuMax = 0;
   private has_gpuMax = false;
   private gpuMin = 0;
   private has_gpuMin = false;
-  private fanConfigs:any[] = [];
+  private fanConfigs: any[] = [];
   private has_fanConfigs = false;
   private current_version = "1.0.0";
   private latest_version = "1.0.0";
-  public async init(serverAPI:ServerAPI) {
-    this.serverAPI=serverAPI;
-    await serverAPI!.callPluginMethod<{},number>("get_cpuMaxNum",{}).then(res=>{
-      if (res.success){
-        console.info("cpuMaxNum = " + res.result);
-        this.cpuMaxNum = res.result;
-        this.has_cpuMaxNum = true;
-      }
-    })
-    await serverAPI!.callPluginMethod<{},number>("get_tdpMax",{}).then(res=>{
-      if (res.success){
-        console.info("tdpMax = " + res.result);
-        this.tdpMax = res.result;
-        this.has_tdpMax = true;
-      }
-    })
-    await serverAPI!.callPluginMethod<{},number[]>("get_gpuFreqRange",{}).then(res=>{
-      if (res.success){
-        console.info("gpuRange = " + res.result);
-        this.gpuMin = res.result[0];
-        this.gpuMax = res.result[1];
-        this.has_gpuMin = true;
-        this.has_gpuMax = true;
-      }
-    })
-    await this.serverAPI!.callPluginMethod<{},[]>("get_fanConfigList",{}).then(res=>{
-      if (res.success){
-        console.info("fanConfigList",res.result)
+  public async init(serverAPI: ServerAPI) {
+    this.serverAPI = serverAPI;
+    await serverAPI!
+      .callPluginMethod<{}, number>("get_cpuMaxNum", {})
+      .then((res) => {
+        if (res.success) {
+          console.info("cpuMaxNum = " + res.result);
+          this.cpuMaxNum = res.result;
+          this.has_cpuMaxNum = true;
+        }
+      });
+    await serverAPI!
+      .callPluginMethod<{}, number>("get_tdpMax", {})
+      .then((res) => {
+        if (res.success) {
+          console.info("tdpMax = " + res.result);
+          this.tdpMax = res.result;
+          this.has_tdpMax = true;
+        }
+      });
+    await serverAPI!
+      .callPluginMethod<{}, number[]>("get_gpuFreqRange", {})
+      .then((res) => {
+        if (res.success) {
+          console.info("gpuRange = " + res.result);
+          this.gpuMin = res.result[0];
+          this.gpuMax = res.result[1];
+          this.has_gpuMin = true;
+          this.has_gpuMax = true;
+        }
+      });
+    await this.serverAPI!.callPluginMethod<{}, []>(
+      "get_fanConfigList",
+      {}
+    ).then((res) => {
+      if (res.success) {
+        console.info("fanConfigList", res.result);
         this.fanConfigs = res.result;
-        this.has_fanConfigs=true;
-      }else{
-        this.has_fanConfigs=false;
+        this.has_fanConfigs = true;
+      } else {
+        this.has_fanConfigs = false;
       }
-    })
+    });
 
-    await this.serverAPI!.callPluginMethod<{},boolean>("get_isSupportSMT",{}).then(res=>{
-      if (res.success){
+    await this.serverAPI!.callPluginMethod<{}, boolean>(
+      "get_isSupportSMT",
+      {}
+    ).then((res) => {
+      if (res.success) {
         console.info("isSupportSMT = " + res.result);
         this.isSupportSMT = res.result;
         this.has_isSupportSMT = true;
       }
-    })
+    });
 
-    await this.serverAPI!.callPluginMethod<{},string>("get_version",{}).then(res=>{
-      if (res.success){
-        console.info("current_version = " + res.result);
-        this.current_version = res.result;
+    await this.serverAPI!.callPluginMethod<{}, string>("get_version", {}).then(
+      (res) => {
+        if (res.success) {
+          console.info("current_version = " + res.result);
+          this.current_version = res.result;
+        }
       }
-    })
+    );
   }
-  public getCpuMaxNum(){
+  public getCpuMaxNum() {
     return this.cpuMaxNum;
   }
 
-  public HasCpuMaxNum(){
+  public HasCpuMaxNum() {
     return this.has_cpuMaxNum;
   }
 
-  public getSupportSMT(){
+  public getSupportSMT() {
     return this.isSupportSMT;
   }
 
-  public HasSupportSMT(){
+  public HasSupportSMT() {
     return this.has_isSupportSMT;
   }
 
-  public getTDPMax(){
+  public getTDPMax() {
     return this.tdpMax;
   }
 
-  public getGPUFreqMax(){
+  public getGPUFreqMax() {
     return this.gpuMax;
   }
 
-  public HasGPUFreqMax(){
+  public HasGPUFreqMax() {
     return this.has_gpuMax;
   }
 
-  public getGPUFreqMin(){
+  public getGPUFreqMin() {
     return this.gpuMin;
   }
 
-  public HasGPUFreqMin(){
+  public HasGPUFreqMin() {
     return this.has_gpuMin;
   }
 
-  public HasTDPMax(){
+  public HasTDPMax() {
     return this.has_tdpMax;
   }
 
-  public getFanMAXPRM(index:number){
-    if (this.has_fanConfigs){
-      return this.fanConfigs?.[index]?.fan_max_rpm??0;
+  public getFanMAXPRM(index: number) {
+    if (this.has_fanConfigs) {
+      return this.fanConfigs?.[index]?.fan_max_rpm ?? 0;
     }
     return 0;
   }
 
-  public getFanCount(){
-    if (this.has_fanConfigs){
-      return this.fanConfigs?.length??0;
+  public getFanCount() {
+    if (this.has_fanConfigs) {
+      return this.fanConfigs?.length ?? 0;
     }
     return 0;
   }
 
-  public getFanName(index:number){
-    if (this.has_fanConfigs){
-      return this.fanConfigs?.[index]?.fan_name??"Fan";
+  public getFanName(index: number) {
+    if (this.has_fanConfigs) {
+      return this.fanConfigs?.[index]?.fan_name ?? "Fan";
     }
     return "Fan";
   }
 
-  public getFanConfigs(){
-    if (this.has_fanConfigs){
+  public getFanConfigs() {
+    if (this.has_fanConfigs) {
       return this.fanConfigs;
     }
     return [];
   }
 
-  public getFanHwmonMode(index:number){
-    if (this.has_fanConfigs){
-      return this.fanConfigs?.[index]?.fan_hwmon_mode??0;
+  public getFanHwmonMode(index: number) {
+    if (this.has_fanConfigs) {
+      return this.fanConfigs?.[index]?.fan_hwmon_mode ?? 0;
     }
     return 0;
   }
@@ -152,45 +167,52 @@ export class BackendData{
     return this.latest_version;
   }
 
-  public async getFanRPM(index:number){
-    var fanPRM:number;
-    await this.serverAPI!.callPluginMethod<{"index":number},number>("get_fanRPM",{"index":index}).then(res=>{
+  public async getFanRPM(index: number) {
+    var fanPRM: number;
+    await this.serverAPI!.callPluginMethod<{ index: number }, number>(
+      "get_fanRPM",
+      { index: index }
+    ).then((res) => {
       //console.log("get_fanRPM res=",res,"index=",index)
-      if (res.success){
-        fanPRM=res.result;
-      }else{
-        fanPRM=0;
+      if (res.success) {
+        fanPRM = res.result;
+      } else {
+        fanPRM = 0;
       }
-    })
+    });
     return fanPRM!!;
   }
 
-  public async getFanTemp(index:number){
-    var fanTemp:number;
-    await this.serverAPI!.callPluginMethod<{"index":number},number>("get_fanTemp",{"index":index}).then(res=>{
-      if (res.success){
-        fanTemp=res.result/1000;
-      }else{
-        fanTemp=-1;
+  public async getFanTemp(index: number) {
+    var fanTemp: number;
+    await this.serverAPI!.callPluginMethod<{ index: number }, number>(
+      "get_fanTemp",
+      { index: index }
+    ).then((res) => {
+      if (res.success) {
+        fanTemp = res.result / 1000;
+      } else {
+        fanTemp = -1;
       }
-    })
+    });
     return fanTemp!!;
   }
 
-  public async getFanIsAuto(index:number){
-    var fanIsAuto:boolean;
-    await this.serverAPI!.callPluginMethod<{"index":number},boolean>("get_fanIsAuto",{"index":index}).then(res=>{
-      if (res.success){
-        fanIsAuto=res.result;
-      }else{
-        fanIsAuto=false;
+  public async getFanIsAuto(index: number) {
+    var fanIsAuto: boolean;
+    await this.serverAPI!.callPluginMethod<{ index: number }, boolean>(
+      "get_fanIsAuto",
+      { index: index }
+    ).then((res) => {
+      if (res.success) {
+        fanIsAuto = res.result;
+      } else {
+        fanIsAuto = false;
       }
-    })
+    });
     return fanIsAuto!!;
   }
-  
 }
-
 
 export class Backend {
   private static serverAPI: ServerAPI;
@@ -203,52 +225,69 @@ export class Backend {
 
   private static applySmt(smt: boolean) {
     console.log("Applying smt " + smt.toString());
-    this.serverAPI!.callPluginMethod("set_smt", { "value": smt });
+    this.serverAPI!.callPluginMethod("set_smt", { value: smt });
   }
 
   private static applyCpuNum(cpuNum: number) {
     console.log("Applying cpuNum " + cpuNum.toString());
-    this.serverAPI!.callPluginMethod("set_cpuOnline", { "value": cpuNum });
+    this.serverAPI!.callPluginMethod("set_cpuOnline", { value: cpuNum });
   }
 
   private static applyCpuBoost(cpuBoost: boolean) {
     console.log("Applying cpuBoost " + cpuBoost.toString());
-    this.serverAPI!.callPluginMethod("set_cpuBoost", { "value": cpuBoost });
+    this.serverAPI!.callPluginMethod("set_cpuBoost", { value: cpuBoost });
   }
 
-  public static applyTDP = (tdp:number)=>{
-      console.log("Applying tdp " + tdp.toString());
-      this.serverAPI!.callPluginMethod("set_cpuTDP", {"value":tdp});
-  }
+  public static applyTDP = (tdp: number) => {
+    console.log("Applying tdp " + tdp.toString());
+    this.serverAPI!.callPluginMethod("set_cpuTDP", { value: tdp });
+  };
 
-  public static applyGPUFreq(freq: number){
+  public static applyGPUFreq(freq: number) {
     console.log("Applying gpuFreq " + freq.toString());
-    this.serverAPI!.callPluginMethod("set_gpuFreq", {"value":freq});
+    this.serverAPI!.callPluginMethod("set_gpuFreq", { value: freq });
   }
 
-  private static applyGPUFreqRange(freqMin: number, freqMax: number){
-    console.log("Applying gpuFreqRange  " + freqMin.toString() + "   "+ freqMax.toString());
-    this.serverAPI!.callPluginMethod("set_gpuFreqRange", {"value":freqMin, "value2":freqMax});
+  private static applyGPUFreqRange(freqMin: number, freqMax: number) {
+    console.log(
+      "Applying gpuFreqRange  " +
+        freqMin.toString() +
+        "   " +
+        freqMax.toString()
+    );
+    this.serverAPI!.callPluginMethod("set_gpuFreqRange", {
+      value: freqMin,
+      value2: freqMax,
+    });
   }
 
-  private static applyGPUAuto(auto: boolean){
+  private static applyGPUAuto(auto: boolean) {
     console.log("Applying gpuAuto" + auto.toString());
-    this.serverAPI!.callPluginMethod("set_gpuAuto", {"value":auto});
+    this.serverAPI!.callPluginMethod("set_gpuAuto", { value: auto });
   }
 
-  private static applyGPUAutoRange(minAutoFreq:number,maxAutoFreq:number){
+  private static applyGPUAutoRange(minAutoFreq: number, maxAutoFreq: number) {
     console.log("Applying gpuAuto" + maxAutoFreq.toString());
-    this.serverAPI!.callPluginMethod("set_gpuAutoFreqRange", {"min":minAutoFreq,"max":maxAutoFreq});
+    this.serverAPI!.callPluginMethod("set_gpuAutoFreqRange", {
+      min: minAutoFreq,
+      max: maxAutoFreq,
+    });
   }
 
-  private static applyFanAuto(index:number,auto:boolean){
-    this.serverAPI!.callPluginMethod("set_fanAuto", {"index":index,"value":auto});
+  private static applyFanAuto(index: number, auto: boolean) {
+    this.serverAPI!.callPluginMethod("set_fanAuto", {
+      index: index,
+      value: auto,
+    });
   }
-  
-  private static applyFanPercent(index:number,percent:number){
-    this.serverAPI!.callPluginMethod("set_fanPercent", {"index":index,"value":percent});
+
+  private static applyFanPercent(index: number, percent: number) {
+    this.serverAPI!.callPluginMethod("set_fanPercent", {
+      index: index,
+      value: percent,
+    });
   }
-  public static throwSuspendEvt(){
+  public static throwSuspendEvt() {
     console.log("throwSuspendEvt");
     this.serverAPI!.callPluginMethod("receive_suspendEvent", {});
   }
@@ -263,7 +302,7 @@ export class Backend {
     await this.serverAPI!.callPluginMethod("update_latest", {});
   }
 
-  public static applyGPUSliderFix(){
+  public static applyGPUSliderFix() {
     console.log("applyGPUSliderFix");
     this.serverAPI!.callPluginMethod("fix_gpuFreqSlider", {});
   }
@@ -273,29 +312,47 @@ export class Backend {
       Backend.resetSettings();
       return;
     }
-    if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_CPUCORE) {
+    if (
+      applyTarget == APPLYTYPE.SET_ALL ||
+      applyTarget == APPLYTYPE.SET_CPUCORE
+    ) {
       const smt = Settings.appSmt();
       const cpuNum = Settings.appCpuNum();
       Backend.applySmt(smt);
       Backend.applyCpuNum(cpuNum);
     }
-    if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_CPUBOOST) {
+    if (
+      applyTarget == APPLYTYPE.SET_ALL ||
+      applyTarget == APPLYTYPE.SET_CPUBOOST
+    ) {
       const cpuBoost = Settings.appCpuboost();
       Backend.applyCpuBoost(cpuBoost);
     }
     if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_TDP) {
-      if(!PluginManager.isPatchSuccess(Patch.TDPPatch)){
-        const tdp = Settings.appTDP();
-        const tdpEnable = Settings.appTDPEnable();
+      const tdp = Settings.appTDP();
+      const tdpEnable = Settings.appTDPEnable();
+
+      if (!PluginManager.isPatchSuccess(Patch.TDPPatch)) {
+        console.log(`>>>>> 插件方式更新 TDP = ${tdp} TDPEnable = ${tdpEnable}`);
+        if (tdpEnable) {
+          Backend.applyTDP(tdp);
+        } else {
+          Backend.applyTDP(Backend.data.getTDPMax());
+        }
+      } else {
+        console.log(`>>>>> 原生设置更新 TDP = ${tdp} TDPEnable = ${tdpEnable}`);
+        // 更新 原生设置的值
+        QAMPatch.setTDPEanble(tdpEnable);
+        QAMPatch.setTDP(tdp);
         if (tdpEnable) {
           Backend.applyTDP(tdp);
         }
-        else {
-          Backend.applyTDP(Backend.data.getTDPMax());
-        }
       }
     }
-    if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_GPUMODE) {
+    if (
+      applyTarget == APPLYTYPE.SET_ALL ||
+      applyTarget == APPLYTYPE.SET_GPUMODE
+    ) {
       const gpuMode = Settings.appGPUMode();
       const gpuFreq = Settings.appGPUFreq();
       const gpuSliderFix = Settings.appGPUSliderFix();
@@ -303,31 +360,33 @@ export class Backend {
       const gpuAutoMinFreq = Settings.appGPUAutoMinFreq();
       const gpuRangeMaxFreq = Settings.appGPURangeMaxFreq();
       const gpuRangeMinFreq = Settings.appGPURangeMinFreq();
-      if (gpuMode == GPUMODE.NOLIMIT ) {
+      if (gpuMode == GPUMODE.NOLIMIT) {
         Backend.applyGPUAuto(false);
         Backend.applyGPUFreq(0);
-      } else if (gpuMode == GPUMODE.FIX ) {
+      } else if (gpuMode == GPUMODE.FIX) {
         Backend.applyGPUAuto(false);
         Backend.applyGPUFreq(gpuFreq);
-      } else if (gpuMode == GPUMODE.NATIVE && gpuSliderFix ) {
-        console.log(`原生设置无需处理`)
+      } else if (gpuMode == GPUMODE.NATIVE && gpuSliderFix) {
+        console.log(`原生设置无需处理`);
       } else if (gpuMode == GPUMODE.AUTO) {
-        console.log(`开始自动优化GPU频率`)
+        console.log(`开始自动优化GPU频率`);
         Settings.setTDPEnable(false);
         Settings.setCpuboost(false);
-        Backend.applyGPUAutoRange(gpuAutoMinFreq,gpuAutoMaxFreq);
+        Backend.applyGPUAutoRange(gpuAutoMinFreq, gpuAutoMaxFreq);
         Backend.applyGPUAuto(true);
       } else if (gpuMode == GPUMODE.RANGE) {
         Backend.applyGPUAuto(false);
         Backend.applyGPUFreqRange(gpuRangeMinFreq, gpuRangeMaxFreq);
-      }
-      else {
-        console.log(`出现意外的GPUmode = ${gpuMode}`)
+      } else {
+        console.log(`出现意外的GPUmode = ${gpuMode}`);
         Backend.applyGPUFreq(0);
       }
     }
 
-    if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_GPUSLIDERFIX) {
+    if (
+      applyTarget == APPLYTYPE.SET_ALL ||
+      applyTarget == APPLYTYPE.SET_GPUSLIDERFIX
+    ) {
       const gpuSlideFix = Settings.appGPUSliderFix();
       if (gpuSlideFix) {
         Backend.applyGPUSliderFix();
@@ -356,45 +415,53 @@ export class Backend {
       
     }*/
 
-    if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_FANRPM){
-      if(!FanControl.fanIsEnable){
+    if (
+      applyTarget == APPLYTYPE.SET_ALL ||
+      applyTarget == APPLYTYPE.SET_FANRPM
+    ) {
+      if (!FanControl.fanIsEnable) {
         return;
       }
       const fanSettings = Settings.appFanSettings();
-      for(var index=0;index<fanSettings.length;index++){
+      for (var index = 0; index < fanSettings.length; index++) {
         var fanSetting = Settings.appFanSettings()?.[index];
         //没有配置时转自动
-        if(!fanSetting){
-          Backend.applyFanAuto(index,true);
-          console.log(`没有配置 index= ${index}`)
+        if (!fanSetting) {
+          Backend.applyFanAuto(index, true);
+          console.log(`没有配置 index= ${index}`);
           continue;
         }
         const fanMode = fanSetting.fanMode;
         //写入转速后再写入控制位
         if (fanMode == FANMODE.NOCONTROL) {
-          console.log(`不控制 index= ${index}`)
-          Backend.applyFanAuto(index,true);
+          console.log(`不控制 index= ${index}`);
+          Backend.applyFanAuto(index, true);
         } else if (fanMode == FANMODE.FIX) {
-          console.log(`直线 index= ${index}`)
-          Backend.applyFanPercent(index,FanControl.fanInfo[index].setPoint.fanRPMpercent!!);
-          Backend.applyFanAuto(index,false);
+          console.log(`直线 index= ${index}`);
+          Backend.applyFanPercent(
+            index,
+            FanControl.fanInfo[index].setPoint.fanRPMpercent!!
+          );
+          Backend.applyFanAuto(index, false);
         } else if (fanMode == FANMODE.CURVE) {
-          console.log(`曲线 index= ${index}`)
-          Backend.applyFanPercent(index,FanControl.fanInfo[index].setPoint.fanRPMpercent!!);
-          Backend.applyFanAuto(index,false);
+          console.log(`曲线 index= ${index}`);
+          Backend.applyFanPercent(
+            index,
+            FanControl.fanInfo[index].setPoint.fanRPMpercent!!
+          );
+          Backend.applyFanAuto(index, false);
         } else {
-          console.log(`出现意外的FanMode = ${fanMode}`)
+          console.log(`出现意外的FanMode = ${fanMode}`);
         }
       }
     }
   };
 
-  public static resetFanSettings = () =>{
-    FanControl.fanInfo.forEach((_value,index)=>{
-      Backend.applyFanAuto(index,true);
-    })
-   
-  }
+  public static resetFanSettings = () => {
+    FanControl.fanInfo.forEach((_value, index) => {
+      Backend.applyFanAuto(index, true);
+    });
+  };
 
   public static resetSettings = () => {
     console.log("重置所有设置");
@@ -403,8 +470,8 @@ export class Backend {
     Backend.applyCpuBoost(true);
     Backend.applyTDP(Backend.data.getTDPMax());
     Backend.applyGPUFreq(0);
-    FanControl.fanInfo.forEach((_value,index)=>{
-      Backend.applyFanAuto(index,true);
-    })
+    FanControl.fanInfo.forEach((_value, index) => {
+      Backend.applyFanAuto(index, true);
+    });
   };
 }
