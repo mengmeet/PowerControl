@@ -111,6 +111,11 @@ const SettingsPerAcStateComponent: VFC = () => {
 
   const [appACStateOverWrite, setAppACStateOverWrite] = useState<boolean>(Settings.appACStateOverWrite());
   const [acstate, setACState] = useState<ACState>(ACStateManager.getACState());
+  const [show, setShow] = useState<boolean>(Settings.ensureEnable());
+
+  const hide = (ishide: boolean) => {
+    setShow(!ishide);
+  };
 
   const refresh = () => {
     setAppACStateOverWrite(Settings.appACStateOverWrite());
@@ -123,12 +128,19 @@ const SettingsPerAcStateComponent: VFC = () => {
         case UpdateType.UPDATE:
           refresh();
           break;
+        case UpdateType.SHOW:
+          hide(false);
+          break;
+        case UpdateType.HIDE:
+          hide(true);
+          break;
       }
     });
   });
 
   return (
-    <PanelSectionRow>
+    <div>
+    {show && <PanelSectionRow>
       <ToggleField
         label = {"Use AC state profile"}
         description = {`Current AC state ${acstate}`}
@@ -137,7 +149,8 @@ const SettingsPerAcStateComponent: VFC = () => {
           Settings.setACStateOverWrite(override);
         }}
       />
-    </PanelSectionRow>
+    </PanelSectionRow>}
+    </div>
   )
 }
 
