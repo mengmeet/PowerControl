@@ -46,7 +46,8 @@ export enum ComponentName{
     GPU_SLIDERFIX="GPU_SLIDERFIX",
     FAN_ALL="FAN_ALL",
     FAN_RPM="FAN_RPM",
-    FAN_DISPLAY="FAN_DISPLAY"
+    FAN_DISPLAY="FAN_DISPLAY",
+    SET_PERACMODE="SET_PERACMODE"
 }
 
 export enum UpdateType{

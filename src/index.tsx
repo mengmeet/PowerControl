@@ -22,26 +22,28 @@ import {
   staticClasses,
   SteamSpinner,
 } from "decky-frontend-lib";
-import { VFC} from "react";
+import { VFC } from "react";
 import { FaSuperpowers } from "react-icons/fa";
-import { PluginManager} from "./util";
-import { GPUComponent,CPUComponent,SettingsComponent,FANComponent, MoreComponent} from "./components";
+import { PluginManager } from "./util";
+import { GPUComponent, CPUComponent, SettingsComponent, FANComponent, MoreComponent } from "./components";
 
-const Content: VFC<{}> = ({}) => {
+const Content: VFC<{}> = ({ }) => {
   return (
-      <div>
-        {PluginManager.isIniting()&&<PanelSectionRow>
-          <SteamSpinner/>
+    <div>
+      {PluginManager.isIniting() &&
+        <PanelSectionRow>
+          <SteamSpinner />
         </PanelSectionRow>}
-        {!PluginManager.isIniting()&&<div>
-          <SettingsComponent/>
+      {!PluginManager.isIniting() &&
+        <div>
+          <SettingsComponent />
           <CPUComponent />
           <GPUComponent />
           <FANComponent />
-          <MoreComponent/>
+          <MoreComponent />
         </div>}
-      </div>
-    );
+    </div>
+  );
 };
 
 export default definePlugin((serverAPI: ServerAPI) => {
@@ -49,7 +51,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
 
   return {
     title: <div className={staticClasses.Title}>PowerControl</div>,
-    content: <Content/>,
+    content: <Content />,
     icon: <FaSuperpowers />,
     onDismount() {
       PluginManager?.unregister();
