@@ -25,11 +25,10 @@ export class fanPosition {
     var getDis =Math.sqrt(Math.pow((other.temperature!!-this.temperature!!),2)+Math.pow((other.fanRPMpercent!!-this.fanRPMpercent!!),2))
     return getDis<=distance
   }
-  public static createFanPosByCanPos(canx:number,cany:number,canWidth:number,canHeight:number)
-  {
+  public static createFanPosByCanPos(canx:number,cany:number,canWidth:number,canHeight:number) {
     var temperature=Math.min(Math.max(canx!!/canWidth*this.tempMax,this.tempMin),this.tempMax);
     var fanRPMpercent=Math.min(Math.max((1-cany!!/canHeight)*this.fanMax,this.fanMin),this.fanMax);
-    return new fanPosition(temperature,fanRPMpercent)
+    return new fanPosition(temperature, fanRPMpercent)
   }
 }
 /*
