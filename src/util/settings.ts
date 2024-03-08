@@ -136,6 +136,13 @@ export class AppSettingData {
   // 电池模式配置
   @JsonProperty()
   public batSetting: AppSetting = new AppSetting();
+
+  constructor() {
+    this.acStateOverwrite = false;
+    this.defaultSettig = new AppSetting();
+    this.acStting = new AppSetting();
+    this.batSetting = new AppSetting();
+  }
 }
 
 @JsonObject()
@@ -183,9 +190,7 @@ export class Settings {
 
     //没有配置文件的时候新生成一个
     if (!(appId in this._instance.perApp)) {
-      this._instance.perApp[appId].defaultSettig = new AppSetting();
-      this._instance.perApp[appId].acStting = new AppSetting();
-      this._instance.perApp[appId].batSetting = new AppSetting();
+      this._instance.perApp[appId] = new AppSettingData();
 
       // 新生成后如果有默认配置文件，则拷贝默认配置文件
       if (DEFAULT_APP in this._instance.perApp) {

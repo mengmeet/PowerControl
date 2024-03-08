@@ -47,7 +47,11 @@ const Content: VFC<{}> = ({ }) => {
 };
 
 export default definePlugin((serverAPI: ServerAPI) => {
-  PluginManager.register(serverAPI);
+  try {
+    PluginManager.register(serverAPI);
+  } catch (e) {
+    console.log("Error while registering plugin", e);
+  }
 
   return {
     title: <div className={staticClasses.Title}>PowerControl</div>,
