@@ -12,7 +12,7 @@ import {
   DropdownItem,
 } from "decky-frontend-lib";
 import { useEffect, useState, useRef, VFC } from "react";
-import { FiPlusCircle } from "react-icons/fi"
+import { FiArrowLeft, FiArrowRight, FiPlus, FiPlusCircle, FiTrash2 } from "react-icons/fi"
 import { Settings, PluginManager, ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, fanPosition, FanSetting, FANPROFILEACTION, FanControl, Backend } from "../util";
 import { localizeStrEnum, localizationManager } from "../i18n";
 import { FanCanvas } from "./fanCanvas";
@@ -616,6 +616,146 @@ function FANCretateProfileModelComponent({
       }
     }
   }
+
+  const addCurvePoint = () => {
+    try {
+      // 统计 curvePoints.current 中所有点的温度值，以及额外的0和100，然后排序。取出距离最远的两个点，然后在他们之间插入一个点。
+      let allTemp = curvePoints.current.map((point: fanPosition) => point.temperature!!);
+      allTemp.push(0);
+      allTemp.push(100);
+      allTemp.sort((a: number, b: number) => a - b);
+      console.log(`allTemp:${allTemp}`);
+      let maxDis = 0;
+      let maxDisIndex = 0;
+      for (let i = 1; i < allTemp.length; i++) {
+        let dis = allTemp[i] - allTemp[i - 1];
+        if (dis > maxDis) {
+          maxDis = dis;
+          maxDisIndex = i;
+        }
+      }
+      let newTemp = (allTemp[maxDisIndex] + allTemp[maxDisIndex - 1]) / 2;
+      let newSpeed = newTemp;
+      console.log(`newTemp:${newTemp},newSpeed:${newSpeed}`);
+      let newPoint = new fanPosition(newTemp, newSpeed);
+      curvePoints.current.push(newPoint);
+
+      // 选中新插入的点
+      selectedPoint.current = newPoint;
+      setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
+      setSelPointSpeed(Math.trunc(selectedPoint.current.fanRPMpercent));
+
+      refreshCanvas();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  const deleteCurvePoint = () => {
+    try {
+      if (selectedPoint.current) {
+        // 记录当前选中的点的温度
+        const delTemperature = selectedPoint.current.temperature;
+
+        // 删除 selectedPoint.current
+        for (let i = 0; i < curvePoints.current.length; i++) {
+          if (curvePoints.current[i] == selectedPoint.current) {
+            curvePoints.current.splice(i, 1);
+            selectedPoint.current = null;
+            setSelPointTemp(0);
+            setSelPointSpeed(0);
+            refreshCanvas();
+            break;
+          }
+        }
+
+        // 当前选中的点被删除后，选中与 delTemperature 最近的点
+        let minDis = 100;
+        let minDisIndex = 0;
+        for (let i = 0; i < curvePoints.current.length; i++) {
+          let dis = Math.abs(curvePoints.current[i].temperature!! - delTemperature);
+          if (dis < minDis) {
+            minDis = dis;
+            minDisIndex = i;
+          }
+        }
+        selectedPoint.current = curvePoints.current[minDisIndex];
+        setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
+        setSelPointSpeed(Math.trunc(selectedPoint.current.fanRPMpercent));
+        refreshCanvas();
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  const selectLeftPoint = () => {
+    if (selectedPoint.current) {
+      let index = curvePoints.current.indexOf(selectedPoint.current);
+      if (index > 0) {
+        selectedPoint.current = curvePoints.current[index - 1];
+        setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
+        setSelPointSpeed(Math.trunc(selectedPoint.current.fanRPMpercent));
+        refreshCanvas();
+      }
+    } else {
+      if (curvePoints.current.length > 0) {
+        selectedPoint.current = curvePoints.current[curvePoints.current.length - 1];
+        setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
+        setSelPointSpeed(Math.trunc(selectedPoint.current.fanRPMpercent));
+        refreshCanvas();
+      }
+    }
+  }
+
+  const selectRightPoint = () => {
+    if (selectedPoint.current) {
+      let index = curvePoints.current.indexOf(selectedPoint.current);
+      if (index < curvePoints.current.length - 1) {
+        selectedPoint.current = curvePoints.current[index + 1];
+        setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
+        setSelPointSpeed(Math.trunc(selectedPoint.current.fanRPMpercent));
+        refreshCanvas();
+      }
+    } else {
+      if (curvePoints.current.length > 0) {
+        selectedPoint.current = curvePoints.current[0];
+        setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
+        setSelPointSpeed(Math.trunc(selectedPoint.current.fanRPMpercent));
+        refreshCanvas();
+      }
+    }
+  }
+
+  interface CurveControlButtonProps {
+    onOKActionDescription: string;
+    onClick?: () => void;
+    disabled?: boolean;
+    children?: React.ReactNode;
+  }
+
+  const CurveControlButton = ({ onOKActionDescription, onClick, children, disabled }: CurveControlButtonProps) => {
+    return (
+      <DialogButton
+        style={{
+          height: "32px",
+          width: "42px",
+          minWidth: 0,
+          padding: "10px 12px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          marginRight: "8px",
+        }}
+        disabled={disabled}
+        onOKActionDescription={onOKActionDescription}
+        onClick={onClick}
+      >
+        {children}
+      </DialogButton>
+    );
+  }
+
   return (
     <div>
       <style>
@@ -719,6 +859,44 @@ function FANCretateProfileModelComponent({
                   setFixSpeed(value);
                 }}
               />}
+              {fanMode == FANMODE.CURVE &&
+                <Field childrenLayout="below" highlightOnFocus={false} >
+                  <Focusable style={{ width: "100%", display: "flex", justifyContent: "space-between" }}>
+                    <CurveControlButton
+                      onOKActionDescription={"ADD"}
+                      onClick={() => {
+                        addCurvePoint();
+                      }}
+                    >
+                      <FiPlus />
+                    </CurveControlButton>
+                    <CurveControlButton
+                      onOKActionDescription={"PREV"}
+                      onClick={() => {
+                        selectLeftPoint();
+                      }}
+                    >
+                      <FiArrowLeft />
+                    </CurveControlButton>
+                    <CurveControlButton
+                      onOKActionDescription={"NEXT"}
+                      onClick={() => {
+                        selectRightPoint();
+                      }}
+                    >
+                      <FiArrowRight />
+                    </CurveControlButton>
+                    <CurveControlButton
+                      onOKActionDescription={"DELETE"}
+                      disabled={!selectedPoint.current}
+                      onClick={() => {
+                        deleteCurvePoint();
+                      }}
+                    >
+                      <FiTrash2 />
+                    </CurveControlButton>
+                  </Focusable>
+                </Field>}
               {fanMode == FANMODE.CURVE && <SliderField
                 label={localizationManager.getString(localizeStrEnum.SENSOR_TEMP)}
                 value={selPointTemp}
