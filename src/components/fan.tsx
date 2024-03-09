@@ -694,18 +694,16 @@ function FANCretateProfileModelComponent({
       let index = curvePoints.current.indexOf(selectedPoint.current);
       if (index > 0) {
         selectedPoint.current = curvePoints.current[index - 1];
-        setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
-        setSelPointSpeed(Math.trunc(selectedPoint.current.fanRPMpercent));
-        refreshCanvas();
       }
     } else {
       if (curvePoints.current.length > 0) {
         selectedPoint.current = curvePoints.current[curvePoints.current.length - 1];
-        setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
-        setSelPointSpeed(Math.trunc(selectedPoint.current.fanRPMpercent));
-        refreshCanvas();
       }
     }
+
+    setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
+    setSelPointSpeed(Math.trunc(selectedPoint.current.fanRPMpercent));
+    refreshCanvas();
   }
 
   const selectRightPoint = () => {
@@ -713,18 +711,17 @@ function FANCretateProfileModelComponent({
       let index = curvePoints.current.indexOf(selectedPoint.current);
       if (index < curvePoints.current.length - 1) {
         selectedPoint.current = curvePoints.current[index + 1];
-        setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
-        setSelPointSpeed(Math.trunc(selectedPoint.current.fanRPMpercent));
-        refreshCanvas();
+
       }
     } else {
       if (curvePoints.current.length > 0) {
         selectedPoint.current = curvePoints.current[0];
-        setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
-        setSelPointSpeed(Math.trunc(selectedPoint.current.fanRPMpercent));
-        refreshCanvas();
       }
     }
+
+    setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
+    setSelPointSpeed(Math.trunc(selectedPoint.current.fanRPMpercent));
+    refreshCanvas();
   }
 
   interface CurveControlButtonProps {
