@@ -26,7 +26,7 @@
     "CREATE_FAN_PROFILE":"创建风扇配置文件",
     "GRID_ALIG":"网格对齐",
     "FAN_MODE":"风扇模式",
-    "NOT_CONTROLLED":"不控制",
+    "NOT_CONTROLLED":"系统",
     "FIXED":"固定",
     "CURVE":"曲线",
     "SNAP_GRIDLINE":"对齐到网格线交点",
