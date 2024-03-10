@@ -229,7 +229,6 @@ export class PluginManager{
     PluginManager.state = PluginState.INIT; 
     await Backend.init(serverAPI);
     await localizationManager.init(serverAPI);
-    await QAMPatch.init();
     RunningApps.register();
     FanControl.register();
     RunningApps.listenActiveChange((newAppId, oldAppId) => {
@@ -238,8 +237,9 @@ export class PluginManager{
         Backend.applySettings(APPLYTYPE.SET_ALL);
       }
     });
-    ACStateManager.register();
     Settings.loadSettingsFromLocalStorage();
+    ACStateManager.register();
+    await QAMPatch.init();
     Backend.applySettings(APPLYTYPE.SET_ALL);
     PluginManager.suspendEndHook = SteamClient.System.RegisterForOnResumeFromSuspend(async () => {
       setTimeout(() => {
