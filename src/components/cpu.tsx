@@ -7,6 +7,7 @@ import { useEffect, useState, VFC} from "react";
 import { Settings,Backend, PluginManager,ComponentName, UpdateType, GPUMODE, Patch} from "../util";
 import { localizeStrEnum,localizationManager } from "../i18n";
 import {SlowSliderField} from "./SlowSliderField"
+import { CustomTDPComponent } from ".";
 
 const CPUBoostComponent:VFC = () =>{
   const [cpuboost, setCPUBoost] = useState<boolean>(Settings.appCpuboost());
@@ -191,6 +192,7 @@ export const CPUComponent: VFC = () => {
           {isSpportSMT && <CPUSmtComponent/>}
           <CPUNumComponent/>
           {!PluginManager.isPatchSuccess(Patch.TDPPatch)&& <CPUTDPComponent/>}
+          <CustomTDPComponent />
         </PanelSection>}
         </div>
     );

@@ -44,13 +44,14 @@
     "SAVE":"儲存",
     "NATIVE_FREQ":"本機設定",
     "VERSION":"版本",
-    "REINSTALL_PLUGIN": "重新安装插件",
-    "UPDATE_PLUGIN": "更新插件到",
-    "INSTALLED_VERSION": "当前版本",
+    "REINSTALL_PLUGIN": "重新安裝插件",
+    "UPDATE_PLUGIN": "更新插件至",
+    "INSTALLED_VERSION": "目前版本",
     "LATEST_VERSION": "最新版本",
-    "GPU_NATIVE_SLIDER": "原生控制条",
-    "GPU_NATIVE_SLIDER_DESC": "修复并启用原生控制条",
-    "USE_PERACMODE_PROFILE": "使用按充电状态设置的配置文件",
-    "AC_MODE": "充电模式",
-    "BAT_MODE": "电池模式"
+    "GPU_NATIVE_SLIDER": "原生控制條",
+    "GPU_NATIVE_SLIDER_DESC": "修復並啟用原生控制條",
+    "USE_PERACMODE_PROFILE": "使用依充電狀態設定的設定檔",
+    "AC_MODE": "充電模式",
+    "BAT_MODE": "電池模式",
+    "CUSTOM_TDP_RANGE": "自訂 TDP 範圍"
 }

@@ -62,6 +62,10 @@ export class QAMPatch {
   public static setTDPEanble(isEnable: boolean) {
     this.TDP_Patch.setTDPEanble(isEnable);
   }
+
+  public static setTDPRange(min?: number, max?: number) {
+    this.TDP_Patch.setTDPRange(min, max);
+  }
 }
 
 class TDPPatch {
@@ -96,6 +100,17 @@ class TDPPatch {
     this.perfStore.msgSettingsPerApp.is_tdp_limit_enabled = isEnable;
   }
 
+  public setTDPRange(min?: number, max?: number) {
+    if (min) {
+      this.perfStore.msgLimits.tdp_limit_min = min;
+    }
+    if (max) {
+      this.perfStore.msgLimits.tdp_limit_max = max;
+    }
+  }
+
+
+
   public patch(patchCallBack: (isPatchSuccess: boolean) => void) {
     try {
       //tdp最大值修补
@@ -104,14 +119,16 @@ class TDPPatch {
         "Get",
         (_: any[], ret: any) => {
           try {
-            if (Backend.data.HasTDPMax()) {
-              this.perfStore.msgLimits.tdp_limit_max = Backend.data.getTDPMax();
-            } else {
-              console.error("未获取到tdp最大值,结束修补");
-              patchCallBack(false);
-            }
+            // if (Backend.data.HasTDPMax()) {
+            //   this.perfStore.msgLimits.tdp_limit_max = Backend.data.getTDPMax();
+            // } else {
+            //   console.error("未获取到tdp最大值,结束修补");
+            //   patchCallBack(false);
+            // }
+            this.perfStore.msgLimits.tdp_limit_max = Settings.getTDPMax();
+            this.perfStore.msgLimits.tdp_limit_min = Settings.getTDPMin();
           } catch (e) {
-            console.error(`tdp最大值修补失败: ${e}`);
+            console.error(`tdp 范围修补失败: ${e}`);
             patchCallBack(false);
           }
           return ret;

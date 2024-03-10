@@ -2,7 +2,7 @@ import { ServerAPI } from "decky-frontend-lib";
 import { APPLYTYPE, FANMODE, GPUMODE, Patch } from "./enum";
 import { FanControl, PluginManager } from "./pluginMain";
 import { Settings } from "./settings";
-import { QAMPatch } from ".";
+import { DEFAULT_TDP_MAX, DEFAULT_TDP_MIN, QAMPatch } from ".";
 
 export class BackendData {
   private serverAPI: ServerAPI | undefined;
@@ -329,23 +329,38 @@ export class Backend {
       Backend.applyCpuBoost(cpuBoost);
     }
     if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_TDP) {
+      // 自定义 QAM TDP范围
+      const enableCustomTDPRange = Settings.appEnableCustomTDPRange();
+      const customTDPRangeMax = Settings.appCustomTDPRangeMax();
+      const customTDPRangeMin = Settings.appCustomTDPRangeMin();
+      if (enableCustomTDPRange) {
+        QAMPatch.setTDPRange(customTDPRangeMin, customTDPRangeMax);
+      } else {
+        QAMPatch.setTDPRange(
+          DEFAULT_TDP_MIN,
+          Backend.data.getTDPMax() !== 0 ? Backend.data.getTDPMax() : DEFAULT_TDP_MAX
+        );
+      }
+
+      // 应用 TDP
       const tdp = Settings.appTDP();
       const tdpEnable = Settings.appTDPEnable();
+      const _tdp = Math.min(customTDPRangeMax, Math.max(customTDPRangeMin, tdp));
 
       if (!PluginManager.isPatchSuccess(Patch.TDPPatch)) {
-        console.log(`>>>>> 插件方式更新 TDP = ${tdp} TDPEnable = ${tdpEnable}`);
+        console.log(`>>>>> 插件方式更新 TDP = ${_tdp} TDPEnable = ${tdpEnable}`);
         if (tdpEnable) {
-          Backend.applyTDP(tdp);
+          Backend.applyTDP(_tdp);
         } else {
           Backend.applyTDP(Backend.data.getTDPMax());
         }
       } else {
-        console.log(`>>>>> 原生设置更新 TDP = ${tdp} TDPEnable = ${tdpEnable}`);
+        console.log(`>>>>> 原生设置更新 TDP = ${_tdp} TDPEnable = ${tdpEnable}`);
         // 更新 原生设置的值
         QAMPatch.setTDPEanble(tdpEnable);
-        QAMPatch.setTDP(tdp);
+        QAMPatch.setTDP(_tdp);
         if (tdpEnable) {
-          Backend.applyTDP(tdp);
+          Backend.applyTDP(_tdp);
         }
       }
     }

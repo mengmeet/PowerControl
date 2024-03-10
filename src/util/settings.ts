@@ -14,6 +14,9 @@ import {
 } from "./pluginMain";
 import { ACState } from "./steamClient";
 
+export const DEFAULT_TDP_MAX = 25;
+export const DEFAULT_TDP_MIN = 3;
+
 const SETTINGS_KEY = "PowerControl";
 const serializer = new JsonSerializer();
 
@@ -161,6 +164,20 @@ export class Settings {
 
   @JsonProperty({ isDictionary: true, type: FanSetting })
   public fanSettings: { [fanProfile: string]: FanSetting } = {};
+
+  @JsonProperty()
+  public enableCustomTDPRange: boolean = false;
+
+  @JsonProperty()
+  public customTDPRangeMax: number;
+
+  @JsonProperty()
+  public customTDPRangeMin: number;
+
+  constructor() {
+    this.customTDPRangeMax = DEFAULT_TDP_MAX;
+    this.customTDPRangeMin = DEFAULT_TDP_MIN;
+  }
 
   public settingChangeEvent = new EventTarget();
   //插件是否开启
@@ -346,6 +363,54 @@ export class Settings {
     }
   }
 
+  static appEnableCustomTDPRange() {
+    return this._instance.enableCustomTDPRange;
+  }
+
+  static setEnableCustomTDPRange(enableCustomTDPRange: boolean) {
+    if (this._instance.enableCustomTDPRange != enableCustomTDPRange) {
+      this._instance.enableCustomTDPRange = enableCustomTDPRange;
+      Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_TDP);
+      PluginManager.updateComponent(
+        ComponentName.CUSTOM_TDP,
+        UpdateType.UPDATE
+      );
+    }
+  }
+
+  static appCustomTDPRangeMax() {
+    return this._instance.customTDPRangeMax;
+  }
+
+  static setCustomTDPRangeMax(customTDPRangeMax: number) {
+    if (this._instance.customTDPRangeMax != customTDPRangeMax) {
+      this._instance.customTDPRangeMax = customTDPRangeMax;
+      Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_TDP);
+      PluginManager.updateComponent(
+        ComponentName.CUSTOM_TDP,
+        UpdateType.UPDATE
+      );
+    }
+  }
+
+  static appCustomTDPRangeMin() {
+    return this._instance.customTDPRangeMin;
+  }
+
+  static setCustomTDPRangeMin(customTDPRangeMin: number) {
+    if (this._instance.customTDPRangeMin != customTDPRangeMin) {
+      this._instance.customTDPRangeMin = customTDPRangeMin;
+      Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_TDP);
+      PluginManager.updateComponent(
+        ComponentName.CUSTOM_TDP,
+        UpdateType.UPDATE
+      );
+    }
+  }
+
   static appTDPEnable() {
     return Settings.ensureApp().tdpEnable!!;
   }
@@ -356,6 +421,22 @@ export class Settings {
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_TDP);
       PluginManager.updateComponent(ComponentName.CPU_TDP, UpdateType.UPDATE);
+    }
+  }
+
+  static getTDPMax() {
+    if (this._instance.enableCustomTDPRange) {
+      return this._instance.customTDPRangeMax;
+    } else {
+      return Backend.data.getTDPMax();
+    }
+  }
+
+  static getTDPMin() {
+    if (this._instance.enableCustomTDPRange) {
+      return this._instance.customTDPRangeMin;
+    } else {
+      return 3;
     }
   }
 
@@ -663,6 +744,17 @@ export class Settings {
     this._instance.enabled = loadSetting ? loadSetting.enabled : false;
     this._instance.perApp = loadSetting ? loadSetting.perApp : {};
     this._instance.fanSettings = loadSetting ? loadSetting.fanSettings : {};
+
+    this._instance.overwrite = loadSetting ? loadSetting.overwrite : false;
+    this._instance.enableCustomTDPRange = loadSetting
+      ? loadSetting.enableCustomTDPRange
+      : false;
+    this._instance.customTDPRangeMax = loadSetting
+      ? loadSetting.customTDPRangeMax
+      : 30;
+    this._instance.customTDPRangeMin = loadSetting
+      ? loadSetting.customTDPRangeMin
+      : 5;
   }
 
   static saveSettingsToLocalStorage() {

@@ -148,7 +148,7 @@ const SettingsPerAcStateComponent: VFC = () => {
   }
 
   const getDescription = (acstate: ACState) => {
-    return localizationManager.getString(localizeStrEnum.USING) + 
+    return localizationManager.getString(localizeStrEnum.USING) +
       (appACStateOverWrite ? "『" : "") +
       (appACStateOverWrite ? getAcSteteName(acstate) : localizationManager.getString(localizeStrEnum.DEFAULT)) +
       (appACStateOverWrite ? "』" : "") +
@@ -157,16 +157,16 @@ const SettingsPerAcStateComponent: VFC = () => {
 
   return (
     <div>
-    {show && <PanelSectionRow>
-      <ToggleField
-        label = {localizationManager.getString(localizeStrEnum.USE_PERACMODE_PROFILE)}
-        description = {getDescription(acstate)}
-        checked = {appACStateOverWrite}
-        onChange = {(override) => {
-          Settings.setACStateOverWrite(override);
-        }}
-      />
-    </PanelSectionRow>}
+      {show && <PanelSectionRow>
+        <ToggleField
+          label={localizationManager.getString(localizeStrEnum.USE_PERACMODE_PROFILE)}
+          description={getDescription(acstate)}
+          checked={appACStateOverWrite}
+          onChange={(override) => {
+            Settings.setACStateOverWrite(override);
+          }}
+        />
+      </PanelSectionRow>}
     </div>
   )
 }

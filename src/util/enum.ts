@@ -47,7 +47,8 @@ export enum ComponentName{
     FAN_ALL="FAN_ALL",
     FAN_RPM="FAN_RPM",
     FAN_DISPLAY="FAN_DISPLAY",
-    SET_PERACMODE="SET_PERACMODE"
+    SET_PERACMODE="SET_PERACMODE",
+    CUSTOM_TDP="CUSTOM_TDP"
 }
 
 export enum UpdateType{
