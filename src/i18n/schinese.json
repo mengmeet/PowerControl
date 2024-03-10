@@ -52,5 +52,6 @@
     "GPU_NATIVE_SLIDER_DESC": "修复并启用原生控制条",
     "USE_PERACMODE_PROFILE": "使用按充电状态设置的配置文件",
     "AC_MODE": "充电模式",
-    "BAT_MODE": "电池模式"
+    "BAT_MODE": "电池模式",
+    "CUSTOM_TDP_RANGE": "自定义 TDP 范围"
 }

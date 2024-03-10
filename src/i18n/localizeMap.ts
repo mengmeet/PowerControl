@@ -119,5 +119,7 @@ export enum localizeStrEnum {
     USE_PERACMODE_PROFILE="USE_PERACMODE_PROFILE",
     AC_MODE="AC_MODE",
     BAT_MODE="BAT_MODE",
+
+    CUSTOM_TDP_RANGE="CUSTOM_TDP_RANGE"
 }
     
