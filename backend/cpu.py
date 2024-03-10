@@ -371,4 +371,18 @@ class CPUManager ():
         else:
             self.offline_cpu(cpu_number)
 
+    def get_ryzenadj_info(self):
+        try:
+            command = f"{RYZENADJ_PATH} -i"
+            process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            stdout, stderr = process.stdout, process.stderr
+            if stderr:
+                logging.error(f"get_ryzenadj_info error:\n{stderr}")
+                return f"get_ryzenadj_info error:\n{stderr}"
+            else:
+                return stdout
+        except Exception as e:
+            logging.error(e)
+            return f"get_ryzenadj_info error:\n{e}"
+
 cpuManager = CPUManager()

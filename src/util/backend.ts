@@ -302,9 +302,15 @@ export class Backend {
     await this.serverAPI!.callPluginMethod("update_latest", {});
   }
 
-  public static applyGPUSliderFix() {
+  public static async applyGPUSliderFix() {
     console.log("applyGPUSliderFix");
-    this.serverAPI!.callPluginMethod("fix_gpuFreqSlider", {});
+    await this.serverAPI!.callPluginMethod("fix_gpuFreqSlider", {});
+  }
+
+  // get_ryzenadj_info
+  public static async getRyzenadjInfo(): Promise<string> {
+    return (await this.serverAPI!.callPluginMethod("get_ryzenadj_info", {}))
+      .result as string;
   }
 
   public static applySettings = (applyTarget: string) => {
