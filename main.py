@@ -207,3 +207,6 @@ class Plugin:
     
     async def get_latest_version(self):
         return update.get_latest_version()
+    
+    async def get_ryzenadj_info(self):
+        return cpuManager.get_ryzenadj_info()

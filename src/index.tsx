@@ -25,7 +25,7 @@ import {
 import { VFC } from "react";
 import { FaSuperpowers } from "react-icons/fa";
 import { PluginManager } from "./util";
-import { GPUComponent, CPUComponent, SettingsComponent, FANComponent, MoreComponent } from "./components";
+import { GPUComponent, CPUComponent, SettingsComponent, FANComponent, MoreComponent, QuickAccessTitleView } from "./components";
 
 const Content: VFC<{}> = ({ }) => {
   return (
@@ -55,6 +55,7 @@ export default definePlugin((serverAPI: ServerAPI) => {
 
   return {
     title: <div className={staticClasses.Title}>PowerControl</div>,
+    titleView: <QuickAccessTitleView title={"PowerControl"} />,
     content: <Content />,
     icon: <FaSuperpowers />,
     onDismount() {
