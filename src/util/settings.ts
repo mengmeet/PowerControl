@@ -280,6 +280,14 @@ export class Settings {
     }
   }
 
+  static saveOverWrite(overwrite: boolean) {
+    if (RunningApps.active() != DEFAULT_APP) {
+      this._instance.overwrite = overwrite;
+      Settings.saveSettingsToLocalStorage();
+      PluginManager.updateAllComponent(UpdateType.UPDATE);
+    }
+  }
+
   static appACStateOverWrite(): boolean {
     return (
       this._instance.perApp[Settings.ensureAppID()].acStateOverwrite ?? false
@@ -446,7 +454,7 @@ export class Settings {
       Settings.ensureApp().tdp != tdp ||
       Settings.ensureApp().tdpEnable != tdpEnable
     ) {
-      console.log("saveTDP", tdp, tdpEnable);
+      // console.log("saveTDP", tdp, tdpEnable);
       Settings.ensureApp().tdp = tdp;
       Settings.ensureApp().tdpEnable = tdpEnable;
       Settings.saveSettingsToLocalStorage();
