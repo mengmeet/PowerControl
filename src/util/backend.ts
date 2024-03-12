@@ -18,15 +18,15 @@ export class BackendData {
   private has_gpuMin = false;
   private fanConfigs: any[] = [];
   private has_fanConfigs = false;
-  private current_version = "1.0.0";
-  private latest_version = "1.0.0";
+  private current_version = "";
+  private latest_version = "";
   public async init(serverAPI: ServerAPI) {
     this.serverAPI = serverAPI;
     await serverAPI!
       .callPluginMethod<{}, number>("get_cpuMaxNum", {})
       .then((res) => {
         if (res.success) {
-          console.info("cpuMaxNum = " + res.result);
+          // console.info("cpuMaxNum = " + res.result);
           this.cpuMaxNum = res.result;
           this.has_cpuMaxNum = true;
         }
@@ -35,7 +35,7 @@ export class BackendData {
       .callPluginMethod<{}, number>("get_tdpMax", {})
       .then((res) => {
         if (res.success) {
-          console.info("tdpMax = " + res.result);
+          // console.info("tdpMax = " + res.result);
           this.tdpMax = res.result;
           this.has_tdpMax = true;
         }
@@ -44,7 +44,7 @@ export class BackendData {
       .callPluginMethod<{}, number[]>("get_gpuFreqRange", {})
       .then((res) => {
         if (res.success) {
-          console.info("gpuRange = " + res.result);
+          // console.info("gpuRange = " + res.result);
           this.gpuMin = res.result[0];
           this.gpuMax = res.result[1];
           this.has_gpuMin = true;
@@ -56,7 +56,7 @@ export class BackendData {
       {}
     ).then((res) => {
       if (res.success) {
-        console.info("fanConfigList", res.result);
+        // console.info("fanConfigList", res.result);
         this.fanConfigs = res.result;
         this.has_fanConfigs = true;
       } else {
@@ -224,37 +224,37 @@ export class Backend {
   }
 
   private static applySmt(smt: boolean) {
-    console.log("Applying smt " + smt.toString());
+    // console.log("Applying smt " + smt.toString());
     this.serverAPI!.callPluginMethod("set_smt", { value: smt });
   }
 
   private static applyCpuNum(cpuNum: number) {
-    console.log("Applying cpuNum " + cpuNum.toString());
+    // console.log("Applying cpuNum " + cpuNum.toString());
     this.serverAPI!.callPluginMethod("set_cpuOnline", { value: cpuNum });
   }
 
   private static applyCpuBoost(cpuBoost: boolean) {
-    console.log("Applying cpuBoost " + cpuBoost.toString());
+    // console.log("Applying cpuBoost " + cpuBoost.toString());
     this.serverAPI!.callPluginMethod("set_cpuBoost", { value: cpuBoost });
   }
 
   public static applyTDP = (tdp: number) => {
-    console.log("Applying tdp " + tdp.toString());
+    // console.log("Applying tdp " + tdp.toString());
     this.serverAPI!.callPluginMethod("set_cpuTDP", { value: tdp });
   };
 
   public static applyGPUFreq(freq: number) {
-    console.log("Applying gpuFreq " + freq.toString());
+    // console.log("Applying gpuFreq " + freq.toString());
     this.serverAPI!.callPluginMethod("set_gpuFreq", { value: freq });
   }
 
   private static applyGPUFreqRange(freqMin: number, freqMax: number) {
-    console.log(
-      "Applying gpuFreqRange  " +
-        freqMin.toString() +
-        "   " +
-        freqMax.toString()
-    );
+    // console.log(
+    //   "Applying gpuFreqRange  " +
+    //     freqMin.toString() +
+    //     "   " +
+    //     freqMax.toString()
+    // );
     this.serverAPI!.callPluginMethod("set_gpuFreqRange", {
       value: freqMin,
       value2: freqMax,
@@ -262,12 +262,12 @@ export class Backend {
   }
 
   private static applyGPUAuto(auto: boolean) {
-    console.log("Applying gpuAuto" + auto.toString());
+    // console.log("Applying gpuAuto" + auto.toString());
     this.serverAPI!.callPluginMethod("set_gpuAuto", { value: auto });
   }
 
   private static applyGPUAutoRange(minAutoFreq: number, maxAutoFreq: number) {
-    console.log("Applying gpuAuto" + maxAutoFreq.toString());
+    // console.log("Applying gpuAuto" + maxAutoFreq.toString());
     this.serverAPI!.callPluginMethod("set_gpuAutoFreqRange", {
       min: minAutoFreq,
       max: maxAutoFreq,
@@ -318,6 +318,14 @@ export class Backend {
       Backend.resetSettings();
       return;
     }
+
+    // 把 OverWrite 同步到系统 QAM 的使用游戏配置文件开关
+    if (applyTarget == APPLYTYPE.SET_ALL) {
+      // console.log(`PtoQ.0 >>>>`);
+      // console.log(`PtoQ.1 >>>> 同步 OverWrite 到 QAM ${Settings.appOverWrite()}`)
+      QAMPatch.togglePreferAppProfile(Settings.appOverWrite());
+    }
+
     if (
       applyTarget == APPLYTYPE.SET_ALL ||
       applyTarget == APPLYTYPE.SET_CPUCORE
@@ -344,24 +352,33 @@ export class Backend {
       } else {
         QAMPatch.setTDPRange(
           DEFAULT_TDP_MIN,
-          Backend.data.getTDPMax() !== 0 ? Backend.data.getTDPMax() : DEFAULT_TDP_MAX
+          Backend.data.getTDPMax() !== 0
+            ? Backend.data.getTDPMax()
+            : DEFAULT_TDP_MAX
         );
       }
 
       // 应用 TDP
       const tdp = Settings.appTDP();
       const tdpEnable = Settings.appTDPEnable();
-      const _tdp = Math.min(customTDPRangeMax, Math.max(customTDPRangeMin, tdp));
+      const _tdp = Math.min(
+        customTDPRangeMax,
+        Math.max(customTDPRangeMin, tdp)
+      );
 
       if (!PluginManager.isPatchSuccess(Patch.TDPPatch)) {
-        console.log(`>>>>> 插件方式更新 TDP = ${_tdp} TDPEnable = ${tdpEnable}`);
+        // console.log(
+        //   `>>>>> 插件方式更新 TDP = ${_tdp} TDPEnable = ${tdpEnable}`
+        // );
         if (tdpEnable) {
           Backend.applyTDP(_tdp);
         } else {
           Backend.applyTDP(Backend.data.getTDPMax());
         }
       } else {
-        console.log(`>>>>> 原生设置更新 TDP = ${_tdp} TDPEnable = ${tdpEnable}`);
+        // console.log(
+        //   `>>>>> 原生设置更新 TDP = ${_tdp} TDPEnable = ${tdpEnable}`
+        // );
         // 更新 原生设置的值
         QAMPatch.setTDPEanble(tdpEnable);
         QAMPatch.setTDP(_tdp);
@@ -449,30 +466,30 @@ export class Backend {
         //没有配置时转自动
         if (!fanSetting) {
           Backend.applyFanAuto(index, true);
-          console.log(`没有配置 index= ${index}`);
+          // console.log(`没有配置 index= ${index}`);
           continue;
         }
         const fanMode = fanSetting.fanMode;
         //写入转速后再写入控制位
         if (fanMode == FANMODE.NOCONTROL) {
-          console.log(`不控制 index= ${index}`);
+          // console.log(`不控制 index= ${index}`);
           Backend.applyFanAuto(index, true);
         } else if (fanMode == FANMODE.FIX) {
-          console.log(`直线 index= ${index}`);
+          // console.log(`直线 index= ${index}`);
           Backend.applyFanPercent(
             index,
             FanControl.fanInfo[index].setPoint.fanRPMpercent!!
           );
           Backend.applyFanAuto(index, false);
         } else if (fanMode == FANMODE.CURVE) {
-          console.log(`曲线 index= ${index}`);
+          // console.log(`曲线 index= ${index}`);
           Backend.applyFanPercent(
             index,
             FanControl.fanInfo[index].setPoint.fanRPMpercent!!
           );
           Backend.applyFanAuto(index, false);
         } else {
-          console.log(`出现意外的FanMode = ${fanMode}`);
+          console.error(`出现意外的FanMode = ${fanMode}`);
         }
       }
     }

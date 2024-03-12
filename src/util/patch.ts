@@ -66,6 +66,10 @@ export class QAMPatch {
   public static setTDPRange(min?: number, max?: number) {
     this.TDP_Patch.setTDPRange(min, max);
   }
+
+  public static togglePreferAppProfile(isEnable: boolean) {
+    this.TDP_Patch.togglePreferAppProfile(isEnable);
+  }
 }
 
 class TDPPatch {
@@ -79,12 +83,15 @@ class TDPPatch {
   private last_tdp_limit: number = 0;
   private last_is_tdp_limit_enabled: boolean = false;
   private last_ac_state: number = 0;
+  private last_active_profile_game_id: string = "769";
   public init(perfStoreClass: any) {
     this.perfStoreClass = perfStoreClass;
     this.perfStore = perfStoreClass.Get();
   }
   private applyTDP = () => {
-    console.log(`qam applyTDP: ${this.perfStore?.msgSettingsPerApp?.tdp_limit}`);
+    console.log(
+      `qam applyTDP: ${this.perfStore?.msgSettingsPerApp?.tdp_limit}`
+    );
     if (this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled) {
       Backend.applyTDP(this.perfStore?.msgSettingsPerApp?.tdp_limit);
     } else {
@@ -109,7 +116,36 @@ class TDPPatch {
     }
   }
 
+  private get active_profile_game_id() {
+    return this.perfStore.m_msgState.active_profile_game_id;
+  }
 
+  private set active_profile_game_id(game_id: string) {
+    this.perfStore.m_msgState.active_profile_game_id = game_id;
+  }
+
+  private get current_game_id() {
+    return this.perfStore.m_msgState.current_game_id;
+  }
+
+  public togglePreferAppProfile(isEnable: boolean) {
+    // console.log(
+    //   `PtoQ.2 >>>> _current_game_id :${this.current_game_id}, _active_profile_game_id :${this.active_profile_game_id}`
+    // );
+    if (isEnable) {
+      if (this.active_profile_game_id !== this.current_game_id) {
+        // console.log(
+        //   `PtoQ.3 >>>>  set active_profile_game_id to qam :${this.current_game_id}`
+        // );
+        this.active_profile_game_id = this.current_game_id;
+      }
+    } else {
+      // console.log(`PtoQ.3 >>>> set active_profile_game_id to qam :769; active_profile_game_id :${this.active_profile_game_id}`);
+      if (this.active_profile_game_id !== "769") {
+        this.active_profile_game_id = "769";
+      }
+    }
+  }
 
   public patch(patchCallBack: (isPatchSuccess: boolean) => void) {
     try {
@@ -160,19 +196,19 @@ class TDPPatch {
               this.last_tdp_limit !=
                 this.perfStore?.msgSettingsPerApp?.tdp_limit
             ) {
-              console.log(
-                `nav tdp limit change: ${this.last_tdp_limit} -> ${this.perfStore?.msgSettingsPerApp?.tdp_limit}`
-              );
-              console.log(
-                `nav tdp limit enable change: ${this.last_is_tdp_limit_enabled} -> ${this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled}`
-              );
+              // console.log(
+              //   `nav tdp limit change: ${this.last_tdp_limit} -> ${this.perfStore?.msgSettingsPerApp?.tdp_limit}`
+              // );
+              // console.log(
+              //   `nav tdp limit enable change: ${this.last_is_tdp_limit_enabled} -> ${this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled}`
+              // );
 
-              if ( this.last_tdp_limit != 0 ) {
-                console.log("saveTDP from qam listener")
+              if (this.last_tdp_limit != 0) {
+                // console.log("saveTDP from qam listener");
                 Settings.saveTDPFromQAM(
-                    this.perfStore?.msgSettingsPerApp?.tdp_limit ?? 15,
-                    this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled
-                  );
+                  this.perfStore?.msgSettingsPerApp?.tdp_limit ?? 15,
+                  this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled
+                );
               }
 
               this.last_is_tdp_limit_enabled =
@@ -181,6 +217,21 @@ class TDPPatch {
                 this.perfStore?.msgSettingsPerApp?.tdp_limit;
 
               this.applyTDP();
+            }
+
+            // 使用按游戏设置的配置文件开关，变化时应用设置到插件的开关上
+            if (
+              this.active_profile_game_id !== this.last_active_profile_game_id
+            ) {
+              this.last_active_profile_game_id = this.active_profile_game_id;
+              // console.log(`QtoP.0 >>>>`);
+              if (this.active_profile_game_id === "769") {
+                // console.log(`QtoP.1 >>>> setOverWrite false from qam listener`);
+                Settings.saveOverWrite(false);
+              } else {
+                // console.log(`QtoP.1 >>>> setOverWrite true from qam listener`);
+                Settings.saveOverWrite(true);
+              }
             }
           }, 500);
         }
@@ -242,7 +293,6 @@ class GPUPerformancePatch {
       return;
     }
 
-    
     if (
       GPUPerformanceLevel.ENABLE ==
       this.perfStore?.msgSettingsPerApp?.gpu_performance_level
