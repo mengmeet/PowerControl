@@ -240,7 +240,11 @@ export class PluginManager{
     Settings.loadSettingsFromLocalStorage();
     ACStateManager.register();
     await QAMPatch.init();
-    Backend.applySettings(APPLYTYPE.SET_ALL);
+    try {
+      Backend.applySettings(APPLYTYPE.SET_ALL);
+    } catch (e) {
+      console.log("Error while applying settings", e);
+    }
     PluginManager.suspendEndHook = SteamClient.System.RegisterForOnResumeFromSuspend(async () => {
       setTimeout(() => {
         if (Settings.ensureEnable()) {
