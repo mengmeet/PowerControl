@@ -1,7 +1,7 @@
 import { ServerAPI } from "decky-frontend-lib";
 import { APPLYTYPE, FANMODE, GPUMODE, Patch } from "./enum";
 import { FanControl, PluginManager } from "./pluginMain";
-import { Settings } from "./settings";
+import { Settings, SettingsData } from "./settings";
 import { DEFAULT_TDP_MAX, DEFAULT_TDP_MIN, QAMPatch } from ".";
 
 export class BackendData {
@@ -311,6 +311,17 @@ export class Backend {
   public static async getRyzenadjInfo(): Promise<string> {
     return (await this.serverAPI!.callPluginMethod("get_ryzenadj_info", {}))
       .result as string;
+  }
+
+  // set_settings
+  public static async setSettings(settingsData: SettingsData) {
+    await this.serverAPI!.callPluginMethod("set_settings", { settings: settingsData });
+  }
+
+  // get_settings
+  public static async getSettings(): Promise<SettingsData> {
+    return (await this.serverAPI!.callPluginMethod("get_settings", {}))
+      .result as SettingsData;
   }
 
   public static applySettings = (applyTarget: string) => {

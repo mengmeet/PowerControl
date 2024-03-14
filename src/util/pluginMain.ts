@@ -237,7 +237,7 @@ export class PluginManager{
         Backend.applySettings(APPLYTYPE.SET_ALL);
       }
     });
-    Settings.loadSettingsFromLocalStorage();
+    await Settings.loadSettings();
     ACStateManager.register();
     await QAMPatch.init();
     try {

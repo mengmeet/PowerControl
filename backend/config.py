@@ -34,6 +34,8 @@ except Exception as e:
 
 API_URL = "https://api.github.com/repos/mengmeet/PowerControl/releases/latest"
 
+CONFIG_KEY = "PowerControl"
+
 #TDP上限配置
 try:
     TDP_LIMIT_CONFIG_PRODUCT={
