@@ -118,6 +118,9 @@ export class FanSetting {
 
 @JsonObject()
 export class AppSettingData {
+  // 按 app 配置
+  @JsonProperty()
+  overwrite?: boolean;
   // 电源模式覆盖， app配置
   @JsonProperty()
   acStateOverwrite?: boolean;
@@ -132,6 +135,7 @@ export class AppSettingData {
   public batSetting: AppSetting = new AppSetting();
 
   constructor() {
+    this.overwrite = false;
     this.acStateOverwrite = false;
     this.defaultSettig = new AppSetting();
     this.acStting = new AppSetting();
@@ -143,10 +147,6 @@ export class AppSettingData {
 export class SettingsData {
   @JsonProperty()
   public enabled: boolean = true;
-
-  // 依据 appID 覆盖配置，作为全局开关而不是单个配置中的开关
-  @JsonProperty()
-  overwrite?: boolean;
 
   @JsonProperty()
   public enableCustomTDPRange: boolean = false;
@@ -164,7 +164,6 @@ export class SettingsData {
   public fanSettings: { [fanProfile: string]: FanSetting } = {};
 
   constructor() {
-    this.overwrite = false;
     this.customTDPRangeMax = DEFAULT_TDP_MAX;
     this.customTDPRangeMin = DEFAULT_TDP_MIN;
   }
@@ -228,19 +227,20 @@ export class Settings {
       }
     }
 
-    // 根据是否覆盖确定配置 id
-    const _appId = this._instance.data.overwrite ? appId : DEFAULT_APP;
+    if (this._instance.data.perApp[this.ensureAppID()] == undefined) {
+      this._instance.data.perApp[this.ensureAppID()] = new AppSettingData();
+    }
 
     // 不开启电源模式覆盖时，返回 id 默认配置
-    if (!this._instance.data.perApp[_appId].acStateOverwrite) {
-      return this._instance.data.perApp[_appId].defaultSettig;
+    if (!this._instance.data.perApp[this.ensureAppID()].acStateOverwrite) {
+      return this._instance.data.perApp[this.ensureAppID()].defaultSettig;
     }
 
     // 根据电源模式返回 id 对应的配置
     if (ACStateManager.getACState() === ACState.Connected) {
-      return this._instance.data.perApp[_appId].acStting;
+      return this._instance.data.perApp[this.ensureAppID()].acStting;
     } else {
-      return this._instance.data.perApp[_appId].batSetting;
+      return this._instance.data.perApp[this.ensureAppID()].batSetting;
     }
   }
 
@@ -260,24 +260,25 @@ export class Settings {
   //   return appId;
   // }
 
-  static ensureAppID(): string {
-    return this._instance.data.overwrite ? RunningApps.active() : DEFAULT_APP;
+  private static ensureAppID(): string {
+    return this._instance.data.perApp[RunningApps.active()]?.overwrite
+      ? RunningApps.active()
+      : DEFAULT_APP;
   }
 
   static appOverWrite(): boolean {
     if (RunningApps.active() == DEFAULT_APP) {
       return false;
     }
-    // return Settings.ensureApp().overwrite!!;
-    return this._instance.data.overwrite ?? false;
+    return this._instance.data.perApp[RunningApps.active()]?.overwrite ?? false;
   }
+
   static setOverWrite(overwrite: boolean) {
     if (
       RunningApps.active() != DEFAULT_APP &&
       Settings.appOverWrite() != overwrite
     ) {
-      // Settings._instance.data.perApp[RunningApps.active()].overwrite=overwrite;
-      this._instance.data.overwrite = overwrite;
+      this._instance.data.perApp[RunningApps.active()].overwrite = overwrite;
 
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_ALL);
@@ -287,7 +288,7 @@ export class Settings {
 
   static saveOverWrite(overwrite: boolean) {
     if (RunningApps.active() != DEFAULT_APP) {
-      this._instance.data.overwrite = overwrite;
+      this._instance.data.perApp[RunningApps.active()].overwrite = overwrite;
       Settings.saveSettingsToLocalStorage();
       PluginManager.updateAllComponent(UpdateType.UPDATE);
     }
@@ -759,7 +760,6 @@ export class Settings {
       ? loadSetting.fanSettings
       : {};
 
-    this._instance.data.overwrite = loadSetting ? loadSetting.overwrite : false;
     this._instance.data.enableCustomTDPRange = loadSetting
       ? loadSetting.enableCustomTDPRange
       : false;
