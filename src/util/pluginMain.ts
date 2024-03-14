@@ -4,7 +4,7 @@ import { Backend} from "./backend";
 import { localizationManager } from "../i18n";
 import { Settings } from "./settings";
 import { ACState, AppOverviewExt, BatteryStateChange } from "./steamClient";
-import { calPointInLine, fanPosition } from "./position";
+import { calPointInLine, FanPosition } from "./position";
 import { QAMPatch } from "./patch";
 
 type ActiveAppChangedHandler = (newAppId: string, oldAppId: string) => void;
@@ -82,7 +82,7 @@ export class ACStateManager {
 export class FanControl{
   private static intervalId: any;
   public static fanIsEnable:boolean=false;
-  public static fanInfo:{nowPoint:fanPosition,setPoint:fanPosition,lastSetPoint:fanPosition,fanMode:FANMODE,fanRPM:number,bFanNotSet:Boolean}[]=[];
+  public static fanInfo:{nowPoint:FanPosition,setPoint:FanPosition,lastSetPoint:FanPosition,fanMode:FANMODE,fanRPM:number,bFanNotSet:Boolean}[]=[];
 
   static async register() {
     if(Backend.data.getFanCount()==0){
@@ -90,7 +90,7 @@ export class FanControl{
       return;
     }
     for(var index = 0;index<Backend.data.getFanCount();index++){
-      this.fanInfo[index] = {nowPoint:new fanPosition(0,0),setPoint:new fanPosition(0,0),lastSetPoint:new fanPosition(0,0),fanMode:FANMODE.NOCONTROL,fanRPM:0,bFanNotSet:false}
+      this.fanInfo[index] = {nowPoint:new FanPosition(0,0),setPoint:new FanPosition(0,0),lastSetPoint:new FanPosition(0,0),fanMode:FANMODE.NOCONTROL,fanRPM:0,bFanNotSet:false}
     }
     if (this.intervalId == undefined)
       this.intervalId = setInterval(() => this.updateFan(), 1000);
@@ -151,11 +151,11 @@ export class FanControl{
           break;
         }
         case(FANMODE.CURVE):{
-          var curvePoints = fanSetting?.curvePoints!!.sort((a:fanPosition,b:fanPosition)=>{
+          var curvePoints = fanSetting?.curvePoints!!.sort((a:FanPosition,b:FanPosition)=>{
             return a.temperature==b.temperature?a.fanRPMpercent!!-b.fanRPMpercent!!:a.temperature!!-b.temperature!!
           });
           //每俩点判断是否在这俩点之间
-          var lineStart = new fanPosition(fanPosition.tempMin,fanPosition.fanMin);
+          var lineStart = new FanPosition(FanPosition.tempMin,FanPosition.fanMin);
           if(curvePoints?.length!!>0){
             //初始点到第一个点
             var lineEnd = curvePoints!![0];
@@ -167,14 +167,14 @@ export class FanControl{
             if(pointIndex>curvePoints?.length!!-1)
                 return;
               lineStart = value;
-              lineEnd = pointIndex == curvePoints?.length!!-1?new fanPosition(fanPosition.tempMax,fanPosition.fanMax):curvePoints!![pointIndex+1];
+              lineEnd = pointIndex == curvePoints?.length!!-1?new FanPosition(FanPosition.tempMax,FanPosition.fanMax):curvePoints!![pointIndex+1];
               if(FanControl.fanInfo[index].nowPoint.temperature!!>lineStart.temperature!!&&FanControl.fanInfo[index].nowPoint.temperature!!<=lineEnd.temperature!!){
                 FanControl.fanInfo[index].setPoint = calPointInLine(lineStart,lineEnd,FanControl.fanInfo[index].nowPoint.temperature!!)!!;
                 return;
               }
             })
           }else{
-            var lineEnd = new fanPosition(fanPosition.tempMax,fanPosition.fanMax);
+            var lineEnd = new FanPosition(FanPosition.tempMax,FanPosition.fanMax);
             if(FanControl.fanInfo[index].nowPoint.temperature!!>lineStart.temperature!!&&FanControl.fanInfo[index].nowPoint.temperature!!<=lineEnd.temperature!!){
               FanControl.fanInfo[index].setPoint = calPointInLine(lineStart,lineEnd,FanControl.fanInfo[index].nowPoint.temperature!!)!!;
               break;
@@ -243,7 +243,7 @@ export class PluginManager{
     try {
       Backend.applySettings(APPLYTYPE.SET_ALL);
     } catch (e) {
-      console.log("Error while applying settings", e);
+      console.error("Error while applying settings", e);
       Settings.resetToLocalStorage();
     }
     PluginManager.suspendEndHook = SteamClient.System.RegisterForOnResumeFromSuspend(async () => {

@@ -297,21 +297,10 @@ class GPUPerformancePatch {
       GPUPerformanceLevel.ENABLE ==
       this.perfStore?.msgSettingsPerApp?.gpu_performance_level
     ) {
-      console.log(
-        "Applying gpuFreq " +
-          this.perfStore.msgSettingsPerApp.gpu_performance_manual_mhz?.toString() +
-          "gpu_enable " +
-          this.perfStore?.msgSettingsPerApp?.gpu_performance_level
-      );
       Backend.applyGPUFreq(
         this.perfStore.msgSettingsPerApp.gpu_performance_manual_mhz ?? 0
       );
     } else {
-      console.log(
-        "Applying gpuFreq 0" +
-          "gpu_enable " +
-          this.perfStore?.msgSettingsPerApp?.gpu_performance_level
-      );
       Backend.applyGPUFreq(0);
     }
   };

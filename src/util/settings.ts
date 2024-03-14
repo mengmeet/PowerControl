@@ -5,7 +5,7 @@ import {
 } from "typescript-json-serializer";
 import { APPLYTYPE, ComponentName, FANMODE, GPUMODE, UpdateType } from "./enum";
 import { Backend } from "./backend";
-import { fanPosition } from "./position";
+import { FanPosition } from "./position";
 import {
   ACStateManager,
   DEFAULT_APP,
@@ -101,13 +101,13 @@ export class FanSetting {
   fanMode?: number = FANMODE.NOCONTROL;
   @JsonProperty()
   fixSpeed?: number = 50;
-  @JsonProperty({ type: fanPosition })
-  curvePoints?: fanPosition[] = [];
+  @JsonProperty({ type: FanPosition })
+  curvePoints?: FanPosition[] = [];
   constructor(
     snapToGrid: boolean,
     fanMode: number,
     fixSpeed: number,
-    curvePoints: fanPosition[]
+    curvePoints: FanPosition[]
   ) {
     this.snapToGrid = snapToGrid;
     this.fanMode = fanMode;
@@ -141,6 +141,14 @@ export class AppSettingData {
     this.acStting = new AppSetting();
     this.batSetting = new AppSetting();
   }
+
+  public deepCopy(copyTarget: AppSettingData) {
+    this.overwrite = copyTarget.overwrite;
+    this.acStateOverwrite = copyTarget.acStateOverwrite;
+    this.defaultSettig.deepCopy(copyTarget.defaultSettig);
+    this.acStting.deepCopy(copyTarget.acStting);
+    this.batSetting.deepCopy(copyTarget.batSetting);
+  }
 }
 
 @JsonObject()
@@ -167,6 +175,22 @@ export class SettingsData {
     this.customTDPRangeMax = DEFAULT_TDP_MAX;
     this.customTDPRangeMin = DEFAULT_TDP_MIN;
   }
+
+  public deepCopy(copyTarget: SettingsData) {
+    this.enabled = copyTarget.enabled;
+    this.enableCustomTDPRange = copyTarget.enableCustomTDPRange;
+    this.customTDPRangeMax = copyTarget.customTDPRangeMax;
+    this.customTDPRangeMin = copyTarget.customTDPRangeMin;
+    this.perApp = {};
+    Object.entries(copyTarget.perApp).forEach(([key, value]) => {
+      this.perApp[key] = new AppSettingData();
+      this.perApp[key].deepCopy(value);
+    });
+    this.fanSettings = {};
+    Object.entries(copyTarget.fanSettings).forEach(([key, value]) => {
+      this.fanSettings[key] = value;
+    });
+  }
 }
 
 export class Settings {
@@ -176,10 +200,6 @@ export class Settings {
 
   constructor() {
     this.data = new SettingsData();
-  }
-
-  public static copyFrom(instance: Settings) {
-    this._instance = instance;
   }
 
   private settingChangeEvent = new EventTarget();
@@ -609,7 +629,7 @@ export class Settings {
       Settings.ensureApp().fanProfileNameList = newArray;
     }
     //console.log("appFanSettingNameList=",Settings.ensureApp().fanProfileNameList,"(Settings.ensureApp().fanProfileNameList?.length??0)=",(Settings.ensureApp().fanProfileNameList?.length??0),"Backend.data.getFanCount()=",Backend.data.getFanCount())
-    return Settings.ensureApp().fanProfileNameList!!;
+    return Settings.ensureApp().fanProfileNameList ?? [];
   }
 
   //风扇配置文件内容
@@ -754,28 +774,14 @@ export class Settings {
       settingsJson,
       SettingsData
     );
-    this._instance.data.enabled = loadSetting ? loadSetting.enabled : false;
-    this._instance.data.perApp = loadSetting ? loadSetting.perApp : {};
-    this._instance.data.fanSettings = loadSetting
-      ? loadSetting.fanSettings
-      : {};
-
-    this._instance.data.enableCustomTDPRange = loadSetting
-      ? loadSetting.enableCustomTDPRange
-      : false;
-    this._instance.data.customTDPRangeMax = loadSetting
-      ? loadSetting.customTDPRangeMax
-      : 30;
-    this._instance.data.customTDPRangeMin = loadSetting
-      ? loadSetting.customTDPRangeMin
-      : 5;
+    this._instance.data.deepCopy(loadSetting ?? new SettingsData());
   }
 
   public static async loadSettings() {
     // 从后端获取配置
     const settingsData = await Backend.getSettings();
     if (settingsData) {
-      this._instance.data = settingsData;
+      this._instance.data.deepCopy(settingsData);
     } else {
       // 从本地存储获取配置 （兼容旧版本数据）
       this.loadSettingsFromLocalStorage();
@@ -783,17 +789,19 @@ export class Settings {
   }
 
   static saveSettingsToLocalStorage() {
-    // const settingsJson = serializer.serializeObject(this._instance);
-    // const settingsString = JSON.stringify(settingsJson);
+    // const settingsJsonObj = serializer.serializeObject(this._instance.data);
+    // const settingsString = JSON.stringify(settingsJsonObj);
+    // console.log(`>>>>> saveSettingsToLocalStorage: \n${settingsString}`);
     // localStorage.setItem(SETTINGS_KEY, settingsString);
     Backend.setSettings(this._instance.data);
   }
 
   static resetToLocalStorage() {
+    console.log(">>>>>  resetToLocalStorage");
     localStorage.removeItem(SETTINGS_KEY);
     const _data = new SettingsData();
     Backend.setSettings(_data);
-    Settings._instance.data = _data;
+    Settings._instance.data.deepCopy(_data);
     // Settings.loadSettingsFromLocalStorage();
     Backend.applySettings(APPLYTYPE.SET_ALL);
   }
