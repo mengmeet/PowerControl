@@ -22,12 +22,8 @@ const serializer = new JsonSerializer();
 
 @JsonObject()
 export class AppSetting {
-  // @JsonProperty()
-  // overwrite?: boolean;
   @JsonProperty()
   smt?: boolean;
-  @JsonProperty()
-  isSupportSMT?: boolean;
   @JsonProperty()
   cpuNum?: number;
   @JsonProperty()
@@ -53,11 +49,7 @@ export class AppSetting {
   @JsonProperty()
   gpuSliderFix?: boolean;
   constructor() {
-    // this.overwrite=false;
     this.smt = true;
-    this.isSupportSMT = Backend.data?.HasSupportSMT()
-      ? Backend.data?.getSupportSMT()
-      : true;
     this.cpuNum = Backend.data?.HasCpuMaxNum()
       ? Backend.data?.getCpuMaxNum()
       : 4;
@@ -86,7 +78,6 @@ export class AppSetting {
   deepCopy(copyTarget: AppSetting) {
     // this.overwrite=copyTarget.overwrite;
     this.smt = copyTarget.smt;
-    this.isSupportSMT = copyTarget.isSupportSMT;
     this.cpuNum = copyTarget.cpuNum;
     this.cpuboost = copyTarget.cpuboost;
     this.tdpEnable = copyTarget.tdpEnable;
@@ -149,21 +140,13 @@ export class AppSettingData {
 }
 
 @JsonObject()
-export class Settings {
-  private static _instance: Settings = new Settings();
-
+export class SettingsData {
   @JsonProperty()
   public enabled: boolean = true;
 
   // 依据 appID 覆盖配置，作为全局开关而不是单个配置中的开关
   @JsonProperty()
   overwrite?: boolean;
-
-  @JsonProperty({ isDictionary: true, type: AppSettingData })
-  public perApp: { [appId: string]: AppSettingData } = {};
-
-  @JsonProperty({ isDictionary: true, type: FanSetting })
-  public fanSettings: { [fanProfile: string]: FanSetting } = {};
 
   @JsonProperty()
   public enableCustomTDPRange: boolean = false;
@@ -174,21 +157,43 @@ export class Settings {
   @JsonProperty()
   public customTDPRangeMin: number;
 
+  @JsonProperty({ isDictionary: true, type: AppSettingData })
+  public perApp: { [appId: string]: AppSettingData } = {};
+
+  @JsonProperty({ isDictionary: true, type: FanSetting })
+  public fanSettings: { [fanProfile: string]: FanSetting } = {};
+
   constructor() {
+    this.overwrite = false;
     this.customTDPRangeMax = DEFAULT_TDP_MAX;
     this.customTDPRangeMin = DEFAULT_TDP_MIN;
   }
+}
 
-  public settingChangeEvent = new EventTarget();
+export class Settings {
+  private static _instance: Settings = new Settings();
+
+  public data: SettingsData;
+
+  constructor() {
+    this.data = new SettingsData();
+  }
+
+  public static copyFrom(instance: Settings) {
+    this._instance = instance;
+  }
+
+  private settingChangeEvent = new EventTarget();
+
   //插件是否开启
   public static ensureEnable(): boolean {
-    return this._instance.enabled;
+    return this._instance.data.enabled;
   }
 
   //设置开启关闭
   public static setEnable(enabled: boolean) {
-    if (this._instance.enabled != enabled) {
-      this._instance.enabled = enabled;
+    if (this._instance.data.enabled != enabled) {
+      this._instance.data.enabled = enabled;
       Settings.saveSettingsToLocalStorage();
       if (enabled) {
         Backend.applySettings(APPLYTYPE.SET_ALL);
@@ -206,57 +211,57 @@ export class Settings {
     const appId = RunningApps.active();
 
     //没有配置文件的时候新生成一个
-    if (!(appId in this._instance.perApp)) {
-      this._instance.perApp[appId] = new AppSettingData();
+    if (!(appId in this._instance.data.perApp)) {
+      this._instance.data.perApp[appId] = new AppSettingData();
 
       // 新生成后如果有默认配置文件，则拷贝默认配置文件
-      if (DEFAULT_APP in this._instance.perApp) {
-        this._instance.perApp[appId].defaultSettig.deepCopy(
-          this._instance.perApp[DEFAULT_APP].defaultSettig
+      if (DEFAULT_APP in this._instance.data.perApp) {
+        this._instance.data.perApp[appId].defaultSettig.deepCopy(
+          this._instance.data.perApp[DEFAULT_APP].defaultSettig
         );
-        this._instance.perApp[appId].acStting.deepCopy(
-          this._instance.perApp[DEFAULT_APP].acStting
+        this._instance.data.perApp[appId].acStting.deepCopy(
+          this._instance.data.perApp[DEFAULT_APP].acStting
         );
-        this._instance.perApp[appId].batSetting.deepCopy(
-          this._instance.perApp[DEFAULT_APP].batSetting
+        this._instance.data.perApp[appId].batSetting.deepCopy(
+          this._instance.data.perApp[DEFAULT_APP].batSetting
         );
       }
     }
 
     // 根据是否覆盖确定配置 id
-    const _appId = this._instance.overwrite ? appId : DEFAULT_APP;
+    const _appId = this._instance.data.overwrite ? appId : DEFAULT_APP;
 
     // 不开启电源模式覆盖时，返回 id 默认配置
-    if (!this._instance.perApp[_appId].acStateOverwrite) {
-      return this._instance.perApp[_appId].defaultSettig;
+    if (!this._instance.data.perApp[_appId].acStateOverwrite) {
+      return this._instance.data.perApp[_appId].defaultSettig;
     }
 
     // 根据电源模式返回 id 对应的配置
     if (ACStateManager.getACState() === ACState.Connected) {
-      return this._instance.perApp[_appId].acStting;
+      return this._instance.data.perApp[_appId].acStting;
     } else {
-      return this._instance.perApp[_appId].batSetting;
+      return this._instance.data.perApp[_appId].batSetting;
     }
   }
 
   // static ensureAppID():string{
   //   const appId = RunningApps.active();
-  //   if (!(appId in this._instance.perApp)) {
-  //     this._instance.perApp[appId]=new AppSetting();
-  //     if(DEFAULT_APP in this._instance.perApp){
-  //       this._instance.perApp[appId].deepCopy(this._instance.perApp[DEFAULT_APP]);
+  //   if (!(appId in this._instance.data.perApp)) {
+  //     this._instance.data.perApp[appId]=new AppSetting();
+  //     if(DEFAULT_APP in this._instance.data.perApp){
+  //       this._instance.data.perApp[appId].deepCopy(this._instance.data.perApp[DEFAULT_APP]);
   //       return DEFAULT_APP;
   //     }
   //     return appId;
   //   }
-  //   if(!this._instance.perApp[appId].overwrite){
+  //   if(!this._instance.data.perApp[appId].overwrite){
   //     return DEFAULT_APP;
   //   }
   //   return appId;
   // }
 
   static ensureAppID(): string {
-    return this._instance.overwrite ? RunningApps.active() : DEFAULT_APP;
+    return this._instance.data.overwrite ? RunningApps.active() : DEFAULT_APP;
   }
 
   static appOverWrite(): boolean {
@@ -264,15 +269,15 @@ export class Settings {
       return false;
     }
     // return Settings.ensureApp().overwrite!!;
-    return this._instance.overwrite ?? false;
+    return this._instance.data.overwrite ?? false;
   }
   static setOverWrite(overwrite: boolean) {
     if (
       RunningApps.active() != DEFAULT_APP &&
       Settings.appOverWrite() != overwrite
     ) {
-      // Settings._instance.perApp[RunningApps.active()].overwrite=overwrite;
-      this._instance.overwrite = overwrite;
+      // Settings._instance.data.perApp[RunningApps.active()].overwrite=overwrite;
+      this._instance.data.overwrite = overwrite;
 
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_ALL);
@@ -282,7 +287,7 @@ export class Settings {
 
   static saveOverWrite(overwrite: boolean) {
     if (RunningApps.active() != DEFAULT_APP) {
-      this._instance.overwrite = overwrite;
+      this._instance.data.overwrite = overwrite;
       Settings.saveSettingsToLocalStorage();
       PluginManager.updateAllComponent(UpdateType.UPDATE);
     }
@@ -290,16 +295,17 @@ export class Settings {
 
   static appACStateOverWrite(): boolean {
     return (
-      this._instance.perApp[Settings.ensureAppID()].acStateOverwrite ?? false
+      this._instance.data.perApp[Settings.ensureAppID()].acStateOverwrite ??
+      false
     );
   }
 
   static setACStateOverWrite(acStateOverwrite: boolean) {
     if (
-      this._instance.perApp[Settings.ensureAppID()].acStateOverwrite !=
+      this._instance.data.perApp[Settings.ensureAppID()].acStateOverwrite !=
       acStateOverwrite
     ) {
-      this._instance.perApp[Settings.ensureAppID()].acStateOverwrite =
+      this._instance.data.perApp[Settings.ensureAppID()].acStateOverwrite =
         acStateOverwrite;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_ALL);
@@ -321,15 +327,7 @@ export class Settings {
   }
 
   static appIsSupportSMT(): boolean {
-    return Settings.ensureApp().isSupportSMT!!;
-  }
-
-  static setIsSupportSMT(isSupportSMT: boolean) {
-    if (Settings.ensureApp().isSupportSMT != isSupportSMT) {
-      Settings.ensureApp().isSupportSMT = isSupportSMT;
-      Settings.saveSettingsToLocalStorage();
-      PluginManager.updateComponent(ComponentName.CPU_SMT, UpdateType.UPDATE);
-    }
+    return Backend.data?.HasSupportSMT() ? Backend.data?.getSupportSMT() : true;
   }
 
   static appCpuNum() {
@@ -372,12 +370,12 @@ export class Settings {
   }
 
   static appEnableCustomTDPRange() {
-    return this._instance.enableCustomTDPRange;
+    return this._instance.data.enableCustomTDPRange;
   }
 
   static setEnableCustomTDPRange(enableCustomTDPRange: boolean) {
-    if (this._instance.enableCustomTDPRange != enableCustomTDPRange) {
-      this._instance.enableCustomTDPRange = enableCustomTDPRange;
+    if (this._instance.data.enableCustomTDPRange != enableCustomTDPRange) {
+      this._instance.data.enableCustomTDPRange = enableCustomTDPRange;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_TDP);
       PluginManager.updateComponent(
@@ -388,12 +386,12 @@ export class Settings {
   }
 
   static appCustomTDPRangeMax() {
-    return this._instance.customTDPRangeMax;
+    return this._instance.data.customTDPRangeMax;
   }
 
   static setCustomTDPRangeMax(customTDPRangeMax: number) {
-    if (this._instance.customTDPRangeMax != customTDPRangeMax) {
-      this._instance.customTDPRangeMax = customTDPRangeMax;
+    if (this._instance.data.customTDPRangeMax != customTDPRangeMax) {
+      this._instance.data.customTDPRangeMax = customTDPRangeMax;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_TDP);
       PluginManager.updateComponent(
@@ -404,12 +402,12 @@ export class Settings {
   }
 
   static appCustomTDPRangeMin() {
-    return this._instance.customTDPRangeMin;
+    return this._instance.data.customTDPRangeMin;
   }
 
   static setCustomTDPRangeMin(customTDPRangeMin: number) {
-    if (this._instance.customTDPRangeMin != customTDPRangeMin) {
-      this._instance.customTDPRangeMin = customTDPRangeMin;
+    if (this._instance.data.customTDPRangeMin != customTDPRangeMin) {
+      this._instance.data.customTDPRangeMin = customTDPRangeMin;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_TDP);
       PluginManager.updateComponent(
@@ -433,16 +431,16 @@ export class Settings {
   }
 
   static getTDPMax() {
-    if (this._instance.enableCustomTDPRange) {
-      return this._instance.customTDPRangeMax;
+    if (this._instance.data.enableCustomTDPRange) {
+      return this._instance.data.customTDPRangeMax;
     } else {
       return Backend.data.getTDPMax();
     }
   }
 
   static getTDPMin() {
-    if (this._instance.enableCustomTDPRange) {
-      return this._instance.customTDPRangeMin;
+    if (this._instance.data.enableCustomTDPRange) {
+      return this._instance.data.customTDPRangeMin;
     } else {
       return 3;
     }
@@ -619,7 +617,7 @@ export class Settings {
     var fanSettings: FanSetting[] = new Array(Backend.data.getFanCount());
     fanProfileName?.forEach((fanProfileName, index) => {
       if (fanProfileName) {
-        fanSettings[index] = this._instance.fanSettings[fanProfileName];
+        fanSettings[index] = this._instance.data.fanSettings[fanProfileName];
       }
     });
     return fanSettings;
@@ -640,7 +638,7 @@ export class Settings {
   //添加一个风扇配置
   static addFanSetting(fanProfileName: string, fanSetting: FanSetting) {
     if (fanProfileName != undefined) {
-      this._instance.fanSettings[fanProfileName] = fanSetting;
+      this._instance.data.fanSettings[fanProfileName] = fanSetting;
       Settings.saveSettingsToLocalStorage();
       return true;
     } else {
@@ -654,12 +652,15 @@ export class Settings {
     newfanProfileName: string,
     fanSetting: FanSetting
   ) {
-    if (newfanProfileName && fanProfileName in this._instance.fanSettings) {
+    if (
+      newfanProfileName &&
+      fanProfileName in this._instance.data.fanSettings
+    ) {
       if (fanProfileName == newfanProfileName) {
-        this._instance.fanSettings[fanProfileName] = fanSetting;
+        this._instance.data.fanSettings[fanProfileName] = fanSetting;
       } else {
-        this._instance.fanSettings[newfanProfileName] = fanSetting;
-        Object.entries(this._instance.perApp)?.forEach(
+        this._instance.data.fanSettings[newfanProfileName] = fanSetting;
+        Object.entries(this._instance.data.perApp)?.forEach(
           ([_appID, appSettings]) => {
             appSettings.defaultSettig.fanProfileNameList?.forEach(
               (value, index) => {
@@ -687,7 +688,7 @@ export class Settings {
             );
           }
         );
-        delete this._instance.fanSettings[fanProfileName];
+        delete this._instance.data.fanSettings[fanProfileName];
       }
       return true;
     } else {
@@ -697,15 +698,15 @@ export class Settings {
 
   //删除一个风扇配置
   static removeFanSetting(fanProfileName: string) {
-    if (fanProfileName in this._instance.fanSettings) {
-      delete this._instance.fanSettings[fanProfileName];
-      Object.entries(this._instance.perApp)?.forEach(
+    if (fanProfileName in this._instance.data.fanSettings) {
+      delete this._instance.data.fanSettings[fanProfileName];
+      Object.entries(this._instance.data.perApp)?.forEach(
         ([_appID, appSettings]) => {
           appSettings.defaultSettig.fanProfileNameList?.forEach(
             (value, index) => {
               if (fanProfileName == value) {
                 appSettings.defaultSettig.fanProfileNameList!![index] =
-                  this._instance.perApp[
+                  this._instance.data.perApp[
                     DEFAULT_APP
                   ].defaultSettig.fanProfileNameList?.[index];
               }
@@ -715,7 +716,7 @@ export class Settings {
           appSettings.acStting.fanProfileNameList?.forEach((value, index) => {
             if (fanProfileName == value) {
               appSettings.acStting.fanProfileNameList!![index] =
-                this._instance.perApp[
+                this._instance.data.perApp[
                   DEFAULT_APP
                 ].acStting.fanProfileNameList?.[index];
             }
@@ -724,7 +725,7 @@ export class Settings {
           appSettings.batSetting.fanProfileNameList?.forEach((value, index) => {
             if (fanProfileName == value) {
               appSettings.batSetting.fanProfileNameList!![index] =
-                this._instance.perApp[
+                this._instance.data.perApp[
                   DEFAULT_APP
                 ].batSetting.fanProfileNameList?.[index];
             }
@@ -737,43 +738,63 @@ export class Settings {
 
   //获取风扇配置列表
   static getFanSettings(): { [fanProfile: string]: FanSetting } {
-    return this._instance.fanSettings;
+    return this._instance.data.fanSettings;
   }
 
   //获取风扇配置
   static getFanSetting(fanProfileName: string): FanSetting {
-    return this._instance.fanSettings?.[fanProfileName];
+    return this._instance.data.fanSettings?.[fanProfileName];
   }
 
-  static loadSettingsFromLocalStorage() {
+  private static loadSettingsFromLocalStorage() {
     const settingsString = localStorage.getItem(SETTINGS_KEY) || "{}";
     const settingsJson = JSON.parse(settingsString);
-    const loadSetting = serializer.deserializeObject(settingsJson, Settings);
-    this._instance.enabled = loadSetting ? loadSetting.enabled : false;
-    this._instance.perApp = loadSetting ? loadSetting.perApp : {};
-    this._instance.fanSettings = loadSetting ? loadSetting.fanSettings : {};
+    const loadSetting = serializer.deserializeObject(
+      settingsJson,
+      SettingsData
+    );
+    this._instance.data.enabled = loadSetting ? loadSetting.enabled : false;
+    this._instance.data.perApp = loadSetting ? loadSetting.perApp : {};
+    this._instance.data.fanSettings = loadSetting
+      ? loadSetting.fanSettings
+      : {};
 
-    this._instance.overwrite = loadSetting ? loadSetting.overwrite : false;
-    this._instance.enableCustomTDPRange = loadSetting
+    this._instance.data.overwrite = loadSetting ? loadSetting.overwrite : false;
+    this._instance.data.enableCustomTDPRange = loadSetting
       ? loadSetting.enableCustomTDPRange
       : false;
-    this._instance.customTDPRangeMax = loadSetting
+    this._instance.data.customTDPRangeMax = loadSetting
       ? loadSetting.customTDPRangeMax
       : 30;
-    this._instance.customTDPRangeMin = loadSetting
+    this._instance.data.customTDPRangeMin = loadSetting
       ? loadSetting.customTDPRangeMin
       : 5;
   }
 
+  public static async loadSettings() {
+    // 从后端获取配置
+    const settingsData = await Backend.getSettings();
+    if (settingsData) {
+      this._instance.data = settingsData;
+    } else {
+      // 从本地存储获取配置 （兼容旧版本数据）
+      this.loadSettingsFromLocalStorage();
+    }
+  }
+
   static saveSettingsToLocalStorage() {
-    const settingsJson = serializer.serializeObject(this._instance);
-    const settingsString = JSON.stringify(settingsJson);
-    localStorage.setItem(SETTINGS_KEY, settingsString);
+    // const settingsJson = serializer.serializeObject(this._instance);
+    // const settingsString = JSON.stringify(settingsJson);
+    // localStorage.setItem(SETTINGS_KEY, settingsString);
+    Backend.setSettings(this._instance.data);
   }
 
   static resetToLocalStorage() {
     localStorage.removeItem(SETTINGS_KEY);
-    Settings.loadSettingsFromLocalStorage();
+    const _data = new SettingsData();
+    Backend.setSettings(_data);
+    Settings._instance.data = _data;
+    // Settings.loadSettingsFromLocalStorage();
     Backend.applySettings(APPLYTYPE.SET_ALL);
   }
 }
