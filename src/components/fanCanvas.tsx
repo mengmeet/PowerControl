@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { FC } from "react";
-import { fanPosition } from "../util";
+import { FanPosition } from "../util";
 export interface FanCanvasProps {
   width: number;
   height: number;
@@ -35,7 +35,7 @@ export const FanCanvas: FC<FanCanvasProps> = (canvas) => {
 
   function onPointerDown(e: any): void {
     const { layerX, layerY } = getlayerXY(e);
-    const fanClickPos = fanPosition.createFanPosByCanPos(layerX, layerY, canvas.width, canvas.height);
+    const fanClickPos = FanPosition.createFanPosByCanPos(layerX, layerY, canvas.width, canvas.height);
     pointerDownPos.current = [layerX, layerY]
     pointerDownTime.current = Date.parse(new Date().toString());
     canvas.onPointerDown?.call(canvas, fanClickPos)
@@ -44,7 +44,7 @@ export const FanCanvas: FC<FanCanvasProps> = (canvas) => {
 
   function onPointerUp(e: any): void {
     const { layerX, layerY } = getlayerXY(e);
-    const fanClickPos = fanPosition.createFanPosByCanPos(layerX, layerY, canvas.width, canvas.height);
+    const fanClickPos = FanPosition.createFanPosByCanPos(layerX, layerY, canvas.width, canvas.height);
     pointerUpPos.current = [layerX, layerY]
     pointerUpTime.current = Date.parse(new Date().toString());
     canvas.onPointerUp?.call(canvas, fanClickPos)
@@ -64,7 +64,7 @@ export const FanCanvas: FC<FanCanvasProps> = (canvas) => {
 
   function onPointerMove(e: any): void {
     const { layerX, layerY } = getlayerXY(e);
-    const fanClickPos = fanPosition.createFanPosByCanPos(layerX, layerY, canvas.width, canvas.height);
+    const fanClickPos = FanPosition.createFanPosByCanPos(layerX, layerY, canvas.width, canvas.height);
     canvas.onPointerMove?.call(canvas, fanClickPos)
     if (pointerIsDrag.current) {
       onDraging(e);
@@ -78,7 +78,7 @@ export const FanCanvas: FC<FanCanvasProps> = (canvas) => {
 
   function onPointerShortPress(e: any): void {
     const { layerX, layerY } = getlayerXY(e);
-    const fanClickPos = fanPosition.createFanPosByCanPos(layerX, layerY, canvas.width, canvas.height);
+    const fanClickPos = FanPosition.createFanPosByCanPos(layerX, layerY, canvas.width, canvas.height);
     canvas.onPointerShortPress?.call(canvas, fanClickPos)
   }
   //@ts-ignore
@@ -87,13 +87,13 @@ export const FanCanvas: FC<FanCanvasProps> = (canvas) => {
   }
   function onDragDown(e: any): void {
     const { layerX, layerY } = getlayerXY(e);
-    const fanClickPos = fanPosition.createFanPosByCanPos(layerX, layerY, canvas.width, canvas.height);
+    const fanClickPos = FanPosition.createFanPosByCanPos(layerX, layerY, canvas.width, canvas.height);
     pointerIsDrag.current = canvas.onPointerDragDown?.call(canvas, fanClickPos)!!;
   }
 
   function onDraging(e: any): void {
     const { layerX, layerY } = getlayerXY(e);
-    const fanClickPos = fanPosition.createFanPosByCanPos(layerX, layerY, canvas.width, canvas.height);
+    const fanClickPos = FanPosition.createFanPosByCanPos(layerX, layerY, canvas.width, canvas.height);
     canvas.onPointerDraging?.call(canvas, fanClickPos)
   }
 

@@ -3,6 +3,9 @@ import { APPLYTYPE, FANMODE, GPUMODE, Patch } from "./enum";
 import { FanControl, PluginManager } from "./pluginMain";
 import { Settings, SettingsData } from "./settings";
 import { DEFAULT_TDP_MAX, DEFAULT_TDP_MIN, QAMPatch } from ".";
+import { JsonSerializer } from "typescript-json-serializer";
+
+const serializer = new JsonSerializer();
 
 export class BackendData {
   private serverAPI: ServerAPI | undefined;
@@ -315,13 +318,22 @@ export class Backend {
 
   // set_settings
   public static async setSettings(settingsData: SettingsData) {
-    await this.serverAPI!.callPluginMethod("set_settings", { settings: settingsData });
+    const obj = serializer.serializeObject(settingsData);
+    await this.serverAPI!.callPluginMethod("set_settings", {
+      settings: obj,
+    });
   }
 
   // get_settings
   public static async getSettings(): Promise<SettingsData> {
-    return (await this.serverAPI!.callPluginMethod("get_settings", {}))
-      .result as SettingsData;
+    const res = await this.serverAPI!.callPluginMethod("get_settings", {});
+    if (!res.success) {
+      return new SettingsData();
+    }
+    return (
+      serializer.deserializeObject(res.result, SettingsData) ??
+      new SettingsData()
+    );
   }
 
   public static applySettings = (applyTarget: string) => {
