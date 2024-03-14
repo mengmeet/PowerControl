@@ -43,7 +43,7 @@
     "EDIT":"編輯",
     "SAVE":"儲存",
     "NATIVE_FREQ":"本機設定",
-    "VERSION":"版本",
+    "MORE":"更多",
     "REINSTALL_PLUGIN": "重新安裝插件",
     "UPDATE_PLUGIN": "更新插件至",
     "INSTALLED_VERSION": "目前版本",
@@ -53,5 +53,6 @@
     "USE_PERACMODE_PROFILE": "使用依充電狀態設定的設定檔",
     "AC_MODE": "充電模式",
     "BAT_MODE": "電池模式",
-    "CUSTOM_TDP_RANGE": "自訂 TDP 範圍"
+    "CUSTOM_TDP_RANGE": "自訂 TDP 範圍",
+    "RESET_ALL": "重置所有設定"
 }

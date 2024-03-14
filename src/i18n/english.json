@@ -43,7 +43,7 @@
     "EDIT":"Edit",
     "SAVE":"Save",
     "NATIVE_FREQ":"Native",
-    "VERSION":"Version",
+    "MORE":"More",
     "REINSTALL_PLUGIN": "Reinstall Plugin",
     "UPDATE_PLUGIN": "Update Plugin To",
     "INSTALLED_VERSION": "Installed Version",
@@ -53,5 +53,6 @@
     "USE_PERACMODE_PROFILE": "Use per-AC Mode Profile",
     "AC_MODE": "AC Mode",
     "BAT_MODE": "Battery Mode",
-    "CUSTOM_TDP_RANGE": "Custom TDP Range"
+    "CUSTOM_TDP_RANGE": "Custom TDP Range",
+    "RESET_ALL": "Reset All"
 }

@@ -770,4 +770,10 @@ export class Settings {
     const settingsString = JSON.stringify(settingsJson);
     localStorage.setItem(SETTINGS_KEY, settingsString);
   }
+
+  static resetToLocalStorage() {
+    localStorage.removeItem(SETTINGS_KEY);
+    Settings.loadSettingsFromLocalStorage();
+    Backend.applySettings(APPLYTYPE.SET_ALL);
+  }
 }
