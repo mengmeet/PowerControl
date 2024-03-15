@@ -767,6 +767,7 @@ export class Settings {
     return this._instance.data.fanSettings?.[fanProfileName];
   }
 
+  // @ts-ignore
   private static loadSettingsFromLocalStorage() {
     const settingsString = localStorage.getItem(SETTINGS_KEY) || "{}";
     const settingsJson = JSON.parse(settingsString);
@@ -782,10 +783,11 @@ export class Settings {
     const settingsData = await Backend.getSettings();
     if (settingsData) {
       this._instance.data.deepCopy(settingsData);
-    } else {
-      // 从本地存储获取配置 （兼容旧版本数据）
-      this.loadSettingsFromLocalStorage();
     }
+    // else {
+    //   // 从本地存储获取配置 （兼容旧版本数据）
+    //   this.loadSettingsFromLocalStorage();
+    // }
   }
 
   static saveSettingsToLocalStorage() {
@@ -796,13 +798,15 @@ export class Settings {
     Backend.setSettings(this._instance.data);
   }
 
-  static resetToLocalStorage() {
+  static resetToLocalStorage(apply = true) {
     console.log(">>>>>  resetToLocalStorage");
     localStorage.removeItem(SETTINGS_KEY);
     const _data = new SettingsData();
     Backend.setSettings(_data);
     Settings._instance.data.deepCopy(_data);
     // Settings.loadSettingsFromLocalStorage();
-    Backend.applySettings(APPLYTYPE.SET_ALL);
+    if (apply) {
+      Backend.applySettings(APPLYTYPE.SET_ALL);
+    }
   }
 }

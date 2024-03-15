@@ -23,7 +23,7 @@ export class QAMPatch {
         this.perfStore = perfStoreClass?.Get();
         count++;
         if (count >= 10) {
-          console.error("获取perfStore失败，结束修补");
+          console.error("获取perfStore失败, 结束修补");
         }
       }
       this.TDP_Patch = new TDPPatch();
@@ -108,10 +108,10 @@ class TDPPatch {
   }
 
   public setTDPRange(min?: number, max?: number) {
-    if (min) {
+    if (min && this.perfStore.msgLimits.tdp_limit_min != undefined) {
       this.perfStore.msgLimits.tdp_limit_min = min;
     }
-    if (max) {
+    if (max && this.perfStore.msgLimits.tdp_limit_max != undefined) {
       this.perfStore.msgLimits.tdp_limit_max = max;
     }
   }

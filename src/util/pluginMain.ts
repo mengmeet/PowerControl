@@ -244,7 +244,7 @@ export class PluginManager{
       Backend.applySettings(APPLYTYPE.SET_ALL);
     } catch (e) {
       console.error("Error while applying settings", e);
-      Settings.resetToLocalStorage();
+      Settings.resetToLocalStorage(false);
     }
     PluginManager.suspendEndHook = SteamClient.System.RegisterForOnResumeFromSuspend(async () => {
       setTimeout(() => {
