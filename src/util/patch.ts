@@ -100,28 +100,34 @@ class TDPPatch {
   };
 
   public setTDP(tdp: number) {
-    this.perfStore.msgSettingsPerApp.tdp_limit = tdp;
+    if (this.perfStore?.msgSettingsPerApp?.tdp_limit) {
+      this.perfStore.msgSettingsPerApp.tdp_limit = tdp;
+    }
   }
 
   public setTDPEanble(isEnable: boolean) {
-    this.perfStore.msgSettingsPerApp.is_tdp_limit_enabled = isEnable;
+    if (this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled) {
+      this.perfStore.msgSettingsPerApp.is_tdp_limit_enabled = isEnable;
+    }
   }
 
   public setTDPRange(min?: number, max?: number) {
-    if (min && this.perfStore.msgLimits.tdp_limit_min != undefined) {
+    if (min && this.perfStore?.msgLimits?.tdp_limit_min) {
       this.perfStore.msgLimits.tdp_limit_min = min;
     }
-    if (max && this.perfStore.msgLimits.tdp_limit_max != undefined) {
+    if (max && this.perfStore?.msgLimits?.tdp_limit_max) {
       this.perfStore.msgLimits.tdp_limit_max = max;
     }
   }
 
   private get active_profile_game_id() {
-    return this.perfStore.m_msgState.active_profile_game_id;
+    return this.perfStore?.m_msgState?.active_profile_game_id;
   }
 
   private set active_profile_game_id(game_id: string) {
-    this.perfStore.m_msgState.active_profile_game_id = game_id;
+    if (this.perfStore.m_msgState.active_profile_game_id) {
+      this.perfStore.m_msgState.active_profile_game_id = game_id;
+    }
   }
 
   private get current_game_id() {
