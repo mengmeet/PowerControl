@@ -335,7 +335,7 @@ export class Settings {
   }
 
   static appSmt(): boolean {
-    return Settings.ensureApp().smt!!;
+    return Settings.ensureApp().smt ?? true;
   }
 
   static setSmt(smt: boolean) {
@@ -365,7 +365,7 @@ export class Settings {
   }
 
   static appCpuboost(): boolean {
-    return Settings.ensureApp().cpuboost!!;
+    return Settings.ensureApp().cpuboost ?? false;
   }
 
   static setCpuboost(cpuboost: boolean) {
@@ -378,7 +378,7 @@ export class Settings {
   }
 
   static appTDP() {
-    return Settings.ensureApp().tdp!!;
+    return Settings.ensureApp().tdp ?? 15;
   }
 
   static setTDP(tdp: number) {
@@ -439,7 +439,7 @@ export class Settings {
   }
 
   static appTDPEnable() {
-    return Settings.ensureApp().tdpEnable!!;
+    return Settings.ensureApp().tdpEnable ?? true;
   }
 
   static setTDPEnable(tdpEnable: boolean) {

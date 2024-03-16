@@ -89,33 +89,48 @@ class TDPPatch {
     this.perfStore = perfStoreClass.Get();
   }
   private applyTDP = () => {
-    console.log(
-      `qam applyTDP: ${this.perfStore?.msgSettingsPerApp?.tdp_limit}`
-    );
     if (this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled) {
+      console.log(
+        `qam applyTDP: ${this.perfStore?.msgSettingsPerApp?.tdp_limit}`
+      );
       Backend.applyTDP(this.perfStore?.msgSettingsPerApp?.tdp_limit);
     } else {
-      Backend.applyTDP(Backend.data.getTDPMax());
+      console.log(`qam applyTDP: ${Settings.getTDPMax()}`);
+      Backend.applyTDP(Settings.getTDPMax());
     }
   };
 
   public setTDP(tdp: number) {
-    if (this.perfStore?.msgSettingsPerApp?.tdp_limit) {
+    if (
+      this.perfStore?.msgSettingsPerApp?.tdp_limit &&
+      this.perfStore.msgSettingsPerApp.tdp_limit !== tdp
+    ) {
       this.perfStore.msgSettingsPerApp.tdp_limit = tdp;
     }
   }
 
   public setTDPEanble(isEnable: boolean) {
-    if (this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled) {
+    if (
+      this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled &&
+      this.perfStore.msgSettingsPerApp.is_tdp_limit_enabled !== isEnable
+    ) {
       this.perfStore.msgSettingsPerApp.is_tdp_limit_enabled = isEnable;
     }
   }
 
   public setTDPRange(min?: number, max?: number) {
-    if (min && this.perfStore?.msgLimits?.tdp_limit_min) {
+    if (
+      min &&
+      this.perfStore?.msgLimits?.tdp_limit_min &&
+      this.perfStore.msgLimits.tdp_limit_min !== min
+    ) {
       this.perfStore.msgLimits.tdp_limit_min = min;
     }
-    if (max && this.perfStore?.msgLimits?.tdp_limit_max) {
+    if (
+      max &&
+      this.perfStore?.msgLimits?.tdp_limit_max &&
+      this.perfStore.msgLimits.tdp_limit_max !== max
+    ) {
       this.perfStore.msgLimits.tdp_limit_max = max;
     }
   }
@@ -125,13 +140,13 @@ class TDPPatch {
   }
 
   private set active_profile_game_id(game_id: string) {
-    if (this.perfStore.m_msgState.active_profile_game_id) {
+    if (this.perfStore.m_msgState.active_profile_game_id !== game_id) {
       this.perfStore.m_msgState.active_profile_game_id = game_id;
     }
   }
 
   private get current_game_id() {
-    return this.perfStore.m_msgState.current_game_id;
+    return this.perfStore.m_msgState.current_game_id ?? "769";
   }
 
   public togglePreferAppProfile(isEnable: boolean) {
@@ -169,6 +184,13 @@ class TDPPatch {
             // }
             this.perfStore.msgLimits.tdp_limit_max = Settings.getTDPMax();
             this.perfStore.msgLimits.tdp_limit_min = Settings.getTDPMin();
+
+            if (Settings.appEnableCustomTDPRange()) {
+              this.setTDPRange(Settings.getTDPMin(), Settings.getTDPMax());
+            }
+            if (Settings.appTDPEnable()) {
+              this.setTDPEanble(Settings.appTDPEnable());
+            }
           } catch (e) {
             console.error(`tdp 范围修补失败: ${e}`);
             patchCallBack(false);
@@ -202,12 +224,12 @@ class TDPPatch {
               this.last_tdp_limit !=
                 this.perfStore?.msgSettingsPerApp?.tdp_limit
             ) {
-              // console.log(
-              //   `nav tdp limit change: ${this.last_tdp_limit} -> ${this.perfStore?.msgSettingsPerApp?.tdp_limit}`
-              // );
-              // console.log(
-              //   `nav tdp limit enable change: ${this.last_is_tdp_limit_enabled} -> ${this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled}`
-              // );
+              console.log(
+                `QAM tdp limit change: ${this.last_tdp_limit} -> ${this.perfStore?.msgSettingsPerApp?.tdp_limit}`
+              );
+              console.log(
+                `QAM tdp limit enable change: ${this.last_is_tdp_limit_enabled} -> ${this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled}`
+              );
 
               if (this.last_tdp_limit != 0) {
                 // console.log("saveTDP from qam listener");

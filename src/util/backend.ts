@@ -370,24 +370,27 @@ export class Backend {
       const enableCustomTDPRange = Settings.appEnableCustomTDPRange();
       const customTDPRangeMax = Settings.appCustomTDPRangeMax();
       const customTDPRangeMin = Settings.appCustomTDPRangeMin();
-      if (enableCustomTDPRange) {
-        QAMPatch.setTDPRange(customTDPRangeMin, customTDPRangeMax);
-      } else {
-        QAMPatch.setTDPRange(
-          DEFAULT_TDP_MIN,
-          Backend.data.getTDPMax() !== 0
-            ? Backend.data.getTDPMax()
-            : DEFAULT_TDP_MAX
-        );
+
+      // patch 成功才设置 QAM 的 TDP 范围
+      if (PluginManager.isPatchSuccess(Patch.TDPPatch)) {
+        if (enableCustomTDPRange) {
+          QAMPatch.setTDPRange(customTDPRangeMin, customTDPRangeMax);
+        } else {
+          QAMPatch.setTDPRange(
+            DEFAULT_TDP_MIN,
+            Backend.data.getTDPMax() !== 0
+              ? Backend.data.getTDPMax()
+              : DEFAULT_TDP_MAX
+          );
+        }
       }
 
       // 应用 TDP
       const tdp = Settings.appTDP();
       const tdpEnable = Settings.appTDPEnable();
-      const _tdp = Math.min(
-        customTDPRangeMax,
-        Math.max(customTDPRangeMin, tdp)
-      );
+      const _tdp = enableCustomTDPRange
+        ? Math.min(customTDPRangeMax, Math.max(customTDPRangeMin, tdp))
+        : tdp;
 
       if (!PluginManager.isPatchSuccess(Patch.TDPPatch)) {
         // console.log(
@@ -402,7 +405,7 @@ export class Backend {
         // console.log(
         //   `>>>>> 原生设置更新 TDP = ${_tdp} TDPEnable = ${tdpEnable}`
         // );
-        // 更新 原生设置的值
+        // patch 成功才更新 QAM 中设置的值
         QAMPatch.setTDPEanble(tdpEnable);
         QAMPatch.setTDP(_tdp);
         if (tdpEnable) {
