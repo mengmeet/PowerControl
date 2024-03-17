@@ -59,5 +59,6 @@
     "UNLIMITED_DESC": "不限制 GPU 頻率，系統預設調度",
     "FIXED_FREQ_DESC": "固定 GPU 頻率",
     "RANGE_FREQ_DESC": "設定 GPU 頻率範圍",
-    "AUTO_FREQ_DESC": "自適應 GPU 頻率，強制關閉 TDP 限制，關閉 Boost"
+    "AUTO_FREQ_DESC": "自適應 GPU 頻率，強制關閉 TDP 限制，關閉 Boost",
+    "AUTO_FREQ_TDP_NOTIF": "GPU 模式为{{mode}}, 關閉 TDP 限制"
 }
