@@ -60,5 +60,5 @@
     "FIXED_FREQ_DESC": "固定 GPU 频率",
     "RANGE_FREQ_DESC": "设置 GPU 频率范围",
     "AUTO_FREQ_DESC": "自适应 GPU 频率, 强制关闭 TDP 限制, 关闭 Boost",
-    "AUTO_FREQ_TDP_NOTIF": "GPU 模式为{{mode}}, 關閉 TDP 限制"
+    "AUTO_FREQ_TDP_NOTIF": "GPU 模式为{{mode}}, 关闭 TDP 限制"
 }
