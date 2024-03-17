@@ -17,7 +17,7 @@
     "GPU_FREQMODE":"GPU 頻率模式",
     "UNLIMITED":"不限制",
     "FIXED_FREQ":"鎖定頻率",
-    "RANGE_FREQ":"範圍頻率S",
+    "RANGE_FREQ":"範圍頻率",
     "AUTO_FREQ":"自適應",
     "GPU_FIX_FREQ":"GPU 頻率",
     "GPU_MIN_FREQ":"GPU 最小頻率限制",
