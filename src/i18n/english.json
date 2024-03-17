@@ -54,5 +54,10 @@
     "AC_MODE": "AC Mode",
     "BAT_MODE": "Battery Mode",
     "CUSTOM_TDP_RANGE": "Custom TDP Range",
-    "RESET_ALL": "Reset All"
+    "RESET_ALL": "Reset All",
+    "NATIVE_FREQ_DESC": "Set frequency using system shortcut menu",
+    "UNLIMITED_DESC": "No limit on GPU frequency, system default scheduling",
+    "FIXED_FREQ_DESC": "Fixed GPU frequency",
+    "RANGE_FREQ_DESC": "Set GPU frequency range",
+    "AUTO_FREQ_DESC": "Adaptive GPU frequency, forcibly turn off TDP limit, turn off Boost"
 }

@@ -87,6 +87,7 @@ export class BackendData {
       }
     );
   }
+  
   public getCpuMaxNum() {
     return this.cpuMaxNum;
   }
@@ -334,6 +335,10 @@ export class Backend {
       serializer.deserializeObject(res.result, SettingsData) ??
       new SettingsData()
     );
+  }
+
+  public static getServerAPI() {
+    return this.serverAPI;
   }
 
   public static applySettings = (applyTarget: string) => {

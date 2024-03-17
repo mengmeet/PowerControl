@@ -54,5 +54,10 @@
     "AC_MODE": "充電模式",
     "BAT_MODE": "電池模式",
     "CUSTOM_TDP_RANGE": "自訂 TDP 範圍",
-    "RESET_ALL": "重置所有設定"
+    "RESET_ALL": "重置所有設定",
+    "NATIVE_FREQ_DESC": "使用系統快捷選單設定頻率",
+    "UNLIMITED_DESC": "不限制 GPU 頻率，系統預設調度",
+    "FIXED_FREQ_DESC": "固定 GPU 頻率",
+    "RANGE_FREQ_DESC": "設定 GPU 頻率範圍",
+    "AUTO_FREQ_DESC": "自適應 GPU 頻率，強制關閉 TDP 限制，關閉 Boost"
 }

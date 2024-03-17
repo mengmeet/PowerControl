@@ -191,11 +191,25 @@ const GPUModeNaviteComponent: VFC = () => {
   }
   );
 
+  const description = (mode: GPUMODE) => {
+    switch (mode) {
+      case GPUMODE.NATIVE:
+        return localizationManager.getString(localizeStrEnum.NATIVE_FREQ_DESC);
+      case GPUMODE.RANGE:
+        return localizationManager.getString(localizeStrEnum.RANGE_FREQ_DESC);
+      case GPUMODE.AUTO:
+        return localizationManager.getString(localizeStrEnum.AUTO_FREQ_DESC);
+      default:
+        return "";
+    }
+  }
+
   return (
     <div>
       <PanelSectionRow>
         <SliderField
           label={localizationManager.getString(localizeStrEnum.GPU_FREQMODE)}
+          description={description(gpuMode as GPUMODE)}
           value={modesWithNative.findIndex((mode) => mode == gpuMode)}
           step={1}
           max={2}
@@ -254,10 +268,26 @@ const GPUModeLegacyComponent: VFC = () => {
     })
   }, []);
 
+  const description = (mode: GPUMODE) => {
+    switch (mode) {
+      case GPUMODE.NOLIMIT:
+        return localizationManager.getString(localizeStrEnum.UNLIMITED_DESC);
+      case GPUMODE.FIX:
+        return localizationManager.getString(localizeStrEnum.FIXED_FREQ_DESC);
+      case GPUMODE.RANGE:
+        return localizationManager.getString(localizeStrEnum.RANGE_FREQ_DESC);
+      case GPUMODE.AUTO:
+        return localizationManager.getString(localizeStrEnum.AUTO_FREQ_DESC);
+      default:
+        return "";
+    }
+  }
+
   return (
     <PanelSectionRow>
       <SliderField
         label={localizationManager.getString(localizeStrEnum.GPU_FREQMODE)}
+        description={description(gpuMode as GPUMODE)}
         value={modesLegacy.findIndex((mode) => mode == gpuMode)}
         step={1}
         max={notchLabelsLegacy.length - 1}

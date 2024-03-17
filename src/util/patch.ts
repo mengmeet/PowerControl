@@ -2,7 +2,7 @@ import { findModuleChild, afterPatch } from "decky-frontend-lib";
 import { Backend } from "./backend";
 import { GPUMODE, GPUPerformanceLevel, Patch } from "./enum";
 import { Settings } from "./settings";
-import { BatteryStateChange } from ".";
+import { BatteryStateChange, SteamUtils } from ".";
 
 export class QAMPatch {
   private static TDP_Patch: TDPPatch;
@@ -231,7 +231,19 @@ class TDPPatch {
                 `QAM tdp limit enable change: ${this.last_is_tdp_limit_enabled} -> ${this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled}`
               );
 
-              if (this.last_tdp_limit != 0) {
+              if (
+                Settings.appGPUMode() === GPUMODE.AUTO &&
+                this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled === true
+              ) {
+                console.error(
+                  "While GPU mode is AUTO, TDP limit must be disabled"
+                );
+
+                const notificationText = `GPU mode is AUTO, TDP limit disabled`;
+                SteamUtils.simpleToast(notificationText, 3000);
+
+                this.perfStore.msgSettingsPerApp.is_tdp_limit_enabled = false;
+              } else if (this.last_tdp_limit != 0) {
                 // console.log("saveTDP from qam listener");
                 Settings.saveTDPFromQAM(
                   this.perfStore?.msgSettingsPerApp?.tdp_limit ?? 15,
