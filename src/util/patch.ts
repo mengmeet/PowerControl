@@ -3,6 +3,7 @@ import { Backend } from "./backend";
 import { GPUMODE, GPUPerformanceLevel, Patch } from "./enum";
 import { Settings } from "./settings";
 import { BatteryStateChange, SteamUtils } from ".";
+import { localizationManager, localizeStrEnum } from "../i18n";
 
 export class QAMPatch {
   private static TDP_Patch: TDPPatch;
@@ -239,7 +240,14 @@ class TDPPatch {
                   "While GPU mode is AUTO, TDP limit must be disabled"
                 );
 
-                const notificationText = `GPU mode is AUTO, TDP limit disabled`;
+                const notificationText = `${localizationManager.getString(
+                  localizeStrEnum.AUTO_FREQ_TDP_NOTIF,
+                  {
+                    mode: localizationManager.getString(
+                      localizeStrEnum.AUTO_FREQ
+                    ),
+                  }
+                )}`;
                 SteamUtils.simpleToast(notificationText, 3000);
 
                 this.perfStore.msgSettingsPerApp.is_tdp_limit_enabled = false;

@@ -228,7 +228,7 @@ export class PluginManager{
   public static register = async(serverAPI:ServerAPI)=>{
     PluginManager.state = PluginState.INIT; 
     await Backend.init(serverAPI);
-    await localizationManager.init(serverAPI);
+    await localizationManager.init();
     RunningApps.register();
     FanControl.register();
     RunningApps.listenActiveChange((newAppId, oldAppId) => {

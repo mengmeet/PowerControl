@@ -59,5 +59,6 @@
     "UNLIMITED_DESC": "No limit on GPU frequency, system default scheduling",
     "FIXED_FREQ_DESC": "Fixed GPU frequency",
     "RANGE_FREQ_DESC": "Set GPU frequency range",
-    "AUTO_FREQ_DESC": "Adaptive GPU frequency, forcibly turn off TDP limit, turn off Boost"
+    "AUTO_FREQ_DESC": "Adaptive GPU frequency, forcibly disabled TDP limit, disabled Boost",
+    "AUTO_FREQ_TDP_NOTIF": "GPU mode {{mode}}, TDP limit disabled"
 }
