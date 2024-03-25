@@ -30,7 +30,7 @@ class Plugin:
     
     async def set_settings(self, settings):
         self.settings.setSetting(CONFIG_KEY, settings)
-        logging.info(f"save Settings: {settings}")
+        # logging.info(f"save Settings: {settings}")
         return True
 
     async def _unload(self):

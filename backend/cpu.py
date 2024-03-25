@@ -128,11 +128,11 @@ class CPUManager ():
 
                 command = f"{sys_ryzenadj_path} -a {stapm_limit} -b {fast_minit} -c {slow_limit} -f {tctl_temp}"
                 command_args = command.split()
-                logging.info(f"set_cpuTDP command: {command}")
-                logging.info(f"set_cpuTDP {value}")
+                logging.debug(f"set_cpuTDP command: {command}")
+                logging.debug(f"set_cpuTDP {value}")
                 process = subprocess.run(command_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 stdout, stderr = process.stdout.decode('utf-8'), process.stderr.decode('utf-8')
-                logging.info(f"set_cpuTDP result:\n{stdout}")
+                logging.debug(f"set_cpuTDP result:\n{stdout}")
                 if stderr:
                     logging.error(f"set_cpuTDP error:\n{stderr}")
 
@@ -145,7 +145,7 @@ class CPUManager ():
         
     def set_cpuOnline(self, value: int):
         try:
-            logging.info("set_cpuOnline {} {}".format(value,cpu_maxNum))
+            logging.debug("set_cpuOnline {} {}".format(value,cpu_maxNum))
             global enable_cpu_num
             enable_cpu_num = value
 
@@ -167,7 +167,7 @@ class CPUManager ():
             #
             # cpu_num 作为索引, 取出对应的核心, 作为开启的最大 cpuid, 关闭大于最大 cpuid 的线程
             max_enable_cpuid = self.cps_ids[enable_cpu_num - 1]
-            logging.info(f"enable_cpu_num {enable_cpu_num}, max_enable_cpuid {max_enable_cpuid}")
+            logging.debug(f"enable_cpu_num {enable_cpu_num}, max_enable_cpuid {max_enable_cpuid}")
             if enable_cpu_num is not None and enable_cpu_num < len(enabled_cores):
                 for processor_id, core_id in cpu_topology.items():
                     if int(core_id) > max_enable_cpuid:

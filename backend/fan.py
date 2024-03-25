@@ -118,7 +118,7 @@ class FanManager ():
         
         #若已获取到风扇hwmon信息则不再获取ec信息
         if len(self.fan_config_list) > 0:
-            logging.debug(f"已获取到风扇hwmon信息:{[config.FAN_HWMON_NAME for config in self.fan_config_list]}")
+            logging.info(f"已获取到风扇hwmon信息:{[config.FAN_HWMON_NAME for config in self.fan_config_list]}")
         else:
             logging.debug(f"未获取到风扇hwmon信息,开始获取风扇ec信息")
             #转化ec信息
@@ -287,6 +287,13 @@ class FanManager ():
                             return False
                         else:
                             fanIsManual = enable_manual_value
+
+                        # GPD 设备没有实际的单独的控制位。但是在oxpec中有控制位，写入手动控制时会将转速设置为 70%。所以添加判断，只在需要时写入控制位
+                        currentFanIsManual = int(open(hwmon_pwm_enable_path).read().strip())
+                        if currentFanIsManual == fanIsManual:
+                            logging.debug(f"currentFanIsManual:{currentFanIsManual} fanIsManual:{fanIsManual} 无需写入")
+                            return True
+
                         open(hwmon_pwm_enable_path,'w').write(str(fanIsManual))
                         logging.debug(f"写入hwmon数据 写入hwmon地址:{hwmon_pwm_enable_path} 写入风扇是否控制:{fanIsManual}")
                         return True
@@ -357,6 +364,11 @@ class FanManager ():
                 try:
                     if is_find_hwmon and hwmon_mode == 0:
                         fanWriteValue = max(min(int(value/100*rpm_write_max),rpm_write_max),0)
+                        currentVal = int(open(hwmon_pwm_path).read().strip())
+                        # 转速相差小于5%时不写入
+                        if currentVal > 0 and abs(currentVal - fanWriteValue) / currentVal < 0.05:
+                            logging.debug(f"当前风扇转速{currentVal} 与目标转速{fanWriteValue} 相差小于5% 不写入")
+                            return True
                         open(hwmon_pwm_path,'w').write(str(fanWriteValue))
                         logging.debug(f"写入hwmon数据 写入hwmon地址:{hwmon_pwm_path} 风扇转速百分比{value} 风扇最大值{rpm_write_max} 风扇转速写入值:{fanWriteValue}")
                         return True
