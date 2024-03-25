@@ -131,16 +131,14 @@ try:
             },
             "pwm_write":{
                 "pwm_write_max":{
-                    "default":255,
-                    "ONEXPLAYER F1":255,
-                    "ONEXPLAYER F1 EVA-01":255
+                    "default":255
                 },
                 "pwm_write_path":"pwm1"
             },
             "pwm_input":{
                 "hwmon_label":"oxpec",
                 "pwm_read_path":"fan1_input",
-                "pwm_read_max": 5030
+                "pwm_read_max": 6000
             },
             "temp_mode":0
         }],
