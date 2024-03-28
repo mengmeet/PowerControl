@@ -88,7 +88,7 @@ class FanManager ():
                     fan_config.FAN_ENABLE_AUTO_VALUE = fan_pwm_enable["auto_value"]
                     fan_config.FAN_HWMON_PWMENABLE_PATH = name_path_map[hwmon_name]+"/"+fan_pwm_enable["pwm_enable_path"]
 
-                    black_list = hwmon_config["black_list"]
+                    black_list = hwmon_config["black_list"] if "black_list" in hwmon_config else []
                         
                     fan_pwm_write = hwmon_config["pwm_write"]
                     pwm_write_max = fan_pwm_write["pwm_write_max"]
