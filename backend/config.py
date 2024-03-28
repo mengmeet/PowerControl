@@ -89,6 +89,7 @@ try:
         "hwmon目录下name文件内容":[{
             "fan_name":"Fan",   #显示在风扇中的名字
             "pwm_mode":0, #写入的模式 0.普通模式(对单个文件写入) 1.rog掌机特殊模式(对多个文件写入同样的数值)
+            "blacklist":["xxx","xxxx"], #黑名单机型(不使用hwmon方式)
             "pwm_enable":{
                 "manual_value": 1,  #手动控制时写入的数值
                 "auto_value": 0,    #自动控制时写入的数值
@@ -124,6 +125,11 @@ try:
         "oxpec":[{
             "fan_name":"Fan",
             "pwm_mode":0,
+            "black_list":[
+                "G1618-03",
+                "G1618-04",
+                "G1619-04"
+                ],
             "pwm_enable":{
                 "manual_value": 1,
                 "auto_value": 0,

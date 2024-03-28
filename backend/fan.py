@@ -87,6 +87,8 @@ class FanManager ():
                     fan_config.FAN_ENABLE_MANUAL_VALUE = fan_pwm_enable["manual_value"]
                     fan_config.FAN_ENABLE_AUTO_VALUE = fan_pwm_enable["auto_value"]
                     fan_config.FAN_HWMON_PWMENABLE_PATH = name_path_map[hwmon_name]+"/"+fan_pwm_enable["pwm_enable_path"]
+
+                    black_list = hwmon_config["black_list"]
                         
                     fan_pwm_write = hwmon_config["pwm_write"]
                     pwm_write_max = fan_pwm_write["pwm_write_max"]
@@ -116,11 +118,11 @@ class FanManager ():
                 except:
                     logging.error(f"获取风扇({hwmon_name})hwmon信息失败:",exc_info=True)
         
-        #若已获取到风扇hwmon信息则不再获取ec信息
-        if len(self.fan_config_list) > 0:
+        # 若已获取到风扇hwmon信息 并且 PRODUCT_NAME 不在 black_list 则不再获取风扇ec信息
+        if len(self.fan_config_list) > 0 and PRODUCT_NAME not in black_list:
             logging.info(f"已获取到风扇hwmon信息:{[config.FAN_HWMON_NAME for config in self.fan_config_list]}")
         else:
-            logging.debug(f"未获取到风扇hwmon信息,开始获取风扇ec信息")
+            logging.info(f"未获取到风扇hwmon信息,开始获取风扇ec信息")
             #转化ec信息
             for ec_info in FAN_EC_CONFIG:
                 try:
