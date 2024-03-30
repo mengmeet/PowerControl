@@ -31,7 +31,7 @@ curl -L https://raw.githubusercontent.com/mengmeet/PowerControl/main/install.sh 
 7. 风扇控制
 
 
-## 性能调整范围预设
+<!-- ## 性能调整范围预设
 > 以下为各个芯片对应的预设TDP
 
 |      芯片        | TDP | 
@@ -45,9 +45,9 @@ curl -L https://raw.githubusercontent.com/mengmeet/PowerControl/main/install.sh 
 | AMD 7840U       | 40 W |
 | AMD 7735U       | 40 W |
 | AMD 7735HS      | 45 W |
-| 其他             | 18 W |
+| 其他             | 18 W | -->
 
-> 以下为各个机型对应的预设TDP(覆盖芯片预设)和风扇适配情况(已适配：经过测试可以正常使用|待验证：未经测试不确定是否存在问题|未适配：隐藏风扇设置选项，等待适配后开放 )
+<!-- > 以下为各个机型对应的预设TDP(覆盖芯片预设)和风扇适配情况(已适配：经过测试可以正常使用|待验证：未经测试不确定是否存在问题|未适配：隐藏风扇设置选项，等待适配后开放 )
 
 |      机型        | TDP | 风扇适配 | 
 | --------------- | ---- | ------ |
@@ -67,9 +67,9 @@ curl -L https://raw.githubusercontent.com/mengmeet/PowerControl/main/install.sh 
 | GPD WINMAX2     | 45 W | 待验证 |
 | GPD WIN4     | 45 W | 待验证 |
 | GPD WIN Mini     | 30 W | 已适配 |
-| ROG Ally        | 30 W | 未适配 |
+| ROG Ally        | 30 W | 未适配 | -->
 
-**TDP调整基于ryzenadj,因此只支持ryzenadj支持的cpu列表.如有未列出的cpu或者给出的范围数值不正确,请在[issues](https://github.com/Gawah/PowerControl/issues)提交**
+<!-- **TDP调整基于ryzenadj,因此只支持ryzenadj支持的cpu列表.如有未列出的cpu或者给出的范围数值不正确,请在[issues](https://github.com/Gawah/PowerControl/issues)提交** -->
 
 ## 支持
 可以加入我们的qq群:487945399反馈问题，或者在[issues](https://github.com/Gawah/PowerControl/issues)提交
