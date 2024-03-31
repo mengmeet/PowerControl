@@ -4,8 +4,8 @@ import time
 from ec import EC
 from config import logging,PRODUCT_NAME
 from config import FAN_HWMON_LIST,FAN_EC_CONFIG
-
-
+import decky_plugin
+from settings import SettingsManager
 
 class FanConfig ():
     def __init__(self):
@@ -44,11 +44,26 @@ class FanConfig ():
 
 class FanManager ():
     def __init__(self):
+        self.settings = SettingsManager(
+            name="fans_config", settings_directory=decky_plugin.DECKY_PLUGIN_SETTINGS_DIR
+        )
         self.fan_config_list=[] #记录每一个风扇的配置
         self.FAN_CPUTEMP_PATH=""     #CPU温度路径
         self.FAN_GPUTEMP_PATH=""     #GPU温度路径
         self.parse_fan_configuration()  ##转化风扇配置
         self.device_init_quirks()    #设备特殊初始化
+
+    # 自动更新风扇最大值
+    def update_fan_max_value(self, cpu_temp:int):
+        for index, fan_config in enumerate(self.fan_config_list):
+            current_rpm = self.get_fanRPM(index)
+            max_value = fan_config.FAN_RPMVALUE_MAX
+            cup_temp = cpu_temp if cpu_temp > 0 else self.get_fanTemp(index)
+            # 如果 current_rpm 和 fan_config.FAN_RPMVALUE_MAX 相差大于 5%, 则更新 max_value
+            if cup_temp > 65000 and abs(int(current_rpm) - max_value) / int(max_value) > 0.05:
+                logging.info(f"cup_temp {cup_temp}, 风扇{index} 当前转速已达到最大值, 更新最大值: {max_value} -> {current_rpm}")
+                fan_config.FAN_RPMVALUE_MAX = current_rpm
+                self.settings.setSetting(f"fan{index}_max", current_rpm)
             
     #转化风扇配置
     def parse_fan_configuration(self):
@@ -112,7 +127,9 @@ class FanManager ():
                     fan_pwm_input = hwmon_config["pwm_input"]
                     fan_hwmon_label_input = fan_pwm_input["hwmon_label"]
                     fan_config.FAN_HWMON_INPUT_PATH = name_path_map[fan_hwmon_label_input]+"/"+fan_pwm_input["pwm_read_path"]
-                    fan_config.FAN_RPMVALUE_MAX = fan_pwm_input["pwm_read_max"] if "pwm_read_max" in fan_pwm_input else 0
+                    fan_config.fan_value_max = fan_pwm_input["pwm_read_max"] if "pwm_read_max" in fan_pwm_input else 0
+                    max_value_from_settings = self.settings.getSetting(f"fan{len(self.fan_config_list)}_max")
+                    fan_config.FAN_RPMVALUE_MAX = max_value_from_settings if max_value_from_settings > fan_config.fan_value_max else fan_config.fan_value_max
                     fan_config.TEMP_MODE = hwmon_config["temp_mode"]
                     self.fan_config_list.append(fan_config)
                 except:
@@ -140,7 +157,12 @@ class FanManager ():
                     fan_config.FAN_RAM_RPMREAD_LENGTH = ec_info["FAN_RAM_RPMREAD_LENGTH"] if "FAN_RAM_RPMREAD_LENGTH" in ec_info else 0    #风扇实际转速值长度 0为需要通过计算获得转速
                     #其他变量
                     fan_config.FAN_RPMWRITE_MAX = ec_info["FAN_RPMWRITE_MAX"] if "FAN_RPMWRITE_MAX" in ec_info else 0  #风扇最大转速写入值
-                    fan_config.FAN_RPMVALUE_MAX = ec_info["FAN_RPMVALUE_MAX"] if "FAN_RPMVALUE_MAX" in ec_info else 0  #风扇最大转速读取数值
+
+                    #风扇最大转速读取数值
+                    fan_config.fan_value_max = ec_info["FAN_RPMVALUE_MAX"] if "FAN_RPMVALUE_MAX" in ec_info else 0
+                    max_value_from_settings = self.settings.getSetting(f"fan{len(self.fan_config_list)}_max")
+                    fan_config.FAN_RPMVALUE_MAX = max_value_from_settings if max_value_from_settings > fan_config.fan_value_max else fan_config.fan_value_max
+
                     fan_config.FAN_ENABLE_MANUAL_VALUE = 1
                     fan_config.FAN_ENABLE_AUTO_VALUE = 0
                     fan_config.TEMP_MODE = 0
@@ -468,6 +490,8 @@ class FanManager ():
         try:
             if os.path.exists(self.FAN_CPUTEMP_PATH):
                 temp = int(open(self.FAN_CPUTEMP_PATH).read().strip())
+
+                self.update_fan_max_value(temp)
             else:
                 temp = -1
             logging.debug(f"获取cpu温度: path:{self.FAN_CPUTEMP_PATH} temp:{temp}")
