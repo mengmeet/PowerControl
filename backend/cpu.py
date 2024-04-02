@@ -2,7 +2,12 @@ import subprocess
 import os
 import re
 from config import logging,SH_PATH,RYZENADJ_PATH
-from config import TDP_LIMIT_CONFIG_CPU,TDP_LIMIT_CONFIG_PRODUCT,PRODUCT_NAME,CPU_ID
+from config import (TDP_LIMIT_CONFIG_CPU,
+                    TDP_LIMIT_CONFIG_PRODUCT,
+                    PRODUCT_NAME,CPU_ID,
+                    PLATFORM_PROFILE_PATH,
+                    PLATFORM_PROFILE_CHOICES_PATH
+                    )
 #初始参数
 cpu_boost=True
 cpu_smt=True
@@ -135,6 +140,8 @@ class CPUManager ():
                 logging.debug(f"set_cpuTDP result:\n{stdout}")
                 if stderr:
                     logging.error(f"set_cpuTDP error:\n{stderr}")
+
+                self.set_platform_profile(value)
 
                 return True
             else:
@@ -384,5 +391,26 @@ class CPUManager ():
         except Exception as e:
             logging.error(e)
             return f"get_ryzenadj_info error:\n{e}"
+        
+    def set_platform_profile(self, tdp):
+        # if PLATFORM_PROFILE_PATH is not a file
+        if not os.path.exists(PLATFORM_PROFILE_PATH) or not os.path.isfile(PLATFORM_PROFILE_CHOICES_PATH):
+            return
+        try:
+            # read platform_profile_choices
+            with open(PLATFORM_PROFILE_CHOICES_PATH, 'r') as file:
+                choices = file.read().strip().split()
+                logging.debug(f"platform_profile_choices {choices}")
+            if tdp <= 12:
+                profile = choices[0]
+            elif tdp < 20:
+                profile = choices[1]
+            else:
+                profile = choices[len(choices) - 1]
+            with open(PLATFORM_PROFILE_PATH, 'w') as file:
+                logging.info(f"set_platform_profile {profile}")
+                file.write(profile)
+        except Exception as e:
+            logging.error(f"set_platform_profile error:\n{e}")
 
 cpuManager = CPUManager()

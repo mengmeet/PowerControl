@@ -19,6 +19,8 @@ try:
     GPU_DEVICE_PATH = glob.glob("/sys/class/drm/card?/device")[0]
     GPUFREQ_PATH = "{}/pp_od_clk_voltage".format(GPU_DEVICE_PATH)
     GPULEVEL_PATH = "{}/power_dpm_force_performance_level".format(GPU_DEVICE_PATH)
+    PLATFORM_PROFILE_PATH  = '/sys/firmware/acpi/platform_profile'
+    PLATFORM_PROFILE_CHOICES_PATH = '/sys/firmware/acpi/platform_profile_choices'
 except Exception as e:
     logging.error(f"路径配置异常|{e}")
 
@@ -144,7 +146,7 @@ try:
             "pwm_input":{
                 "hwmon_label":"oxpec",
                 "pwm_read_path":"fan1_input",
-                "pwm_read_max": 6000
+                "pwm_read_max": 5000
             },
             "temp_mode":0
         }],
