@@ -301,8 +301,13 @@ const FANDisplayComponent: VFC<{ fanIndex: number }> = ({ fanIndex }) => {
 //FANRPM模块
 const FANRPMComponent: VFC<{ fanIndex: number }> = ({ fanIndex }) => {
   const [fanrpm, setFanRPM] = useState<number>(0);
+  const [temperature, setTemperature] = useState<number|undefined>(undefined);
   const refresh = async () => {
     setFanRPM(FanControl.fanInfo[fanIndex].fanRPM);
+    const temperature = FanControl.fanInfo[fanIndex].nowPoint.temperature;
+    if (temperature != undefined) {
+      setTemperature(Math.trunc(temperature));
+    }
   };
 
   useEffect(() => {
@@ -314,12 +319,21 @@ const FANRPMComponent: VFC<{ fanIndex: number }> = ({ fanIndex }) => {
     }
   }, []);
   return (
-    <PanelSectionRow>
-      <Field focusable={true}
-        label={localizationManager.getString(localizeStrEnum.FAN_SPEED)}>
-        {fanrpm + " RPM"}
-      </Field>
-    </PanelSectionRow>
+    <>
+      <PanelSectionRow>
+        <Field focusable={true}
+          label={localizationManager.getString(localizeStrEnum.FAN_SPEED)}>
+          {fanrpm + " RPM"}
+        </Field>
+      </PanelSectionRow>
+      {temperature &&
+        <PanelSectionRow>
+          <Field focusable={true}
+            label={localizationManager.getString(localizeStrEnum.SENSOR_TEMP)}>
+            {temperature + " °C"}
+          </Field>
+        </PanelSectionRow>}
+    </>
   );
 };
 
