@@ -305,7 +305,7 @@ const FANRPMComponent: VFC<{ fanIndex: number }> = ({ fanIndex }) => {
   const refresh = async () => {
     setFanRPM(FanControl.fanInfo[fanIndex].fanRPM);
     const temperature = FanControl.fanInfo[fanIndex].nowPoint.temperature;
-    if (temperature != undefined) {
+    if (temperature != undefined && temperature != 0) {
       setTemperature(Math.trunc(temperature));
     }
   };
