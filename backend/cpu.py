@@ -380,7 +380,10 @@ class CPUManager ():
 
     def get_ryzenadj_info(self):
         try:
-            command = f"{RYZENADJ_PATH} -i"
+            sys_ryzenadj_path = "/usr/bin/ryzenadj"
+            if not os.path.exists(sys_ryzenadj_path):
+                sys_ryzenadj_path = RYZENADJ_PATH
+            command = f"{sys_ryzenadj_path} -i"
             process = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             stdout, stderr = process.stdout, process.stderr
             if stderr:
