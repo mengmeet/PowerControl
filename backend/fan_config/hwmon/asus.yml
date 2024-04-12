@@ -1,0 +1,111 @@
+hwmon_name: asus_custom_fan_curve
+
+fans:
+  - fan_name: CPU Fan
+    pwm_mode: 1
+
+    pwm_enable:
+      manual_value: 1
+      auto_value: 2
+      pwm_enable_path: pwm1_enable
+
+    pwm_write:
+      pwm_write_max:
+        default: 255
+        ROG Ally RC71L_RC71L: 255
+      pwm_mode1_write_path: # 写入转速和温度的文件名 多组
+        - pwm_write: pwm1_auto_point1_pwm
+          temp_write: pwm1_auto_point1_temp
+        - pwm_write: pwm1_auto_point2_pwm
+          temp_write: pwm1_auto_point2_temp
+        - pwm_write: pwm1_auto_point3_pwm
+          temp_write: pwm1_auto_point3_temp
+        - pwm_write: pwm1_auto_point4_pwm
+          temp_write: pwm1_auto_point4_temp
+        - pwm_write: pwm1_auto_point5_pwm
+          temp_write: pwm1_auto_point5_temp
+        - pwm_write: pwm1_auto_point6_pwm
+          temp_write: pwm1_auto_point6_temp
+        - pwm_write: pwm1_auto_point7_pwm
+          temp_write: pwm1_auto_point7_temp
+        - pwm_write: pwm1_auto_point8_pwm
+          temp_write: pwm1_auto_point8_temp
+      pwm_mode1_auto_value:
+        - pwm_write_value: 3
+          temp_write_value: 39
+        - pwm_write_value: 3
+          temp_write_value: 40
+        - pwm_write_value: 3
+          temp_write_value: 50
+        - pwm_write_value: 3
+          temp_write_value: 60
+        - pwm_write_value: 10
+          temp_write_value: 70
+        - pwm_write_value: 38
+          temp_write_value: 80
+        - pwm_write_value: 77
+          temp_write_value: 90
+        - pwm_write_value: 115
+          temp_write_value: 100
+
+    pwm_input:
+      hwmon_label: asus
+      pwm_read_path: fan1_input
+      pwm_read_max: 8200
+
+    temp_mode: 0
+
+  - fan_name: GPU Fan
+    pwm_mode: 1
+    black_list: 
+
+    pwm_enable:
+      manual_value: 1
+      auto_value: 2
+      pwm_enable_path: pwm2_enable
+
+    pwm_write:
+      pwm_write_max:
+        default: 255
+        ROG Ally RC71L_RC71L: 255
+      pwm_mode1_write_path:
+        - pwm_write: pwm2_auto_point1_pwm
+          temp_write: pwm2_auto_point1_temp
+        - pwm_write: pwm2_auto_point2_pwm
+          temp_write: pwm2_auto_point2_temp
+        - pwm_write: pwm2_auto_point3_pwm
+          temp_write: pwm2_auto_point3_temp
+        - pwm_write: pwm2_auto_point4_pwm
+          temp_write: pwm2_auto_point4_temp
+        - pwm_write: pwm2_auto_point5_pwm
+          temp_write: pwm2_auto_point5_temp
+        - pwm_write: pwm2_auto_point6_pwm
+          temp_write: pwm2_auto_point6_temp
+        - pwm_write: pwm2_auto_point7_pwm
+          temp_write: pwm2_auto_point7_temp
+        - pwm_write: pwm2_auto_point8_pwm
+          temp_write: pwm2_auto_point8_temp
+      pwm_mode1_auto_value:
+        - pwm_write_value: 3
+          temp_write_value: 39
+        - pwm_write_value: 3
+          temp_write_value: 40
+        - pwm_write_value: 3
+          temp_write_value: 50
+        - pwm_write_value: 3
+          temp_write_value: 60
+        - pwm_write_value: 10
+          temp_write_value: 70
+        - pwm_write_value: 38
+          temp_write_value: 80
+        - pwm_write_value: 77
+          temp_write_value: 90
+        - pwm_write_value: 115
+          temp_write_value: 100
+
+    pwm_input:
+      hwmon_label: asus
+      pwm_read_path: fan2_input
+      pwm_read_max: 8200
+
+    temp_mode: 0

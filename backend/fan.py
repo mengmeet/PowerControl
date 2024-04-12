@@ -60,7 +60,9 @@ class FanManager ():
             max_value = fan_config.FAN_RPMVALUE_MAX
             cup_temp = cpu_temp if cpu_temp > 0 else self.get_fanTemp(index)
             # 如果 current_rpm 和 fan_config.FAN_RPMVALUE_MAX 相差大于 5%, 则更新 max_value
-            if cup_temp > 65000 and abs(int(current_rpm) - max_value) / int(max_value) > 0.05:
+            if (
+                cup_temp > 75000 and (max_value - max_value) / int(max_value) > 0.05
+            ) or (int(current_rpm) - max_value) / int(max_value) > 0.05:
                 logging.info(f"cup_temp {cup_temp}, 风扇{index} 当前转速已达到最大值, 更新最大值: {max_value} -> {current_rpm}")
                 fan_config.FAN_RPMVALUE_MAX = current_rpm
                 self.settings.setSetting(f"fan{index}_max", current_rpm)
@@ -147,27 +149,29 @@ class FanManager ():
             logging.info(f"已获取到风扇hwmon信息:{[config.FAN_HWMON_NAME for config in self.fan_config_list]}")
         else:
             logging.info(f"未获取到风扇hwmon信息,开始获取风扇ec信息")
+            self.fan_config_list.clear()
             # 转化ec信息
             for ec_info in FAN_EC_CONFIG:
                 try:
                     fan_config = FanConfig()
                     # EC配置变量
-                    fan_config.FAN_MANUAL_OFFSET = ec_info["FAN_MANUAL_OFFSET"] if "FAN_MANUAL_OFFSET" in ec_info else None #风扇自动控制ec地址
-                    fan_config.FAN_RPMWRITE_OFFSET = ec_info["FAN_RPMWRITE_OFFSET"] if "FAN_RPMWRITE_OFFSET" in ec_info else None   #风扇写入转速ec地址
-                    fan_config.FAN_RPMREAD_OFFSET = ec_info["FAN_RPMREAD_OFFSET"] if "FAN_RPMREAD_OFFSET" in ec_info else None    #风扇读取转速ec地址
+                    fan_config.FAN_MANUAL_OFFSET = ec_info["manual_offset"] if "manual_offset" in ec_info else None #风扇自动控制ec地址
+                    fan_config.FAN_RPMWRITE_OFFSET = ec_info["rpmwrite_offset"] if "rpmwrite_offset" in ec_info else None   #风扇写入转速ec地址
+                    fan_config.FAN_RPMREAD_OFFSET = ec_info["rpmread_offset"] if "rpmread_offset" in ec_info else None    #风扇读取转速ec地址
                     # ECRAM配置变量
-                    fan_config.FAN_RAM_REG_ADDR = ec_info["FAN_RAM_REG_ADDR"] if "FAN_RAM_REG_ADDR" in ec_info else None  #风扇ecRam寄存器地址
-                    fan_config.FAN_RAM_REG_DATA = ec_info["FAN_RAM_REG_DATA"] if "FAN_RAM_REG_DATA" in ec_info else None  #风扇ecRam寄存器数据
-                    fan_config.FAN_RAM_MANUAL_OFFSET = ec_info["FAN_RAM_MANUAL_OFFSET"] if "FAN_RAM_MANUAL_OFFSET" in ec_info else None #风扇自动控制ecRam地址
-                    fan_config.FAN_RAM_RPMWRITE_OFFSET = ec_info["FAN_RAM_RPMWRITE_OFFSET"] if "FAN_RAM_RPMWRITE_OFFSET" in ec_info else None    #风扇写入转速ecRam地址
-                    fan_config.FAN_RAM_RPMREAD_OFFSET = ec_info["FAN_RAM_RPMREAD_OFFSET"] if "FAN_RAM_RPMREAD_OFFSET" in ec_info else None    #风扇读取转速ecRam地址
-                    fan_config.FAN_RAM_RPMREAD_LENGTH = ec_info["FAN_RAM_RPMREAD_LENGTH"] if "FAN_RAM_RPMREAD_LENGTH" in ec_info else 0    #风扇实际转速值长度 0为需要通过计算获得转速
+                    fan_config.FAN_RAM_REG_ADDR = ec_info["ram_reg_addr"] if "ram_reg_addr" in ec_info else None  #风扇ecRam寄存器地址
+                    fan_config.FAN_RAM_REG_DATA = ec_info["ram_reg_data"] if "ram_reg_data" in ec_info else None  #风扇ecRam寄存器数据
+                    fan_config.FAN_RAM_MANUAL_OFFSET = ec_info["ram_manual_offset"] if "ram_manual_offset" in ec_info else None #风扇自动控制ecRam地址
+                    fan_config.FAN_RAM_RPMWRITE_OFFSET = ec_info["ram_rpmwrite_offset"] if "ram_rpmwrite_offset" in ec_info else None    #风扇写入转速ecRam地址
+                    fan_config.FAN_RAM_RPMREAD_OFFSET = ec_info["ram_rpmread_offset"] if "ram_rpmread_offset" in ec_info else None    #风扇读取转速ecRam地址
+                    fan_config.FAN_RAM_RPMREAD_LENGTH = ec_info["ram_rpmread_length"] if "ram_rpmread_length" in ec_info else 0    #风扇实际转速值长度 0为需要通过计算获得转速
                     # 其他变量
-                    fan_config.FAN_RPMWRITE_MAX = ec_info["FAN_RPMWRITE_MAX"] if "FAN_RPMWRITE_MAX" in ec_info else 0  #风扇最大转速写入值
+                    fan_config.FAN_RPMWRITE_MAX = ec_info["rpm_write_max"] if "rpm_write_max" in ec_info else 0  #风扇最大转速写入值
 
                     # 风扇最大转速读取数值
-                    fan_config.fan_value_max = ec_info["FAN_RPMVALUE_MAX"] if "FAN_RPMVALUE_MAX" in ec_info else 0
+                    fan_config.fan_value_max = ec_info["rpm_value_max"] if "rpm_value_max" in ec_info else 0
                     max_value_from_settings = self.settings.getSetting(f"fan{len(self.fan_config_list)}_max")
+                    logging.info(f"max_value_from_settings:{max_value_from_settings}, fan_config.fan_value_max:{fan_config.fan_value_max}")
                     fan_config.FAN_RPMVALUE_MAX = (
                         max_value_from_settings
                         if (
@@ -176,6 +180,7 @@ class FanManager ():
                         )
                         else fan_config.fan_value_max
                     )
+                    logging.info(f"fan_config.FAN_RPMVALUE_MAX:{fan_config.FAN_RPMVALUE_MAX}")
 
                     fan_config.FAN_ENABLE_MANUAL_VALUE = 1
                     fan_config.FAN_ENABLE_AUTO_VALUE = 0
@@ -186,7 +191,8 @@ class FanManager ():
                                                     and  (fan_config.FAN_RPMREAD_OFFSET!=None or fan_config.FAN_RAM_RPMREAD_OFFSET!=None)\
                                                     and  (fan_config.FAN_RPMWRITE_MAX!=0 and fan_config.FAN_RPMVALUE_MAX!=0)
                     if fan_config.FAN_IS_EC_CONFIGURED:
-                        self.fan_config_list.append(fan_config)                               
+                        self.fan_config_list.append(fan_config)
+                    logging.info(f"fan_config_list to json {fan_config.__dict__}")                            
                 except:
                     logging.error(f"获取风扇({hwmon_name})ec信息失败:",exc_info=True)
 
@@ -405,7 +411,7 @@ class FanManager ():
                         currentVal = int(open(hwmon_pwm_path).read().strip())
                         # 转速相差小于5%时不写入
                         if currentVal > 0 and abs(currentVal - fanWriteValue) / currentVal < 0.05:
-                            logging.debug(f"当前风扇转速{currentVal} 与目标转速{fanWriteValue} 相差小于5% 不写入")
+                            logging.info(f"当前风扇转速{currentVal} 与目标转速{fanWriteValue} 相差小于5% 不写入")
                             return True
                         open(hwmon_pwm_path,'w').write(str(fanWriteValue))
                         logging.debug(f"写入hwmon数据 写入hwmon地址:{hwmon_pwm_path} 风扇转速百分比{value} 风扇最大值{rpm_write_max} 风扇转速写入值:{fanWriteValue}")
@@ -453,7 +459,7 @@ class FanManager ():
                 except:
                     logging.error("使用ECIO写入风扇转速异常:",exc_info=True)   
             else:
-                logging.debug(f"风扇下标越界 index:{index} len:{len(self.fan_config_list)}")
+                logging.error(f"风扇下标越界 index:{index} len:{len(self.fan_config_list)}")
             return False       
         except:
             logging.error(f"写入风扇转速异常:",exc_info=True)

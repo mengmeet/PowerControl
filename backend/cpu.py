@@ -408,7 +408,7 @@ class CPUManager ():
             else:
                 profile = choices[len(choices) - 1]
             with open(PLATFORM_PROFILE_PATH, 'w') as file:
-                logging.info(f"set_platform_profile {profile}")
+                logging.debug(f"set_platform_profile {profile}")
                 file.write(profile)
         except Exception as e:
             logging.error(f"set_platform_profile error:\n{e}")
