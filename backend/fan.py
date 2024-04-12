@@ -152,21 +152,21 @@ class FanManager ():
                 try:
                     fan_config = FanConfig()
                     # EC配置变量
-                    fan_config.FAN_MANUAL_OFFSET = ec_info["FAN_MANUAL_OFFSET"] if "FAN_MANUAL_OFFSET" in ec_info else None #风扇自动控制ec地址
-                    fan_config.FAN_RPMWRITE_OFFSET = ec_info["FAN_RPMWRITE_OFFSET"] if "FAN_RPMWRITE_OFFSET" in ec_info else None   #风扇写入转速ec地址
-                    fan_config.FAN_RPMREAD_OFFSET = ec_info["FAN_RPMREAD_OFFSET"] if "FAN_RPMREAD_OFFSET" in ec_info else None    #风扇读取转速ec地址
+                    fan_config.FAN_MANUAL_OFFSET = ec_info["manual_offset"] if "manual_offset" in ec_info else None #风扇自动控制ec地址
+                    fan_config.FAN_RPMWRITE_OFFSET = ec_info["rpmwrite_offset"] if "rpmwrite_offset" in ec_info else None   #风扇写入转速ec地址
+                    fan_config.FAN_RPMREAD_OFFSET = ec_info["rpmread_offset"] if "rpmread_offset" in ec_info else None    #风扇读取转速ec地址
                     # ECRAM配置变量
-                    fan_config.FAN_RAM_REG_ADDR = ec_info["FAN_RAM_REG_ADDR"] if "FAN_RAM_REG_ADDR" in ec_info else None  #风扇ecRam寄存器地址
-                    fan_config.FAN_RAM_REG_DATA = ec_info["FAN_RAM_REG_DATA"] if "FAN_RAM_REG_DATA" in ec_info else None  #风扇ecRam寄存器数据
-                    fan_config.FAN_RAM_MANUAL_OFFSET = ec_info["FAN_RAM_MANUAL_OFFSET"] if "FAN_RAM_MANUAL_OFFSET" in ec_info else None #风扇自动控制ecRam地址
-                    fan_config.FAN_RAM_RPMWRITE_OFFSET = ec_info["FAN_RAM_RPMWRITE_OFFSET"] if "FAN_RAM_RPMWRITE_OFFSET" in ec_info else None    #风扇写入转速ecRam地址
-                    fan_config.FAN_RAM_RPMREAD_OFFSET = ec_info["FAN_RAM_RPMREAD_OFFSET"] if "FAN_RAM_RPMREAD_OFFSET" in ec_info else None    #风扇读取转速ecRam地址
-                    fan_config.FAN_RAM_RPMREAD_LENGTH = ec_info["FAN_RAM_RPMREAD_LENGTH"] if "FAN_RAM_RPMREAD_LENGTH" in ec_info else 0    #风扇实际转速值长度 0为需要通过计算获得转速
+                    fan_config.FAN_RAM_REG_ADDR = ec_info["ram_reg_addr"] if "ram_reg_addr" in ec_info else None  #风扇ecRam寄存器地址
+                    fan_config.FAN_RAM_REG_DATA = ec_info["ram_reg_data"] if "ram_reg_data" in ec_info else None  #风扇ecRam寄存器数据
+                    fan_config.FAN_RAM_MANUAL_OFFSET = ec_info["ram_manual_offset"] if "ram_manual_offset" in ec_info else None #风扇自动控制ecRam地址
+                    fan_config.FAN_RAM_RPMWRITE_OFFSET = ec_info["ram_rpmwrite_offset"] if "ram_rpmwrite_offset" in ec_info else None    #风扇写入转速ecRam地址
+                    fan_config.FAN_RAM_RPMREAD_OFFSET = ec_info["ram_rpmread_offset"] if "ram_rpmread_offset" in ec_info else None    #风扇读取转速ecRam地址
+                    fan_config.FAN_RAM_RPMREAD_LENGTH = ec_info["ram_rpmread_length"] if "ram_rpmread_length" in ec_info else 0    #风扇实际转速值长度 0为需要通过计算获得转速
                     # 其他变量
-                    fan_config.FAN_RPMWRITE_MAX = ec_info["FAN_RPMWRITE_MAX"] if "FAN_RPMWRITE_MAX" in ec_info else 0  #风扇最大转速写入值
+                    fan_config.FAN_RPMWRITE_MAX = ec_info["rpm_write_max"] if "rpm_write_max" in ec_info else 0  #风扇最大转速写入值
 
                     # 风扇最大转速读取数值
-                    fan_config.fan_value_max = ec_info["FAN_RPMVALUE_MAX"] if "FAN_RPMVALUE_MAX" in ec_info else 0
+                    fan_config.fan_value_max = ec_info["rpm_value_max"] if "rpm_value_max" in ec_info else 0
                     max_value_from_settings = self.settings.getSetting(f"fan{len(self.fan_config_list)}_max")
                     fan_config.FAN_RPMVALUE_MAX = (
                         max_value_from_settings

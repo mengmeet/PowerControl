@@ -1,0 +1,28 @@
+# hwmon目录下name文件内容
+hwmon_name: oxpec 
+
+fans:
+  - fan_name: Fan # 显示在 UI 上的风扇名称
+    pwm_mode: 0 # 写入的模式 0.普通模式(对单个文件写入) 1.rog掌机特殊模式(对多个文件写入同样的数值)
+    black_list: # 黑名单, 匹配 /sys/devices/virtual/dmi/id/product_name. 不使用该配置
+      - G1618-03
+      - G1618-04
+      - G1619-04
+      - G1617-01
+
+    pwm_enable:
+      manual_value: 1 # 手动模式写入的值
+      auto_value: 0 # 自动模式写入的值
+      pwm_enable_path: pwm1_enable # 写入数值的文件路径(数值模式)
+
+    pwm_write:
+      pwm_write_max: # 写入转速最大值(根据不同产品名写入不同的最大值，没有则使用默认)
+        default: 255
+      pwm_write_path: pwm1 # 写入数值的文件路径
+
+    pwm_input:
+      hwmon_label: oxpec # 读转速的hwmon标签(读取转速和写入转速可能不在同一个hwmon)
+      pwm_read_path: fan1_input # 读取转速的文件路径
+      pwm_read_max: 5000 # 读取转速的最大值
+
+    temp_mode: 0 #温度使用哪个数据  0.cpu温度(不可用时切换到gpu温度)  1.gpu温度(不可用时切换到cpu温度)

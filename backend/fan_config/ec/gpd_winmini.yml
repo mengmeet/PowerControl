@@ -1,0 +1,13 @@
+
+product_name: 
+  - G1617-01
+fans:
+  - ram_reg_addr: 0x4E
+    ram_reg_data: 0x4F
+    ram_manual_offset: 0x47A
+    ram_rpmwrite_offset: 0x47A
+    ram_rpmread_offset: 0x478
+    ram_rpmread_length: 2
+
+    rpm_write_max: 244
+    rpm_value_max: 6700

@@ -1,0 +1,22 @@
+hwmon_name: steamdeck_hwmon
+
+fans:
+  - fan_name: Fan
+    pwm_mode: 0
+    
+    pwm_enable:
+      manual_value: 1
+      auto_value: 0
+      pwm_enable_path: fan1_target
+
+    pwm_write:
+      pwm_write_max:
+        default: 7300
+      pwm_write_path: fan1_target
+
+    pwm_input:
+      hwmon_label: steamdeck_hwmon
+      pwm_read_path: fan1_input
+      pwm_read_max: 7309
+
+    temp_mode: 0
