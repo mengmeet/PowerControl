@@ -16,6 +16,9 @@ try:
     import update
 
 except Exception as e:
+    # 堆栈跟踪
+    import traceback
+    logging.error(traceback.format_exc())
     logging.error(e)
 
 

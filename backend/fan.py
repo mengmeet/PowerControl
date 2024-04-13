@@ -105,7 +105,14 @@ class FanManager ():
                     fan_config.FAN_ENABLE_AUTO_VALUE = fan_pwm_enable["auto_value"]
                     fan_config.FAN_HWMON_PWMENABLE_PATH = name_path_map[hwmon_name]+"/"+fan_pwm_enable["pwm_enable_path"]
 
-                    black_list = hwmon_config["black_list"] if "black_list" in hwmon_config else []
+                    black_list = (
+                        hwmon_config["black_list"]
+                        if (
+                            "black_list" in hwmon_config
+                            and hwmon_config["black_list"] != None
+                        )
+                        else []
+                    )
 
                     fan_pwm_write = hwmon_config["pwm_write"]
                     pwm_write_max = fan_pwm_write["pwm_write_max"]
@@ -114,12 +121,28 @@ class FanManager ():
                     else:
                         fan_config.FAN_RPMWRITE_MAX = pwm_write_max["default"]
                     if fan_config.FAN_HWMON_MODE == 0:   
-                        fan_config.FAN_HWMON_PWM_PATH = name_path_map[hwmon_name]+"/"+fan_pwm_write["pwm_write_path"] if "pwm_write_path" in fan_pwm_write and fan_pwm_write["pwm_write_path"] != "" else None
+                        fan_config.FAN_HWMON_PWM_PATH = (
+                            name_path_map[hwmon_name]
+                            + "/"
+                            + fan_pwm_write["pwm_write_path"]
+                            if "pwm_write_path" in fan_pwm_write
+                            and fan_pwm_write["pwm_write_path"] != ""
+                            else None
+                        )
                     elif fan_config.FAN_HWMON_MODE == 1:
                         pwm_mode1_write_path = fan_pwm_write["pwm_mode1_write_path"] if "pwm_mode1_write_path" in fan_pwm_write else []
                         for point in pwm_mode1_write_path:
-                            point_info = {"pwm_write":name_path_map[hwmon_name]+"/"+point["pwm_write"],"temp_write":name_path_map[hwmon_name]+"/"+point["temp_write"]}
-                            if os.path.exists(point_info["pwm_write"]) and os.path.exists(point_info["temp_write"]):
+                            point_info = {
+                                "pwm_write": name_path_map[hwmon_name]
+                                + "/"
+                                + point["pwm_write"],
+                                "temp_write": name_path_map[hwmon_name]
+                                + "/"
+                                + point["temp_write"],
+                            }
+                            if os.path.exists(
+                                point_info["pwm_write"]
+                            ) and os.path.exists(point_info["temp_write"]):
                                 fan_config.FAN_HWMON_MODE1_PWM_PATH.append(point_info)
                         pwm_mode1_auto_value = fan_pwm_write["pwm_mode1_auto_value"] if "pwm_mode1_auto_value" in fan_pwm_write else []
                         for value in pwm_mode1_auto_value:
