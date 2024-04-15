@@ -406,6 +406,16 @@ export class Backend {
         } else {
           Backend.applyTDP(Backend.data.getTDPMax());
         }
+        if (Settings.appForceShowTDP()) {
+          try {
+            QAMPatch.setTDPEanble(tdpEnable);
+            if (tdpEnable) {
+              QAMPatch.setTDP(_tdp);
+            }
+          } catch (error) {
+            console.error(`>>>>> 强制显示 TDP 时设置QAM失败`, error);
+          }
+        }
       } else {
         // console.log(
         //   `>>>>> 原生设置更新 TDP = ${_tdp} TDPEnable = ${tdpEnable}`
