@@ -60,5 +60,7 @@
     "FIXED_FREQ_DESC": "Fixed GPU frequency",
     "RANGE_FREQ_DESC": "Set GPU frequency range",
     "AUTO_FREQ_DESC": "Adaptive GPU frequency, forcibly disabled TDP limit, disabled Boost",
-    "AUTO_FREQ_TDP_NOTIF": "GPU mode {{mode}}, TDP limit disabled"
+    "AUTO_FREQ_TDP_NOTIF": "GPU mode {{mode}}, TDP limit disabled",
+    "FORCE_SHOW_TDP": "Force Show TDP Control",
+    "FORCE_SHOW_TDP_DESC": "By default, the plugin will process the native TDP slider. If there is an issue with the native slider, enable this option to use the plugin's internal TDP control"
 }
