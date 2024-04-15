@@ -397,7 +397,7 @@ export class Backend {
         ? Math.min(customTDPRangeMax, Math.max(customTDPRangeMin, tdp))
         : tdp;
 
-      if (!PluginManager.isPatchSuccess(Patch.TDPPatch)) {
+      if (!PluginManager.isPatchSuccess(Patch.TDPPatch) || Settings.appForceShowTDP()) {
         // console.log(
         //   `>>>>> 插件方式更新 TDP = ${_tdp} TDPEnable = ${tdpEnable}`
         // );

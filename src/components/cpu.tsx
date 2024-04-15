@@ -117,7 +117,7 @@ const CPUTDPComponent: VFC = () => {
   const [tdpEnable, setTDPEnable] = useState<boolean>(Settings.appTDPEnable());
   const [tdp, setTDP] = useState<number>(Settings.appTDP());
   const [disabled, setDisable] = useState<boolean>(Settings.appGPUMode() == GPUMODE.AUTO);
-  const [forceShow, setForceShow] = useState<boolean>(false);
+  const [forceShow, setForceShow] = useState<boolean>(Settings.appForceShowTDP());
   const [enableCustomTDPRange, setEnableCustomTDPRange] = useState<boolean>(Settings.appEnableCustomTDPRange());
   const [customTDPRangeMax, setCustomTDPRangeMax] = useState<number>(Settings.appCustomTDPRangeMax());
   const [customTDPRangeMin, setCustomTDPRangeMin] = useState<number>(Settings.appCustomTDPRangeMin());
@@ -128,6 +128,7 @@ const CPUTDPComponent: VFC = () => {
     setEnableCustomTDPRange(Settings.appEnableCustomTDPRange());
     setCustomTDPRangeMax(Settings.appCustomTDPRangeMax());
     setCustomTDPRangeMin(Settings.appCustomTDPRangeMin());
+    setForceShow(Settings.appForceShowTDP());
   };
   useEffect(() => {
     PluginManager.listenUpdateComponent(ComponentName.CPU_TDP, [ComponentName.CPU_TDP, ComponentName.GPU_FREQMODE], (_ComponentName, updateType) => {
@@ -147,7 +148,8 @@ const CPUTDPComponent: VFC = () => {
           description={localizationManager.getString(localizeStrEnum.FORCE_SHOW_TDP_DESC)}
           checked={forceShow || !PluginManager.isPatchSuccess(Patch.TDPPatch)}
           onChange={(value) => {
-            setForceShow(value);
+            // setForceShow(value);
+            Settings.setForceShowTDP(value);
           }}
         />
       </PanelSectionRow>

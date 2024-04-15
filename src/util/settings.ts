@@ -165,6 +165,9 @@ export class SettingsData {
   @JsonProperty()
   public customTDPRangeMin: number;
 
+  @JsonProperty()
+  public forceShowTDP: boolean = false;
+
   @JsonProperty({ isDictionary: true, type: AppSettingData })
   public perApp: { [appId: string]: AppSettingData } = {};
 
@@ -311,6 +314,18 @@ export class Settings {
       this._instance.data.perApp[RunningApps.active()].overwrite = overwrite;
       Settings.saveSettingsToLocalStorage();
       PluginManager.updateAllComponent(UpdateType.UPDATE);
+    }
+  }
+
+  static appForceShowTDP(): boolean {
+    return this._instance.data.forceShowTDP;
+  }
+
+  static setForceShowTDP(forceShowTDP: boolean) {
+    if (this._instance.data.forceShowTDP != forceShowTDP) {
+      this._instance.data.forceShowTDP = forceShowTDP;
+      Settings.saveSettingsToLocalStorage();
+      PluginManager.updateComponent(ComponentName.CPU_TDP, UpdateType.UPDATE);
     }
   }
 
