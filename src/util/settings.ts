@@ -162,8 +162,8 @@ export class SettingsData {
   @JsonProperty()
   public customTDPRangeMax: number;
 
-  @JsonProperty()
-  public customTDPRangeMin: number;
+  // @JsonProperty()
+  // public customTDPRangeMin: number;
 
   @JsonProperty()
   public forceShowTDP: boolean = false;
@@ -176,14 +176,15 @@ export class SettingsData {
 
   constructor() {
     this.customTDPRangeMax = DEFAULT_TDP_MAX;
-    this.customTDPRangeMin = DEFAULT_TDP_MIN;
+    // this.customTDPRangeMin = DEFAULT_TDP_MIN;
   }
 
   public deepCopy(copyTarget: SettingsData) {
     this.enabled = copyTarget.enabled;
     this.enableCustomTDPRange = copyTarget.enableCustomTDPRange;
     this.customTDPRangeMax = copyTarget.customTDPRangeMax;
-    this.customTDPRangeMin = copyTarget.customTDPRangeMin;
+    this.forceShowTDP = copyTarget.forceShowTDP;
+    // this.customTDPRangeMin = copyTarget.customTDPRangeMin;
     this.perApp = {};
     Object.entries(copyTarget.perApp).forEach(([key, value]) => {
       this.perApp[key] = new AppSettingData();
@@ -438,20 +439,21 @@ export class Settings {
   }
 
   static appCustomTDPRangeMin() {
-    return this._instance.data.customTDPRangeMin;
+    // return this._instance.data.customTDPRangeMin;
+    return DEFAULT_TDP_MIN;
   }
 
-  static setCustomTDPRangeMin(customTDPRangeMin: number) {
-    if (this._instance.data.customTDPRangeMin != customTDPRangeMin) {
-      this._instance.data.customTDPRangeMin = customTDPRangeMin;
-      Settings.saveSettingsToLocalStorage();
-      Backend.applySettings(APPLYTYPE.SET_TDP);
-      PluginManager.updateComponent(
-        ComponentName.CUSTOM_TDP,
-        UpdateType.UPDATE
-      );
-    }
-  }
+  // static setCustomTDPRangeMin(customTDPRangeMin: number) {
+  //   if (this._instance.data.customTDPRangeMin != customTDPRangeMin) {
+  //     this._instance.data.customTDPRangeMin = customTDPRangeMin;
+  //     Settings.saveSettingsToLocalStorage();
+  //     Backend.applySettings(APPLYTYPE.SET_TDP);
+  //     PluginManager.updateComponent(
+  //       ComponentName.CUSTOM_TDP,
+  //       UpdateType.UPDATE
+  //     );
+  //   }
+  // }
 
   static appTDPEnable() {
     return Settings.ensureApp().tdpEnable ?? true;
@@ -475,11 +477,12 @@ export class Settings {
   }
 
   static getTDPMin() {
-    if (this._instance.data.enableCustomTDPRange) {
-      return this._instance.data.customTDPRangeMin;
-    } else {
-      return 3;
-    }
+    // if (this._instance.data.enableCustomTDPRange) {
+    //   return this._instance.data.customTDPRangeMin;
+    // } else {
+    //   return 3;
+    // }
+    return DEFAULT_TDP_MIN;
   }
 
   static saveTDPFromQAM(tdp: number, tdpEnable: boolean) {

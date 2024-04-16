@@ -7,7 +7,7 @@ export const CustomTDPComponent: VFC = () => {
   const [show, setShow] = useState<boolean>(Settings.ensureEnable());
   const [enableCustomTDPRange, setEnableCustomTDPRange] = useState<boolean>(Settings.appEnableCustomTDPRange());
   const [customTDPRangeMax, setCustomTDPRangeMax] = useState<number>(Settings.appCustomTDPRangeMax());
-  const [customTDPRangeMin, setCustomTDPRangeMin] = useState<number>(Settings.appCustomTDPRangeMin());
+  // const [customTDPRangeMin, setCustomTDPRangeMin] = useState<number>(Settings.appCustomTDPRangeMin());
 
   const hide = (ishide: boolean) => {
     setShow(!ishide);
@@ -15,7 +15,7 @@ export const CustomTDPComponent: VFC = () => {
   const refresh = () => {
     setEnableCustomTDPRange(Settings.appEnableCustomTDPRange());
     setCustomTDPRangeMax(Settings.appCustomTDPRangeMax());
-    setCustomTDPRangeMin(Settings.appCustomTDPRangeMin());
+    // setCustomTDPRangeMin(Settings.appCustomTDPRangeMin());
   };
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export const CustomTDPComponent: VFC = () => {
             }}
           />
         </PanelSectionRow>}
-      {show && enableCustomTDPRange &&
+      {/* {show && enableCustomTDPRange &&
         <PanelSectionRow>
           <SliderField
             label={"Min"}
@@ -81,7 +81,7 @@ export const CustomTDPComponent: VFC = () => {
               }
             }}
           />
-        </PanelSectionRow>}
+        </PanelSectionRow>} */}
     </div>
   )
 }

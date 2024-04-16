@@ -53,7 +53,7 @@
     "USE_PERACMODE_PROFILE": "使用按充电状态设置的配置文件",
     "AC_MODE": "充电模式",
     "BAT_MODE": "电池模式",
-    "CUSTOM_TDP_RANGE": "自定义 TDP 范围",
+    "CUSTOM_TDP_RANGE": "自定义 TDP 滑块范围",
     "RESET_ALL": "重置所有设置",
     "NATIVE_FREQ_DESC": "使用系统快捷菜单频率设置",
     "UNLIMITED_DESC": "不限制 GPU 频率, 系统默认调度",

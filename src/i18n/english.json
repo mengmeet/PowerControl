@@ -53,7 +53,7 @@
     "USE_PERACMODE_PROFILE": "Use per-AC Mode Profile",
     "AC_MODE": "AC Mode",
     "BAT_MODE": "Battery Mode",
-    "CUSTOM_TDP_RANGE": "Custom TDP Range",
+    "CUSTOM_TDP_RANGE": "Custom TDP Slider Range",
     "RESET_ALL": "Reset All",
     "NATIVE_FREQ_DESC": "Set frequency using system shortcut menu",
     "UNLIMITED_DESC": "No limit on GPU frequency, system default scheduling",
