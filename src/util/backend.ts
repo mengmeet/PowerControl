@@ -397,7 +397,7 @@ export class Backend {
         ? Math.min(customTDPRangeMax, Math.max(customTDPRangeMin, tdp))
         : tdp;
 
-      if (!PluginManager.isPatchSuccess(Patch.TDPPatch)) {
+      if (!PluginManager.isPatchSuccess(Patch.TDPPatch) || Settings.appForceShowTDP()) {
         // console.log(
         //   `>>>>> 插件方式更新 TDP = ${_tdp} TDPEnable = ${tdpEnable}`
         // );
@@ -405,6 +405,16 @@ export class Backend {
           Backend.applyTDP(_tdp);
         } else {
           Backend.applyTDP(Backend.data.getTDPMax());
+        }
+        if (Settings.appForceShowTDP()) {
+          try {
+            QAMPatch.setTDPEanble(tdpEnable);
+            if (tdpEnable) {
+              QAMPatch.setTDP(_tdp);
+            }
+          } catch (error) {
+            console.error(`>>>>> 强制显示 TDP 时设置QAM失败`, error);
+          }
         }
       } else {
         // console.log(

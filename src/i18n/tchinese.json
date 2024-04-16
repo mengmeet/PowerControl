@@ -60,5 +60,7 @@
     "FIXED_FREQ_DESC": "固定 GPU 頻率",
     "RANGE_FREQ_DESC": "設定 GPU 頻率範圍",
     "AUTO_FREQ_DESC": "自適應 GPU 頻率，強制關閉 TDP 限制，關閉 Boost",
-    "AUTO_FREQ_TDP_NOTIF": "GPU 模式为{{mode}}, 關閉 TDP 限制"
+    "AUTO_FREQ_TDP_NOTIF": "GPU 模式为{{mode}}, 關閉 TDP 限制",
+    "FORCE_SHOW_TDP": "強制顯示 TDP 控制",
+    "FORCE_SHOW_TDP_DESC": "默認情況下, 插件將處理原生 TDP 滑塊。如果原生滑塊出現問題, 請啟用此選項以使用插件內部的 TDP 控制"
 }

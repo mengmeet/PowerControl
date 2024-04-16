@@ -19,7 +19,7 @@ export const CustomTDPComponent: VFC = () => {
   };
 
   useEffect(() => {
-    PluginManager.listenUpdateComponent(ComponentName.CUSTOM_TDP, [ComponentName.CUSTOM_TDP], (_ComponentName, updateType: string) => {
+    PluginManager.listenUpdateComponent(ComponentName.CUSTOM_TDP, [ComponentName.CPU_TDP,ComponentName.CUSTOM_TDP], (_ComponentName, updateType: string) => {
       switch (updateType) {
         case UpdateType.UPDATE:
           refresh();
