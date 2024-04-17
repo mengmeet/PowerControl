@@ -57,8 +57,7 @@ fans:
 
   - fan_name: GPU Fan
     pwm_mode: 1
-    black_list: 
-
+    
     pwm_enable:
       manual_value: 1
       auto_value: 2

@@ -1,0 +1,12 @@
+{
+  "python.analysis.extraPaths": [
+    "../decky-loader/plugin",
+    "../decky-loader/backend/src",
+    "./py_modules",
+    "./backend"
+  ],
+  "yaml.schemas": {
+    "./backend/fan_config/schema/ec.json": ["backend/fan_config/ec/*.yml"],
+    "./backend/fan_config/schema/hwmon.json": ["backend/fan_config/hwmon/*.yml"],
+  }
+}

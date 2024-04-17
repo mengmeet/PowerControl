@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$ref": "#/definitions/ECProfile",
+  "definitions": {
+    "ECProfile": {
+      "title": "ECProfile",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_name": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "设备标识, `/sys/devices/virtual/dmi/id/product_name`"
+        },
+        "fans": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Fans"
+          },
+          "minItems": 1,
+          "description": "风扇配置信息"
+        }
+      },
+      "required": ["product_name", "fans"]
+    },
+    "Fans": {
+      "title": "Fans",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "manual_offset": {
+          "type": "number",
+          "description": "风扇自动控制ec地址"
+        },
+        "rpmwrite_offset": {
+          "type": "number",
+          "description": "风扇写入转速ec地址"
+        },
+        "rpmread_offset": {
+          "type": "number",
+          "description": "风扇读取转速ec地址"
+        },
+        "ram_reg_addr": {
+          "type": "number",
+          "description": "风扇ecRam寄存器地址"
+        },
+        "ram_reg_data": {
+          "type": "number",
+          "description": "风扇ecRam寄存器数据"
+        },
+        "ram_manual_offset": {
+          "type": "number",
+          "description": "风扇ecRam手动控制地址"
+        },
+        "ram_rpmwrite_offset": {
+          "type": "number",
+          "description": "风扇ecRam写入转速地址"
+        },
+        "ram_rpmread_offset": {
+          "type": "number",
+          "description": "风扇ecRam读取转速地址"
+        },
+        "ram_rpmread_length": {
+          "type": "number",
+          "description": "风扇ecRam读取转速数据长度"
+        },
+        "rpm_write_max": {
+          "type": "number",
+          "description": "风扇最大转速ec写入值"
+        },
+        "rpm_value_max": {
+          "type": "number",
+          "description": "风扇最大转速值"
+        }
+      },
+      "required": []
+    }
+  }
+}
