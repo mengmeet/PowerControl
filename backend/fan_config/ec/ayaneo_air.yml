@@ -1,5 +1,4 @@
-
-product_name: 
+product_name:
   - AIR
   - AIR Pro
   - AIR 1S
@@ -18,4 +17,3 @@ fans:
 
     rpm_write_max: 255
     rpm_value_max: 5811
-

@@ -1,5 +1,4 @@
-
-product_name: 
+product_name:
   - ONEXPLAYER 2 ARP23
 fans:
   - manual_offset: 0x4a
@@ -15,4 +14,3 @@ fans:
 
     rpm_write_max: 184
     rpm_value_max: 5000
-

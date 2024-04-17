@@ -1,5 +1,5 @@
 # hwmon目录下name文件内容
-hwmon_name: oxpec 
+hwmon_name: oxpec
 
 fans:
   - fan_name: Fan # 显示在 UI 上的风扇名称

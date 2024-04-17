@@ -1,5 +1,4 @@
-
-product_name: 
+product_name:
   - G1617-01
 fans:
   - ram_reg_addr: 0x4E

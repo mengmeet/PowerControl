@@ -104,6 +104,7 @@ class FanManager ():
                     fan_config.FAN_ENABLE_MANUAL_VALUE = fan_pwm_enable["manual_value"]
                     fan_config.FAN_ENABLE_AUTO_VALUE = fan_pwm_enable["auto_value"]
                     fan_config.FAN_HWMON_PWMENABLE_PATH = name_path_map[hwmon_name]+"/"+fan_pwm_enable["pwm_enable_path"]
+                    fan_config.FAN_HWMON_PWMENABLE_SECOND_PATH = name_path_map[hwmon_name]+"/"+fan_pwm_enable["pwm_enable_second_path"] if "pwm_enable_second_path" in fan_pwm_enable else None
 
                     black_list = (
                         hwmon_config["black_list"]
@@ -295,8 +296,11 @@ class FanManager ():
                 is_find_hwmon = self.fan_config_list[index].FAN_ISFIND_HWMON
                 hwmon_mode = self.fan_config_list[index].FAN_HWMON_MODE
                 hwmon_pwm_enable_path = self.fan_config_list[index].FAN_HWMON_PWMENABLE_PATH
+                hwmon_pwm_enable_second_path = self.fan_config_list[index].FAN_HWMON_PWMENABLE_SECOND_PATH
                 enable_auto_value = self.fan_config_list[index].FAN_ENABLE_AUTO_VALUE
                 try:
+                    if not os.path.exists(hwmon_pwm_enable_path) and os.path.exists(hwmon_pwm_enable_second_path):
+                        hwmon_pwm_enable_path = hwmon_pwm_enable_second_path
                     if is_find_hwmon and hwmon_mode == 0:
                         fanIsManual=int(open(hwmon_pwm_enable_path).read().strip())
                         logging.debug(f"使用hwmon数据 读取hwmon地址:{hwmon_pwm_enable_path} 风扇是否控制:{fanIsManual == enable_auto_value}")
@@ -340,12 +344,16 @@ class FanManager ():
                 is_find_hwmon = self.fan_config_list[index].FAN_ISFIND_HWMON
                 hwmon_mode = self.fan_config_list[index].FAN_HWMON_MODE
                 hwmon_pwm_enable_path = self.fan_config_list[index].FAN_HWMON_PWMENABLE_PATH
+                hwmon_pwm_enable_second_path = self.fan_config_list[index].FAN_HWMON_PWMENABLE_SECOND_PATH
                 hwmon_pwm_path = self.fan_config_list[index].FAN_HWMON_PWM_PATH
                 hwmon_mode1_pwm_path =  self.fan_config_list[index].FAN_HWMON_MODE1_PWM_PATH
                 enable_manual_value = self.fan_config_list[index].FAN_ENABLE_MANUAL_VALUE
                 enable_auto_value = self.fan_config_list[index].FAN_ENABLE_AUTO_VALUE
                 mode1_auto_value = self.fan_config_list[index].FAN_HWMON_MODE1_AUTO_VALUE
                 try:
+                    if not os.path.exists(hwmon_pwm_enable_path) and os.path.exists(hwmon_pwm_enable_second_path):
+                        hwmon_pwm_enable_path = hwmon_pwm_enable_second_path
+
                     if is_find_hwmon and hwmon_mode == 0:
                         if value:
                             fanIsManual = enable_auto_value if value else enable_manual_value
@@ -428,7 +436,10 @@ class FanManager ():
                 hwmon_mode1_pwm_path =  self.fan_config_list[index].FAN_HWMON_MODE1_PWM_PATH
                 enable_manual_value = self.fan_config_list[index].FAN_ENABLE_MANUAL_VALUE
                 hwmon_pwm_enable_path = self.fan_config_list[index].FAN_HWMON_PWMENABLE_PATH
+                hwmon_pwm_enable_second_path = self.fan_config_list[index].FAN_HWMON_PWMENABLE_SECOND_PATH
                 try:
+                    if not os.path.exists(hwmon_pwm_enable_path) and os.path.exists(hwmon_pwm_enable_second_path):
+                        hwmon_pwm_enable_path = hwmon_pwm_enable_second_path
                     if is_find_hwmon and hwmon_mode == 0:
                         fanWriteValue = max(min(int(value/100*rpm_write_max),rpm_write_max),0)
                         currentVal = int(open(hwmon_pwm_path).read().strip())
@@ -454,6 +465,7 @@ class FanManager ():
                                 open(temp_path,'w').write(str(temp))
                                 logging.debug(f"写入hwmon数据 写入hwmon转速地址:{pwm_path} 风扇转速百分比{value} 风扇最大值{rpm_write_max} 风扇转速写入值:{fanWriteValue} 温度地址:{temp_path} 温度大小:{temp}")     
                         fanIsManual = enable_manual_value
+
                         open(hwmon_pwm_enable_path,'w').write(str(fanIsManual))
                         logging.debug(f"写入hwmon数据 写入hwmon地址:{hwmon_pwm_enable_path} 写入风扇是否控制:{fanIsManual}")
                         return True

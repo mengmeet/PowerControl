@@ -1,5 +1,4 @@
-
-product_name: 
+product_name:
   - AYANEO 2
   - AYANEO 2S
   - GEEK
@@ -18,4 +17,3 @@ fans:
 
     rpm_write_max: 255
     rpm_value_max: 5530
-
