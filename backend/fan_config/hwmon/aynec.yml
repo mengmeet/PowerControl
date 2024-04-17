@@ -1,4 +1,4 @@
-hwmon_name: steamdeck_hwmon
+hwmon_name: aynec
 
 fans:
   - fan_name: Fan
@@ -7,16 +7,17 @@ fans:
     pwm_enable:
       manual_value: 1
       auto_value: 0
-      pwm_enable_path: fan1_target
+      pwm_enable_path: pwm1_enable
+      pwm_enable_second_path: pwm1_mode
 
     pwm_write:
       pwm_write_max:
-        default: 7300
-      pwm_write_path: fan1_target
+        default: 255
+      pwm_write_path: pwm1
 
     pwm_input:
-      hwmon_label: steamdeck_hwmon
+      hwmon_label: aynec
       pwm_read_path: fan1_input
-      pwm_read_max: 7309
+      pwm_read_max: 5000
 
     temp_mode: 0

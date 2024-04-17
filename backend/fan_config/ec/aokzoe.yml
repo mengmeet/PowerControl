@@ -1,19 +1,18 @@
-
-product_name:                    # /sys/devices/virtual/dmi/id/product_name 内容
+product_name: # /sys/devices/virtual/dmi/id/product_name 内容
   - AOKZOE A1 AR07
   - ONEXPLAYER Mini Pro
 fans:
-  - manual_offset: 0x4a          # 风扇自动控制ec地址
-    rpmwrite_offset: 0x4b        # 风扇写入转速ec地址
-    rpmread_offset: 0x76         # 风扇读取转速ec地址
+  - manual_offset: 0x4a # 风扇自动控制ec地址
+    rpmwrite_offset: 0x4b # 风扇写入转速ec地址
+    rpmread_offset: 0x76 # 风扇读取转速ec地址
 
-    ram_reg_addr: 0x4E           # 风扇ecRam寄存器地址
-    ram_reg_data: 0x4F           # 风扇ecRam寄存器数据
-    ram_manual_offset: 0x44a     # 风扇自动控制ecRam地址
-    ram_rpmwrite_offset: 0x44b   # 风扇写入转速ecRam地址
-    ram_rpmread_offset: 0x1809   # 风扇读取转速ecRam地址
-    ram_rpmread_length: 0        # 风扇实际转速值长度 0为需要通过计算获得转速
+    ram_reg_addr: 0x4E # 风扇ecRam寄存器地址
+    ram_reg_data: 0x4F # 风扇ecRam寄存器数据
+    ram_manual_offset: 0x44a # 风扇自动控制ecRam地址
+    ram_rpmwrite_offset: 0x44b # 风扇写入转速ecRam地址
+    ram_rpmread_offset: 0x1809 # 风扇读取转速ecRam地址
+    ram_rpmread_length: 0 # 风扇实际转速值长度 0为需要通过计算获得转速
 
-    rpm_write_max: 255           # 风扇最大转速ec写入值
-    rpm_value_max: 4968          # 风扇最大转速数值
+    rpm_write_max: 255 # 风扇最大转速ec写入值
+    rpm_value_max: 4968 # 风扇最大转速数值
 
