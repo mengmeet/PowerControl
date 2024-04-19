@@ -243,7 +243,7 @@ export class Backend {
   }
 
   public static applyTDP = (tdp: number) => {
-    // console.log("Applying tdp " + tdp.toString());
+    console.log("Applying tdp " + tdp.toString());
     this.serverAPI!.callPluginMethod("set_cpuTDP", { value: tdp });
   };
 
