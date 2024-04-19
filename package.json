@@ -1,6 +1,6 @@
 {
   "name": "PowerControl",
-  "version": "2.4.24",
+  "version": "2.4.25",
   "description": "PowerControl plugin.",
   "scripts": {
     "build": "shx rm -rf dist && rollup -c",
