@@ -74,6 +74,7 @@ try:
         "ROG Ally RC71L_RC71L": 30,
         "ROG Ally RC71L": 30,
         "Jupiter": 20,
+        "V3": 45,
     }
     TDP_LIMIT_CONFIG_CPU = {
         "7735HS": 65,

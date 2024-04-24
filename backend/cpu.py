@@ -135,7 +135,7 @@ class CPUManager ():
                 command_args = command.split()
                 logging.info(f"set_cpuTDP command: {command}")
                 logging.info(f"set_cpuTDP {value}")
-                process = subprocess.run(command_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                process = subprocess.run(command_args, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 stdout, stderr = process.stdout.decode('utf-8'), process.stderr.decode('utf-8')
                 logging.info(f"set_cpuTDP result:\n{stdout}")
                 if stderr:
