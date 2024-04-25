@@ -38,7 +38,12 @@ try:
     cpuinfo = open(cpuinfo_path, "r").read()
     CPU_ID = cpuinfo.split("model name")[1].split(":")[1].split("\n")[0].strip()
     PRODUCT_NAME = open("/sys/devices/virtual/dmi/id/product_name", "r").read().strip()
-    logging.info(f"CPU_ID: {CPU_ID}, PRODUCT_NAME: {PRODUCT_NAME}")
+    PRODUCT_VERSION = (
+        open("/sys/devices/virtual/dmi/id/product_version", "r").read().strip()
+    )
+    logging.info(
+        f"CPU_ID: {CPU_ID}, PRODUCT_NAME: {PRODUCT_NAME}, PRODUCT_VERSION: {PRODUCT_VERSION}"
+    )
 except Exception as e:
     logging.error(f"设备信息配置异常|{e}")
 
@@ -150,12 +155,37 @@ try:
         data = load_yaml(config, ec_schema)
         if data == {}:
             continue
-        names = data["product_name"]
-        if not names is None:
-            for name in names:
+        names = (
+            data["product_name"]
+            if (
+                "product_name" in data
+                and data["product_name"] != None
+                and isinstance(data["product_name"], list)
+            )
+            else []
+        )
+        versions = (
+            data["product_version"]
+            if (
+                "product_version" in data
+                and data["product_version"] != None
+                and isinstance(data["product_version"], list)
+            )
+            else []
+        )
+        for name in names:
+            if len(versions) == 0:
                 FAN_EC_CONFIG_MAP[name] = data["fans"]
+            else:
+                for version in versions:
+                    FAN_EC_CONFIG_MAP[f"{name}{version}"] = data["fans"]
 
-    FAN_EC_CONFIG = FAN_EC_CONFIG_MAP.get(PRODUCT_NAME, [])
+    logging.debug(f"FAN_EC_CONFIG_MAP: {FAN_EC_CONFIG_MAP}")
+
+    product_version = PRODUCT_VERSION if PRODUCT_VERSION != "Default string" else ""
+    key = f"{PRODUCT_NAME}{product_version}"
+    logging.info(f"风扇配置key: {key}")
+    FAN_EC_CONFIG = FAN_EC_CONFIG_MAP.get(key, [])
     logging.info(f"FAN_EC_CONFIG: {FAN_EC_CONFIG}")
 
 

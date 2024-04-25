@@ -1,0 +1,14 @@
+product_name:
+  - G1618-04
+product_version:
+  - Ver. 1.0
+fans:
+  - ram_reg_addr: 0x4E
+    ram_reg_data: 0x4F
+    ram_manual_offset: 0x275
+    ram_rpmwrite_offset: 0x1809
+    ram_rpmread_offset: 0x218
+    ram_rpmread_length: 2
+
+    rpm_write_max: 184
+    rpm_value_max: 4968

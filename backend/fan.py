@@ -8,38 +8,42 @@ import decky_plugin
 from settings import SettingsManager
 
 class FanConfig ():
+
     def __init__(self):
-        #HWMON配置变量
-        self.FAN_ISFIND_HWMON=False  #是否找到风扇hwmon
-        self.FAN_NAME="FAN"  #风扇在图表中显示的名字
-        self.FAN_HWMON_NAME=None       #风扇hwmon名字
-        self.FAN_HWMON_MODE=0   #风扇模式
-        self.FAN_HWMON_PWMENABLE_PATH=None     #风扇自动控制hwmon地址
+        # HWMON配置变量
+        self.FAN_ISFIND_HWMON = False  # 是否找到风扇hwmon
+        self.FAN_NAME = "FAN"  # 风扇在图表中显示的名字
+        self.FAN_HWMON_NAME = None  # 风扇hwmon名字
+        self.FAN_HWMON_MODE = 0  # 风扇模式
+        self.FAN_HWMON_PWMENABLE_PATH = None  # 风扇自动控制hwmon地址
 
-        self.FAN_ENABLE_MANUAL_VALUE = 1    #手动模式写到自动控制hwmon地址的数值
-        self.FAN_ENABLE_AUTO_VALUE = 0    #自动模式写到自动控制hwmon地址的数值
-        self.FAN_HWMON_PWM_PATH=None       #风扇写入转速hwmon地址
-        self.FAN_HWMON_MODE1_PWM_PATH=[]       #风扇写入转速和对应温度hwmon地址列表(模式1)
-        self.FAN_HWMON_MODE1_AUTO_VALUE=[]       #风扇写入转速和对应温度hwmon地址列表(模式1)
+        self.FAN_ENABLE_MANUAL_VALUE = 1  # 手动模式写到自动控制hwmon地址的数值
+        self.FAN_ENABLE_AUTO_VALUE = 0  # 自动模式写到自动控制hwmon地址的数值
+        self.FAN_HWMON_PWM_PATH = None  # 风扇写入转速hwmon地址
+        self.FAN_HWMON_PWMENABLE_SECOND_PATH = None  # 风扇写入转速hwmon地址(次要)
+        self.FAN_HWMON_MODE1_PWM_PATH = []  # 风扇写入转速和对应温度hwmon地址列表(模式1)
+        self.FAN_HWMON_MODE1_AUTO_VALUE = (
+            []
+        )  # 风扇写入转速和对应温度hwmon地址列表(模式1)
 
-        self.FAN_HWMON_INPUT_PATH=None     #风扇读取转速hwmon地址
+        self.FAN_HWMON_INPUT_PATH = None  # 风扇读取转速hwmon地址
 
-        #EC配置变量
-        self.FAN_IS_EC_CONFIGURED=False  #是否配置好风扇ec
-        self.FAN_MANUAL_OFFSET=None #风扇自动控制ec地址
-        self.FAN_RPMWRITE_OFFSET=None   #风扇写入转速ec地址
-        self.FAN_RPMREAD_OFFSET=None    #风扇读取转速ec地址
-        #ECRAM配置变量
-        self.FAN_RAM_REG_ADDR=None  #风扇ecRam寄存器地址
-        self.FAN_RAM_REG_DATA=None  #风扇ecRam寄存器数据
-        self.FAN_RAM_MANUAL_OFFSET=None #风扇自动控制ecRam地址
-        self.FAN_RAM_RPMWRITE_OFFSET=None    #风扇写入转速ecRam地址
-        self.FAN_RAM_RPMREAD_OFFSET=None    #风扇读取转速ecRam地址
-        self.FAN_RAM_RPMREAD_LENGTH=0   #风扇实际转速值长度 0为需要通过计算获得转速
-        #其他变量
-        self.FAN_RPMWRITE_MAX=0 #风扇最大转速写入值
-        self.FAN_RPMVALUE_MAX=0 #风扇最大转速读取数值
-        self.TEMP_MODE=0    #使用cpu或者gpu温度
+        # EC配置变量
+        self.FAN_IS_EC_CONFIGURED = False  # 是否配置好风扇ec
+        self.FAN_MANUAL_OFFSET = None  # 风扇自动控制ec地址
+        self.FAN_RPMWRITE_OFFSET = None  # 风扇写入转速ec地址
+        self.FAN_RPMREAD_OFFSET = None  # 风扇读取转速ec地址
+        # ECRAM配置变量
+        self.FAN_RAM_REG_ADDR = None  # 风扇ecRam寄存器地址
+        self.FAN_RAM_REG_DATA = None  # 风扇ecRam寄存器数据
+        self.FAN_RAM_MANUAL_OFFSET = None  # 风扇自动控制ecRam地址
+        self.FAN_RAM_RPMWRITE_OFFSET = None  # 风扇写入转速ecRam地址
+        self.FAN_RAM_RPMREAD_OFFSET = None  # 风扇读取转速ecRam地址
+        self.FAN_RAM_RPMREAD_LENGTH = 0  # 风扇实际转速值长度 0为需要通过计算获得转速
+        # 其他变量
+        self.FAN_RPMWRITE_MAX = 0  # 风扇最大转速写入值
+        self.FAN_RPMVALUE_MAX = 0  # 风扇最大转速读取数值
+        self.TEMP_MODE = 0  # 使用cpu或者gpu温度
 
 
 class FanManager ():
@@ -299,9 +303,13 @@ class FanManager ():
                 hwmon_pwm_enable_second_path = self.fan_config_list[index].FAN_HWMON_PWMENABLE_SECOND_PATH
                 enable_auto_value = self.fan_config_list[index].FAN_ENABLE_AUTO_VALUE
                 try:
-                    if not os.path.exists(hwmon_pwm_enable_path) and os.path.exists(hwmon_pwm_enable_second_path):
-                        hwmon_pwm_enable_path = hwmon_pwm_enable_second_path
                     if is_find_hwmon and hwmon_mode == 0:
+                        if (
+                            not os.path.exists(hwmon_pwm_enable_path)
+                            and hwmon_pwm_enable_second_path != None
+                            and os.path.exists(hwmon_pwm_enable_second_path)
+                        ):
+                            hwmon_pwm_enable_path = hwmon_pwm_enable_second_path
                         fanIsManual=int(open(hwmon_pwm_enable_path).read().strip())
                         logging.debug(f"使用hwmon数据 读取hwmon地址:{hwmon_pwm_enable_path} 风扇是否控制:{fanIsManual == enable_auto_value}")
                         # return not fanIsManual
@@ -339,6 +347,7 @@ class FanManager ():
             return False
 
     def set_fanAuto(self, index:int, value:bool):
+        logging.debug(f"set_fanAuto index:{index} value:{value}, len:{len(self.fan_config_list)}")
         try:
             if index < len(self.fan_config_list):
                 is_find_hwmon = self.fan_config_list[index].FAN_ISFIND_HWMON
@@ -351,10 +360,13 @@ class FanManager ():
                 enable_auto_value = self.fan_config_list[index].FAN_ENABLE_AUTO_VALUE
                 mode1_auto_value = self.fan_config_list[index].FAN_HWMON_MODE1_AUTO_VALUE
                 try:
-                    if not os.path.exists(hwmon_pwm_enable_path) and os.path.exists(hwmon_pwm_enable_second_path):
-                        hwmon_pwm_enable_path = hwmon_pwm_enable_second_path
-
                     if is_find_hwmon and hwmon_mode == 0:
+                        if (
+                            not os.path.exists(hwmon_pwm_enable_path)
+                            and hwmon_pwm_enable_second_path != None
+                            and os.path.exists(hwmon_pwm_enable_second_path)
+                        ):
+                            hwmon_pwm_enable_path = hwmon_pwm_enable_second_path
                         if value:
                             fanIsManual = enable_auto_value if value else enable_manual_value
                         elif not value and hwmon_pwm_path == hwmon_pwm_enable_path: #手动模式且控制位地址和写风扇转速的地址一样，跳过控制位写入，防止覆盖风扇转速
@@ -438,9 +450,14 @@ class FanManager ():
                 hwmon_pwm_enable_path = self.fan_config_list[index].FAN_HWMON_PWMENABLE_PATH
                 hwmon_pwm_enable_second_path = self.fan_config_list[index].FAN_HWMON_PWMENABLE_SECOND_PATH
                 try:
-                    if not os.path.exists(hwmon_pwm_enable_path) and os.path.exists(hwmon_pwm_enable_second_path):
-                        hwmon_pwm_enable_path = hwmon_pwm_enable_second_path
                     if is_find_hwmon and hwmon_mode == 0:
+                        if (
+                            not os.path.exists(hwmon_pwm_enable_path)
+                            and hwmon_pwm_enable_second_path != None
+                            and os.path.exists(hwmon_pwm_enable_second_path)
+                        ):
+                            hwmon_pwm_enable_path = hwmon_pwm_enable_second_path
+
                         fanWriteValue = max(min(int(value/100*rpm_write_max),rpm_write_max),0)
                         currentVal = int(open(hwmon_pwm_path).read().strip())
                         # 转速相差小于5%时不写入
