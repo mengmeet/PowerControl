@@ -174,11 +174,18 @@ try:
             else []
         )
         for name in names:
-            for version in versions:
-                FAN_EC_CONFIG_MAP[f"{name}_{version}"] = data["fans"]
+            if len(versions) == 0:
+                FAN_EC_CONFIG_MAP[name] = data["fans"]
+            else:
+                for version in versions:
+                    FAN_EC_CONFIG_MAP[f"{name}{version}"] = data["fans"]
+
+    logging.debug(f"FAN_EC_CONFIG_MAP: {FAN_EC_CONFIG_MAP}")
 
     product_version = PRODUCT_VERSION if PRODUCT_VERSION != "Default string" else ""
-    FAN_EC_CONFIG = FAN_EC_CONFIG_MAP.get(f"{PRODUCT_NAME}_{product_version}", [])
+    key = f"{PRODUCT_NAME}{product_version}"
+    logging.info(f"风扇配置key: {key}")
+    FAN_EC_CONFIG = FAN_EC_CONFIG_MAP.get(key, [])
     logging.info(f"FAN_EC_CONFIG: {FAN_EC_CONFIG}")
 
 
