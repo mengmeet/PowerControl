@@ -13,7 +13,15 @@
             "type": "string"
           },
           "minItems": 1,
-          "description": "设备标识, `/sys/devices/virtual/dmi/id/product_name`"
+          "description": "设备标识, `/sys/class/dmi/id/product_name`"
+        },
+        "product_version": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "设备版本, `/sys/class/dmi/id/product_version`"
         },
         "fans": {
           "type": "array",
