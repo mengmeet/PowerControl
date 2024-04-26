@@ -184,7 +184,7 @@ try:
 
     product_version = PRODUCT_VERSION if PRODUCT_VERSION != "Default string" else ""
     key = f"{PRODUCT_NAME}{product_version}"
-    logging.info(f"风扇配置key: {key}")
+    logging.info(f"fans config key: {key}")
     FAN_EC_CONFIG = FAN_EC_CONFIG_MAP.get(key, [])
     logging.info(f"FAN_EC_CONFIG: {FAN_EC_CONFIG}")
 

@@ -1,4 +1,5 @@
 import sys
+import traceback
 import decky_plugin
 from settings import SettingsManager
 
@@ -17,7 +18,6 @@ try:
 
 except Exception as e:
     # 堆栈跟踪
-    import traceback
     logging.error(traceback.format_exc())
     logging.error(e)
 

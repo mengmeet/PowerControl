@@ -1,14 +1,13 @@
 import subprocess
 import os
 import re
+import traceback
 from config import logging, SH_PATH, RYZENADJ_PATH
 from config import (
     TDP_LIMIT_CONFIG_CPU,
     TDP_LIMIT_CONFIG_PRODUCT,
     PRODUCT_NAME,
     CPU_ID,
-    PLATFORM_PROFILE_PATH,
-    PLATFORM_PROFILE_CHOICES_PATH,
 )
 
 # 初始参数
@@ -50,6 +49,7 @@ class CPUManager:
                 logging.info("get_hasRyzenadj {}".format(False))
                 return False
         except Exception as e:
+            logging.error(traceback.format_exc())
             logging.error(e)
             return False
 
@@ -139,8 +139,8 @@ class CPUManager:
 
                 command = f"{sys_ryzenadj_path} -a {stapm_limit} -b {fast_minit} -c {slow_limit} -f {tctl_temp}"
                 command_args = command.split()
-                logging.info(f"set_cpuTDP command: {command}")
-                logging.info(f"set_cpuTDP {value}")
+                logging.debug(f"set_cpuTDP command: {command}")
+                logging.debug(f"set_cpuTDP {value}")
                 process = subprocess.run(
                     command_args,
                     stdout=subprocess.PIPE,
@@ -148,7 +148,7 @@ class CPUManager:
                     text=True,
                 )
                 stdout, stderr = process.stdout, process.stderr
-                logging.info(f"set_cpuTDP result:\n{stdout}")
+                logging.debug(f"set_cpuTDP result:\n{stdout}")
                 if stderr:
                     logging.error(f"set_cpuTDP error:\n{stderr}")
 
@@ -156,6 +156,7 @@ class CPUManager:
             else:
                 return False
         except Exception as e:
+            logging.error(traceback.format_exc())
             logging.error(e)
             return False
 
@@ -216,6 +217,7 @@ class CPUManager:
                     self.online_cpu(int(cpu))
             return True
         except Exception as e:
+            logging.error(traceback.format_exc())
             logging.error(e)
             return False
 
@@ -258,6 +260,7 @@ class CPUManager:
             else:
                 self.is_support_smt = int(stdout) > 1
         except Exception as e:
+            logging.error(traceback.format_exc())
             logging.error(e)
             self.is_support_smt = False
         return self.is_support_smt
@@ -272,6 +275,7 @@ class CPUManager:
             cpu_smt = value
             return True
         except Exception as e:
+            logging.error(traceback.format_exc())
             logging.error(e)
             return False
 
@@ -307,6 +311,7 @@ class CPUManager:
 
             return True
         except Exception as e:
+            logging.error(traceback.format_exc())
             logging.error(e)
             return False
 
