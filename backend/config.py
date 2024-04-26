@@ -2,18 +2,28 @@ import json
 import logging
 import glob
 import yaml
+import traceback
 import decky_plugin
 from helpers import get_homebrew_path
+from logging_handler import SystemdHandler
 
 # 日志配置
 LOG_LOCATION = "/tmp/PowerControl_py.log"
-logging.basicConfig(
-    level=logging.INFO,
-    filename=LOG_LOCATION,
-    format="[%(asctime)s | %(filename)s:%(lineno)s:%(funcName)s] %(levelname)s: %(message)s",
-    filemode="w",
-    force=True,
-)
+try:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(asctime)s | %(filename)s:%(lineno)s:%(funcName)s] %(levelname)s: %(message)s",
+        force=True,
+        handlers=[
+            SystemdHandler(),
+            logging.FileHandler(filename=LOG_LOCATION, mode="w"),
+        ],
+    )
+except Exception as e:
+    stack = traceback.format_exc()
+    with open(LOG_LOCATION, "a") as f:
+        f.write(str(e))
+        f.write(stack)
 
 # 路径配置
 try:
