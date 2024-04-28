@@ -136,33 +136,35 @@ def load_yaml(file_path: str, chk_schema=None) -> dict:
     return data
 
 
-# 风扇配置
-try:
+HWMON_CONFS = glob.glob(f"{FAN_HWMON_CONFIG_DIR}/*.yml")
+EC_CONFS = glob.glob(f"{FAN_EC_CONFIG_DIR}/*.yml")
 
-    hwmon_configs = glob.glob(f"{FAN_HWMON_CONFIG_DIR}/*.yml")
-    ec_configs = glob.glob(f"{FAN_EC_CONFIG_DIR}/*.yml")
+HWMON_SCHEMA = f"{DECKY_PLUGIN_DIR}/backend/fan_config/schema/hwmon.json"
+EC_SCHEMA = f"{DECKY_PLUGIN_DIR}/backend/fan_config/schema/ec.json"
 
-    hwmon_schema_path = f"{DECKY_PLUGIN_DIR}/backend/fan_config/schema/hwmon.json"
-    ec_schema_path = f"{DECKY_PLUGIN_DIR}/backend/fan_config/schema/ec.json"
 
-    with open(hwmon_schema_path, "r") as f:
+def get_all_howmon_fans():
+    with open(HWMON_SCHEMA, "r") as f:
         hwmon_schema = json.load(f)
-    with open(ec_schema_path, "r") as f:
-        ec_schema = json.load(f)
 
-    FAN_HWMON_LIST = {}
-    for config in hwmon_configs:
-        data = load_yaml(config, hwmon_schema)
+    fans_confs = {}
+    for config_path in HWMON_CONFS:
+        data = load_yaml(config_path, hwmon_schema)
         if data == {}:
             continue
         name = data["hwmon_name"]
         if not name is None:
-            FAN_HWMON_LIST[name] = data["fans"]
-    # logging.info(f"FAN_HWMON_LIST: {FAN_HWMON_LIST}")
+            fans_confs[name] = data["fans"]
+    return fans_confs
+
+
+def get_device_ec_fans(product_name, product_version):
+    with open(EC_SCHEMA, "r") as f:
+        ec_schema = json.load(f)
 
     FAN_EC_CONFIG_MAP = {}
-    for config in ec_configs:
-        data = load_yaml(config, ec_schema)
+    for config_path in EC_CONFS:
+        data = load_yaml(config_path, ec_schema)
         if data == {}:
             continue
         names = (
@@ -184,20 +186,48 @@ try:
             else []
         )
         for name in names:
-            if len(versions) == 0:
-                FAN_EC_CONFIG_MAP[name] = data["fans"]
-            else:
-                for version in versions:
-                    FAN_EC_CONFIG_MAP[f"{name}{version}"] = data["fans"]
+            if name not in FAN_EC_CONFIG_MAP:
+                FAN_EC_CONFIG_MAP[name] = []
+            fanconf = {"fans": data["fans"], "product_version": versions}
+            FAN_EC_CONFIG_MAP[name].append(fanconf)
 
-    logging.debug(f"FAN_EC_CONFIG_MAP: {FAN_EC_CONFIG_MAP}")
+    # 带版本号的配置
+    confs_with_name_version = []
+    # 不带版本号的配置
+    confs_with_name = []
 
-    product_version = PRODUCT_VERSION if PRODUCT_VERSION != "Default string" else ""
-    key = f"{PRODUCT_NAME}{product_version}"
-    logging.info(f"fans config key: {key}")
-    FAN_EC_CONFIG = FAN_EC_CONFIG_MAP.get(key, [])
+    # 通过产品名获得所有配置，然后分成带版本号和不带版本号的配置
+    for conf in FAN_EC_CONFIG_MAP.get(product_name, []):
+        if (
+            product_version in conf["product_version"]
+            and data["product_version"] != None
+            and isinstance(data["product_version"], list)
+            and len(data["product_version"]) > 0
+        ):
+            confs_with_name_version.append(conf)
+        else:
+            confs_with_name.append(conf)
+
+    # 优先匹配带版本号的配置
+    for conf in confs_with_name_version:
+        if product_version in conf["product_version"]:
+            return conf["fans"]
+    # 其次匹配不带版本号的配置 (如果有)
+    for conf in confs_with_name:
+        return conf["fans"]
+
+
+# 风扇配置
+try:
+
+    FAN_HWMON_LIST = get_all_howmon_fans()
+
+    FAN_EC_CONFIG = get_device_ec_fans(PRODUCT_NAME, PRODUCT_VERSION)
+
     logging.info(f"FAN_EC_CONFIG: {FAN_EC_CONFIG}")
 
-
 except Exception as e:
+    import traceback
+
     logging.error(f"风扇配置异常|{e}")
+    logging.error(traceback.format_exc())

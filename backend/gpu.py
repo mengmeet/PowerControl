@@ -286,12 +286,13 @@ class GPUManager ():
                 result = subprocess.run(['frzr-unlock'])
             elif distribution == 'SteamOS':
                 result = subprocess.run(['steamos-readonly', 'disable'])
-            if result.stdout:
-                logging.info(f"stdout {result.stdout.strip()}")
-            # 如果有错误输出，则打印错误信息
-            if result.stderr:
-                logging.error(result.stderr.strip())
-                return
+
+            if not result is None: 
+                if result.stdout:
+                    logging.info(f"stdout {result.stdout.strip()}")
+                if result.stderr:
+                    logging.error(result.stderr.strip())
+                    return
 
             gpu_file_path=["power_dpm_force_performance_level","pp_od_clk_voltage"]
             steamos_priv_path="/usr/bin/steamos-polkit-helpers/steamos-priv-write"
