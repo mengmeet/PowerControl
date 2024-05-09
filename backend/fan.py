@@ -320,20 +320,20 @@ class FanManager:
         for fan_config in self.fan_config_list:
             try:
                 # ecram配置
-                FAN_IS_EC_CONFIGURED = fan_config.is_ec_configured
-                FAN_RAM_REG_ADDR = fan_config.ram_reg_addr
-                FAN_RAM_REG_DATA = fan_config.ram_reg_data
+                is_ec_configured = fan_config.is_ec_configured
+                ram_reg_addr = fan_config.ram_reg_addr
+                ram_reg_data = fan_config.ram_reg_data
                 # 有配置ec并且是win4
-                if FAN_IS_EC_CONFIGURED and PRODUCT_NAME == "G1618-04":
+                if is_ec_configured and PRODUCT_NAME == "G1618-04":
                     # Initialize GPD WIN4 EC
-                    ec_chip_id = EC.RamRead(FAN_RAM_REG_ADDR, FAN_RAM_REG_DATA, 0x2000)
+                    ec_chip_id = EC.RamRead(ram_reg_addr, ram_reg_data, 0x2000)
                     if ec_chip_id == 0x55:
                         ec_chip_ver = EC.RamRead(
-                            FAN_RAM_REG_ADDR, FAN_RAM_REG_DATA, 0x1060
+                            ram_reg_addr, ram_reg_data, 0x1060
                         )
                         ec_chip_ver |= 0x80
                         EC.RamWrite(
-                            FAN_RAM_REG_ADDR, FAN_RAM_REG_DATA, 0x1060, ec_chip_ver
+                            ram_reg_addr, ram_reg_data, 0x1060, ec_chip_ver
                         )
             except:
                 logging.error("设备特殊初始化失败:", exc_info=True)
@@ -353,7 +353,7 @@ class FanManager:
                 return self.__get_fanRPM_HWMON(fc)
 
             # ECIO 读取
-            if fc.is_ec_configured:
+            if fc.pwm_read_offset:
                 return self.__get_fanRPM_ECIO(fc)
 
             # ECRAM 读取
