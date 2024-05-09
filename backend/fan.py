@@ -359,6 +359,8 @@ class FanManager:
             # ECRAM 读取
             if fc.ram_pwm_read_offset:
                 return self.__get_fanRPM_ECRAM(fc)
+            
+            return 0
         except:
             logging.error(f"获取风扇转速异常:", exc_info=True)
             return 0
@@ -419,7 +421,7 @@ class FanManager:
             logging.error(f"获取风扇转速异常:", exc_info=True)
             return 0
 
-    def get_fanIsAuto(self, index: int):
+    def get_fanIsAuto_Old(self, index: int):
         try:
             if index < len(self.fan_config_list):
                 is_found_hwmon = self.fan_config_list[index].is_found_hwmon
@@ -483,6 +485,80 @@ class FanManager:
                 return False
         except:
             logging.error(f"获取风扇状态异常:", exc_info=True)
+            return False
+
+    def get_fanIsAuto(self, index: int):
+        try:
+            if index > len(self.fan_config_list) - 1:
+                logging.error(
+                    f"风扇下标越界 index:{index} len:{len(self.fan_config_list)}"
+                )
+                return False
+
+            fc = self.fan_config_list[index]
+
+            if fc.is_found_hwmon and fc.hwmon_mode == 0:
+                return self.__get_fanIsAuto_HWMON(fc)
+
+            # ECRAM 读取
+            if fc.ram_manual_offset:
+                return self.__get_fanIsAuto_ECRAM(fc)
+
+            # ECIO 读取
+            if fc.manual_offset:
+                return self.__get_fanIsAuto_ECIO(fc)
+            
+            return False
+        except:
+            logging.error(f"获取风扇状态异常:", exc_info=True)
+            return False
+
+    def __get_fanIsAuto_HWMON(self, fc: FanConfig):
+        try:
+            hwmon_pwm_enable_path = fc.hwmon_enable_path
+            hwmon_pwm_enable_second_path = fc.hwmon_enable_second_path
+            enable_auto_value = fc.hwmon_auto_val
+            if (
+                not os.path.exists(hwmon_pwm_enable_path)
+                and hwmon_pwm_enable_second_path != None
+                and os.path.exists(hwmon_pwm_enable_second_path)
+            ):
+                hwmon_pwm_enable_path = hwmon_pwm_enable_second_path
+            fanIsManual = int(open(hwmon_pwm_enable_path).read().strip())
+            logging.debug(
+                f"使用hwmon数据 读取hwmon地址:{hwmon_pwm_enable_path} 风扇是否控制:{fanIsManual == enable_auto_value}"
+            )
+            return fanIsManual == enable_auto_value
+        except:
+            logging.error(f"使用hwmon获取风扇状态异常:", exc_info=True)
+            return False
+
+    def __get_fanIsAuto_ECIO(self, fc: FanConfig):
+        try:
+            manual_offset = fc.manual_offset
+            enable_auto_value = fc.hwmon_auto_val
+            fanIsManual = EC.Read(manual_offset)
+            logging.debug(
+                f"使用ECIO数据 读取EC地址:{hex(manual_offset)} 风扇是否控制:{fanIsManual == enable_auto_value}"
+            )
+            return fanIsManual == enable_auto_value
+        except:
+            logging.error(f"使用ECIO获取风扇状态异常:", exc_info=True)
+            return False
+
+    def __get_fanIsAuto_ECRAM(self, fc: FanConfig):
+        try:
+            ram_manual_offset = fc.ram_manual_offset
+            ram_reg_addr = fc.ram_reg_addr
+            ram_reg_data = fc.ram_reg_data
+            enable_auto_value = fc.hwmon_auto_val
+            fanIsManual = EC.RamRead(ram_reg_addr, ram_reg_data, ram_manual_offset)
+            logging.debug(
+                f"使用ECRAM数据 读取EC地址:{hex(ram_manual_offset)} 风扇是否控制:{fanIsManual == enable_auto_value}"
+            )
+            return fanIsManual == enable_auto_value
+        except:
+            logging.error(f"使用ECRAM获取风扇状态异常:", exc_info=True)
             return False
 
     def set_fanAuto(self, index: int, value: bool):
