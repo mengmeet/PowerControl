@@ -1,3 +1,5 @@
+# 转速的读取地址不对
+# 写入转速测试可用
 product_name:
   - AIR Plus
   - SLIDE
