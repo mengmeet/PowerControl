@@ -427,3 +427,27 @@ declare global {
     // @ts-ignore
     let SteamClient: SteamClient;
 }
+
+export interface SystemInfo {
+    sOSName: string;
+    sKernelVersion: string;
+    sBIOSVersion: string;
+    sHostname: string;
+    sOSCodename: string;
+    sOSVariantId: string;
+    sOSVersionId: string;
+    sOSBuildId: string;
+    nSteamVersion: number;
+    sSteamBuildDate: string;
+    sSteamAPI: string;
+    sCPUVendor: string;
+    sCPUName: string;
+    nCPUHz: number;
+    nCPUPhysicalCores: number;
+    nCPULogicalCores: number;
+    nSystemRAMSizeMB: number;
+    sVideoCardName: string;
+    sVideoDriverVersion: string;
+    nVideoRAMSizeMB: number;
+    bIsUnsupportedPrototypeHardware: boolean;
+}
