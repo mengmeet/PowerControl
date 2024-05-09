@@ -73,7 +73,7 @@
         },
         "ram_rpmread_length": {
           "type": "number",
-          "description": "风扇ecRam读取转速数据长度"
+          "description": "风扇ecRam读取转速数据长度, 0为需要通过计算获得转速"
         },
         "rpm_write_max": {
           "type": "number",
@@ -82,6 +82,14 @@
         "rpm_value_max": {
           "type": "number",
           "description": "风扇最大转速值"
+        },
+        "enable_manual_value": {
+          "type": "number",
+          "description": "风扇手动控制写入值, 默认 1"
+        },
+        "enable_auto_value": {
+          "type": "number",
+          "description": "风扇自动控制写入值 , 默认 0"
         }
       },
       "required": []

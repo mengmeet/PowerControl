@@ -1,0 +1,17 @@
+product_name:
+  - AOKZOE A1 Pro
+  - AOKZOE A2 Pro
+fans:
+  - manual_offset: 0x4a # 风扇自动控制ec地址
+    rpmwrite_offset: 0x4b # 风扇写入转速ec地址
+    rpmread_offset: 0x76 # 风扇读取转速ec地址
+    
+    ram_reg_addr: 0x4E
+    ram_reg_data: 0x4F
+    ram_manual_offset: 0x44a
+    ram_rpmwrite_offset: 0x44b
+    ram_rpmread_offset: 0x1809
+    ram_rpmread_length: 0
+    rpm_write_max: 184
+    rpm_value_max: 5000
+

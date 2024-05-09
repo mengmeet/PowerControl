@@ -217,6 +217,7 @@ def get_device_ec_fans(product_name, product_version):
     # 其次匹配不带版本号的配置 (如果有)
     for conf in confs_with_name:
         return conf["fans"]
+    return []
 
 
 # 风扇配置
