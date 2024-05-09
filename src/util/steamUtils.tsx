@@ -1,5 +1,5 @@
 import { Module, findModuleChild } from "decky-frontend-lib";
-import { Backend } from ".";
+import { Backend, SystemInfo } from ".";
 import { ReactNode } from "react";
 import { FaSuperpowers } from "react-icons/fa";
 
@@ -58,5 +58,10 @@ export class SteamUtils {
 
   static async simpleToast(message: string, duration?: number) {
     this.notify({ message, showToast: true, duration });
+  }
+;
+  static async getSystemInfo() : Promise<SystemInfo> {
+    const systemInfo = await SteamClient.System.GetSystemInfo();
+    return systemInfo;
   }
 }

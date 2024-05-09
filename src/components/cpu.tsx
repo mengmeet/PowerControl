@@ -4,7 +4,7 @@ import {
   ToggleField,
 } from "decky-frontend-lib";
 import { useEffect, useState, VFC } from "react";
-import { Settings, Backend, PluginManager, ComponentName, UpdateType, GPUMODE, Patch } from "../util";
+import { Settings, Backend, PluginManager, ComponentName, UpdateType, GPUMODE, Patch, SteamUtils } from "../util";
 import { localizeStrEnum, localizationManager } from "../i18n";
 import { SlowSliderField } from "./SlowSliderField"
 import { CustomTDPComponent } from ".";
@@ -122,6 +122,11 @@ const CPUTDPComponent: VFC = () => {
   const [customTDPRangeMax, setCustomTDPRangeMax] = useState<number>(Settings.appCustomTDPRangeMax());
   const [customTDPRangeMin, setCustomTDPRangeMin] = useState<number>(Settings.appCustomTDPRangeMin());
 
+  // 隐藏强制显示TDP开关, 并默认显示 TDP 控制组件。新版 Steam 客户端临时方案
+  const [hideForceShowSwitch, setHideForceShowSwitch] = useState<boolean>(false);
+
+  const minSteamVersion = 1714854927;
+
   const refresh = () => {
     setTDPEnable(Settings.appTDPEnable());
     setDisable(Settings.appGPUMode() == GPUMODE.AUTO);
@@ -150,10 +155,24 @@ const CPUTDPComponent: VFC = () => {
           }
         }
       })
+
+    // 检查 Steam 客户端版本，如果版本大于等于 minSteamVersion。不显示强制 TDP 开关。并默认显示 TDP 控制组件
+    // 在解决 QAM 中 TDP 控制组件显示问题后，可以移除该逻辑
+    SteamUtils.getSystemInfo().then((systemInfo) => {
+      // json output
+      console.log(`>>>>>>>> System Info: ${JSON.stringify(systemInfo, null, 2)}`);
+      if (systemInfo.nSteamVersion >= minSteamVersion) {
+        setHideForceShowSwitch(true);
+      }
+    });
   }, []);
+
+  const _showTdp = !PluginManager.isPatchSuccess(Patch.TDPPatch) || forceShow || hideForceShowSwitch;
+  console.log(`>>>>>>>> Hide Force Show Switch: ${hideForceShowSwitch}, Show TDP: ${_showTdp}`);
+
   return (
     <>
-      <PanelSectionRow>
+      {!hideForceShowSwitch && <PanelSectionRow>
         <ToggleField
           label={localizationManager.getString(localizeStrEnum.FORCE_SHOW_TDP)}
           description={localizationManager.getString(localizeStrEnum.FORCE_SHOW_TDP_DESC)}
@@ -162,8 +181,8 @@ const CPUTDPComponent: VFC = () => {
             Settings.setForceShowTDP(value);
           }}
         />
-      </PanelSectionRow>
-      {!PluginManager.isPatchSuccess(Patch.TDPPatch) || forceShow &&
+      </PanelSectionRow>}
+      {_showTdp &&
         <>
           <PanelSectionRow>
             <ToggleField
