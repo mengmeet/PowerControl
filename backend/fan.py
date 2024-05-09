@@ -561,7 +561,7 @@ class FanManager:
             logging.error(f"使用ECRAM获取风扇状态异常:", exc_info=True)
             return False
 
-    def set_fanAuto(self, index: int, value: bool):
+    def set_fanAuto_Old(self, index: int, value: bool):
         logging.debug(
             f"set_fanAuto index:{index} value:{value}, len:{len(self.fan_config_list)}"
         )
@@ -691,6 +691,144 @@ class FanManager:
             return False
         except:
             logging.error(f"写入风扇状态异常:", exc_info=True)
+            return False
+
+    def set_fanAuto(self, index: int, value: bool):
+        try:
+            if index > len(self.fan_config_list) - 1:
+                logging.error(
+                    f"风扇下标越界 index:{index} len:{len(self.fan_config_list)}"
+                )
+                return False
+
+            fc = self.fan_config_list[index]
+
+            if fc.is_found_hwmon and fc.hwmon_mode == 0:
+                return self.__set_fanAuto_HWMON(fc, value)
+
+            # ECRAM 写入
+            if fc.ram_manual_offset:
+                return self.__set_fanAuto_ECRAM(fc, value)
+
+            # ECIO 写入
+            if fc.manual_offset:
+                return self.__set_fanAuto_ECIO(fc, value)
+
+            return False
+        except:
+            logging.error(f"写入风扇状态异常:", exc_info=True)
+            return False
+
+    def __set_fanAuto_HWMON(self, fc: FanConfig, value: bool):
+        try:
+            pwm_enable_path = fc.hwmon_enable_path
+            pwm_enable_second_path = fc.hwmon_enable_second_path
+            auto_value = fc.hwmon_auto_val
+            manual_value = fc.hwmon_manual_val
+            hwmon_mode = fc.hwmon_mode
+            pwm_path = fc.hwmon_pwm_path
+            mode1_auto_value = fc.hwmon_mode1_auto_val
+            mode1_pwm_paths = fc.hwmon_mode1_pwm_path
+
+            if hwmon_mode == 0:
+                if (
+                    not os.path.exists(pwm_enable_path)
+                    and pwm_enable_second_path != None
+                    and os.path.exists(pwm_enable_second_path)
+                ):
+                    pwm_enable_path = pwm_enable_second_path
+
+                if value:
+                    fanIsManual = auto_value if value else manual_value
+                elif (
+                    not value and pwm_path == pwm_enable_path
+                ):  # 手动模式且控制位地址和写风扇转速的地址一样，跳过控制位写入，防止覆盖风扇转速
+                    logging.debug(
+                        f"写入hwmon_eanble地址:{pwm_enable_path} 写入hwmon_pwm地址:{pwm_enable_path} 地址相同跳过写入控制位"
+                    )
+                    return False
+                else:
+                    fanIsManual = manual_value
+
+                # GPD 设备没有实际的单独的控制位。但是在oxpec中有控制位，写入手动控制时会将转速设置为 70%。所以添加判断，只在需要时写入控制位
+                currentFanIsManual = int(open(pwm_enable_path).read().strip())
+                if currentFanIsManual == fanIsManual:
+                    logging.debug(
+                        f"currentFanIsManual:{currentFanIsManual} fanIsManual:{fanIsManual} 无需写入"
+                    )
+                    return True
+
+                open(pwm_enable_path, "w").write(str(fanIsManual))
+                logging.debug(
+                    f"写入hwmon数据 写入hwmon地址:{pwm_enable_path} 写入风扇是否控制:{fanIsManual}"
+                )
+                return True
+            elif hwmon_mode == 1 and value:
+                fanIsManual = manual_value
+                for index, mode1_pwm_path in enumerate(mode1_pwm_paths):
+                    if index >= len(mode1_auto_value):
+                        break
+                    # 写入转速
+                    fanWriteValue = mode1_auto_value[index]["pwm_write_value"]
+                    pwm_path = mode1_pwm_path["pwm_write"]
+                    open(pwm_path, "w").write(str(fanWriteValue))
+                    # 写入温度
+                    temp = mode1_auto_value[index]["temp_write_value"]
+                    temp_path = mode1_pwm_path["temp_write"]
+                    open(temp_path, "w").write(str(temp))
+                    logging.debug(
+                        f"写入hwmon数据 写入hwmon转速地址:{pwm_path} 风扇转速写入值:{fanWriteValue} 温度地址:{temp_path} 温度大小:{temp}"
+                    )
+                open(pwm_enable_path, "w").write(str(fanIsManual))
+                logging.debug(
+                    f"写入hwmon数据 写入hwmon地址:{pwm_enable_path} 写入风扇是否控制:{fanIsManual}"
+                )
+                return True
+            return False
+        except:
+            logging.error(f"使用hwmon写入风扇状态异常:", exc_info=True)
+            return False
+
+    def __set_fanAuto_ECRAM(self, fc: FanConfig, value: bool):
+        try:
+            manual_offset = fc.ram_manual_offset
+            reg_addr = fc.ram_reg_addr
+            reg_data = fc.ram_reg_data
+            auto_value = fc.hwmon_auto_val
+            manual_value = fc.hwmon_manual_val
+            rpm_write_offset = fc.ram_pwm_write_offset
+            if (
+                not value and manual_offset == rpm_write_offset
+            ):  # 手动模式且控制位地址和写风扇转速的地址一样，跳过控制位写入，防止覆盖风扇转速
+                return False
+            fanIsManual = auto_value if value else manual_value
+            EC.RamWrite(reg_addr, reg_data, manual_offset, fanIsManual)
+            logging.info(
+                f"写入ECRAM数据 写入EC地址:{hex(manual_offset)} 写入风扇是否控制:{fanIsManual}"
+            )
+            return True
+        except:
+            logging.error(f"使用ECRAM写入风扇状态异常:", exc_info=True)
+            return False
+    
+    def __set_fanAuto_ECIO(self, fc: FanConfig, value: bool):
+        try:
+            manual_offset = fc.manual_offset
+            auto_value = fc.hwmon_auto_val
+            manual_value = fc.hwmon_manual_val
+            rpm_write_offset = fc.pwm_write_offset
+            if (
+                not value and manual_offset == rpm_write_offset
+            ):  # 手动模式且控制位地址和写风扇转速的地址一样，跳过控制位写入，防止覆盖风扇转速
+                return False
+            fanIsManual = auto_value if value else manual_value
+            EC.Write(manual_offset, fanIsManual)
+            logging.debug(
+                f"写入ECIO数据 写入EC地址:{hex(manual_offset)} 写入风扇是否控制:{fanIsManual}"
+            )
+            return True
+        except:
+            logging.error(f"使用ECIO写入风扇状态异常:", exc_info=True)
             return False
 
     def set_fanPercent_Old(self, index: int, value: int):
