@@ -359,7 +359,7 @@ class FanManager:
             # ECRAM 读取
             if fc.ram_pwm_read_offset:
                 return self.__get_fanRPM_ECRAM(fc)
-            
+
             return 0
         except:
             logging.error(f"获取风扇转速异常:", exc_info=True)
@@ -507,7 +507,7 @@ class FanManager:
             # ECIO 读取
             if fc.manual_offset:
                 return self.__get_fanIsAuto_ECIO(fc)
-            
+
             return False
         except:
             logging.error(f"获取风扇状态异常:", exc_info=True)
@@ -693,7 +693,7 @@ class FanManager:
             logging.error(f"写入风扇状态异常:", exc_info=True)
             return False
 
-    def set_fanPercent(self, index: int, value: int):
+    def set_fanPercent_Old(self, index: int, value: int):
         try:
             if index < len(self.fan_config_list):
                 is_found_hwmon = self.fan_config_list[index].is_found_hwmon
@@ -802,6 +802,119 @@ class FanManager:
             return False
         except:
             logging.error(f"写入风扇转速异常:", exc_info=True)
+            return False
+
+    def set_fanPercent(self, index: int, value: int):
+        try:
+            if index > len(self.fan_config_list) - 1:
+                logging.error(
+                    f"风扇下标越界 index:{index} len:{len(self.fan_config_list)}"
+                )
+                return False
+
+            fc = self.fan_config_list[index]
+
+            if fc.is_found_hwmon:
+                return self.__set_fanPercent_HWMON(fc, value)
+
+            if fc.ram_pwm_write_offset:
+                return self.__set_fanPercent_ECRAM(fc, value)
+
+            if fc.pwm_write_offset:
+                return self.__set_fanPercent_ECIO(fc, value)
+
+            return False
+        except:
+            logging.error(f"写入风扇转速异常:", exc_info=True)
+            return False
+
+    def __set_fanPercent_HWMON(self, fc: FanConfig, value: int):
+        try:
+            pwm_path = fc.hwmon_pwm_path
+            rpm_write_max = fc.pwm_write_max
+            mode = fc.hwmon_mode
+            mode1_paths = fc.hwmon_mode1_pwm_path
+            manual_val = fc.hwmon_manual_val
+            enable_path = fc.hwmon_enable_path
+
+            if mode == 0:
+                fanWriteValue = max(
+                    min(int(value / 100 * rpm_write_max), rpm_write_max), 0
+                )
+                currentVal = int(open(pwm_path).read().strip())
+                # 转速相差小于5%时不写入
+                if (
+                    currentVal > 0
+                    and abs(currentVal - fanWriteValue) / currentVal < 0.05
+                ):
+                    logging.info(
+                        f"当前风扇转速{currentVal} 与目标转速{fanWriteValue} 相差小于5% 不写入"
+                    )
+                    return True
+                open(pwm_path, "w").write(str(fanWriteValue))
+                logging.debug(
+                    f"写入hwmon数据 写入hwmon地址:{pwm_path} 风扇转速百分比{value} 风扇最大值{rpm_write_max} 风扇转速写入值:{fanWriteValue}"
+                )
+                return True
+            if mode == 1:
+                fanWriteValue = max(
+                    min(int(value / 100 * rpm_write_max), rpm_write_max), 0
+                )
+                temp = 10
+                addTemp = int(100 / len(mode1_paths))
+                if mode1_paths:
+                    for mode1_pwm_path in mode1_paths:
+                        # 写入转速
+                        pwm_path = mode1_pwm_path["pwm_write"]
+                        open(pwm_path, "w").write(str(fanWriteValue))
+                        # 写入温度
+                        temp = temp + addTemp
+                        temp_path = mode1_pwm_path["temp_write"]
+                        open(temp_path, "w").write(str(temp))
+                        logging.debug(
+                            f"写入hwmon数据 写入hwmon转速地址:{pwm_path} 风扇转速百分比{value} 风扇最大值{rpm_write_max} 风扇转速写入值:{fanWriteValue} 温度地址:{temp_path} 温度大小:{temp}"
+                        )
+                fanIsManual = manual_val
+
+                open(enable_path, "w").write(str(fanIsManual))
+                logging.debug(
+                    f"写入hwmon数据 写入hwmon地址:{enable_path} 写入风扇是否控制:{fanIsManual}"
+                )
+                return True
+        except:
+            logging.error("使用hwmon写入风扇转速异常:", exc_info=True)
+            return False
+
+    def __set_fanPercent_ECRAM(self, fc: FanConfig, value: int):
+        try:
+            addr = fc.ram_reg_addr
+            data = fc.ram_reg_data
+            offset = fc.ram_pwm_write_offset
+            rpm_write_max = fc.pwm_write_max
+
+            fanWriteValue = max(min(int(value / 100 * rpm_write_max), rpm_write_max), 0)
+            EC.RamWrite(addr, data, offset, fanWriteValue)
+            logging.info(
+                f"写入ECRAM数据 写入EC地址:{hex(offset)} 风扇转速百分比{value} 风扇最大值{rpm_write_max} 风扇转速写入值:{fanWriteValue}"
+            )
+            return True
+        except:
+            logging.error("使用ECRAM写入风扇转速异常:", exc_info=True)
+            return False
+
+    def __set_fanPercent_ECIO(self, fc: FanConfig, value: int):
+        try:
+            offset = fc.pwm_write_offset
+            rpm_write_max = fc.pwm_write_max
+
+            fanWriteValue = max(min(int(value / 100 * rpm_write_max), rpm_write_max), 0)
+            EC.Write(offset, fanWriteValue)
+            logging.debug(
+                f"写入ECIO数据 写入EC地址:{hex(offset)} 风扇转速百分比{value} 风扇最大值{rpm_write_max} 风扇转速写入值:{fanWriteValue}"
+            )
+            return True
+        except:
+            logging.error("使用ECIO写入风扇转速异常:", exc_info=True)
             return False
 
     def get_fanTemp(self, index: int):
