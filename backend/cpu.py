@@ -281,29 +281,30 @@ class CPUManager:
 
     def set_cpuBoost(self, value: bool):
         boost_path = "/sys/devices/system/cpu/cpufreq/boost"
+        pstate_boost_path = "/sys/devices/system/cpu/amd_pstate/cpb_boost"
         amd_pstate_path = "/sys/devices/system/cpu/amd_pstate/status"
         try:
             logging.debug("set_cpuBoost {}".format(value))
             global cpu_boost
             cpu_boost = value
 
-            # 切换为 passive 模式
-            if os.path.exists(amd_pstate_path):
-                open(amd_pstate_path, "w").write("passive")
-
-                # 关闭 amd_pstate 使用 acpi_cpufreq。但是会导致mangohud cpu显示不正常
-                # open(amd_pstate_path, 'w').write('disable')
-                # os.system("modprobe acpi_cpufreq")
-                # result = subprocess.run(["modprobe", "acpi_cpufreq"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
-                # if result.stderr:
-                #     logging.error(f"modprobe acpi_cpufreq error:\n{result.stderr}")
-                #     open(amd_pstate_path, 'w').write('active')
-                #     return False
+            # 如果不存在 pstate_boost_path
+            if not os.path.exists(pstate_boost_path):
+                # 切换为 passive 模式
+                if os.path.exists(amd_pstate_path):
+                    open(amd_pstate_path, "w").write("passive")
 
             # 设置 boost
             if os.path.exists(boost_path):
                 with open(boost_path, "w") as file:
+                    if cpu_boost:
+                        file.write("1")
+                    else:
+                        file.write("0")
+            
+            # 设置 pstate_boost
+            if os.path.exists(pstate_boost_path):
+                with open(pstate_boost_path, "w") as file:
                     if cpu_boost:
                         file.write("1")
                     else:
