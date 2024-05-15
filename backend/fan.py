@@ -741,8 +741,8 @@ class FanManager:
 
             fc = self.fan_config_list[index]
 
-            if fc.is_found_hwmon and fc.hwmon_mode == 0:
-                return self.__set_fanAuto_HWMON(fc, value)
+            # HWMON 写入
+            self.__set_fanAuto_HWMON(fc, value)
 
             # ECRAM 写入
             if fc.ram_manual_offset:
