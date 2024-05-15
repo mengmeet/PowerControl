@@ -22,6 +22,8 @@ class FanConfig:
         self.hwmon_mode1_auto_val = []  # 风扇写入转速和对应温度hwmon地址列表(模式1)
         self.hwmon_input_path = None  # 风扇读取转速hwmon地址
 
+        self.hwmon_black_list = []  # 风扇hwmon黑名单
+
         # EC配置变量
         self.is_ec_configured = False  # 是否配置好风扇ec
         self.manual_offset = None  # 风扇自动控制ec地址
@@ -72,28 +74,8 @@ class FanManager:
                 fan_config.pwm_value_max = current_rpm
                 self.settings.setSetting(f"fan{index}_max", current_rpm)
 
-    # 转化风扇配置
-    def parse_fan_configuration(self):
-        hwmon_path = "/sys/class/hwmon"
-        hwmon_files = os.listdir(hwmon_path)
-        name_path_map = {}
-
-        # 转化hwmon信息
-        for file in hwmon_files:
-            path = hwmon_path + "/" + file
-            name = open(path + "/name").read().strip()
-            name_path_map[name] = path
-            if name == "amdgpu":
-                self.gpu_temp_path = path + "/temp1_input"
-            # if(name == "k10temp" or name == "acpitz"):
-            #     self.FAN_CPUTEMP_PATH = path + "/temp1_input"
-
-            # 优先读取 k10temp
-            if not self.cpu_temp_path and name == "k10temp":
-                self.cpu_temp_path = path + "/temp1_input"
-            if not self.cpu_temp_path and name == "acpitz":
-                self.cpu_temp_path = path + "/temp1_input"
-
+    # 解析处理 HWMON 风扇配置
+    def __parse_fan_configuration_HWMON(self, name_path_map):
         for hwmon_name in FAN_HWMON_LIST:
             if hwmon_name not in name_path_map:
                 continue
@@ -121,7 +103,7 @@ class FanManager:
                         else None
                     )
 
-                    black_list = (
+                    fc.hwmon_black_list = (
                         hwmon_config["black_list"]
                         if (
                             "black_list" in hwmon_config
@@ -206,112 +188,157 @@ class FanManager:
                         f"获取风扇({hwmon_name})hwmon信息失败:", exc_info=True
                     )
 
-        # 若已获取到风扇hwmon信息 并且 PRODUCT_NAME 不在 black_list 则不再获取风扇ec信息
-        if len(self.fan_config_list) > 0 and PRODUCT_NAME not in black_list:
+    # 解析处理 EC 风扇配置
+    def __parse_fan_configuration_EC(self):
+        logging.info(f"开始获取风扇ec信息")
+        self.fan_config_list.clear()
+        # 转化ec信息
+        for ec_info in FAN_EC_CONFIG if FAN_EC_CONFIG != None else []:
+            try:
+                fc = FanConfig()
+
+                # EC配置变量
+                fc.manual_offset = (
+                    ec_info["manual_offset"] if "manual_offset" in ec_info else None
+                )  # 风扇自动控制ec地址
+                fc.pwm_write_offset = (
+                    ec_info["rpmwrite_offset"] if "rpmwrite_offset" in ec_info else None
+                )  # 风扇写入转速ec地址
+                fc.pwm_read_offset = (
+                    ec_info["rpmread_offset"] if "rpmread_offset" in ec_info else None
+                )  # 风扇读取转速ec地址
+
+                # ECRAM配置变量
+                # 风扇ecRam寄存器地址
+                fc.ram_reg_addr = (
+                    ec_info["ram_reg_addr"] if "ram_reg_addr" in ec_info else None
+                )
+                # 风扇ecRam寄存器数据
+                fc.ram_reg_data = (
+                    ec_info["ram_reg_data"] if "ram_reg_data" in ec_info else None
+                )
+                # 风扇自动控制ecRam地址
+                fc.ram_manual_offset = (
+                    ec_info["ram_manual_offset"]
+                    if "ram_manual_offset" in ec_info
+                    else None
+                )
+                # 风扇写入转速ecRam地址
+                fc.ram_pwm_write_offset = (
+                    ec_info["ram_rpmwrite_offset"]
+                    if "ram_rpmwrite_offset" in ec_info
+                    else None
+                )
+                # 风扇读取转速ecRam地址
+                fc.ram_pwm_read_offset = (
+                    ec_info["ram_rpmread_offset"]
+                    if "ram_rpmread_offset" in ec_info
+                    else None
+                )
+                # 风扇实际转速值长度 0为需要通过计算获得转速
+                fc.ram_pwm_read_length = (
+                    ec_info["ram_rpmread_length"]
+                    if "ram_rpmread_length" in ec_info
+                    else 0
+                )
+
+                # 其他变量
+                # 风扇最大转速写入值
+                fc.pwm_write_max = (
+                    ec_info["rpm_write_max"] if "rpm_write_max" in ec_info else 0
+                )
+
+                # 风扇最大转速读取数值
+                fc.fan_value_max = (
+                    ec_info["rpm_value_max"] if "rpm_value_max" in ec_info else 0
+                )
+                max_value_from_settings = self.settings.getSetting(
+                    f"fan{len(self.fan_config_list)}_max"
+                )
+                logging.info(
+                    f"max_value_from_settings:{max_value_from_settings}, fan_config.fan_value_max:{fc.fan_value_max}"
+                )
+                fc.pwm_value_max = (
+                    max_value_from_settings
+                    if (
+                        max_value_from_settings != None
+                        and max_value_from_settings > fc.fan_value_max
+                    )
+                    else fc.fan_value_max
+                )
+                logging.info(f"fan_config.FAN_RPMVALUE_MAX:{fc.pwm_value_max}")
+                fc.hwmon_manual_val = (
+                    ec_info["enable_manual_value"]
+                    if "enable_manual_value" in ec_info
+                    else 1
+                )
+                fc.hwmon_auto_val = (
+                    ec_info["enable_auto_value"]
+                    if "enable_auto_value" in ec_info
+                    else 0
+                )
+                fc.temp_mode = 0
+
+                # 判断是否配置好ec(控制地址、读和写至少各有一种方法,最大写入和最大读取必须有配置数值)
+                fc.is_ec_configured = (
+                    (fc.manual_offset != None or fc.ram_manual_offset != None)
+                    and (fc.pwm_write_offset != None or fc.ram_pwm_write_offset != None)
+                    and (fc.pwm_read_offset != None or fc.ram_pwm_read_offset != None)
+                    and (fc.pwm_write_max != 0 and fc.pwm_value_max != 0)
+                )
+                if fc.is_ec_configured:
+                    self.fan_config_list.append(fc)
+                logging.info(f"fan_config_list to json {fc.__dict__}")
+            except:
+                logging.error(f"获取风扇ec信息失败:", exc_info=True)
+        pass
+
+    # 转化风扇配置
+    def parse_fan_configuration(self):
+        hwmon_path = "/sys/class/hwmon"
+        hwmon_files = os.listdir(hwmon_path)
+        name_path_map = {}
+
+        # 转化hwmon信息
+        for file in hwmon_files:
+            path = hwmon_path + "/" + file
+            name = open(path + "/name").read().strip()
+            name_path_map[name] = path
+            if name == "amdgpu":
+                self.gpu_temp_path = path + "/temp1_input"
+            # if(name == "k10temp" or name == "acpitz"):
+            #     self.FAN_CPUTEMP_PATH = path + "/temp1_input"
+
+            # 优先读取 k10temp
+            if not self.cpu_temp_path and name == "k10temp":
+                self.cpu_temp_path = path + "/temp1_input"
+            if not self.cpu_temp_path and name == "acpitz":
+                self.cpu_temp_path = path + "/temp1_input"
+
+        # 解析 hwmon 信息
+        self.__parse_fan_configuration_HWMON(name_path_map)
+
+        # self.fan_config_list 筛选, 去除黑名单
+        self.fan_config_list = list(
+            filter(
+                lambda x: PRODUCT_NAME not in x.hwmon_black_list, self.fan_config_list
+            )
+        )
+        # self.fan_config_list = [
+        #     config
+        #     for config in self.fan_config_list
+        #     if PRODUCT_NAME not in config.hwmon_black_list
+        # ]
+
+        # 若已获取到风扇hwmon信息, 则不再获取风扇ec信息
+        if len(self.fan_config_list) > 0:
             logging.info(
                 f"已获取到风扇hwmon信息:{[config.hwmon_name for config in self.fan_config_list]}"
             )
-        else:
-            logging.info(f"未获取到风扇hwmon信息,开始获取风扇ec信息")
-            self.fan_config_list.clear()
-            # 转化ec信息
-            for ec_info in FAN_EC_CONFIG if FAN_EC_CONFIG != None else []:
-                try:
-                    fc = FanConfig()
-                    # EC配置变量
-                    fc.manual_offset = (
-                        ec_info["manual_offset"] if "manual_offset" in ec_info else None
-                    )  # 风扇自动控制ec地址
-                    fc.pwm_write_offset = (
-                        ec_info["rpmwrite_offset"]
-                        if "rpmwrite_offset" in ec_info
-                        else None
-                    )  # 风扇写入转速ec地址
-                    fc.pwm_read_offset = (
-                        ec_info["rpmread_offset"]
-                        if "rpmread_offset" in ec_info
-                        else None
-                    )  # 风扇读取转速ec地址
-                    # ECRAM配置变量
-                    fc.ram_reg_addr = (
-                        ec_info["ram_reg_addr"] if "ram_reg_addr" in ec_info else None
-                    )  # 风扇ecRam寄存器地址
-                    fc.ram_reg_data = (
-                        ec_info["ram_reg_data"] if "ram_reg_data" in ec_info else None
-                    )  # 风扇ecRam寄存器数据
-                    fc.ram_manual_offset = (
-                        ec_info["ram_manual_offset"]
-                        if "ram_manual_offset" in ec_info
-                        else None
-                    )  # 风扇自动控制ecRam地址
-                    fc.ram_pwm_write_offset = (
-                        ec_info["ram_rpmwrite_offset"]
-                        if "ram_rpmwrite_offset" in ec_info
-                        else None
-                    )  # 风扇写入转速ecRam地址
-                    fc.ram_pwm_read_offset = (
-                        ec_info["ram_rpmread_offset"]
-                        if "ram_rpmread_offset" in ec_info
-                        else None
-                    )  # 风扇读取转速ecRam地址
-                    fc.ram_pwm_read_length = (
-                        ec_info["ram_rpmread_length"]
-                        if "ram_rpmread_length" in ec_info
-                        else 0
-                    )  # 风扇实际转速值长度 0为需要通过计算获得转速
-                    # 其他变量
-                    fc.pwm_write_max = (
-                        ec_info["rpm_write_max"] if "rpm_write_max" in ec_info else 0
-                    )  # 风扇最大转速写入值
+            return
 
-                    # 风扇最大转速读取数值
-                    fc.fan_value_max = (
-                        ec_info["rpm_value_max"] if "rpm_value_max" in ec_info else 0
-                    )
-                    max_value_from_settings = self.settings.getSetting(
-                        f"fan{len(self.fan_config_list)}_max"
-                    )
-                    logging.info(
-                        f"max_value_from_settings:{max_value_from_settings}, fan_config.fan_value_max:{fc.fan_value_max}"
-                    )
-                    fc.pwm_value_max = (
-                        max_value_from_settings
-                        if (
-                            max_value_from_settings != None
-                            and max_value_from_settings > fc.fan_value_max
-                        )
-                        else fc.fan_value_max
-                    )
-                    logging.info(f"fan_config.FAN_RPMVALUE_MAX:{fc.pwm_value_max}")
-
-                    fc.hwmon_manual_val = (
-                        ec_info["enable_manual_value"]
-                        if "enable_manual_value" in ec_info
-                        else 1
-                    )
-                    fc.hwmon_auto_val = (
-                        ec_info["enable_auto_value"]
-                        if "enable_auto_value" in ec_info
-                        else 0
-                    )
-                    fc.temp_mode = 0
-                    # 判断是否配置好ec(控制地址、读和写至少各有一种方法,最大写入和最大读取必须有配置数值)
-                    fc.is_ec_configured = (
-                        (fc.manual_offset != None or fc.ram_manual_offset != None)
-                        and (
-                            fc.pwm_write_offset != None
-                            or fc.ram_pwm_write_offset != None
-                        )
-                        and (
-                            fc.pwm_read_offset != None or fc.ram_pwm_read_offset != None
-                        )
-                        and (fc.pwm_write_max != 0 and fc.pwm_value_max != 0)
-                    )
-                    if fc.is_ec_configured:
-                        self.fan_config_list.append(fc)
-                    logging.info(f"fan_config_list to json {fc.__dict__}")
-                except:
-                    logging.error(f"获取风扇({hwmon_name})ec信息失败:", exc_info=True)
+        # 解析 ec 信息
+        self.__parse_fan_configuration_EC()
 
     # 设备特殊初始化
     def device_init_quirks(self):

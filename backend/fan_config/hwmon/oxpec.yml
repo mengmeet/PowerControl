@@ -5,10 +5,7 @@ fans:
   - fan_name: Fan # 显示在 UI 上的风扇名称
     pwm_mode: 0 # 写入的模式 0.普通模式(对单个文件写入) 1.rog掌机特殊模式(对多个文件写入同样的数值)
     black_list: # 黑名单, 匹配 /sys/devices/virtual/dmi/id/product_name. 不使用该配置
-      - G1618-03
-      - G1618-04
-      - G1619-04
-      # - G1617-01
+      - G1617-01
 
     pwm_enable:
       manual_value: 1 # 手动模式写入的值

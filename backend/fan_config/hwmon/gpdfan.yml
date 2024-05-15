@@ -1,0 +1,26 @@
+# support for https://github.com/Cryolitia/gpd-fan-driver
+hwmon_name: gpdfan
+
+fans:
+  - fan_name: Fan
+    pwm_mode: 0
+    black_list:
+      - G1618-04
+      # - G1617-01
+
+    pwm_enable:
+      manual_value: 1
+      auto_value: 2
+      pwm_enable_path: pwm1_enable
+
+    pwm_write:
+      pwm_write_max:
+        default: 255
+      pwm_write_path: pwm1
+
+    pwm_input:
+      hwmon_label: gpdfan
+      pwm_read_path: fan1_input
+      pwm_read_max: 5000
+
+    temp_mode: 0
