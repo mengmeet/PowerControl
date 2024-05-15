@@ -1,7 +1,6 @@
 import os
 from ec import EC
-from config import logging, PRODUCT_NAME
-from config import FAN_HWMON_LIST, FAN_EC_CONFIG
+from config import logging, PRODUCT_NAME, FAN_HWMON_LIST, FAN_EC_CONFIG, PRODUCT_VERSION
 import decky_plugin
 from settings import SettingsManager
 
@@ -317,26 +316,28 @@ class FanManager:
     # 设备特殊初始化
     def device_init_quirks(self):
         # 遍历所有风扇配置
-        for fan_config in self.fan_config_list:
-            try:
-                # ecram配置
-                is_ec_configured = fan_config.is_ec_configured
-                ram_reg_addr = fan_config.ram_reg_addr
-                ram_reg_data = fan_config.ram_reg_data
-                # 有配置ec并且是win4
-                if is_ec_configured and PRODUCT_NAME == "G1618-04":
-                    # Initialize GPD WIN4 EC
-                    ec_chip_id = EC.RamRead(ram_reg_addr, ram_reg_data, 0x2000)
-                    if ec_chip_id == 0x55:
-                        ec_chip_ver = EC.RamRead(
-                            ram_reg_addr, ram_reg_data, 0x1060
-                        )
-                        ec_chip_ver |= 0x80
-                        EC.RamWrite(
-                            ram_reg_addr, ram_reg_data, 0x1060, ec_chip_ver
-                        )
-            except:
-                logging.error("设备特殊初始化失败:", exc_info=True)
+        for fc in self.fan_config_list:
+            # 有配置ec并且是win4
+            if (
+                fc.is_ec_configured
+                and PRODUCT_NAME == "G1618-04"
+                and PRODUCT_VERSION == "Default string"
+            ):
+                # Initialize GPD WIN4 EC
+                self.__initECWin4(fc)
+
+    def __initECWin4(self, fc: FanConfig):
+        try:
+            logging.info("初始化GPD WIN4 6800U EC")
+            ram_reg_addr = fc.ram_reg_addr
+            ram_reg_data = fc.ram_reg_data
+            ec_chip_id = EC.RamRead(ram_reg_addr, ram_reg_data, 0x2000)
+            if ec_chip_id == 0x55:
+                ec_chip_ver = EC.RamRead(ram_reg_addr, ram_reg_data, 0x1060)
+                ec_chip_ver |= 0x80
+                EC.RamWrite(ram_reg_addr, ram_reg_data, 0x1060, ec_chip_ver)
+        except:
+            logging.error("初始化GPD WIN4 EC失败:", exc_info=True)
 
     def get_fanRPM(self, index: int):
         try:
@@ -409,6 +410,16 @@ class FanManager:
                     * rpm_value_max
                     / rpm_write_max
                 )
+
+            # GPD WIN4 6800U, 读取转速为 0 时，初始化 EC
+            if (
+                fc.is_ec_configured
+                and PRODUCT_NAME == "G1618-04"
+                and PRODUCT_VERSION == "Default string"
+                and fanRPM == 0
+            ):
+                self.__initECWin4(fc)
+
             logging.debug(
                 f"使用ECRAM数据 当前机型:{PRODUCT_NAME} EC_ADDR:{hex(ram_reg_addr)} EC_DATA={hex(ram_reg_data)} EC地址:{hex(ram_read_offset)} 风扇转速:{fanRPM}"
             )
@@ -810,7 +821,7 @@ class FanManager:
         except:
             logging.error(f"使用ECRAM写入风扇状态异常:", exc_info=True)
             return False
-    
+
     def __set_fanAuto_ECIO(self, fc: FanConfig, value: bool):
         try:
             manual_offset = fc.manual_offset
