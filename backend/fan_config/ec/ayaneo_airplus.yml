@@ -1,0 +1,21 @@
+# 转速的读取地址不对
+# 写入转速测试可用
+product_name:
+  - AIR Plus
+  - SLIDE
+fans:
+  - ram_reg_addr: 0x4E
+    ram_reg_data: 0x4F
+    ram_manual_offset: 0xd1c8
+    ram_rpmwrite_offset: 0x1804
+    ram_rpmread_offset: 0x1804
+    ram_rpmread_length: 0
+    enable_manual_value: 0xa5
+    enable_auto_value: 0x00
+
+    # manual_offset: 0x4a
+    # rpmwrite_offset: 0x4b
+    # rpmread_offset: 0x76
+
+    rpm_write_max: 255
+    rpm_value_max: 6000
