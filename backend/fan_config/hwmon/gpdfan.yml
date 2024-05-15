@@ -6,7 +6,7 @@ fans:
     pwm_mode: 0
     black_list:
       - G1618-04
-      # - G1617-01
+      - G1617-01
 
     pwm_enable:
       manual_value: 1
