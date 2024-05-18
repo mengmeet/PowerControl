@@ -15,7 +15,6 @@ try:
     from fan import fanManager
     from sysInfo import sysInfoManager
     import update
-
 except Exception as e:
     # 堆栈跟踪
     logging.error(traceback.format_exc())

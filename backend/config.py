@@ -160,7 +160,7 @@ def get_all_howmon_fans():
     return fans_confs
 
 
-def get_device_ec_fans(product_name, product_version):
+def get_device_ec_fans(p_name, p_version):
     with open(EC_SCHEMA, "r") as f:
         ec_schema = json.load(f)
 
@@ -199,12 +199,13 @@ def get_device_ec_fans(product_name, product_version):
     confs_with_name = []
 
     # 通过产品名获得所有配置，然后分成带版本号和不带版本号的配置
-    for conf in FAN_EC_CONFIG_MAP.get(product_name, []):
+    for conf in FAN_EC_CONFIG_MAP.get(p_name, []):
+        logging.info(f"conf of {p_name}: {conf}")
         if (
-            product_version in conf["product_version"]
-            and data["product_version"] != None
-            and isinstance(data["product_version"], list)
-            and len(data["product_version"]) > 0
+            p_version in conf["product_version"]
+            and conf["product_version"] != None
+            and isinstance(conf["product_version"], list)
+            and len(conf["product_version"]) > 0
         ):
             confs_with_name_version.append(conf)
         else:
@@ -212,7 +213,7 @@ def get_device_ec_fans(product_name, product_version):
 
     # 优先匹配带版本号的配置
     for conf in confs_with_name_version:
-        if product_version in conf["product_version"]:
+        if p_version in conf["product_version"]:
             return conf["fans"]
     # 其次匹配不带版本号的配置 (如果有)
     for conf in confs_with_name:

@@ -742,7 +742,8 @@ class FanManager:
             fc = self.fan_config_list[index]
 
             # HWMON 写入
-            self.__set_fanAuto_HWMON(fc, value)
+            if fc.is_found_hwmon:
+                self.__set_fanAuto_HWMON(fc, value)
 
             # ECRAM 写入
             if fc.ram_manual_offset:
@@ -841,7 +842,7 @@ class FanManager:
                 return False
             fanIsManual = auto_value if value else manual_value
             EC.RamWrite(reg_addr, reg_data, manual_offset, fanIsManual)
-            logging.info(
+            logging.debug(
                 f"写入ECRAM数据 写入EC地址:{hex(manual_offset)} 写入风扇是否控制:{fanIsManual}"
             )
             return True
