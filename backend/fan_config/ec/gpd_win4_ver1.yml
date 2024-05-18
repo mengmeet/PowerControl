@@ -2,6 +2,7 @@ product_name:
   - G1618-04
 product_version:
   - Ver. 1.0
+  - Ver.1.0
 fans:
   - ram_reg_addr: 0x4E
     ram_reg_data: 0x4F
