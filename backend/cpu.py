@@ -281,8 +281,15 @@ class CPUManager:
 
     def set_cpuBoost(self, value: bool):
         boost_path = "/sys/devices/system/cpu/cpufreq/boost"
+
+        # amd
         pstate_boost_path = "/sys/devices/system/cpu/amd_pstate/cpb_boost"
         amd_pstate_path = "/sys/devices/system/cpu/amd_pstate/status"
+
+        # intel
+        hwp_dynamic_boost_path = "/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost"
+        no_turbo_path = "/sys/devices/system/cpu/intel_pstate/no_turbo"
+
         try:
             logging.debug("set_cpuBoost {}".format(value))
             global cpu_boost
@@ -309,6 +316,19 @@ class CPUManager:
                         file.write("1")
                     else:
                         file.write("0")
+
+            # 设置 hwp_dynamic_boost
+            if os.path.exists(hwp_dynamic_boost_path):
+                with open(hwp_dynamic_boost_path, "w") as file:
+                    file.write("1")
+            
+            # 设置 no_turbo
+            if os.path.exists(no_turbo_path):
+                with open(no_turbo_path, "w") as file:
+                    if cpu_boost:
+                        file.write("0")
+                    else:
+                        file.write("1")
 
             return True
         except Exception as e:
