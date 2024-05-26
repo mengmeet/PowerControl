@@ -1,13 +1,17 @@
+import glob
 import subprocess
 import os
 import re
 import traceback
-from config import logging, SH_PATH, RYZENADJ_PATH
 from config import (
     TDP_LIMIT_CONFIG_CPU,
     TDP_LIMIT_CONFIG_PRODUCT,
     PRODUCT_NAME,
     CPU_ID,
+    CPU_VENDOR,
+    logging,
+    SH_PATH,
+    RYZENADJ_PATH,
 )
 
 # 初始参数
@@ -125,6 +129,60 @@ class CPUManager:
             return []
 
     def set_cpuTDP(self, value: int):
+        if CPU_VENDOR == "GenuineIntel":
+            return self.set_cpuTDP_Intel(value)
+        elif CPU_VENDOR == "AuthenticAMD":
+            self.set_cpuTDP_AMD(value)
+        else:
+            logging.error("set_cpuTDP error: unknown CPU_VENDOR")
+            return False
+
+    def __get_intel_rapl_path(self):
+        rapl_path = ""
+        rapl_long = ""
+        rapl_short = ""
+        try:
+            # 遍历 /sys/class/powercap/intel-rapl/intel-rapl:*/ 如果 name 是 package-0 则是cpu
+            for r_path in glob.glob("/sys/class/powercap/intel-rapl/intel-rapl:?"):
+                if os.path.isdir(r_path):
+                    name_path = os.path.join(r_path, "name")
+                    with open(name_path, "r") as file:
+                        name = file.read().strip()
+                    if name == "package-0":
+                        rapl_path = r_path
+                        break
+            for f in glob.glob(f"{rapl_path}/constraint_?_name"):
+                if os.path.isfile(f):
+                    with open(f, "r") as file:
+                        name = file.read().strip()
+                    if name == "short_term":
+                        rapl_short = f.replace("_name", "_power_limit_uw")
+                    elif name == "long_term":
+                        rapl_long = f.replace("_name", "_power_limit_uw")
+            return rapl_long, rapl_short
+        except Exception as e:
+            logging.error(e, exc_info=True)
+
+    def set_cpuTDP_Intel(self, value: int):
+        try:
+            # 遍历 /sys/class/powercap/intel-rapl/*/ 如果 name 是 package-0 则是cpu
+            logging.debug("set_cpuTDP_Intel {}".format(value))
+            tdp = value * 1000000
+            rapl_long, rapl_short = self.__get_intel_rapl_path()
+            if rapl_long == "" or rapl_short == "":
+                logging.error("set_cpuTDP_Intel error: rapl path not found")
+                return False
+            with open(rapl_long, "w") as file:
+                file.write(str(tdp))
+            with open(rapl_short, "w") as file:
+                file.write(str(tdp))
+            return True
+        
+        except Exception as e:
+            logging.error(e, exc_info=True)
+            return False
+
+    def set_cpuTDP_AMD(self, value: int):
         try:
             if value >= 3:
                 tdp = value * 1000
@@ -281,8 +339,18 @@ class CPUManager:
 
     def set_cpuBoost(self, value: bool):
         boost_path = "/sys/devices/system/cpu/cpufreq/boost"
-        pstate_boost_path = "/sys/devices/system/cpu/amd_pstate/cpb_boost"
-        amd_pstate_path = "/sys/devices/system/cpu/amd_pstate/status"
+
+        # amd
+        amd_pstate_dir = "/sys/devices/system/cpu/amd_pstate"
+        pstate_boost_path = "${pstate_path}/cpb_boost"
+        amd_state_path = "${pstate_path}/status"
+
+        # intel
+        hwp_dynamic_boost_path = (
+            "/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost"
+        )
+        no_turbo_path = "/sys/devices/system/cpu/intel_pstate/no_turbo"
+
         try:
             logging.debug("set_cpuBoost {}".format(value))
             global cpu_boost
@@ -291,8 +359,8 @@ class CPUManager:
             # 如果不存在 pstate_boost_path
             if not os.path.exists(pstate_boost_path):
                 # 切换为 passive 模式
-                if os.path.exists(amd_pstate_path):
-                    open(amd_pstate_path, "w").write("passive")
+                if os.path.exists(amd_state_path) and os.path.exists(amd_pstate_dir):
+                    open(amd_state_path, "w").write("passive")
 
             # 设置 boost
             if os.path.exists(boost_path):
@@ -301,7 +369,7 @@ class CPUManager:
                         file.write("1")
                     else:
                         file.write("0")
-            
+
             # 设置 pstate_boost
             if os.path.exists(pstate_boost_path):
                 with open(pstate_boost_path, "w") as file:
@@ -309,6 +377,19 @@ class CPUManager:
                         file.write("1")
                     else:
                         file.write("0")
+
+            # 设置 hwp_dynamic_boost
+            if os.path.exists(hwp_dynamic_boost_path):
+                with open(hwp_dynamic_boost_path, "w") as file:
+                    file.write("1")
+
+            # 设置 no_turbo
+            if os.path.exists(no_turbo_path):
+                with open(no_turbo_path, "w") as file:
+                    if cpu_boost:
+                        file.write("0")
+                    else:
+                        file.write("1")
 
             return True
         except Exception as e:
