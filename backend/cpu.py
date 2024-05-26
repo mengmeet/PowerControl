@@ -283,8 +283,9 @@ class CPUManager:
         boost_path = "/sys/devices/system/cpu/cpufreq/boost"
 
         # amd
-        pstate_boost_path = "/sys/devices/system/cpu/amd_pstate/cpb_boost"
-        amd_pstate_path = "/sys/devices/system/cpu/amd_pstate/status"
+        amd_pstate_dir = "/sys/devices/system/cpu/amd_pstate"
+        pstate_boost_path = "${pstate_path}/cpb_boost"
+        amd_state_path = "${pstate_path}/status"
 
         # intel
         hwp_dynamic_boost_path = "/sys/devices/system/cpu/intel_pstate/hwp_dynamic_boost"
@@ -298,8 +299,8 @@ class CPUManager:
             # 如果不存在 pstate_boost_path
             if not os.path.exists(pstate_boost_path):
                 # 切换为 passive 模式
-                if os.path.exists(amd_pstate_path):
-                    open(amd_pstate_path, "w").write("passive")
+                if os.path.exists(amd_state_path) and os.path.exists(amd_pstate_dir):
+                    open(amd_state_path, "w").write("passive")
 
             # 设置 boost
             if os.path.exists(boost_path):
