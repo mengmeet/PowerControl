@@ -303,7 +303,7 @@ export class Backend {
 
   // updateLatest
   public static async updateLatest() {
-    await this.serverAPI!.callPluginMethod("update_latest", {});
+    return await this.serverAPI!.callPluginMethod("update_latest", {});
   }
 
   public static async applyGPUSliderFix() {

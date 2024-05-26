@@ -28,8 +28,8 @@ export const MoreComponent: VFC = () => {
             <PanelSectionRow>
                 <ActionButtonItem
                     layout="below"
-                    onClick={() => {
-                        Backend.updateLatest();
+                    onClick={async () => {
+                        await Backend.updateLatest();
                     }}
                 >{uptButtonText}</ActionButtonItem>
             </PanelSectionRow>
