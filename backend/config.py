@@ -1,6 +1,7 @@
 import json
 import logging
 import glob
+import os
 import yaml
 import traceback
 import decky_plugin
@@ -31,22 +32,43 @@ try:
     DECKY_PLUGIN_DIR = decky_plugin.DECKY_PLUGIN_DIR
     SH_PATH = "{}/backend/sh_tools.sh".format(DECKY_PLUGIN_DIR)
     RYZENADJ_PATH = "{}/bin/ryzenadj".format(DECKY_PLUGIN_DIR)
-    GPU_DEVICE_PATH = glob.glob("/sys/class/drm/card?/device")[0]
-    GPUFREQ_PATH = "{}/pp_od_clk_voltage".format(GPU_DEVICE_PATH)
-    GPULEVEL_PATH = "{}/power_dpm_force_performance_level".format(GPU_DEVICE_PATH)
+    # AMD_GPU_DEVICE_PATH = glob.glob("/sys/class/drm/card?/device")[0]
+    # AMD_GPUFREQ_PATH = "{}/pp_od_clk_voltage".format(AMD_GPU_DEVICE_PATH)
+    # AMD_GPULEVEL_PATH = "{}/power_dpm_force_performance_level".format(AMD_GPU_DEVICE_PATH)
     PLATFORM_PROFILE_PATH = "/sys/firmware/acpi/platform_profile"
     PLATFORM_PROFILE_CHOICES_PATH = "/sys/firmware/acpi/platform_profile_choices"
+
+    for p in glob.glob("/sys/class/drm/card?"):
+        if os.path.exists(f"{p}/device/enable"):
+            with open(f"{p}/device/enable", "r") as f:
+                if f.read().strip() == "1":
+                    AMD_GPU_DEVICE_PATH = f"{p}/device"
+                    AMD_GPUFREQ_PATH = f"{AMD_GPU_DEVICE_PATH}/pp_od_clk_voltage"
+                    AMD_GPULEVEL_PATH = f"{AMD_GPU_DEVICE_PATH}/power_dpm_force_performance_level"
+
+                    # read adn write
+                    INTEL_GPU_MIN_FREQ = f"{p}/gt_min_freq_mhz"
+                    INTEL_GPU_MAX_FREQ = f"{p}/gt_max_freq_mhz"
+                    INTEL_GPU_BOOST_FREQ = f"{p}/gt_boost_freq_mhz"
+
+                    # read only
+                    INTEL_GPU_MAX_LIMIT = f"{p}/gt_RP0_freq_mhz"
+                    INTEL_GPU_NORMAL_LIMIT = f"{p}/gt_RP1_freq_mhz"
+                    INTEL_GPU_MIN_LIMIT = f"{p}/gt_RPn_freq_mhz"
+                    INTEL_GPU_CUR_FREQ = f"{p}/gt_cur_freq_mhz"
+                    break
 
     FAN_HWMON_CONFIG_DIR = f"{DECKY_PLUGIN_DIR}/backend/fan_config/hwmon"
     FAN_EC_CONFIG_DIR = f"{DECKY_PLUGIN_DIR}/backend/fan_config/ec"
 except Exception as e:
-    logging.error(f"路径配置异常|{e}")
+    logging.error(f"路径配置异常|{e}", exc_info=True)
 
 # 设备信息获取配置
 try:
     cpuinfo_path = "/proc/cpuinfo"
     cpuinfo = open(cpuinfo_path, "r").read()
     CPU_ID = cpuinfo.split("model name")[1].split(":")[1].split("\n")[0].strip()
+    CPU_VENDOR = cpuinfo.split("vendor_id")[1].split(":")[1].split("\n")[0].strip()
     PRODUCT_NAME = open("/sys/devices/virtual/dmi/id/product_name", "r").read().strip()
     PRODUCT_VERSION = (
         open("/sys/devices/virtual/dmi/id/product_version", "r").read().strip()
@@ -84,6 +106,7 @@ try:
         "ONEXPLAYER F1": 35,
         "ONEXPLAYER F1 EVA-01": 35,
         "G1619-04": 45,  # GPD WINMAX2
+        "G1618-03": 28,  # GPD WIN3
         "G1618-04": 45,  # GPD WIN4
         "G1617-01": 30,  # GPD WIN mini
         "ROG Ally RC71L_RC71L": 30,

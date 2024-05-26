@@ -5,7 +5,7 @@ import time
 import os
 import re
 import platform
-from config import logging,SH_PATH,GPUFREQ_PATH,GPULEVEL_PATH
+from config import INTEL_GPU_MAX_FREQ, INTEL_GPU_MAX_LIMIT, INTEL_GPU_MIN_FREQ, INTEL_GPU_MIN_LIMIT, logging,SH_PATH,AMD_GPUFREQ_PATH,AMD_GPULEVEL_PATH
 import sysInfo
 from inotify import notify,IN_MODIFY
 
@@ -112,11 +112,11 @@ class GPUFreqNotifier ():
                 self._gpuManager.set_gpuFreq(self._gpuManager.gpu_nowFreq[0],self._gpuManager.gpu_nowFreq[1])
         
         def gpuLevel_IN_MODIFY(self, path, mask):
-            level_string = open(GPULEVEL_PATH,"r").read().strip()
+            level_string = open(AMD_GPULEVEL_PATH,"r").read().strip()
             logging.debug(f"gpuLevel_IN_MODIFY path:{path} mask:{mask} minFreq:{self._gpuManager.gpu_nowFreq[0]} maxFreq:{self._gpuManager.gpu_nowFreq[1]} level:{level_string}")
             #目标频率非[0,0]时，如果power_dpm_force_performance_level被改成auto，则设置回来
             if self._gpuManager.gpu_nowFreq[0]!=0 and self._gpuManager.gpu_nowFreq[1]!=0 and level_string=="auto":
-                open(GPULEVEL_PATH,'w').write("manual")
+                open(AMD_GPULEVEL_PATH,'w').write("manual")
                 self._gpuManager.set_gpuFreq(self._gpuManager.gpu_nowFreq[0],self._gpuManager.gpu_nowFreq[1])
         
         def checkGPUNeedSet(self, freqMin:int, freqMax:int):
@@ -124,8 +124,8 @@ class GPUFreqNotifier ():
             gpu_freqMin = self._gpuManager.gpu_freqRange[0]
             try:
                 #可查询gpu设置频率时，判断当前设置是否与系统相同
-                if os.path.exists(GPUFREQ_PATH):
-                    freq_string = open(GPUFREQ_PATH,"r").read()
+                if os.path.exists(AMD_GPUFREQ_PATH):
+                    freq_string = open(AMD_GPUFREQ_PATH,"r").read()
                     # 使用正则表达式提取频率信息
                     od_sclk_matches = re.findall(r"OD_SCLK:?\s*0:\s*(\d+)Mhz\s*1:\s*(\d+)Mhz", freq_string)
                     if od_sclk_matches:
@@ -151,12 +151,12 @@ class GPUFreqNotifier ():
                 return False
         
         def run(self):
-            notify.add_watch(GPUFREQ_PATH, IN_MODIFY, self.gpuFreq_IN_MODIFY)
-            notify.add_watch(GPULEVEL_PATH, IN_MODIFY, self.gpuLevel_IN_MODIFY)
+            notify.add_watch(AMD_GPUFREQ_PATH, IN_MODIFY, self.gpuFreq_IN_MODIFY)
+            notify.add_watch(AMD_GPULEVEL_PATH, IN_MODIFY, self.gpuLevel_IN_MODIFY)
         
         def stop(self):
-            notify.remove_watch(GPUFREQ_PATH)
-            notify.remove_watch(GPULEVEL_PATH)
+            notify.remove_watch(AMD_GPUFREQ_PATH)
+            notify.remove_watch(AMD_GPULEVEL_PATH)
 
 class GPUManager ():
 
@@ -175,20 +175,34 @@ class GPUManager ():
     def get_gpuFreqRange(self):
         try:
             # write "manual" to power_dpm_force_performance_level
-            open(GPULEVEL_PATH,'w').write("manual")
-            freq_string = open(GPUFREQ_PATH,"r").read()
-            # 使用正则表达式提取频率信息
-            od_sclk_matches = re.findall(r"OD_RANGE:?\s*SCLK:\s*(\d+)Mhz\s*(\d+)Mhz", freq_string)
-            logging.debug(f"get_gpuFreqRange {od_sclk_matches[0][0]} {od_sclk_matches[0][1]}")
-            if od_sclk_matches:
-                self.gpu_freqRange = [int(od_sclk_matches[0][0]),int(od_sclk_matches[0][1])]
-                return self.gpu_freqRange[0],self.gpu_freqRange[1]
+            if os.path.exists(AMD_GPULEVEL_PATH):
+                open(AMD_GPULEVEL_PATH,'w').write("manual")
+            if os.path.exists(AMD_GPUFREQ_PATH):
+                freq_string = open(AMD_GPUFREQ_PATH,"r").read()
+                # 使用正则表达式提取频率信息
+                od_sclk_matches = re.findall(r"OD_RANGE:?\s*SCLK:\s*(\d+)Mhz\s*(\d+)Mhz", freq_string)
+                logging.debug(f"get_gpuFreqRange {od_sclk_matches[0][0]} {od_sclk_matches[0][1]}")
+
+                if od_sclk_matches:
+                    self.gpu_freqRange = [int(od_sclk_matches[0][0]), int(od_sclk_matches[0][1])]
+                    return self.gpu_freqRange[0], self.gpu_freqRange[1]
+            elif os.path.exists(INTEL_GPU_MAX_LIMIT) and os.path.exists(INTEL_GPU_MIN_LIMIT):
+                logging.info(f"get_gpuFreqRange intel gpu, max_limit: {INTEL_GPU_MAX_LIMIT}, min_limit: {INTEL_GPU_MIN_LIMIT}")
+                # intel gpu
+                with open(INTEL_GPU_MAX_LIMIT, 'r') as file:
+                    max_freq = int(file.read().strip())
+                with open(INTEL_GPU_MIN_LIMIT, 'r') as file:
+                    min_freq = int(file.read().strip())
+                self.gpu_freqRange = [min_freq, max_freq]
+
+                return min_freq, max_freq
             else:
-                return 0
+                return 0,0
 
         except Exception as e:
-            logging.error(e)
-            return 0
+            logging.error(e, exc_info=True)
+            return 0,0
+
     def set_gpuAuto(self, value:bool):
         try:
             logging.debug(f"set_gpuAuto  isAuto: {value}")
@@ -218,33 +232,35 @@ class GPUManager ():
 
     def set_gpuFreq(self, minValue: int,maxValue: int):
         try:
-            logging.debug(f"set_gpuFreq: [{minValue}, {maxValue}]")
+            logging.info(f"set_gpuFreq: [{minValue}, {maxValue}], gpu_freqRange={self.gpu_freqRange}")
             if ((minValue >= self.gpu_freqRange[0] and maxValue<= self.gpu_freqRange[1]) or (minValue==0 and maxValue==0)) and maxValue >= minValue:
                 self.gpu_nowFreq = [minValue,maxValue]
-                #尝试sh的方式写入
-                try:
+
+                logging.debug(f"set_gpuFreq: gpu_nowFreq={self.gpu_nowFreq}")
+                if os.path.exists(AMD_GPULEVEL_PATH):
+                    # amd gpu
                     if minValue==0 and maxValue==0:
-                        open(GPULEVEL_PATH,'w').write("auto")
+                        open(AMD_GPULEVEL_PATH,'w').write("auto")
                     else:
-                        subprocess.run(["sh","-c",f"echo 'manual' > '{GPULEVEL_PATH}'"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                        subprocess.run(["sh","-c",f"echo 's 0 {minValue}' > '{GPUFREQ_PATH}'"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                        subprocess.run(["sh","-c",f"echo 's 1 {maxValue}' > '{GPUFREQ_PATH}'"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                        subprocess.run(["sh","-c",f"echo 'c' > '{GPUFREQ_PATH}'"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        open(AMD_GPULEVEL_PATH,'w').write("manual")
+                        open(AMD_GPUFREQ_PATH,'w').write("s 0 {}".format(minValue))
+                        open(AMD_GPUFREQ_PATH,'w').write("s 1 {}".format(maxValue))
+                        open(AMD_GPUFREQ_PATH,'w').write("c")
                     return True
-                except:
-                    logging.debug(f"set_gpuFreq: gpu_nowFreq={self.gpu_nowFreq}")
+                elif os.path.exists(INTEL_GPU_MAX_FREQ) and os.path.exists(INTEL_GPU_MIN_FREQ):
+                    # intel gpu
                     if minValue==0 and maxValue==0:
-                        open(GPULEVEL_PATH,'w').write("auto")
-                    else:
-                        open(GPULEVEL_PATH,'w').write("manual")
-                        open(GPUFREQ_PATH,'w').write("s 0 {}".format(minValue))
-                        open(GPUFREQ_PATH,'w').write("s 1 {}".format(maxValue))
-                        open(GPUFREQ_PATH,'w').write("c")
-                return True
+                        minValue = self.gpu_freqRange[0]
+                        maxValue = self.gpu_freqRange[1]
+                    with open(INTEL_GPU_MIN_FREQ, 'w') as file:
+                        file.write(str(minValue))
+                    with open(INTEL_GPU_MAX_FREQ, 'w') as file:
+                        file.write(str(maxValue))
+                    return True
             else:
                 return False
         except Exception as e:
-            logging.error(e)
+            logging.error(e, exc_info=True)
             return False
 
     def set_gpuFreqFix(self, value:int):
@@ -271,7 +287,7 @@ class GPUManager ():
         except Exception as e:
             logging.error(e)
             return False
-
+    
     def fix_gpuFreqSlider(self):
         logging.info("修复GPU频率滑块")
         try:
@@ -293,9 +309,101 @@ class GPUManager ():
                 if result.stderr:
                     logging.error(result.stderr.strip())
                     return
+            
+            if os.path.exists(AMD_GPULEVEL_PATH):
+                self.fix_gpuFreqSlider_AMD()
+            elif os.path.exists(INTEL_GPU_MAX_FREQ) and os.path.exists(INTEL_GPU_MIN_FREQ):
+                self.fix_gpuFreqSlider_INTEL()
+        except Exception as e:
+            logging.error(e, exc_info=True)
+        pass
 
-            gpu_file_path=["power_dpm_force_performance_level","pp_od_clk_voltage"]
+    def fix_gpuFreqSlider_INTEL(self):
+        steamos_priv_path="/usr/bin/steamos-polkit-helpers/steamos-priv-write"
+        gpu_file_path=["power_dpm_force_performance_level","pp_od_clk_voltage"]
+        # 读取sh文件内容
+        with open(steamos_priv_path, 'r') as file:
+            sh_code = file.read()
+        for path in gpu_file_path:
+                if path == "power_dpm_force_performance_level":
+                    new_then_code = '''    GPU=$(grep -H 0x8086 /sys/class/drm/card?/device/vendor 2>/dev/null | head -n1 | sed 's/\/device\/vendor:.*//')
+    GPU_MIN_FREQ="$GPU/gt_min_freq_mhz"
+    GPU_MAX_FREQ="$GPU/gt_max_freq_mhz"
+    GPU_MIN_LIMIT="$(cat $GPU/gt_RPn_freq_mhz)"
+    GPU_MAX_LIMIT="$(cat $GPU/gt_RP0_freq_mhz)"
+    echo "setting intel gpu $GPU to [$WRITE_VALUE]" | systemd-cat -t p-steamos-priv-write -p warning
+    if [[ "$WRITE_VALUE" == "auto" ]]; then
+        echo "$GPU_MIN_LIMIT" >"$GPU_MIN_FREQ"
+        echo "$GPU_MAX_LIMIT" >"$GPU_MAX_FREQ"
+        echo "commit: $GPU_MIN_LIMIT -> $GPU_MIN_FREQ" | systemd-cat -t p-steamos-priv-write -p warning
+        echo "commit: $GPU_MAX_LIMIT -> $GPU_MAX_FREQ" | systemd-cat -t p-steamos-priv-write -p warning
+    fi
+    exit 0'''
+                else:
+                    new_then_code = '''    GPU=$(grep -H 0x8086 /sys/class/drm/card?/device/vendor 2>/dev/null | head -n1 | sed 's/\/device\/vendor:.*//')
+    GPU_MIN_FREQ="$GPU/gt_min_freq_mhz"
+    GPU_MAX_FREQ="$GPU/gt_max_freq_mhz"
+    GPU_MIN_LIMIT="$(cat $GPU/gt_RPn_freq_mhz)"
+    GPU_MAX_LIMIT="$(cat $GPU/gt_RP0_freq_mhz)"
+    echo "commit: GPU -> $WRITE_VALUE" | systemd-cat -t p-steamos-priv-write -p warning
+    if [[ "$WRITE_VALUE" =~ "s 0" ]]; then
+        min_freq=$(echo "$WRITE_VALUE" | sed 's/.*s 0 //')
+        if [[ "$(cat $GPU_MAX_FREQ)" -lt "$min_freq" ]]; then
+            echo "commit: $GPU_MAX_FREQ -> $min_freq" | systemd-cat -t p-steamos-priv-write -p warning
+            echo "$min_freq" >"$GPU_MAX_FREQ"
+        fi
+        if [[ "$min_freq" -lt "$GPU_MIN_LIMIT" ]]; then
+            min_freq="$GPU_MIN_LIMIT"
+        fi
+        if [[ "$min_freq" -gt "$GPU_MAX_LIMIT" ]]; then
+            min_freq="$GPU_MIN_LIMIT"
+        fi
+        echo "commit: $min_freq -> $GPU_MIN_FREQ" | systemd-cat -t p-steamos-priv-write -p warning
+        echo "$min_freq" >"$GPU_MIN_FREQ"
+    fi
+    if [[ "$WRITE_VALUE" =~ "s 1" ]]; then
+        max_freq=$(echo "$WRITE_VALUE" | sed 's/.*s 1 //')
+        if [[ "$max_freq" -gt "$GPU_MAX_LIMIT" ]]; then
+            max_freq="$GPU_MAX_LIMIT"
+        fi
+        echo "commit: $max_freq -> $GPU_MAX_FREQ" | systemd-cat -t p-steamos-priv-write -p warning
+        echo "$max_freq" >"$GPU_MAX_FREQ"
+    fi
+    exit 0'''.format(path)
+                # 匹配目标if语句，并检查then部分的代码
+                if_match = re.search(r'\nif([\s\S]*?)\[\[([\s\S]*?){}([\s\S]*?)]]([\s\S]*?)then([\s\S]*?)\nfi'.format(path), sh_code, flags=re.DOTALL)
+                if if_match:
+                    # 获取then部分的代码
+                    then_code = if_match.group(5)
+                    logging.debug(f"then_code: {then_code}")
+
+                    # 如果then部分的代码与目标不同，则将其替换
+                    if then_code.strip() != new_then_code.strip():
+                        logging.debug(f"new_then_code: {new_then_code}")
+                        new_sh_code = re.sub(r'\nif([\s\S]*?)\[\[([\s\S]*?){}([\s\S]*?)]]([\s\S]*?)then([\s\S]*?)\nfi'.format(path), 
+                                             r'\nif\1[[\2{}\3]]\4then\n{}\nfi'.format(path, new_then_code), sh_code)
+                        sh_code = new_sh_code
+                else:
+                    logging.info(f"no match {path}")
+                    # 没有匹配到目标if语句，在文件能匹配到的最后一个if [[ ]] then fi后面添加代码
+                    last_if_match = re.findall(r'\nif[\s\S]*?\[\[[\s\S]*?]][\s\S]*?then[\s\S]*?\nfi', sh_code, flags=re.DOTALL)
+                    add_code='''
+if [[ "$WRITE_PATH" == /sys/class/drm/card*/device/{} ]]; then
+{}
+fi'''.format(path, new_then_code)
+                    # 文件最后一个if，换行后添加
+                    if last_if_match:
+                        sh_code = sh_code.replace(last_if_match[-1], f'{last_if_match[-1]}\n{add_code}')
+
+        # 将修改后的代码写回文件
+        with open(steamos_priv_path, 'w') as file:
+            file.write(sh_code)
+        pass
+
+    def fix_gpuFreqSlider_AMD(self):
+        try:
             steamos_priv_path="/usr/bin/steamos-polkit-helpers/steamos-priv-write"
+            gpu_file_path=["power_dpm_force_performance_level","pp_od_clk_voltage"]
             # 读取sh文件内容
             with open(steamos_priv_path, 'r') as file:
                 sh_code = file.read()
@@ -330,7 +438,7 @@ fi'''.format(path,path)
             with open(steamos_priv_path, 'w') as file:
                 file.write(sh_code)
         except Exception as e:
-            logging.error(e)
+            logging.error(e, exc_info=True)
         
         
     def get_gpuFreqMin(self):

@@ -5,7 +5,7 @@ import time
 import os
 import asyncio
 from config import logging,SH_PATH,PRODUCT_NAME
-from config import GPU_DEVICE_PATH
+from config import AMD_GPU_DEVICE_PATH
 from helpers import get_user
 
 cpu_busyPercent = 0
@@ -17,7 +17,7 @@ gpu_DataErrCnt=0
 has_gpuData = True
 
 statPath="/proc/stat"
-gpu_busy_percentPath="{}/gpu_busy_percent".format(GPU_DEVICE_PATH)
+gpu_busy_percentPath="{}/gpu_busy_percent".format(AMD_GPU_DEVICE_PATH)
 hwmon_path="/sys/class/hwmon"
 
 #GPU单次监控数据

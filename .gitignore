@@ -45,6 +45,7 @@ yalc.lock
 # Ignore output folder
 
 backend/out
+backend/*.sh
 Makefile
 
 .history
