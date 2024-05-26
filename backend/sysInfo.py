@@ -1,11 +1,9 @@
-import subprocess
 import collections
+import subprocess
 import threading
 import time
 import os
-import asyncio
-from config import logging,SH_PATH,PRODUCT_NAME
-from config import AMD_GPU_DEVICE_PATH
+from config import AMD_GPU_DEVICE_PATH,logging
 from helpers import get_user
 
 cpu_busyPercent = 0
@@ -26,12 +24,12 @@ class GPUData:
         #gpu占用率
         self.gpuBusyPercent=0
     
-    def setBusyPercent(self,busyPercent):
+    def setBusyPercent(self, busyPercent):
         try:
             self.gpuBusyPercent = int(busyPercent)
             return True
         except Exception as e:
-            logging.error(f"setBusyPercent数据异常 ={StatInfo}")
+            logging.error(f"setBusyPercent数据异常", exc_info=True)
             return False
     def getBusyPercent(self):
         return self.gpuBusyPercent
@@ -92,7 +90,7 @@ class SysInfoManager (threading.Thread):
         self._gpuDataQueue = collections.deque()    #记录gpu占用率的队列
         self._gpu_busyPercentSum = 0    #当前所有的gpu占用率总和 用于计算平均值 无需每次遍历队列
         self._gpu_NowQueueLength = 0    #当前gpu占用率个数
-        self._gpu_QueueMaxLength = 100     #gpu占用率最多记录几个
+        self._gpu_QueueMaxLength = 10     #gpu占用率最多记录几个
         self._enableUpdateGPUInfo=False        #是否开启gpu数据记录收集
 
         self._collectInfoInterval=0.005           #记录数据的间隔
@@ -143,14 +141,60 @@ class SysInfoManager (threading.Thread):
             cpu_DataErrCnt = cpu_DataErrCnt + 1
             if(cpu_DataErrCnt >= self._cpu_QueueMaxLength / 2):
                 has_cpuData = False
+
+    def getGpuBusyPercent(self):
+        if os.path.exists(gpu_busy_percentPath):
+            gpu_busyPercentFile=open(gpu_busy_percentPath,'r')
+            gpu_busy_percent = gpu_busyPercentFile.readline().rstrip("\n")
+            return gpu_busy_percent
+        else:
+            # 检查 intel_gpu_top 命令 是否可用
+            if os.system("command -v intel_gpu_top") == 0:
+                return self._getGPUBusyPercentByIntelGPUTop()
+            else:
+                return 0
+            
+    def _getGPUBusyPercentByIntelGPUTop(self):
+        command = ['stdbuf', '-oL', 'intel_gpu_top', '-l', '-s', '1']
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        line_count = 0
+        percent = 0
+        try:
+            while True:
+                output = process.stdout.readline()
+                if output == '' and process.poll() is not None:
+                    break
+                if output:
+                    line_count += 1
+                    # logging.info(f"Line {line_count}: {output.strip()}")
+                    if line_count == 4:
+                        # 按空格分割
+                        parts = output.strip().split()
+                        if len(parts) >= 7:
+                            # 取第七项
+                            seventh_item = parts[6]
+                            # logging.info(f"The seventh item in the fourth line is: {seventh_item}")
+                            percent = seventh_item
+                        else:
+                            logging.error("The fourth line does not have at least seven items.")
+                        process.terminate()  # 停止命令
+                        break
+            return round(float(percent))
+        except Exception as e:
+            logging.error(f"An error occurred: {e}")
+            return 0
+        finally:
+            process.stdout.close()
+            process.stderr.close()
+            process.wait()
+
     
     def updateGpuData(self):
         global gpuDataErrorCnt
         global gpu_busyPercent
         try:
             gpuData=GPUData()
-            gpu_busyPercentFile=open(gpu_busy_percentPath,'r')
-            gpu_busy_percent = gpu_busyPercentFile.readline().rstrip("\n")
+            gpu_busy_percent = self.getGpuBusyPercent()
             if not gpuData.setBusyPercent(gpu_busy_percent):
                 raise Exception()
             self._gpuDataQueue.append(gpuData)
@@ -181,7 +225,7 @@ class SysInfoManager (threading.Thread):
                 self.updateCpuData()
             if(self._enableUpdateGPUInfo):
                 self.updateGpuData()
-            #logging.debug(f"cpu_busyPercent={cpu_busyPercent} gpu_busyPercent={gpu_busyPercent}")
+            # logging.info(f"cpu_busyPercent={cpu_busyPercent} gpu_busyPercent={gpu_busyPercent}")
             time.sleep(self._collectInfoInterval)
 
 sysInfoManager = SysInfoManager()

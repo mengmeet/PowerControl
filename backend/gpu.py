@@ -76,9 +76,11 @@ class GPUAutoFreqManager (threading.Thread):
             logging.error(e)
 
     def run(self):
-        logging.debug("开始自动优化频率:" + self.name)
+        logging.info("开始自动优化频率:" + self.name)
         adjust_count = 0
         self._isRunning = True
+        gpu_autoFreqMin = self._gpuManager.gpu_autoFreqRange[0]
+        gpu_autoFreqMax = self._gpuManager.gpu_autoFreqRange[1]
         while True:
             try:
                 if not self._gpu_enableAutoFreq:
@@ -249,13 +251,26 @@ class GPUManager ():
                     return True
                 elif os.path.exists(INTEL_GPU_MAX_FREQ) and os.path.exists(INTEL_GPU_MIN_FREQ):
                     # intel gpu
-                    if minValue==0 and maxValue==0:
+                    if minValue == 0 and maxValue == 0:
                         minValue = self.gpu_freqRange[0]
                         maxValue = self.gpu_freqRange[1]
-                    with open(INTEL_GPU_MIN_FREQ, 'w') as file:
-                        file.write(str(minValue))
-                    with open(INTEL_GPU_MAX_FREQ, 'w') as file:
-                        file.write(str(maxValue))
+                    currentMin = 0
+                    currentMax = 0
+                    with open(INTEL_GPU_MIN_FREQ, 'r') as file:
+                        currentMin = int(file.read().strip())
+                    with open(INTEL_GPU_MAX_FREQ, 'r') as file:
+                        currentMax = int(file.read().strip())
+                    # 如果要设置 min 大于当前 max，要先设置 max
+                    if minValue > currentMax:
+                        with open(INTEL_GPU_MAX_FREQ, 'w') as file:
+                            file.write(str(minValue))
+                        with open(INTEL_GPU_MIN_FREQ, 'w') as file:
+                            file.write(str(maxValue))
+                    else:
+                        with open(INTEL_GPU_MIN_FREQ, 'w') as file:
+                            file.write(str(minValue))
+                        with open(INTEL_GPU_MAX_FREQ, 'w') as file:
+                            file.write(str(maxValue))
                     return True
             else:
                 return False
@@ -289,13 +304,12 @@ class GPUManager ():
             return False
     
     def fix_gpuFreqSlider(self):
-        logging.info("修复GPU频率滑块")
         try:
             # 执行 lsb_release 命令并捕获输出
             result = subprocess.run(['/usr/bin/lsb_release', '-is'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
             # 获取输出并去除空白字符
             distribution = result.stdout.strip()
-            logging.info(f"当前系统为 {distribution}")
+            logging.debug(f"当前系统为 {distribution}")
             result = None
             # 判断是否为 ChimeraOS
             if distribution == 'chimeraos':
