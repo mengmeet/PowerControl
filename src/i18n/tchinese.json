@@ -10,6 +10,7 @@
     "SMT_DESC":"啟用多執行續",
     "CPU_NUM":"CPU內核數",
     "CPU_NUM_DESC":"設置啟用CPU內核數量",
+    "CPU_MAX_PERF":"最大效能百分比",
     "TDP":"散熱設計功率 (TDP) 限制",
     "TDP_DESC":"限制處理器功率以降低總功率",
     "RYZENADJ_NOT_FOUND":"未檢測到ryzenAdj文件",

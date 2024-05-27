@@ -112,6 +112,47 @@ const CPUNumComponent: VFC = () => {
   );
 }
 
+const CPUPerformancePerfComponent: VFC = () => {
+  const [supportPerf, _] = useState<boolean>(Backend.data.getSupportCPUMaxPct());
+  const [maxPerf, setMaxPerf] = useState<number>(Settings.appCpuMaxPerfPct());
+
+  const refresh = () => {
+    setMaxPerf(Settings.appCpuMaxPerfPct());
+  }
+
+  useEffect(() => {
+    PluginManager.listenUpdateComponent(ComponentName.CPU_PERFORMANCE,
+      [
+        ComponentName.CPU_PERFORMANCE,
+      ], (_ComponentName, updateType) => {
+        switch (updateType) {
+          case (UpdateType.UPDATE): {
+            refresh();
+            break;
+          }
+        }
+      })
+  }, []);
+
+  return (
+    <>
+      {supportPerf && <PanelSectionRow>
+        <SlowSliderField
+          label={localizationManager.getString(localizeStrEnum.CPU_MAX_PERF)}
+          value={maxPerf}
+          valueSuffix=" %"
+          step={1}
+          max={100}
+          min={10}
+          showValue={true}
+          onChangeEnd={(value: number) => {
+            Settings.setCpuMaxPerfPct(value);
+          }}
+        />
+      </PanelSectionRow>}
+    </>
+  )
+}
 
 const CPUTDPComponent: VFC = () => {
   const [tdpEnable, setTDPEnable] = useState<boolean>(Settings.appTDPEnable());
@@ -197,8 +238,9 @@ const CPUTDPComponent: VFC = () => {
           </PanelSectionRow>
           {tdpEnable && <PanelSectionRow>
             <SlowSliderField
-              label={localizationManager.getString(localizeStrEnum.WATTS)}
+              // label={localizationManager.getString(localizeStrEnum.WATTS)}
               value={tdp}
+              valueSuffix=" W"
               step={1}
               max={enableCustomTDPRange ? customTDPRangeMax : Backend.data.getTDPMax()}
               min={enableCustomTDPRange ? customTDPRangeMin : 3}
@@ -249,6 +291,7 @@ export const CPUComponent: VFC = () => {
         <CPUNumComponent />
         <CPUTDPComponent />
         <CustomTDPComponent />
+        <CPUPerformancePerfComponent />
       </PanelSection>}
     </div>
   );

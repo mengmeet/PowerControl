@@ -48,6 +48,8 @@ export class AppSetting {
   fanProfileNameList?: string[] | undefined[];
   @JsonProperty()
   gpuSliderFix?: boolean;
+  @JsonProperty()
+  cpuMaxPerfPct?: number;
   constructor() {
     this.smt = true;
     this.cpuNum = Backend.data?.HasCpuMaxNum()
@@ -74,6 +76,7 @@ export class AppSetting {
       ? Backend.data.getGPUFreqMin()
       : 200;
     this.fanProfileNameList = [];
+    this.cpuMaxPerfPct = 100;
   }
   deepCopy(copyTarget: AppSetting) {
     // this.overwrite=copyTarget.overwrite;
@@ -90,6 +93,7 @@ export class AppSetting {
     this.gpuRangeMaxFreq = copyTarget.gpuRangeMaxFreq;
     this.gpuRangeMinFreq = copyTarget.gpuAutoMinFreq;
     this.fanProfileNameList = copyTarget.fanProfileNameList?.slice();
+    this.cpuMaxPerfPct = copyTarget.cpuMaxPerfPct;
   }
 }
 
@@ -403,6 +407,22 @@ export class Settings {
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_TDP);
       PluginManager.updateComponent(ComponentName.CPU_TDP, UpdateType.UPDATE);
+    }
+  }
+
+  static appCpuMaxPerfPct() {
+    return Settings.ensureApp().cpuMaxPerfPct ?? 100;
+  }
+
+  static setCpuMaxPerfPct(cpuMaxPerfPct: number) {
+    if (Settings.ensureApp().cpuMaxPerfPct != cpuMaxPerfPct) {
+      Settings.ensureApp().cpuMaxPerfPct = cpuMaxPerfPct;
+      Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_CPU_MAX_PERF);
+      PluginManager.updateComponent(
+        ComponentName.CPU_PERFORMANCE,
+        UpdateType.UPDATE
+      );
     }
   }
 
