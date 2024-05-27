@@ -145,7 +145,7 @@ const CPUPerformancePerfComponent: VFC = () => {
           min={10}
           showValue={true}
           onChangeEnd={(value: number) => {
-            Backend.setMaxPerfPct(value);
+            Settings.setCpuMaxPerfPct(value);
           }}
         />
       </PanelSectionRow>}
