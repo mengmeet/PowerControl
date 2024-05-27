@@ -140,6 +140,7 @@ const CPUPerformancePerfComponent: VFC = () => {
         <SlowSliderField
           label={localizationManager.getString(localizeStrEnum.CPU_MAX_PERF)}
           value={maxPerf}
+          valueSuffix=" %"
           step={1}
           max={100}
           min={10}
