@@ -10,6 +10,7 @@
     "SMT_DESC":"启用同步多线程",
     "CPU_NUM":"核 心 数",
     "CPU_NUM_DESC":"设置启用的物理核心数量",
+    "CPU_MAX_PERF":"最大性能百分比",
     "TDP":"热设计功耗 (TDP) 限制",
     "TDP_DESC":"限制处理器功耗以降低总功耗",
     "RYZENADJ_NOT_FOUND":"未检测到ryzenAdj",

@@ -112,6 +112,46 @@ const CPUNumComponent: VFC = () => {
   );
 }
 
+const CPUPerformancePerfComponent: VFC = () => {
+  const [supportPerf, _] = useState<boolean>(Backend.data.getSupportCPUMaxPct());
+  const [maxPerf, setMaxPerf] = useState<number>(Settings.appCpuMaxPerfPct());
+
+  const refresh = () => {
+    setMaxPerf(Settings.appCpuMaxPerfPct());
+  }
+
+  useEffect(() => {
+    PluginManager.listenUpdateComponent(ComponentName.CPU_PERFORMANCE,
+      [
+        ComponentName.CPU_PERFORMANCE,
+      ], (_ComponentName, updateType) => {
+        switch (updateType) {
+          case (UpdateType.UPDATE): {
+            refresh();
+            break;
+          }
+        }
+      })
+  }, []);
+
+  return (
+    <>
+      {supportPerf && <PanelSectionRow>
+        <SlowSliderField
+          label={localizationManager.getString(localizeStrEnum.CPU_MAX_PERF)}
+          value={maxPerf}
+          step={1}
+          max={100}
+          min={10}
+          showValue={true}
+          onChangeEnd={(value: number) => {
+            Backend.setMaxPerfPct(value);
+          }}
+        />
+      </PanelSectionRow>}
+    </>
+  )
+}
 
 const CPUTDPComponent: VFC = () => {
   const [tdpEnable, setTDPEnable] = useState<boolean>(Settings.appTDPEnable());
@@ -249,6 +289,7 @@ export const CPUComponent: VFC = () => {
         <CPUNumComponent />
         <CPUTDPComponent />
         <CustomTDPComponent />
+        <CPUPerformancePerfComponent />
       </PanelSection>}
     </div>
   );

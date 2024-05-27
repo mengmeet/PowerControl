@@ -23,6 +23,7 @@ export class BackendData {
   private has_fanConfigs = false;
   private current_version = "";
   private latest_version = "";
+  private supportCPUMaxPct = false;
   public async init(serverAPI: ServerAPI) {
     this.serverAPI = serverAPI;
     await serverAPI!
@@ -78,6 +79,10 @@ export class BackendData {
       }
     });
 
+    Backend.getMaxPerfPct().then((value) => {
+      this.supportCPUMaxPct = value > 0;
+    });
+
     await this.serverAPI!.callPluginMethod<{}, string>("get_version", {}).then(
       (res) => {
         if (res.success) {
@@ -87,7 +92,7 @@ export class BackendData {
       }
     );
   }
-  
+
   public getCpuMaxNum() {
     return this.cpuMaxNum;
   }
@@ -169,6 +174,10 @@ export class BackendData {
 
   public getLatestVersion() {
     return this.latest_version;
+  }
+
+  public getSupportCPUMaxPct() {
+    return this.supportCPUMaxPct;
   }
 
   public async getFanRPM(index: number) {
@@ -337,6 +346,17 @@ export class Backend {
     );
   }
 
+  // get_max_perf_pct
+  public static async getMaxPerfPct(): Promise<number> {
+    return (await this.serverAPI!.callPluginMethod("get_max_perf_pct", {}))
+      .result as number;
+  }
+
+  // set_max_perf_pct
+  public static async setMaxPerfPct(value: number) {
+    await this.serverAPI!.callPluginMethod("set_max_perf_pct", { value: value });
+  }
+
   public static getServerAPI() {
     return this.serverAPI;
   }
@@ -428,6 +448,12 @@ export class Backend {
         }
       }
     }
+
+    if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_CPU_MAX_PERF) {
+      const maxPerfPct = Settings.appCpuMaxPerfPct();
+      Backend.setMaxPerfPct(maxPerfPct);
+    }
+
     if (
       applyTarget == APPLYTYPE.SET_ALL ||
       applyTarget == APPLYTYPE.SET_GPUMODE

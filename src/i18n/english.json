@@ -10,6 +10,7 @@
     "SMT_DESC":"Enable hyper-threading",
     "CPU_NUM":"Number Of CPU Cores",
     "CPU_NUM_DESC":"Set the enabled physical core",
+    "CPU_MAX_PERF":"CPU Maximum Performance",
     "TDP":"Thermal Power (TDP) Limit",
     "TDP_DESC":"Limits processor power for less total power",
     "RYZENADJ_NOT_FOUND":"RyzenAdj Not Detected",

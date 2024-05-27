@@ -523,6 +523,29 @@ class CPUManager:
         except Exception as e:
             logging.error(e)
             return f"get_ryzenadj_info error:\n{e}"
+        
+    def get_max_perf_pct(self):
+        max_perf_pct_path = "/sys/devices/system/cpu/intel_pstate/max_perf_pct"
+        if os.path.exists(max_perf_pct_path):
+            with open(max_perf_pct_path, "r") as file:
+                return int(file.read().strip())
+        else:
+            return 0
+        
+    def set_max_perf_pct(self, value: int):
+        max_perf_pct_path = "/sys/devices/system/cpu/intel_pstate/max_perf_pct"
+        try:
+            if value < 10 or value > 100:
+                return False
+            if os.path.exists(max_perf_pct_path):
+                with open(max_perf_pct_path, "w") as file:
+                    file.write(str(value))
+                return True
+            else:
+                return False
+        except Exception as e:
+            logging.error(e)
+            return False
 
 
 cpuManager = CPUManager()
