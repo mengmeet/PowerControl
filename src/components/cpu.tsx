@@ -238,8 +238,9 @@ const CPUTDPComponent: VFC = () => {
           </PanelSectionRow>
           {tdpEnable && <PanelSectionRow>
             <SlowSliderField
-              label={localizationManager.getString(localizeStrEnum.WATTS)}
+              // label={localizationManager.getString(localizeStrEnum.WATTS)}
               value={tdp}
+              valueSuffix=" W"
               step={1}
               max={enableCustomTDPRange ? customTDPRangeMax : Backend.data.getTDPMax()}
               min={enableCustomTDPRange ? customTDPRangeMin : 3}
