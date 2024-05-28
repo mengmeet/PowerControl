@@ -2,10 +2,12 @@ import { ServerAPI } from "decky-frontend-lib";
 import { APPLYTYPE, FANMODE, GPUMODE, Patch } from "./enum";
 import { FanControl, PluginManager } from "./pluginMain";
 import { Settings, SettingsData } from "./settings";
-import { DEFAULT_TDP_MAX, DEFAULT_TDP_MIN, QAMPatch } from ".";
+import { DEFAULT_TDP_MAX, DEFAULT_TDP_MIN, QAMPatch, SteamUtils, SystemInfo } from ".";
 import { JsonSerializer } from "typescript-json-serializer";
 
 const serializer = new JsonSerializer();
+
+const minSteamVersion = 1714854927;
 
 export class BackendData {
   private serverAPI: ServerAPI | undefined;
@@ -24,6 +26,7 @@ export class BackendData {
   private current_version = "";
   private latest_version = "";
   private supportCPUMaxPct = false;
+  private systemInfo: SystemInfo | undefined;
   public async init(serverAPI: ServerAPI) {
     this.serverAPI = serverAPI;
     await serverAPI!
@@ -91,6 +94,15 @@ export class BackendData {
         }
       }
     );
+
+    SteamUtils.getSystemInfo().then((systemInfo) => {
+      this.systemInfo = systemInfo;
+    });
+  }
+
+  public getForceShowTDP() {
+    // 检查 Steam 客户端版本，如果版本大于等于 minSteamVersion。不显示强制 TDP 开关。并默认显示 TDP 控制组件
+    return this.systemInfo!.nSteamVersion >= minSteamVersion
   }
 
   public getCpuMaxNum() {
@@ -418,33 +430,38 @@ export class Backend {
         : tdp;
 
       if (!PluginManager.isPatchSuccess(Patch.TDPPatch) || Settings.appForceShowTDP()) {
-        // console.log(
-        //   `>>>>> 插件方式更新 TDP = ${_tdp} TDPEnable = ${tdpEnable}`
-        // );
+        console.log(
+          `>>>>> 插件方式更新 TDP = ${_tdp} TDPEnable = ${tdpEnable}`
+        );
+
         if (tdpEnable) {
           Backend.applyTDP(_tdp);
         } else {
           Backend.applyTDP(Backend.data.getTDPMax());
         }
-        if (Settings.appForceShowTDP()) {
-          try {
-            QAMPatch.setTDPEanble(tdpEnable);
-            if (tdpEnable) {
-              QAMPatch.setTDP(_tdp);
-            }
-          } catch (error) {
-            console.error(`>>>>> 强制显示 TDP 时设置QAM失败`, error);
+
+        try {
+          QAMPatch.setTDPEanble(tdpEnable);
+          if (tdpEnable) {
+            QAMPatch.setTDP(_tdp);
           }
+        } catch (error) {
+          console.error(`>>>>> 强制显示 TDP 时设置QAM失败`, error);
         }
-      } else {
-        // console.log(
-        //   `>>>>> 原生设置更新 TDP = ${_tdp} TDPEnable = ${tdpEnable}`
-        // );
+      }
+
+      // patch 成功, 更新 QAM 中设置的值
+      if (PluginManager.isPatchSuccess(Patch.TDPPatch)) {
+        console.log(
+          `>>>>> 原生设置更新 TDP = ${_tdp} TDPEnable = ${tdpEnable}`
+        );
         // patch 成功才更新 QAM 中设置的值
         QAMPatch.setTDPEanble(tdpEnable);
         QAMPatch.setTDP(_tdp);
         if (tdpEnable) {
           Backend.applyTDP(_tdp);
+        } else {
+          Backend.applyTDP(Backend.data.getTDPMax());
         }
       }
     }
