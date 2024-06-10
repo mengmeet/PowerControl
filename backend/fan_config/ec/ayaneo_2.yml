@@ -3,6 +3,8 @@ product_name:
   - AYANEO 2S
   - GEEK
   - GEEK 1S
+  - FLIP KD
+  - FLIP DS
 fans:
   - manual_offset: 0x4a
     rpmwrite_offset: 0x4b
