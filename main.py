@@ -217,13 +217,22 @@ class Plugin:
 
     async def update_latest(self):
         logging.info("Updating latest")
-        return update.update_latest()
+        # return update.update_latest()
+        try:
+            return update.update_latest()
+        except Exception as e:
+            logging.error(e, exc_info=True)
+            return False
 
     async def get_version(self):
         return update.get_version()
 
     async def get_latest_version(self):
-        return update.get_latest_version()
+        try:
+            return update.get_latest_version()
+        except Exception as e:
+            logging.error(e, exc_info=True)
+            return ""
 
     async def get_ryzenadj_info(self):
         return cpuManager.get_ryzenadj_info()

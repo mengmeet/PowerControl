@@ -10,9 +10,14 @@ export const MoreComponent: VFC = () => {
 
     useEffect(() => {
         const getData = async () => {
-            const latestVersion = await Backend.getLatestVersion();
-            setLatestVersion(latestVersion);
-            //   Settings.latestVersion = latestVersion;
+            // const latestVersion = await Backend.getLatestVersion();
+            // setLatestVersion(latestVersion);
+            setTimeout(() => {
+                setLatestVersion(latestVersion);
+                Backend.getLatestVersion().then((latestVersion) => {
+                    setLatestVersion(latestVersion);
+                })
+            }, 3000);
         };
         getData();
     });
