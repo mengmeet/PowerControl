@@ -177,7 +177,7 @@ class CPUManager:
             with open(rapl_short, "w") as file:
                 file.write(str(tdp))
             return True
-        
+
         except Exception as e:
             logging.error(e, exc_info=True)
             return False
@@ -523,7 +523,7 @@ class CPUManager:
         except Exception as e:
             logging.error(e)
             return f"get_ryzenadj_info error:\n{e}"
-        
+
     def get_max_perf_pct(self):
         max_perf_pct_path = "/sys/devices/system/cpu/intel_pstate/max_perf_pct"
         if os.path.exists(max_perf_pct_path):
@@ -531,7 +531,7 @@ class CPUManager:
                 return int(file.read().strip())
         else:
             return 0
-        
+
     def set_max_perf_pct(self, value: int):
         max_perf_pct_path = "/sys/devices/system/cpu/intel_pstate/max_perf_pct"
         try:

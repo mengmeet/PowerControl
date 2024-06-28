@@ -6,7 +6,6 @@ from settings import SettingsManager
 
 
 class FanConfig:
-
     def __init__(self):
         # HWMON配置变量
         self.is_found_hwmon = False  # 是否找到风扇hwmon
@@ -107,7 +106,7 @@ class FanManager:
                         hwmon_config["black_list"]
                         if (
                             "black_list" in hwmon_config
-                            and hwmon_config["black_list"] != None
+                            and hwmon_config["black_list"] is not None
                         )
                         else []
                     )
@@ -176,24 +175,24 @@ class FanManager:
                     fc.pwm_value_max = (
                         max_value_from_settings
                         if (
-                            max_value_from_settings != None
+                            max_value_from_settings is not None
                             and max_value_from_settings > fc.fan_value_max
                         )
                         else fc.fan_value_max
                     )
                     fc.temp_mode = hwmon_config["temp_mode"]
                     self.fan_config_list.append(fc)
-                except:
+                except Exception:
                     logging.error(
                         f"获取风扇({hwmon_name})hwmon信息失败:", exc_info=True
                     )
 
     # 解析处理 EC 风扇配置
     def __parse_fan_configuration_EC(self):
-        logging.info(f"开始获取风扇ec信息")
+        logging.info("开始获取风扇ec信息")
         self.fan_config_list.clear()
         # 转化ec信息
-        for ec_info in FAN_EC_CONFIG if FAN_EC_CONFIG != None else []:
+        for ec_info in FAN_EC_CONFIG if FAN_EC_CONFIG is not None else []:
             try:
                 fc = FanConfig()
 
@@ -261,7 +260,7 @@ class FanManager:
                 fc.pwm_value_max = (
                     max_value_from_settings
                     if (
-                        max_value_from_settings != None
+                        max_value_from_settings is not None
                         and max_value_from_settings > fc.fan_value_max
                     )
                     else fc.fan_value_max
@@ -281,16 +280,16 @@ class FanManager:
 
                 # 判断是否配置好ec(控制地址、读和写至少各有一种方法,最大写入和最大读取必须有配置数值)
                 fc.is_ec_configured = (
-                    (fc.manual_offset != None or fc.ram_manual_offset != None)
-                    and (fc.pwm_write_offset != None or fc.ram_pwm_write_offset != None)
-                    and (fc.pwm_read_offset != None or fc.ram_pwm_read_offset != None)
+                    (fc.manual_offset is not None or fc.ram_manual_offset is not None)
+                    and (fc.pwm_write_offset is not None or fc.ram_pwm_write_offset is not None)
+                    and (fc.pwm_read_offset is not None or fc.ram_pwm_read_offset is not None)
                     and (fc.pwm_write_max != 0 and fc.pwm_value_max != 0)
                 )
                 if fc.is_ec_configured:
                     self.fan_config_list.append(fc)
                 logging.info(f"fan_config_list to json {fc.__dict__}")
-            except:
-                logging.error(f"获取风扇ec信息失败:", exc_info=True)
+            except Exception:
+                logging.error("获取风扇ec信息失败:", exc_info=True)
         pass
 
     # 转化风扇配置
@@ -363,7 +362,7 @@ class FanManager:
                 ec_chip_ver = EC.RamRead(ram_reg_addr, ram_reg_data, 0x1060)
                 ec_chip_ver |= 0x80
                 EC.RamWrite(ram_reg_addr, ram_reg_data, 0x1060, ec_chip_ver)
-        except:
+        except Exception:
             logging.error("初始化GPD WIN4 EC失败:", exc_info=True)
 
     def get_fanRPM(self, index: int):
@@ -389,8 +388,8 @@ class FanManager:
                 return self.__get_fanRPM_ECRAM(fc)
 
             return 0
-        except:
-            logging.error(f"获取风扇转速异常:", exc_info=True)
+        except Exception:
+            logging.error("获取风扇转速异常:", exc_info=True)
             return 0
 
     def __get_fanRPM_HWMON(self, fc: FanConfig):
@@ -401,8 +400,8 @@ class FanManager:
                 f"使用hwmon数据 当前机型:{PRODUCT_NAME} hwmon地址:{hwmon_input_path} 风扇转速:{fanRPM}"
             )
             return fanRPM
-        except:
-            logging.error(f"使用hwmon获取风扇转速异常:", exc_info=True)
+        except Exception:
+            logging.error("使用hwmon获取风扇转速异常:", exc_info=True)
             return 0
 
     def __get_fanRPM_ECIO(self, fc: FanConfig):
@@ -413,8 +412,8 @@ class FanManager:
                 f"使用ECIO数据 当前机型:{PRODUCT_NAME} EC地址:{hex(rpm_read_offset)} 风扇转速:{fanRPM}"
             )
             return fanRPM
-        except:
-            logging.error(f"获取风扇转速异常:", exc_info=True)
+        except Exception:
+            logging.error("获取风扇转速异常:", exc_info=True)
             return 0
 
     def __get_fanRPM_ECRAM(self, fc: FanConfig):
@@ -455,8 +454,8 @@ class FanManager:
                 f"使用ECRAM数据 读取EC地址:{hex(ram_manual_offset)} 风扇控制位:{fanIsManual}"
             )
             return fanRPM
-        except:
-            logging.error(f"获取风扇转速异常:", exc_info=True)
+        except Exception:
+            logging.error("获取风扇转速异常:", exc_info=True)
             return 0
 
     def get_fanIsAuto_Old(self, index: int):
@@ -473,7 +472,7 @@ class FanManager:
                     if is_found_hwmon and hwmon_mode == 0:
                         if (
                             not os.path.exists(hwmon_pwm_enable_path)
-                            and hwmon_pwm_enable_second_path != None
+                            and hwmon_pwm_enable_second_path is not None
                             and os.path.exists(hwmon_pwm_enable_second_path)
                         ):
                             hwmon_pwm_enable_path = hwmon_pwm_enable_second_path
@@ -483,8 +482,8 @@ class FanManager:
                         )
                         # return not fanIsManual
                         return fanIsManual == enable_auto_value
-                except:
-                    logging.error(f"使用hwmon获取风扇状态异常:", exc_info=True)
+                except Exception:
+                    logging.error("使用hwmon获取风扇状态异常:", exc_info=True)
 
                 # ECRAM 读取
                 ram_manual_offset = self.fan_config_list[index].ram_manual_offset
@@ -500,8 +499,8 @@ class FanManager:
                             f"使用ECRAM数据 读取EC地址:{hex(ram_manual_offset)} 风扇是否控制:{fanIsManual == enable_auto_value}"
                         )
                         return fanIsManual == enable_auto_value
-                except:
-                    logging.error(f"使用ECRAM获取风扇状态异常:", exc_info=True)
+                except Exception:
+                    logging.error("使用ECRAM获取风扇状态异常:", exc_info=True)
 
                 # ECIO 读取
                 manual_offset = self.fan_config_list[index].ram_manual_offset
@@ -512,8 +511,8 @@ class FanManager:
                             f"使用ECIO数据 读取EC地址:{hex(manual_offset)} 风扇是否控制:{fanIsManual == enable_auto_value}"
                         )
                         return fanIsManual == enable_auto_value
-                except:
-                    logging.error(f"使用ECIO获取风扇状态异常:", exc_info=True)
+                except Exception:
+                    logging.error("使用ECIO获取风扇状态异常:", exc_info=True)
 
                 return False
             else:
@@ -521,8 +520,8 @@ class FanManager:
                     f"风扇下标越界 index:{index} len:{len(self.fan_config_list)}"
                 )
                 return False
-        except:
-            logging.error(f"获取风扇状态异常:", exc_info=True)
+        except Exception:
+            logging.error("获取风扇状态异常:", exc_info=True)
             return False
 
     def get_fanIsAuto(self, index: int):
@@ -547,8 +546,8 @@ class FanManager:
                 return self.__get_fanIsAuto_ECIO(fc)
 
             return False
-        except:
-            logging.error(f"获取风扇状态异常:", exc_info=True)
+        except Exception:
+            logging.error("获取风扇状态异常:", exc_info=True)
             return False
 
     def __get_fanIsAuto_HWMON(self, fc: FanConfig):
@@ -558,7 +557,7 @@ class FanManager:
             enable_auto_value = fc.hwmon_auto_val
             if (
                 not os.path.exists(hwmon_pwm_enable_path)
-                and hwmon_pwm_enable_second_path != None
+                and hwmon_pwm_enable_second_path is not None
                 and os.path.exists(hwmon_pwm_enable_second_path)
             ):
                 hwmon_pwm_enable_path = hwmon_pwm_enable_second_path
@@ -567,8 +566,8 @@ class FanManager:
                 f"使用hwmon数据 读取hwmon地址:{hwmon_pwm_enable_path} 风扇是否控制:{fanIsManual == enable_auto_value}"
             )
             return fanIsManual == enable_auto_value
-        except:
-            logging.error(f"使用hwmon获取风扇状态异常:", exc_info=True)
+        except Exception:
+            logging.error("使用hwmon获取风扇状态异常:", exc_info=True)
             return False
 
     def __get_fanIsAuto_ECIO(self, fc: FanConfig):
@@ -580,8 +579,8 @@ class FanManager:
                 f"使用ECIO数据 读取EC地址:{hex(manual_offset)} 风扇是否控制:{fanIsManual == enable_auto_value}"
             )
             return fanIsManual == enable_auto_value
-        except:
-            logging.error(f"使用ECIO获取风扇状态异常:", exc_info=True)
+        except Exception:
+            logging.error("使用ECIO获取风扇状态异常:", exc_info=True)
             return False
 
     def __get_fanIsAuto_ECRAM(self, fc: FanConfig):
@@ -595,8 +594,8 @@ class FanManager:
                 f"使用ECRAM数据 读取EC地址:{hex(ram_manual_offset)} 风扇是否控制:{fanIsManual == enable_auto_value}"
             )
             return fanIsManual == enable_auto_value
-        except:
-            logging.error(f"使用ECRAM获取风扇状态异常:", exc_info=True)
+        except Exception:
+            logging.error("使用ECRAM获取风扇状态异常:", exc_info=True)
             return False
 
     def set_fanAuto_Old(self, index: int, value: bool):
@@ -620,7 +619,7 @@ class FanManager:
                     if is_found_hwmon and hwmon_mode == 0:
                         if (
                             not os.path.exists(hwmon_pwm_enable_path)
-                            and hwmon_pwm_enable_second_path != None
+                            and hwmon_pwm_enable_second_path is not None
                             and os.path.exists(hwmon_pwm_enable_second_path)
                         ):
                             hwmon_pwm_enable_path = hwmon_pwm_enable_second_path
@@ -676,8 +675,8 @@ class FanManager:
                             f"写入hwmon数据 写入hwmon地址:{hwmon_pwm_enable_path} 写入风扇是否控制:{fanIsManual}"
                         )
                         return True
-                except:
-                    logging.error(f"使用hwmon写入风扇状态异常:", exc_info=True)
+                except Exception:
+                    logging.error("使用hwmon写入风扇状态异常:", exc_info=True)
 
                 # ECRAM 写入
                 ram_manual_offset = self.fan_config_list[index].ram_manual_offset
@@ -700,8 +699,8 @@ class FanManager:
                             f"写入ECRAM数据 写入EC地址:{hex(ram_manual_offset)} 写入风扇是否控制:{fanIsManual}"
                         )
                         return True
-                except:
-                    logging.error(f"使用ECRAM写入风扇状态异常:", exc_info=True)
+                except Exception:
+                    logging.error("使用ECRAM写入风扇状态异常:", exc_info=True)
 
                 # ECIO 写入
                 manual_offset = self.fan_config_list[index].manual_offset
@@ -720,15 +719,15 @@ class FanManager:
                             f"写入ECIO数据 写入EC地址:{hex(manual_offset)} 写入风扇是否控制:{fanIsManual}"
                         )
                         return True
-                except:
-                    logging.error(f"使用ECIO写入风扇状态异常:", exc_info=True)
+                except Exception:
+                    logging.error("使用ECIO写入风扇状态异常:", exc_info=True)
             else:
                 logging.debug(
                     f"风扇下标越界 index:{index} len:{len(self.fan_config_list)}"
                 )
             return False
-        except:
-            logging.error(f"写入风扇状态异常:", exc_info=True)
+        except Exception:
+            logging.error("写入风扇状态异常:", exc_info=True)
             return False
 
     def set_fanAuto(self, index: int, value: bool):
@@ -754,8 +753,8 @@ class FanManager:
                 return self.__set_fanAuto_ECIO(fc, value)
 
             return False
-        except:
-            logging.error(f"写入风扇状态异常:", exc_info=True)
+        except Exception:
+            logging.error("写入风扇状态异常:", exc_info=True)
             return False
 
     def __set_fanAuto_HWMON(self, fc: FanConfig, value: bool):
@@ -772,7 +771,7 @@ class FanManager:
             if hwmon_mode == 0:
                 if (
                     not os.path.exists(pwm_enable_path)
-                    and pwm_enable_second_path != None
+                    and pwm_enable_second_path is not None
                     and os.path.exists(pwm_enable_second_path)
                 ):
                     pwm_enable_path = pwm_enable_second_path
@@ -824,8 +823,8 @@ class FanManager:
                 )
                 return True
             return False
-        except:
-            logging.error(f"使用hwmon写入风扇状态异常:", exc_info=True)
+        except Exception:
+            logging.error("使用hwmon写入风扇状态异常:", exc_info=True)
             return False
 
     def __set_fanAuto_ECRAM(self, fc: FanConfig, value: bool):
@@ -846,8 +845,8 @@ class FanManager:
                 f"写入ECRAM数据 写入EC地址:{hex(manual_offset)} 写入风扇是否控制:{fanIsManual}"
             )
             return True
-        except:
-            logging.error(f"使用ECRAM写入风扇状态异常:", exc_info=True)
+        except Exception as e:
+            logging.error(f"使用ECRAM写入风扇状态异常:{e}", exc_info=True)
             return False
 
     def __set_fanAuto_ECIO(self, fc: FanConfig, value: bool):
@@ -866,8 +865,8 @@ class FanManager:
                 f"写入ECIO数据 写入EC地址:{hex(manual_offset)} 写入风扇是否控制:{fanIsManual}"
             )
             return True
-        except:
-            logging.error(f"使用ECIO写入风扇状态异常:", exc_info=True)
+        except Exception:
+            logging.error("使用ECIO写入风扇状态异常:", exc_info=True)
             return False
 
     def set_fanPercent_Old(self, index: int, value: int):
@@ -887,7 +886,7 @@ class FanManager:
                     if is_found_hwmon and hwmon_mode == 0:
                         if (
                             not os.path.exists(hwmon_pwm_enable_path)
-                            and hwmon_pwm_enable_second_path != None
+                            and hwmon_pwm_enable_second_path is not None
                             and os.path.exists(hwmon_pwm_enable_second_path)
                         ):
                             hwmon_pwm_enable_path = hwmon_pwm_enable_second_path
@@ -935,7 +934,7 @@ class FanManager:
                             f"写入hwmon数据 写入hwmon地址:{hwmon_pwm_enable_path} 写入风扇是否控制:{fanIsManual}"
                         )
                         return True
-                except:
+                except Exception:
                     logging.error("使用hwmon写入风扇转速异常:", exc_info=True)
 
                 ram_reg_addr = self.fan_config_list[index].ram_reg_addr
@@ -956,7 +955,7 @@ class FanManager:
                             f"写入ECRAM数据 写入EC地址:{hex(ram_rpm_write_offset)} 风扇转速百分比{value} 风扇最大值{rpm_write_max} 风扇转速写入值:{fanWriteValue}"
                         )
                         return True
-                except:
+                except Exception:
                     logging.error("使用ECRAM写入风扇转速异常:", exc_info=True)
 
                 rpm_write_offset = self.fan_config_list[index].pwm_write_offset
@@ -970,15 +969,15 @@ class FanManager:
                             f"写入ECIO数据 写入EC地址:{hex(rpm_write_offset)} 风扇转速百分比{value} 风扇最大值{rpm_write_max} 风扇转速写入值:{fanWriteValue}"
                         )
                         return True
-                except:
+                except Exception:
                     logging.error("使用ECIO写入风扇转速异常:", exc_info=True)
             else:
                 logging.error(
                     f"风扇下标越界 index:{index} len:{len(self.fan_config_list)}"
                 )
             return False
-        except:
-            logging.error(f"写入风扇转速异常:", exc_info=True)
+        except Exception:
+            logging.error("写入风扇转速异常:", exc_info=True)
             return False
 
     def set_fanPercent(self, index: int, value: int):
@@ -1001,8 +1000,8 @@ class FanManager:
                 return self.__set_fanPercent_ECIO(fc, value)
 
             return False
-        except:
-            logging.error(f"写入风扇转速异常:", exc_info=True)
+        except Exception:
+            logging.error("写入风扇转速异常:", exc_info=True)
             return False
 
     def __set_fanPercent_HWMON(self, fc: FanConfig, value: int):
@@ -1058,7 +1057,7 @@ class FanManager:
                     f"写入hwmon数据 写入hwmon地址:{enable_path} 写入风扇是否控制:{fanIsManual}"
                 )
                 return True
-        except:
+        except Exception:
             logging.error("使用hwmon写入风扇转速异常:", exc_info=True)
             return False
 
@@ -1075,7 +1074,7 @@ class FanManager:
                 f"写入ECRAM数据 写入EC地址:{hex(offset)} 风扇转速百分比{value} 风扇最大值{rpm_write_max} 风扇转速写入值:{fanWriteValue}"
             )
             return True
-        except:
+        except Exception:
             logging.error("使用ECRAM写入风扇转速异常:", exc_info=True)
             return False
 
@@ -1090,7 +1089,7 @@ class FanManager:
                 f"写入ECIO数据 写入EC地址:{hex(offset)} 风扇转速百分比{value} 风扇最大值{rpm_write_max} 风扇转速写入值:{fanWriteValue}"
             )
             return True
-        except:
+        except Exception:
             logging.error("使用ECIO写入风扇转速异常:", exc_info=True)
             return False
 
@@ -1110,14 +1109,14 @@ class FanManager:
                         return cpu_temp
                     return gpu_temp
                 else:
-                    logging.error(f"未知的温度来源配置:", exc_info=True)
+                    logging.error("未知的温度来源配置:", exc_info=True)
             else:
                 logging.debug(
                     f"风扇下标越界 index:{index} len:{len(self.fan_config_list)}"
                 )
             return 0
-        except:
-            logging.error(f"获取温度异常:", exc_info=True)
+        except Exception:
+            logging.error("获取温度异常:", exc_info=True)
             return 0
 
     def get_gpuTemp(self):
@@ -1134,7 +1133,7 @@ class FanManager:
             logging.debug(f"获取gpu温度:{temp}")
             return temp
         except Exception as e:
-            logging.error(f"获取gpu温度异常:{e}")
+            logging.error(f"获取gpu温度异常:{e}", exc_info=True)
             return -1
 
     def get_cpuTemp(self):
@@ -1148,7 +1147,7 @@ class FanManager:
             logging.debug(f"获取cpu温度: path:{self.cpu_temp_path} temp:{temp}")
             return temp
         except Exception as e:
-            logging.error(f"获取cpu温度异常:{e}")
+            logging.error(f"获取cpu温度异常:{e}", exc_info=True)
             return -1
 
     def get_fanConfigList(self):
@@ -1172,7 +1171,7 @@ class FanManager:
                 logging.debug(f"机型未适配fan 当前机型:{PRODUCT_NAME}")
             return []
         except Exception as e:
-            logging.error(f"获取机型适配异常:{e}")
+            logging.error(f"获取机型适配异常:{e}", exc_info=True)
             return []
 
 

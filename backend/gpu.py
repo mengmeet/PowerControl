@@ -17,7 +17,6 @@ from inotify import notify, IN_MODIFY
 
 
 class GPUAutoFreqManager(threading.Thread):
-
     def __init__(self, gpuManager):
         self._gpu_enableAutoFreq = False  # 标记是否开启GPU频率优化
         self._gpu_autoFreqCheckInterval = 0.005  # gpu占用率数据检测间隔
@@ -133,7 +132,6 @@ class GPUAutoFreqManager(threading.Thread):
 
 
 class GPUFreqNotifier:
-
     def __init__(self, manager):
         self._gpuManager = manager
 
@@ -218,7 +216,6 @@ class GPUFreqNotifier:
 
 
 class GPUManager:
-
     def __init__(self):
         self._gpuAutoFreqManager = None
         self.gpu_nowFreq = [0, 0]  # 当前设置的gpu频率
@@ -478,9 +475,7 @@ class GPUManager:
         echo "commit: $max_freq -> $GPU_MAX_FREQ" | systemd-cat -t p-steamos-priv-write -p warning
         echo "$max_freq" >"$GPU_MAX_FREQ"
     fi
-    exit 0""".format(
-                    path
-                )
+    exit 0""".format(path)
             # 匹配目标if语句，并检查then部分的代码
             if_match = re.search(
                 r"\nif([\s\S]*?)\[\[([\s\S]*?){}([\s\S]*?)]]([\s\S]*?)then([\s\S]*?)\nfi".format(
@@ -516,9 +511,7 @@ class GPUManager:
                 add_code = """
 if [[ "$WRITE_PATH" == /sys/class/drm/card*/device/{} ]]; then
 {}
-fi""".format(
-                    path, new_then_code
-                )
+fi""".format(path, new_then_code)
                 # 文件最后一个if，换行后添加
                 if last_if_match:
                     sh_code = sh_code.replace(
@@ -551,9 +544,7 @@ fi""".format(
                     # 获取then部分的代码
                     then_code = if_match.group(5)
                     new_then_code = """   WRITE_PATH=$(ls /sys/class/drm/*/device/{} | head -n 1)
-   CommitWrite""".format(
-                        path
-                    )
+   CommitWrite""".format(path)
 
                     # 如果then部分的代码与目标不同，则将其替换
                     if then_code.strip() != new_then_code.strip():
@@ -577,9 +568,7 @@ fi""".format(
 if [[ "$WRITE_PATH" == /sys/class/drm/card*/device/{} ]]; then
    WRITE_PATH=$(ls /sys/class/drm/*/device/{} | head -n 1)
    CommitWrite
-fi""".format(
-                        path, path
-                    )
+fi""".format(path, path)
                     # 文件最后一个if，换行后添加
                     if last_if_match:
                         sh_code = sh_code.replace(

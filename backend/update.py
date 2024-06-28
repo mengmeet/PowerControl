@@ -84,8 +84,10 @@ def download_latest_build():
 
     return file_path
 
+
 def get_version():
     return f"{decky_plugin.DECKY_PLUGIN_VERSION}"
+
 
 def get_latest_version():
     gcontext = ssl.SSLContext()
@@ -93,7 +95,7 @@ def get_latest_version():
     response = urllib.request.urlopen(API_URL, context=gcontext)
     json_data = json.load(response)
 
-    tag =  json_data.get("tag_name")
+    tag = json_data.get("tag_name")
     # if tag is a v* tag, remove the v
     if tag.startswith("v"):
         tag = tag[1:]

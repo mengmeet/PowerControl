@@ -44,7 +44,9 @@ try:
                 if f.read().strip() == "1":
                     AMD_GPU_DEVICE_PATH = f"{p}/device"
                     AMD_GPUFREQ_PATH = f"{AMD_GPU_DEVICE_PATH}/pp_od_clk_voltage"
-                    AMD_GPULEVEL_PATH = f"{AMD_GPU_DEVICE_PATH}/power_dpm_force_performance_level"
+                    AMD_GPULEVEL_PATH = (
+                        f"{AMD_GPU_DEVICE_PATH}/power_dpm_force_performance_level"
+                    )
 
                     # read adn write
                     INTEL_GPU_MIN_FREQ = f"{p}/gt_min_freq_mhz"
@@ -178,7 +180,7 @@ def get_all_howmon_fans():
         if data == {}:
             continue
         name = data["hwmon_name"]
-        if not name is None:
+        if name is not None:
             fans_confs[name] = data["fans"]
     return fans_confs
 
@@ -196,7 +198,7 @@ def get_device_ec_fans(p_name, p_version):
             data["product_name"]
             if (
                 "product_name" in data
-                and data["product_name"] != None
+                and data["product_name"] is not None
                 and isinstance(data["product_name"], list)
             )
             else []
@@ -205,7 +207,7 @@ def get_device_ec_fans(p_name, p_version):
             data["product_version"]
             if (
                 "product_version" in data
-                and data["product_version"] != None
+                and data["product_version"] is not None
                 and isinstance(data["product_version"], list)
             )
             else []
@@ -226,7 +228,7 @@ def get_device_ec_fans(p_name, p_version):
         logging.info(f"conf of {p_name}: {conf}")
         if (
             p_version in conf["product_version"]
-            and conf["product_version"] != None
+            and conf["product_version"] is not None
             and isinstance(conf["product_version"], list)
             and len(conf["product_version"]) > 0
         ):
@@ -246,7 +248,6 @@ def get_device_ec_fans(p_name, p_version):
 
 # 风扇配置
 try:
-
     FAN_HWMON_LIST = get_all_howmon_fans()
 
     FAN_EC_CONFIG = get_device_ec_fans(PRODUCT_NAME, PRODUCT_VERSION)

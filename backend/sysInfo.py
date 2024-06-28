@@ -30,7 +30,7 @@ class GPUData:
             self.gpuBusyPercent = int(busyPercent)
             return True
         except Exception as e:
-            logging.error(f"setBusyPercent数据异常", exc_info=True)
+            logging.error(f"setBusyPercent数据异常{e}", exc_info=True)
             return False
 
     def getBusyPercent(self):
@@ -66,7 +66,7 @@ class CPUData:
             self.guestnice = int(StatInfo[10])
             return True
         except Exception as e:
-            logging.error(f"StatInfo数据异常 ={StatInfo}")
+            logging.error(f"StatInfo数据异常{e} ={StatInfo}", exc_info=True)
             return False
 
     def getFreeTime(self):
