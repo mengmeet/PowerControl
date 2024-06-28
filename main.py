@@ -1,6 +1,6 @@
 import sys
 import traceback
-import decky_plugin
+import decky
 from settings import SettingsManager
 
 # 获取插件路径 加载backend中各个py文件
@@ -24,7 +24,7 @@ except Exception as e:
 class Plugin:
     async def _main(self):
         self.settings = SettingsManager(
-            name="config", settings_directory=decky_plugin.DECKY_PLUGIN_SETTINGS_DIR
+            name="config", settings_directory=decky.DECKY_PLUGIN_SETTINGS_DIR
         )
 
     async def get_settings(self):

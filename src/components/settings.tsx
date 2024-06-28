@@ -9,14 +9,14 @@ import {
   ModalRoot,
   showModal,
   ScrollPanelGroup,
-} from "decky-frontend-lib";
+} from "@decky/ui";
 import MarkDownIt from "markdown-it";
-import { useEffect, useState, VFC } from "react";
+import { useEffect, useState, FC } from "react";
 import { Settings, PluginManager, RunningApps, DEFAULT_APP, ComponentName, UpdateType, ACStateManager, ACState, Backend } from "../util";
 import { localizeStrEnum, localizationManager } from "../i18n";
 import { FaExclamationCircle } from "react-icons/fa";
 
-const SettingsEnableComponent: VFC = () => {
+const SettingsEnableComponent: FC = () => {
   const [enable, setEnable] = useState<boolean>(Settings.ensureEnable());
   const refresh = () => {
     setEnable(Settings.ensureEnable());
@@ -52,7 +52,7 @@ const SettingsEnableComponent: VFC = () => {
   );
 }
 
-const SettingsPerAppComponent: VFC = () => {
+const SettingsPerAppComponent: FC = () => {
   const [override, setOverWrite] = useState<boolean>(Settings.appOverWrite());
   const [overrideable, setOverWriteable] = useState<boolean>(RunningApps.active() != DEFAULT_APP);
   const [show, setShow] = useState<boolean>(Settings.ensureEnable());
@@ -115,7 +115,7 @@ const SettingsPerAppComponent: VFC = () => {
   );
 }
 
-const SettingsPerAcStateComponent: VFC = () => {
+const SettingsPerAcStateComponent: FC = () => {
 
   const [appACStateOverWrite, setAppACStateOverWrite] = useState<boolean>(Settings.appACStateOverWrite());
   const [acstate, setACState] = useState<ACState>(ACStateManager.getACState());
@@ -179,7 +179,7 @@ const SettingsPerAcStateComponent: VFC = () => {
   )
 }
 
-export const SettingsComponent: VFC = () => {
+export const SettingsComponent: FC = () => {
   return (
     <div>
       <PanelSection title={localizationManager.getString(localizeStrEnum.TITEL_SETTINGS)}>
@@ -194,7 +194,7 @@ export const SettingsComponent: VFC = () => {
 
 const buttonStyle = { height: '28px', width: '40px', minWidth: 0, padding: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' };
 
-export const QuickAccessTitleView: VFC<{ title: string }> = ({ title }) => {
+export const QuickAccessTitleView: FC<{ title: string }> = ({ title }) => {
 
   return (
     <Focusable
@@ -220,7 +220,7 @@ export const QuickAccessTitleView: VFC<{ title: string }> = ({ title }) => {
   );
 };
 
-export const RyzenadjInfoModel: VFC = ({ closeModal }: { closeModal?: () => void }) => {
+export const RyzenadjInfoModel: FC = ({ closeModal }: { closeModal?: () => void }) => {
   const fontStyle: React.CSSProperties = {
     fontFamily: "Courier New",
     fontSize: "12px",

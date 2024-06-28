@@ -18,16 +18,15 @@
 import {
   definePlugin,
   PanelSectionRow,
-  ServerAPI,
   staticClasses,
   SteamSpinner,
-} from "decky-frontend-lib";
-import { VFC } from "react";
+} from "@decky/ui";
+import { FC } from "react";
 import { FaSuperpowers } from "react-icons/fa";
 import { PluginManager } from "./util";
 import { GPUComponent, CPUComponent, SettingsComponent, FANComponent, MoreComponent, QuickAccessTitleView } from "./components";
 
-const Content: VFC<{}> = ({ }) => {
+const Content: FC<{}> = ({ }) => {
   return (
     <div>
       {PluginManager.isIniting() &&
@@ -46,9 +45,9 @@ const Content: VFC<{}> = ({ }) => {
   );
 };
 
-export default definePlugin((serverAPI: ServerAPI) => {
+export default definePlugin(() => {
   try {
-    PluginManager.register(serverAPI);
+    PluginManager.register();
   } catch (e) {
     console.log("Error while registering plugin", e);
   }

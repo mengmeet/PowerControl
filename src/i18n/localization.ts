@@ -11,7 +11,7 @@ export class localizationManager {
     this.language = language;
     console.log("Language: " + this.language);
 
-    const resources: Resource = Object.keys(localizeMap).reduce((acc, key) => {
+    const resources: Resource = Object.keys(localizeMap).reduce((acc : Resource, key) => {
       acc[localizeMap[key].locale] = {
         translation: localizeMap[key].strings,
       };

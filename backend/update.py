@@ -8,7 +8,7 @@ import subprocess
 import urllib.request
 
 from config import logging, API_URL
-import decky_plugin
+import decky
 
 
 def recursive_chmod(path, perms):
@@ -23,7 +23,7 @@ def update_latest():
     downloaded_filepath = download_latest_build()
 
     if os.path.exists(downloaded_filepath):
-        plugin_dir = decky_plugin.DECKY_PLUGIN_DIR
+        plugin_dir = decky.DECKY_PLUGIN_DIR
 
         try:
             logging.info(f"removing old plugin from {plugin_dir}")
@@ -40,14 +40,14 @@ def update_latest():
             # extract files to decky plugins dir
             shutil.unpack_archive(
                 downloaded_filepath,
-                f"{decky_plugin.DECKY_USER_HOME}/homebrew/plugins",
+                f"{decky.DECKY_USER_HOME}/homebrew/plugins",
                 format="gztar",
             )
 
             # cleanup downloaded files
             os.remove(downloaded_filepath)
         except Exception as e:
-            decky_plugin.logger.error(f"error during ota file extraction {e}")
+            decky.logger.error(f"error during ota file extraction {e}")
 
         logging.info("restarting plugin_loader")
         # cmd = "systemctl restart plugin_loader.service"
@@ -74,7 +74,7 @@ def download_latest_build():
 
     logging.info(download_url)
 
-    file_path = f"/tmp/{decky_plugin.DECKY_PLUGIN_NAME}.tag.gz"
+    file_path = f"/tmp/{decky.DECKY_PLUGIN_NAME}.tag.gz"
 
     with urllib.request.urlopen(download_url, context=gcontext) as response, open(
         file_path, "wb"
@@ -86,7 +86,7 @@ def download_latest_build():
 
 
 def get_version():
-    return f"{decky_plugin.DECKY_PLUGIN_VERSION}"
+    return f"{decky.DECKY_PLUGIN_VERSION}"
 
 
 def get_latest_version():

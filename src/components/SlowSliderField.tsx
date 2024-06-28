@@ -1,7 +1,7 @@
 import {
   NotchLabel, SliderField,
-} from "decky-frontend-lib";
-import { ItemProps } from "decky-frontend-lib/dist/deck-components/Item";
+} from "@decky/ui";
+import { ItemProps } from "@decky/ui/dist/components/Item";
 import { useEffect, useRef } from "react";
 import { useState } from "react";
 import { FC } from "react";
