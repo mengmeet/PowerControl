@@ -4,14 +4,14 @@ import {
   PanelSectionRow,
   SliderField,
   ToggleField,
-} from "decky-frontend-lib";
-import { useEffect, useState, VFC } from "react";
+} from "@decky/ui";
+import { useEffect, useState, FC } from "react";
 import { Settings, Backend, PluginManager, GPUMODE, ComponentName, UpdateType } from "../util";
 import { localizeStrEnum, localizationManager } from "../i18n";
 import { SlowSliderField } from "./SlowSliderField"
 
 //GPUFreq模块
-const GPUFreqComponent: VFC = () => {
+const GPUFreqComponent: FC = () => {
   const [gpuFreq, setGPUFreq] = useState<number>(Settings.appGPUFreq());
   // console.log(`gpuFreq: ${gpuFreq} , GPUFreqMax : ${Backend.data.getGPUFreqMax()} , GPUFreqMin : ${Backend.data.getGPUFreqMin()}`);
   const refresh = () => {
@@ -47,7 +47,7 @@ const GPUFreqComponent: VFC = () => {
 };
 
 //GPURange模块
-const GPURangeComponent: VFC = () => {
+const GPURangeComponent: FC = () => {
   const [gpuRangeMaxFreq, setGPURangeMaxFreq] = useState<number>(Settings.appGPURangeMaxFreq());
   const [gpuRangeMinFreq, setGPURangeMinFreq] = useState<number>(Settings.appGPURangeMinFreq());
   //GPURange设置
@@ -103,7 +103,7 @@ const GPURangeComponent: VFC = () => {
 };
 
 //GPUAutoMax模块
-const GPUAutoComponent: VFC = () => {
+const GPUAutoComponent: FC = () => {
   const [gpuAutoMaxFreq, setGPUAutoMaxFreq] = useState<number>(Settings.appGPUAutoMaxFreq());
   const [gpuAutoMinFreq, setGPUAutoMinFreq] = useState<number>(Settings.appGPUAutoMinFreq());
   const refresh = () => {
@@ -158,7 +158,7 @@ const GPUAutoComponent: VFC = () => {
 };
 
 
-const GPUModeNaviteComponent: VFC = () => {
+const GPUModeNaviteComponent: FC = () => {
   const [gpuMode, setGPUMode] = useState<string>(Settings.appGPUMode());
   //GPU模式设置
   const refresh = () => {
@@ -230,7 +230,7 @@ const GPUModeNaviteComponent: VFC = () => {
 };
 
 
-const GPUModeLegacyComponent: VFC = () => {
+const GPUModeLegacyComponent: FC = () => {
 
   const modesLegacy: GPUMODE[] = [GPUMODE.NOLIMIT, GPUMODE.FIX, GPUMODE.RANGE, GPUMODE.AUTO];
   const localizedModes = [
@@ -306,7 +306,7 @@ const GPUModeLegacyComponent: VFC = () => {
   );
 };
 
-const GPUModeComponent: VFC = () => {
+const GPUModeComponent: FC = () => {
   const [gpuSliderFix, setGPUSliderFix] = useState<boolean>(Settings.appGPUSliderFix());
 
   //GPU模式设置

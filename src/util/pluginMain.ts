@@ -1,4 +1,4 @@
-import { Router, ServerAPI } from "decky-frontend-lib";
+import { Router } from "@decky/ui";
 import { APPLYTYPE, ComponentName, FANMODE, Patch, PluginState, UpdateType } from "./enum";
 import { Backend} from "./backend";
 import { localizationManager } from "../i18n";
@@ -225,9 +225,9 @@ export class PluginManager{
   private static state:PluginState;
   private static listeners: Map<ComponentName,Map<ComponentName,ComponentUpdateHandler>> = new Map();
   private static suspendEndHook:any;
-  public static register = async(serverAPI:ServerAPI)=>{
+  public static register = async()=>{
     PluginManager.state = PluginState.INIT; 
-    await Backend.init(serverAPI);
+    await Backend.init();
     await localizationManager.init();
     RunningApps.register();
     FanControl.register();

@@ -10,8 +10,8 @@ import {
   DropdownOption,
   Focusable,
   DropdownItem,
-} from "decky-frontend-lib";
-import { useEffect, useState, useRef, VFC } from "react";
+} from "@decky/ui";
+import { useEffect, useState, useRef, FC } from "react";
 import { FiArrowLeft, FiArrowRight, FiPlus, FiPlusCircle, FiTrash2 } from "react-icons/fi"
 import { Settings, PluginManager, ComponentName, UpdateType, FANMODE, getTextPosByCanvasPos, FanPosition, FanSetting, FANPROFILEACTION, FanControl, Backend } from "../util";
 import { localizeStrEnum, localizationManager } from "../i18n";
@@ -25,7 +25,7 @@ const lineColor = "#1E90FF";
 const setPointColor = "#00BFFF";
 
 //选择配置文件下拉框
-const FANSelectProfileComponent: VFC<{ fanIndex: number }> = ({ fanIndex }) => {
+const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   //@ts-ignore
   const [items, setItems] = useState<DropdownOption[]>(
     Object.entries(Settings.getFanSettings()).map(([profileName, fanSetting]) => {
@@ -98,7 +98,7 @@ const FANSelectProfileComponent: VFC<{ fanIndex: number }> = ({ fanIndex }) => {
 }
 
 //显示当前风扇配置和温度转速信息
-const FANDisplayComponent: VFC<{ fanIndex: number }> = ({ fanIndex }) => {
+const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   const canvasRef : any = useRef(null);
   const curvePoints = useRef<FanPosition[]>([]);
 
@@ -299,7 +299,7 @@ const FANDisplayComponent: VFC<{ fanIndex: number }> = ({ fanIndex }) => {
 
 
 //FANRPM模块
-const FANRPMComponent: VFC<{ fanIndex: number }> = ({ fanIndex }) => {
+const FANRPMComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   const [fanrpm, setFanRPM] = useState<number>(0);
   const [temperature, setTemperature] = useState<number|undefined>(undefined);
   const refresh = async () => {

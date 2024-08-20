@@ -4,7 +4,7 @@ import glob
 import os
 import yaml
 import traceback
-import decky_plugin
+import decky
 from helpers import get_homebrew_path
 from logging_handler import SystemdHandler
 
@@ -29,7 +29,7 @@ except Exception as e:
 # 路径配置
 try:
     HOMEBREW_PATH = get_homebrew_path()
-    DECKY_PLUGIN_DIR = decky_plugin.DECKY_PLUGIN_DIR
+    DECKY_PLUGIN_DIR = decky.DECKY_PLUGIN_DIR
     SH_PATH = "{}/backend/sh_tools.sh".format(DECKY_PLUGIN_DIR)
     RYZENADJ_PATH = "{}/bin/ryzenadj".format(DECKY_PLUGIN_DIR)
     # AMD_GPU_DEVICE_PATH = glob.glob("/sys/class/drm/card?/device")[0]

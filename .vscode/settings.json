@@ -1,7 +1,7 @@
 {
   "python.analysis.extraPaths": [
-    "../decky-loader/plugin",
-    "../decky-loader/backend/src",
+    "../decky-loader/backend/decky_loader/plugin/imports",
+    "../decky-loader/backend/decky_loader",
     "./py_modules",
     "./backend"
   ],

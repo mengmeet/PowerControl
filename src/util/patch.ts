@@ -1,4 +1,4 @@
-import { findModuleChild, afterPatch } from "decky-frontend-lib";
+import { findModuleChild, afterPatch } from "@decky/ui";
 import { Backend } from "./backend";
 import { GPUMODE, GPUPerformanceLevel, Patch } from "./enum";
 import { Settings } from "./settings";

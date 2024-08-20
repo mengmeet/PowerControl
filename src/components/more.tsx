@@ -1,10 +1,10 @@
-import { ButtonItem, Field, PanelSection, PanelSectionRow } from "decky-frontend-lib";
-import { VFC, useEffect, useState } from "react";
+import { ButtonItem, Field, PanelSection, PanelSectionRow } from "@decky/ui";
+import { FC, useEffect, useState } from "react";
 import { localizationManager, localizeStrEnum } from "../i18n";
 import { Backend, Settings } from "../util";
 import { ActionButtonItem } from ".";
 
-export const MoreComponent: VFC = () => {
+export const MoreComponent: FC = () => {
     const [currentVersion, _] = useState<string>(Backend.data.getCurrentVersion());
     const [latestVersion, setLatestVersion] = useState<string>(Backend.data.getLatestVersion());
 

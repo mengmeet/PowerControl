@@ -2,14 +2,14 @@ import {
   PanelSection,
   PanelSectionRow,
   ToggleField,
-} from "decky-frontend-lib";
-import { useEffect, useState, VFC } from "react";
+} from "@decky/ui";
+import { useEffect, useState, FC } from "react";
 import { Settings, Backend, PluginManager, ComponentName, UpdateType, GPUMODE, Patch } from "../util";
 import { localizeStrEnum, localizationManager } from "../i18n";
 import { SlowSliderField } from "./SlowSliderField"
 import { CustomTDPComponent } from ".";
 
-const CPUBoostComponent: VFC = () => {
+const CPUBoostComponent: FC = () => {
   const [cpuboost, setCPUBoost] = useState<boolean>(Settings.appCpuboost());
   const [disabled, setDisable] = useState<boolean>(Settings.appGPUMode() == GPUMODE.AUTO);
   const refresh = () => {
@@ -44,7 +44,7 @@ const CPUBoostComponent: VFC = () => {
   );
 }
 
-const CPUSmtComponent: VFC = () => {
+const CPUSmtComponent: FC = () => {
   const [cpusmt, setCPUSmt] = useState<boolean>(Settings.appSmt());
   const refresh = () => {
     setCPUSmt(Settings.appSmt());
@@ -76,7 +76,7 @@ const CPUSmtComponent: VFC = () => {
   );
 }
 
-const CPUNumComponent: VFC = () => {
+const CPUNumComponent: FC = () => {
   const [cpunum, setCPUNum] = useState<number>(Settings.appCpuNum());
   const refresh = () => {
     setCPUNum(Settings.appCpuNum());
@@ -112,7 +112,7 @@ const CPUNumComponent: VFC = () => {
   );
 }
 
-const CPUPerformancePerfComponent: VFC = () => {
+const CPUPerformancePerfComponent: FC = () => {
   const [supportPerf, _] = useState<boolean>(Backend.data.getSupportCPUMaxPct());
   const [maxPerf, setMaxPerf] = useState<number>(Settings.appCpuMaxPerfPct());
 
@@ -154,7 +154,7 @@ const CPUPerformancePerfComponent: VFC = () => {
   )
 }
 
-const CPUTDPComponent: VFC = () => {
+const CPUTDPComponent: FC = () => {
   const [tdpEnable, setTDPEnable] = useState<boolean>(Settings.appTDPEnable());
   const [tdp, setTDP] = useState<number>(Settings.appTDP());
   const [disabled, setDisable] = useState<boolean>(Settings.appGPUMode() == GPUMODE.AUTO);
@@ -247,7 +247,7 @@ const CPUTDPComponent: VFC = () => {
 }
 
 
-export const CPUComponent: VFC = () => {
+export const CPUComponent: FC = () => {
   const [show, setShow] = useState<boolean>(Settings.ensureEnable());
 
   const [isSpportSMT, setIsSpportSMT] = useState<boolean>(Settings.appIsSupportSMT());

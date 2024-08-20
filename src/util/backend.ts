@@ -1,16 +1,15 @@
-import { ServerAPI } from "decky-frontend-lib";
 import { APPLYTYPE, FANMODE, GPUMODE, Patch } from "./enum";
 import { FanControl, PluginManager } from "./pluginMain";
 import { Settings, SettingsData } from "./settings";
 import { DEFAULT_TDP_MAX, DEFAULT_TDP_MIN, QAMPatch, SteamUtils, SystemInfo } from ".";
 import { JsonSerializer } from "typescript-json-serializer";
+import { call } from "@decky/api";
 
 const serializer = new JsonSerializer();
 
 const minSteamVersion = 1714854927;
 
 export class BackendData {
-  private serverAPI: ServerAPI | undefined;
   private cpuMaxNum = 0;
   private has_cpuMaxNum = false;
   private isSupportSMT = false;
@@ -27,71 +26,46 @@ export class BackendData {
   private latest_version = "";
   private supportCPUMaxPct = false;
   private systemInfo: SystemInfo | undefined;
-  public async init(serverAPI: ServerAPI) {
-    this.serverAPI = serverAPI;
-    await serverAPI!
-      .callPluginMethod<{}, number>("get_cpuMaxNum", {})
+  public async init() {
+    await call<[], number>("get_cpuMaxNum")
       .then((res) => {
-        if (res.success) {
-          // console.info("cpuMaxNum = " + res.result);
-          this.cpuMaxNum = res.result;
-          this.has_cpuMaxNum = true;
-        }
+        // console.info("cpuMaxNum = " + res.result);
+        this.cpuMaxNum = res;
+        this.has_cpuMaxNum = true;
       });
-    await serverAPI!
-      .callPluginMethod<{}, number>("get_tdpMax", {})
+    await call<[], number>("get_tdpMax")
       .then((res) => {
-        if (res.success) {
-          // console.info("tdpMax = " + res.result);
-          this.tdpMax = res.result;
-          this.has_tdpMax = true;
-        }
+        this.tdpMax = res;
+        this.has_tdpMax = true;
       });
-    await serverAPI!
-      .callPluginMethod<{}, number[]>("get_gpuFreqRange", {})
+    await call<[], number[]>("get_gpuFreqRange")
       .then((res) => {
-        if (res.success) {
-          // console.info("gpuRange = " + res.result);
-          this.gpuMin = res.result[0];
-          this.gpuMax = res.result[1];
-          this.has_gpuMin = true;
-          this.has_gpuMax = true;
-        }
+        this.gpuMin = res[0];
+        this.gpuMax = res[1];
+        this.has_gpuMin = true;
+        this.has_gpuMax = true;
       });
-    await this.serverAPI!.callPluginMethod<{}, []>(
-      "get_fanConfigList",
-      {}
+    await call<[], []>(
+      "get_fanConfigList"
     ).then((res) => {
-      if (res.success) {
-        // console.info("fanConfigList", res.result);
-        this.fanConfigs = res.result;
-        this.has_fanConfigs = true;
-      } else {
-        this.has_fanConfigs = false;
-      }
+      this.fanConfigs = res;
+      this.has_fanConfigs = res.length > 0;
     });
 
-    await this.serverAPI!.callPluginMethod<{}, boolean>(
-      "get_isSupportSMT",
-      {}
+    await call<[], boolean>(
+      "get_isSupportSMT"
     ).then((res) => {
-      if (res.success) {
-        console.info("isSupportSMT = " + res.result);
-        this.isSupportSMT = res.result;
-        this.has_isSupportSMT = true;
-      }
+      this.isSupportSMT = res;
+      this.has_isSupportSMT = true;
     });
 
     Backend.getMaxPerfPct().then((value) => {
       this.supportCPUMaxPct = value > 0;
     });
 
-    await this.serverAPI!.callPluginMethod<{}, string>("get_version", {}).then(
+    await call<[], string>("get_version").then(
       (res) => {
-        if (res.success) {
-          console.info("current_version = " + res.result);
-          this.current_version = res.result;
-        }
+        this.current_version = res;
       }
     );
 
@@ -193,84 +167,71 @@ export class BackendData {
   }
 
   public async getFanRPM(index: number) {
-    var fanPRM: number;
-    await this.serverAPI!.callPluginMethod<{ index: number }, number>(
-      "get_fanRPM",
-      { index: index }
-    ).then((res) => {
-      //console.log("get_fanRPM res=",res,"index=",index)
-      if (res.success) {
-        fanPRM = res.result;
-      } else {
-        fanPRM = 0;
-      }
+    var fanPRM: number = 0;
+    await call<[index: number], number>("get_fanRPM", index).then((res) => {
+      fanPRM = res;
+    }).catch((error) => {
+      console.error("get_fanRPM error", error);
     });
-    return fanPRM!!;
+    return fanPRM;
   }
 
   public async getFanTemp(index: number) {
-    var fanTemp: number;
-    await this.serverAPI!.callPluginMethod<{ index: number }, number>(
-      "get_fanTemp",
-      { index: index }
-    ).then((res) => {
-      if (res.success) {
-        fanTemp = res.result / 1000;
-      } else {
-        fanTemp = -1;
-      }
+    var fanTemp: number = -1;
+    await call<[index: number], number>("get_fanTemp", index).then((res) => {
+      fanTemp = res / 1000;
+    }).catch((error) => {
+      console.error("get_fanTemp error", error);
     });
-    return fanTemp!!;
+    return fanTemp;
   }
 
   public async getFanIsAuto(index: number) {
-    var fanIsAuto: boolean;
-    await this.serverAPI!.callPluginMethod<{ index: number }, boolean>(
-      "get_fanIsAuto",
-      { index: index }
-    ).then((res) => {
-      if (res.success) {
-        fanIsAuto = res.result;
-      } else {
-        fanIsAuto = false;
-      }
+    var fanIsAuto: boolean = false;
+    await call<[index: number], boolean>("get_fanIsAuto", index).then((res) => {
+      fanIsAuto = res;
+    }).catch((error) => {
+      console.error("get_fanIsAuto error", error);
     });
-    return fanIsAuto!!;
+    return fanIsAuto;
   }
 }
 
 export class Backend {
-  private static serverAPI: ServerAPI;
   public static data: BackendData;
-  public static async init(serverAPI: ServerAPI) {
-    this.serverAPI = serverAPI;
+  public static async init() {
     this.data = new BackendData();
-    await this.data.init(serverAPI);
+    await this.data.init();
   }
 
   private static applySmt(smt: boolean) {
     // console.log("Applying smt " + smt.toString());
-    this.serverAPI!.callPluginMethod("set_smt", { value: smt });
+    // this.serverAPI!.callPluginMethod("set_smt", { value: smt });
+    call("set_smt", smt);
   }
 
   private static applyCpuNum(cpuNum: number) {
     // console.log("Applying cpuNum " + cpuNum.toString());
-    this.serverAPI!.callPluginMethod("set_cpuOnline", { value: cpuNum });
+    // this.serverAPI!.callPluginMethod("set_cpuOnline", { value: cpuNum });
+    call("set_cpuOnline", cpuNum);
   }
 
   private static applyCpuBoost(cpuBoost: boolean) {
     // console.log("Applying cpuBoost " + cpuBoost.toString());
-    this.serverAPI!.callPluginMethod("set_cpuBoost", { value: cpuBoost });
+    // this.serverAPI!.callPluginMethod("set_cpuBoost", { value: cpuBoost });
+    call("set_cpuBoost", cpuBoost);
   }
 
   public static applyTDP = (tdp: number) => {
     console.log("Applying tdp " + tdp.toString());
-    this.serverAPI!.callPluginMethod("set_cpuTDP", { value: tdp });
+    // this.serverAPI!.callPluginMethod("set_cpuTDP", { value: tdp });
+    call("set_cpuTDP", tdp);
   };
 
   public static applyGPUFreq(freq: number) {
     // console.log("Applying gpuFreq " + freq.toString());
-    this.serverAPI!.callPluginMethod("set_gpuFreq", { value: freq });
+    // this.serverAPI!.callPluginMethod("set_gpuFreq", { value: freq });
+    call("set_gpuFreq", freq);
   }
 
   private static applyGPUFreqRange(freqMin: number, freqMax: number) {
@@ -280,97 +241,113 @@ export class Backend {
     //     "   " +
     //     freqMax.toString()
     // );
-    this.serverAPI!.callPluginMethod("set_gpuFreqRange", {
-      value: freqMin,
-      value2: freqMax,
-    });
+    // this.serverAPI!.callPluginMethod("set_gpuFreqRange", {
+    //   value: freqMin,
+    //   value2: freqMax,
+    // });
+    call<[value: number, value2: number], void>("set_gpuFreqRange", freqMin, freqMax);
   }
 
   private static applyGPUAuto(auto: boolean) {
     // console.log("Applying gpuAuto" + auto.toString());
-    this.serverAPI!.callPluginMethod("set_gpuAuto", { value: auto });
+    // this.serverAPI!.callPluginMethod("set_gpuAuto", { value: auto });
+    call("set_gpuAuto", auto);
   }
 
   private static applyGPUAutoRange(minAutoFreq: number, maxAutoFreq: number) {
     // console.log("Applying gpuAuto" + maxAutoFreq.toString());
-    this.serverAPI!.callPluginMethod("set_gpuAutoFreqRange", {
-      min: minAutoFreq,
-      max: maxAutoFreq,
-    });
+    // this.serverAPI!.callPluginMethod("set_gpuAutoFreqRange", {
+    //   min: minAutoFreq,
+    //   max: maxAutoFreq,
+    // });
+    call<[min: number, max: number], void>("set_gpuAutoFreqRange", minAutoFreq, maxAutoFreq);
   }
 
   private static applyFanAuto(index: number, auto: boolean) {
-    this.serverAPI!.callPluginMethod("set_fanAuto", {
-      index: index,
-      value: auto,
-    });
+    // this.serverAPI!.callPluginMethod("set_fanAuto", {
+    //   index: index,
+    //   value: auto,
+    // });
+    call<[index: number, value: boolean], void>("set_fanAuto", index, auto);
   }
 
   private static applyFanPercent(index: number, percent: number) {
-    this.serverAPI!.callPluginMethod("set_fanPercent", {
-      index: index,
-      value: percent,
-    });
+    // this.serverAPI!.callPluginMethod("set_fanPercent", {
+    //   index: index,
+    //   value: percent,
+    // });
+    call<[index: number, value: number], void>("set_fanPercent", index, percent);
   }
   public static throwSuspendEvt() {
     console.log("throwSuspendEvt");
-    this.serverAPI!.callPluginMethod("receive_suspendEvent", {});
+    // this.serverAPI!.callPluginMethod("receive_suspendEvent", {});
+    call("receive_suspendEvent");
   }
 
   public static async getLatestVersion(): Promise<string> {
-    return (await this.serverAPI!.callPluginMethod("get_latest_version", {}))
-      .result as string;
+    // return (await this.serverAPI!.callPluginMethod("get_latest_version", {}))
+    //   .result as string;
+    return (await call("get_latest_version")) as string;
   }
 
   // updateLatest
   public static async updateLatest() {
-    return await this.serverAPI!.callPluginMethod("update_latest", {});
+    // return await this.serverAPI!.callPluginMethod("update_latest", {});
+    return await call("update_latest");
   }
 
   public static async applyGPUSliderFix() {
     console.log("applyGPUSliderFix");
-    await this.serverAPI!.callPluginMethod("fix_gpuFreqSlider", {});
+    // await this.serverAPI!.callPluginMethod("fix_gpuFreqSlider", {});
+    return await call("fix_gpuFreqSlider");
   }
 
   // get_ryzenadj_info
   public static async getRyzenadjInfo(): Promise<string> {
-    return (await this.serverAPI!.callPluginMethod("get_ryzenadj_info", {}))
-      .result as string;
+    // return (await this.serverAPI!.callPluginMethod("get_ryzenadj_info", {}))
+    //   .result as string;
+    return (await call("get_ryzenadj_info")) as string;
   }
 
   // set_settings
   public static async setSettings(settingsData: SettingsData) {
     const obj = serializer.serializeObject(settingsData);
-    await this.serverAPI!.callPluginMethod("set_settings", {
-      settings: obj,
-    });
+    // await this.serverAPI!.callPluginMethod("set_settings", {
+    //   settings: obj,
+    // });
+    await call("set_settings", obj);
   }
 
   // get_settings
   public static async getSettings(): Promise<SettingsData> {
-    const res = await this.serverAPI!.callPluginMethod("get_settings", {});
-    if (!res.success) {
+    // const res = await this.serverAPI!.callPluginMethod("get_settings", {});
+    // if (!res.success) {
+    //   return new SettingsData();
+    // }
+    // return (
+    //   serializer.deserializeObject(res.result, SettingsData) ??
+    //   new SettingsData()
+    // );
+    try {
+      const res = await call("get_settings") as string;
+      return serializer.deserializeObject(res, SettingsData) ?? new SettingsData();
+    } catch (error) {
+      console.error("getSettings error", error);
       return new SettingsData();
     }
-    return (
-      serializer.deserializeObject(res.result, SettingsData) ??
-      new SettingsData()
-    );
   }
 
   // get_max_perf_pct
   public static async getMaxPerfPct(): Promise<number> {
-    return (await this.serverAPI!.callPluginMethod("get_max_perf_pct", {}))
-      .result as number;
+    // return (await this.serverAPI!.callPluginMethod("get_max_perf_pct", {}))
+    //   .result as number;
+    return (await call("get_max_perf_pct")) as number;
   }
 
   // set_max_perf_pct
   public static async setMaxPerfPct(value: number) {
-    await this.serverAPI!.callPluginMethod("set_max_perf_pct", { value: value });
-  }
-
-  public static getServerAPI() {
-    return this.serverAPI;
+    // await this.serverAPI!.callPluginMethod("set_max_perf_pct", { value: value });
+    return await call("set_max_perf_pct", value);
   }
 
   public static applySettings = (applyTarget: string) => {

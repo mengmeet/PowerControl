@@ -1,7 +1,7 @@
 import os
 from ec import EC
 from config import logging, PRODUCT_NAME, FAN_HWMON_LIST, FAN_EC_CONFIG, PRODUCT_VERSION
-import decky_plugin
+import decky
 from settings import SettingsManager
 
 
@@ -49,7 +49,7 @@ class FanManager:
     def __init__(self):
         self.settings = SettingsManager(
             name="fans_config",
-            settings_directory=decky_plugin.DECKY_PLUGIN_SETTINGS_DIR,
+            settings_directory=decky.DECKY_PLUGIN_SETTINGS_DIR,
         )
         self.fan_config_list: list[FanConfig] = []  # 记录每一个风扇的配置
         self.cpu_temp_path = ""  # CPU温度路径

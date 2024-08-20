@@ -1,9 +1,9 @@
-import { VFC, useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { ComponentName, DEFAULT_TDP_MIN, PluginManager, Settings, UpdateType } from "../util";
-import { PanelSectionRow, SliderField, ToggleField } from "decky-frontend-lib";
+import { PanelSectionRow, SliderField, ToggleField } from "@decky/ui";
 import { localizationManager, localizeStrEnum } from "../i18n";
 
-export const CustomTDPComponent: VFC = () => {
+export const CustomTDPComponent: FC = () => {
   const [show, setShow] = useState<boolean>(Settings.ensureEnable());
   const [enableCustomTDPRange, setEnableCustomTDPRange] = useState<boolean>(Settings.appEnableCustomTDPRange());
   const [customTDPRangeMax, setCustomTDPRangeMax] = useState<number>(Settings.appCustomTDPRangeMax());

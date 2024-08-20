@@ -2,6 +2,7 @@
   "name": "PowerControl",
   "author": "yxx",
   "flags": ["root"],
+  "api_version": 1,
   "publish": {
     "tags": ["root"],
     "description": "PowerControl plugin.",
