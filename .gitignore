@@ -46,6 +46,6 @@ yalc.lock
 
 backend/out
 backend/*.sh
-Makefile
+# Makefile
 
 .history
