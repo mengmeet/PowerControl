@@ -29,11 +29,12 @@ jobs:
 
       - name: build RyzenAdj
         run: |
-          cd RyzenAdj
+          pacman -S base-devel pciutils cmake --noconfirm --needed --overwrite='*'
+          cd submodule/RyzenAdj
           mkdir build && cd build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make
-          cp -f ryzenadj ../../bin
+          cp -f ryzenadj ../../../bin
 
       - name: build plugin
         run: |
