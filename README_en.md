@@ -29,6 +29,9 @@ curl -L https://raw.githubusercontent.com/mengmeet/PowerControl/main/install.sh 
 6. Auto GPU frequency
 7. Fan control
 
+## Supported devices
+- Most AMD Ryzen processors
+- Intel processors (experimental, tested with GPD WIN3)
 
 ## Reference
 [decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)  

@@ -4,22 +4,23 @@
 
 [![](https://img.shields.io/github/downloads/mengmeet/PowerControl/total.svg)](https://gitHub.com/mengmeet/PowerControl/releases) [![](https://img.shields.io/github/downloads/mengmeet/PowerControl/latest/total)](https://github.com/mengmeet/PowerControl/releases/latest) [![](https://img.shields.io/github/v/release/mengmeet/PowerControl)](https://github.com/mengmeet/PowerControl/releases/latest)
 
-用于[decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)的插件  
-为安装了[holoiso](https://github.com/theVakhovskeIsTaken/holoiso)的手持设备提供性能设置调整  
-
-## 手动安装
-
-1. 安装[decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)
-2. 下载[Releases](https://github.com/Gawah/PowerControl/releases)页面的PowerControl.tar.gz
-3. 调整插件目录权限 `chmod -R 777 ${HOME}/homebrew/plugins`
-4. 解压到/home/xxxx/homebrew/plugins/下
-5. 重启 decky-loader, `sudo systemctl restart plugin_loader.service`
-6. 进入游戏模式，即可在decky页面使用该插件
+用于 [decky-loader](https://github.com/SteamDeckHomebrew/decky-loader) 的插件  
+为安装了 [holoiso](https://github.com/theVakhovskeIsTaken/holoiso) 的手持设备提供性能设置调整
 
 ## 一键安装
 ```
 curl -L https://raw.githubusercontent.com/mengmeet/PowerControl/main/install.sh | sh
 ```
+
+## 手动安装
+
+1. 安装 [decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)
+2. 下载 [Releases](https://github.com/Gawah/PowerControl/releases) 页面的PowerControl.tar.gz
+3. 调整插件目录权限 `chmod -R 777 ${HOME}/homebrew/plugins`
+4. 解压到/home/xxxx/homebrew/plugins/下
+5. 重启 decky-loader, `sudo systemctl restart plugin_loader.service`
+6. 进入游戏模式，即可在decky页面使用该插件
+
 
 ## 功能
 1. 开关睿频
@@ -29,6 +30,10 @@ curl -L https://raw.githubusercontent.com/mengmeet/PowerControl/main/install.sh 
 5. 固定GPU频率
 6. 自动GPU频率
 7. 风扇控制
+
+## 支持设备
+- 大多数 AMD Ryzen 处理器
+- Intel 处理器 （实验, 使用GPD WIN3 测试）
 
 
 <!-- ## 性能调整范围预设
