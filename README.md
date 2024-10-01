@@ -5,7 +5,7 @@
 [![](https://img.shields.io/github/downloads/mengmeet/PowerControl/total.svg)](https://gitHub.com/mengmeet/PowerControl/releases) [![](https://img.shields.io/github/downloads/mengmeet/PowerControl/latest/total)](https://github.com/mengmeet/PowerControl/releases/latest) [![](https://img.shields.io/github/v/release/mengmeet/PowerControl)](https://github.com/mengmeet/PowerControl/releases/latest)
 
 用于 [decky-loader](https://github.com/SteamDeckHomebrew/decky-loader) 的插件  
-为安装了 [holoiso](https://github.com/theVakhovskeIsTaken/holoiso) 的手持设备提供性能设置调整
+为手持设备提供性能设置调整
 
 ## 一键安装
 ```

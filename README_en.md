@@ -5,7 +5,7 @@ English | [简体中文](./README.md)
 [![](https://img.shields.io/github/downloads/mengmeet/PowerControl/total.svg)](https://gitHub.com/mengmeet/PowerControl/releases) [![](https://img.shields.io/github/downloads/mengmeet/PowerControl/latest/total)](https://github.com/mengmeet/PowerControl/releases/latest) [![](https://img.shields.io/github/v/release/mengmeet/PowerControl)](https://github.com/mengmeet/PowerControl/releases/latest)
 
 Plugin for [decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)  
-Provide performance settings adjustments for handheld installed with [holoiso](https://github.com/theVakhovskeIsTaken/holoiso)
+Provide performance settings adjustments for handheld
 
 ## Manual installation
 
