@@ -19,12 +19,6 @@ export class localizationManager {
     }, {});
 
     i18n.init({
-      // resources: {
-      //   "zh-CN": {
-      //     translation: localizeMap["tchinese"].strings,
-      //   }
-      // },
-      // lng:"zh-CN",
       resources: resources,
       lng: this.getLocale(), // 目标语言
       fallbackLng: defaultLocale, // 回落语言
@@ -40,10 +34,6 @@ export class localizationManager {
   }
 
   public static getString(defaultString: localizeStrEnum, variables?: Record<string, unknown>) {
-    // var str =
-    //   localizeMap[this.language]?.strings?.[defaultString] ??
-    //   localizeMap["english"]?.strings?.[defaultString];
-    // return str == "" ? localizeMap["english"]?.strings?.[defaultString] : str;
     return i18n.t(defaultString, variables);
   }
 }

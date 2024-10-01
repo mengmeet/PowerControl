@@ -63,10 +63,12 @@ class FanManager:
             current_rpm = self.get_fanRPM(index)
             max_value = fan_config.pwm_value_max
             cup_temp = cpu_temp if cpu_temp > 0 else self.get_fanTemp(index)
-            # 如果 current_rpm 和 fan_config.FAN_RPMVALUE_MAX 相差大于 5%, 则更新 max_value
+            # 更新 pwm_value_max
             if (
-                cup_temp > 75000 and (max_value - max_value) / int(max_value) > 0.05
-            ) or (int(current_rpm) - max_value) / int(max_value) > 0.05:
+                ((int(current_rpm) - max_value) / int(max_value)) > 0.05
+                and current_rpm < 2 * max_value
+                and cup_temp > 75000
+            ):
                 logging.info(
                     f"cup_temp {cup_temp}, 风扇{index} 当前转速已达到最大值, 更新最大值: {max_value} -> {current_rpm}"
                 )
@@ -281,8 +283,14 @@ class FanManager:
                 # 判断是否配置好ec(控制地址、读和写至少各有一种方法,最大写入和最大读取必须有配置数值)
                 fc.is_ec_configured = (
                     (fc.manual_offset is not None or fc.ram_manual_offset is not None)
-                    and (fc.pwm_write_offset is not None or fc.ram_pwm_write_offset is not None)
-                    and (fc.pwm_read_offset is not None or fc.ram_pwm_read_offset is not None)
+                    and (
+                        fc.pwm_write_offset is not None
+                        or fc.ram_pwm_write_offset is not None
+                    )
+                    and (
+                        fc.pwm_read_offset is not None
+                        or fc.ram_pwm_read_offset is not None
+                    )
                     and (fc.pwm_write_max != 0 and fc.pwm_value_max != 0)
                 )
                 if fc.is_ec_configured:
