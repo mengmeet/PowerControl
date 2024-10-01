@@ -30,8 +30,8 @@ curl -L https://raw.githubusercontent.com/mengmeet/PowerControl/main/install.sh 
 7. Fan control
 
 ## Supported devices
-- Most AMD Ryzen processors
-- Intel processors (experimental, tested with GPD WIN3)
+- Most AMD Ryzen CPU
+- Some Intel CPU (experimental, tested with GPD WIN3)
 
 ## Reference
 [decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)  
