@@ -14,45 +14,61 @@ on:
 jobs:
   build_plugin:
     runs-on: ubuntu-latest
-    container:
-        image: archlinux:latest
     steps:
-      - name: set git global safe directory
-        run: |
-          pacman -Syu git npm --noconfirm
-          git config --global --add safe.directory $(realpath .)
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: actions/checkout@v3
+      - name: Setup latest Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: latest
 
-      - name: update submodules
+      - name: Setup PNPM@9
+        uses: pnpm/action-setup@v4
+        with:
+          version: '9.4.0'
+
+      - name: Update submodules
         run: git submodule update --init --recursive
 
-      - name: build RyzenAdj
+      - name: Build frontend from source
         run: |
-          pacman -S base-devel pciutils cmake --noconfirm --needed --overwrite='*'
-          cd submodule/RyzenAdj
-          mkdir build && cd build
-          cmake -DCMAKE_BUILD_TYPE=Release ..
-          make
-          cp -f ryzenadj ../../../bin
-
-      - name: build plugin
-        run: |
-          npm i -g pnpm
-          pnpm install --no-frozen-lockfile
-          pnpm update
+          pnpm i
           pnpm run build
-          tar -czvf PowerControl.tar.gz --transform 's,^,PowerControl/,' dist backend bin *.py *.json *.md *.js LICENSE
-      
+
+      - name: Download Decky Plugin CLI
+        run: |
+          mkdir $(pwd)/cli
+          curl -L -o $(pwd)/cli/decky "https://github.com/SteamDeckHomebrew/cli/releases/latest/download/decky-linux-x86_64"
+          chmod +x $(pwd)/cli/decky
+
+      - name: Build plugin
+        run: |
+          $(pwd)/cli/decky plugin build $(pwd)
+          unzip "out/PowerControl.zip" -d "out/PowerControl"
+
+      - name: Package plugin as TAR GZ
+        run: |
+          tar -czvf PowerControl.tar.gz --transform 's|out/PowerControl/PowerControl|PowerControl|' out/PowerControl/PowerControl/*
+
       - name: show files
         run: |
           tar -tzvf PowerControl.tar.gz
-      
-      - name: Publish Artifacts
-        uses: actions/upload-artifact@v3
+          7z l out/PowerControl.zip
+
+      - name: Publish Installable Artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: PowerControl
-          path: PowerControl.tar.gz
+          name: PowerControl-Installable
+          path: out/PowerControl/*
+
+      - name: Publish Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PowerControl-Release
+          path: |
+            PowerControl.tar.gz
+            out/PowerControl.zip
 
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -62,7 +78,7 @@ jobs:
       - run: mkdir /tmp/artifacts
 
       - name: download artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: /tmp/artifacts
 
@@ -71,7 +87,9 @@ jobs:
       - name: publish to github release
         uses: softprops/action-gh-release@v1
         with:
-          files: /tmp/artifacts/PowerControl/PowerControl.tar.gz
+          files: |
+            /tmp/artifacts/PowerControl-Release/PowerControl.tar.gz
+            /tmp/artifacts/PowerControl-Release/out/PowerControl.zip
           tag_name: ${{ github.ref_name }}
           draft: false
           generate_release_notes: true
