@@ -10,10 +10,9 @@ Provide performance settings adjustments for handheld
 ## Manual installation
 
 1. Install [decky-loader](https://github.com/SteamDeckHomebrew/decky-loader)
-2. Download PowerControl.tar.gz from [Releases](https://github.com/Gawah/PowerControl/releases)
-3. Modify directory permissions `chmod -R 777 ${HOME}/homebrew/plugins`
-4. Extract to /home/xxxx/homebrew/plugins/
-5. Restart decky-loader, `sudo systemctl restart plugin_loader.service`
+2. Download PowerControl.zip from [Releases](https://github.com/Gawah/PowerControl/releases)
+3. Enable "Developer mode" inside Decky UI (Decky-Loader -> Settings -> General -> Developer mode)
+4. Navigate to the Developer section and click "Browse" on "Install Plugin from ZIP file", locate and select the PowerControl.zip and then install it.
 
 ## Automatic installation
 ```
