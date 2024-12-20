@@ -3,6 +3,7 @@ import subprocess
 import os
 import re
 import traceback
+from typing import Dict, List, Optional, Tuple, Union
 from config import (
     TDP_LIMIT_CONFIG_CPU,
     TDP_LIMIT_CONFIG_PRODUCT,
@@ -14,36 +15,72 @@ from config import (
     RYZENADJ_PATH,
 )
 
-# 初始参数
-cpu_boost = True
-cpu_smt = True
-enable_cpu_num = 4
-cpu_maxNum = 0
-cpu_tdpMax = 15
-cpu_avaFreq = []
-cpu_avaMaxFreq = 1600000
-cpu_avaMinFreq = 1600000
-cpu_nowLimitFreq = 0
-
 
 class CPUManager:
-    def __init__(self):
-        self.cpu_topology = {}
-
-        # 获取 cpu_topology
+    """CPU管理器类，提供CPU相关的控制和监控功能。
+    
+    该类提供了对CPU的全面控制，包括：
+    - TDP（热设计功耗）控制
+    - CPU核心启用/禁用
+    - SMT（超线程）控制
+    - CPU频率管理
+    - CPU Boost控制
+    
+    Attributes:
+        cpu_boost (bool): CPU Boost状态
+        cpu_smt (bool): SMT（超线程）状态
+        enable_cpu_num (int): 启用的CPU核心数
+        cpu_maxNum (int): 最大CPU核心数
+        cpu_tdpMax (int): 最大TDP值（瓦特）
+        cpu_avaFreq (List[int]): 可用的CPU频率列表
+        cpu_avaMaxFreq (int): 最大可用频率
+        cpu_avaMinFreq (int): 最小可用频率
+        cpu_nowLimitFreq (int): 当前频率限制
+        cpu_topology (Dict[int, int]): CPU拓扑信息，键为处理器ID，值为核心ID
+    """
+    
+    def __init__(self) -> None:
+        """初始化CPU管理器。
+        
+        初始化过程包括：
+        1. 设置默认属性值
+        2. 获取CPU拓扑信息
+        3. 检测SMT支持
+        4. 获取最大CPU核心数
+        """
+        # CPU状态相关属性
+        self.cpu_boost: bool = True
+        self.cpu_smt: bool = True
+        self.enable_cpu_num: int = 4
+        self.cpu_maxNum: int = 0
+        self.cpu_tdpMax: int = 15
+        self.cpu_avaFreq: List[int] = []
+        self.cpu_avaMaxFreq: int = 1600000
+        self.cpu_avaMinFreq: int = 1600000
+        self.cpu_nowLimitFreq: int = 0
+        
+        # CPU拓扑相关属性
+        self.cpu_topology: Dict[int, int] = {}
+        self.is_support_smt: Optional[bool] = None
+        
+        # 初始化CPU信息
         self.set_enable_All()  # 先开启所有cpu, 否则拓扑信息不全
-        self.is_support_smt = None
         self.get_isSupportSMT()  # 获取 is_support_smt
         self.get_cpuMaxNum()  # 获取 cpu_maxNum
-
-        _cpu_topology: dict = self.get_cpu_topology()
-        self.cpu_topology = _cpu_topology
-        self.cps_ids = sorted(list(set(_cpu_topology.values())))
-
+        
+        # 获取并存储CPU拓扑信息
+        self.cpu_topology = self.get_cpu_topology()
+        self.cps_ids: List[int] = sorted(list(set(self.cpu_topology.values())))
+        
         logging.info(f"self.cpu_topology {self.cpu_topology}")
         logging.info(f"cpu_ids {self.cps_ids}")
 
-    def get_hasRyzenadj(self):
+    def get_hasRyzenadj(self) -> bool:
+        """检查系统是否安装了ryzenadj工具。
+        
+        Returns:
+            bool: True如果ryzenadj可用，否则False
+        """
         try:
             # 查看ryzenadj路径是否有该文件
             if os.path.exists(RYZENADJ_PATH) or os.path.exists("/usr/bin/ryzenadj"):
@@ -57,9 +94,13 @@ class CPUManager:
             logging.error(e)
             return False
 
-    def get_cpuMaxNum(self):
+    def get_cpuMaxNum(self) -> int:
+        """获取最大CPU核心数。
+        
+        Returns:
+            int: 最大CPU核心数
+        """
         try:
-            global cpu_maxNum
             cpu_path = "/sys/devices/system/cpu"
             cpu_index = 0
             # 循环查找cpu*文件夹，根据找到的文件夹数量确定cpu最大数量
@@ -71,64 +112,78 @@ class CPUManager:
                     break
             if self.get_isSupportSMT():
                 # 去掉超线程部分，物理核心只有cpu文件夹数量的一半
-                cpu_maxNum = int(cpu_index / 2)
+                self.cpu_maxNum = int(cpu_index / 2)
             else:
-                cpu_maxNum = cpu_index
-            logging.info("get_cpuMaxNum {}".format(cpu_maxNum))
-            return cpu_maxNum
+                self.cpu_maxNum = cpu_index
+            logging.info("get_cpuMaxNum {}".format(self.cpu_maxNum))
+            return self.cpu_maxNum
         except Exception as e:
             logging.error(e)
             return 0
 
-    def get_tdpMax(self):
+    def get_tdpMax(self) -> int:
+        """获取最大TDP值。
+        
+        Returns:
+            int: 最大TDP值（瓦特）
+        """
         try:
             # 根据机器型号或者CPU型号返回tdp最大值
-            global cpu_tdpMax
             if PRODUCT_NAME in TDP_LIMIT_CONFIG_PRODUCT:
-                cpu_tdpMax = TDP_LIMIT_CONFIG_PRODUCT[PRODUCT_NAME]
+                self.cpu_tdpMax = TDP_LIMIT_CONFIG_PRODUCT[PRODUCT_NAME]
             else:
                 for model in TDP_LIMIT_CONFIG_CPU:
                     if model in CPU_ID:
-                        cpu_tdpMax = TDP_LIMIT_CONFIG_CPU[model]
+                        self.cpu_tdpMax = TDP_LIMIT_CONFIG_CPU[model]
                         break
                     else:
-                        cpu_tdpMax = 15
-            logging.info("get_tdpMax {}".format(cpu_tdpMax))
-            return cpu_tdpMax
+                        self.cpu_tdpMax = 15
+            logging.info("get_tdpMax {}".format(self.cpu_tdpMax))
+            return self.cpu_tdpMax
         except Exception as e:
             logging.error(e)
             return 0
 
     # 弃用
-    def get_cpu_AvailableFreq(self):
+    def get_cpu_AvailableFreq(self) -> List[int]:
+        """获取可用的CPU频率列表。
+        
+        Returns:
+            List[int]: 可用的CPU频率列表
+        """
         try:
-            global cpu_avaFreq
-            global cpu_avaMaxFreq
-            global cpu_avaMinFreq
             # 当前已有cpu频率列表，直接返回
-            if len(cpu_avaFreq) > 0:
-                return cpu_avaFreq
+            if len(self.cpu_avaFreq) > 0:
+                return self.cpu_avaFreq
             # 获取可用的cpu频率列表
             command = "sudo sh {} get_cpu_AvailableFreq ".format(SH_PATH)
             cpu_avaFreqRes = subprocess.getoutput(command)
             # 按空格分割获取的结果并且化为int存入
             cpu_avaFreqStr = cpu_avaFreqRes.split()
             for index in cpu_avaFreqStr:
-                cpu_avaFreq.append(int(index))
+                self.cpu_avaFreq.append(int(index))
             # 列表不为空时，先排序，最小值取第一个，最大值取倒数第一个
-            if len(cpu_avaFreq) >= 1:
-                cpu_avaFreq.sort()
-                cpu_avaMinFreq = cpu_avaFreq[0]
-                cpu_avaMaxFreq = cpu_avaFreq[len(cpu_avaFreq) - 1]
+            if len(self.cpu_avaFreq) >= 1:
+                self.cpu_avaFreq.sort()
+                self.cpu_avaMinFreq = self.cpu_avaFreq[0]
+                self.cpu_avaMaxFreq = self.cpu_avaFreq[len(self.cpu_avaFreq) - 1]
             logging.info(
-                f"cpu_avaFreqData={[cpu_avaFreq,cpu_avaMinFreq,cpu_avaMaxFreq]}"
+                f"cpu_avaFreqData={[self.cpu_avaFreq,self.cpu_avaMinFreq,self.cpu_avaMaxFreq]}"
             )
-            return cpu_avaFreq
+            return self.cpu_avaFreq
         except Exception as e:
             logging.error(e)
             return []
 
-    def set_cpuTDP(self, value: int):
+    def set_cpuTDP(self, value: int) -> bool:
+        """设置CPU TDP值。
+        
+        Args:
+            value (int): TDP值（瓦特）
+        
+        Returns:
+            bool: True如果设置成功，否则False
+        """
         if CPU_VENDOR == "GenuineIntel":
             return self.set_cpuTDP_Intel(value)
         elif CPU_VENDOR == "AuthenticAMD":
@@ -137,7 +192,12 @@ class CPUManager:
             logging.error("set_cpuTDP error: unknown CPU_VENDOR")
             return False
 
-    def __get_intel_rapl_path(self):
+    def __get_intel_rapl_path(self) -> Tuple[str, str]:
+        """获取Intel RAPL路径。
+        
+        Returns:
+            Tuple[str, str]: RAPL路径
+        """
         rapl_path = ""
         rapl_long = ""
         rapl_short = ""
@@ -163,7 +223,15 @@ class CPUManager:
         except Exception as e:
             logging.error(e, exc_info=True)
 
-    def set_cpuTDP_Intel(self, value: int):
+    def set_cpuTDP_Intel(self, value: int) -> bool:
+        """设置Intel CPU TDP值。
+        
+        Args:
+            value (int): TDP值（瓦特）
+        
+        Returns:
+            bool: True如果设置成功，否则False
+        """
         try:
             # 遍历 /sys/class/powercap/intel-rapl/*/ 如果 name 是 package-0 则是cpu
             logging.debug("set_cpuTDP_Intel {}".format(value))
@@ -182,7 +250,15 @@ class CPUManager:
             logging.error(e, exc_info=True)
             return False
 
-    def set_cpuTDP_AMD(self, value: int):
+    def set_cpuTDP_AMD(self, value: int) -> bool:
+        """设置AMD CPU TDP值。
+        
+        Args:
+            value (int): TDP值（瓦特）
+        
+        Returns:
+            bool: True如果设置成功，否则False
+        """
         try:
             if value >= 3:
                 tdp = value * 1000
@@ -218,11 +294,18 @@ class CPUManager:
             logging.error(e)
             return False
 
-    def set_cpuOnline(self, value: int):
+    def set_cpuOnline(self, value: int) -> bool:
+        """设置CPU在线状态。
+        
+        Args:
+            value (int): CPU在线状态
+        
+        Returns:
+            bool: True如果设置成功，否则False
+        """
         try:
-            logging.debug("set_cpuOnline {} {}".format(value, cpu_maxNum))
-            global enable_cpu_num
-            enable_cpu_num = value
+            logging.debug("set_cpuOnline {} {}".format(value, self.cpu_maxNum))
+            self.enable_cpu_num = value
 
             cpu_topology = self.cpu_topology
             enabled_cores = list(set(int(core) for core in cpu_topology.values()))
@@ -241,11 +324,11 @@ class CPUManager:
             # 所以不能直接关掉 大于 enable_cpu_num 的线程
             #
             # cpu_num 作为索引, 取出对应的核心, 作为开启的最大 cpuid, 关闭大于最大 cpuid 的线程
-            max_enable_cpuid = self.cps_ids[enable_cpu_num - 1]
+            max_enable_cpuid = self.cps_ids[self.enable_cpu_num - 1]
             logging.debug(
-                f"enable_cpu_num {enable_cpu_num}, max_enable_cpuid {max_enable_cpuid}"
+                f"enable_cpu_num {self.enable_cpu_num}, max_enable_cpuid {max_enable_cpuid}"
             )
-            if enable_cpu_num is not None and enable_cpu_num < len(enabled_cores):
+            if self.enable_cpu_num is not None and self.enable_cpu_num < len(enabled_cores):
                 for processor_id, core_id in cpu_topology.items():
                     if int(core_id) > max_enable_cpuid:
                         logging.info(
@@ -254,8 +337,8 @@ class CPUManager:
                         to_offline.add(int(processor_id))
 
             # 如果关闭SMT，关闭每个核心中数字更大的线程
-            if not cpu_smt:
-                for core_id in enabled_cores[:enable_cpu_num]:
+            if not self.cpu_smt:
+                for core_id in enabled_cores[:self.enable_cpu_num]:
                     core_threads = [
                         cpu
                         for cpu, core in cpu_topology.items()
@@ -279,7 +362,12 @@ class CPUManager:
             logging.error(e)
             return False
 
-    def set_enable_All(self):
+    def set_enable_All(self) -> bool:
+        """启用所有CPU核心。
+        
+        Returns:
+            bool: True如果设置成功，否则False
+        """
         try:
             logging.debug("set_enable_All")
             cpu_path = "/sys/devices/system/cpu/"
@@ -296,7 +384,12 @@ class CPUManager:
             return False
 
     # 不能在cpu offline 之后进行判断，会不准确
-    def get_isSupportSMT(self):
+    def get_isSupportSMT(self) -> bool:
+        """检查系统是否支持SMT。
+        
+        Returns:
+            bool: True如果支持SMT，否则False
+        """
         try:
             if self.is_support_smt is not None:
                 return self.is_support_smt
@@ -323,21 +416,36 @@ class CPUManager:
             self.is_support_smt = False
         return self.is_support_smt
 
-    def set_smt(self, value: bool):
+    def set_smt(self, value: bool) -> bool:
+        """设置SMT状态。
+        
+        Args:
+            value (bool): SMT状态
+        
+        Returns:
+            bool: True如果设置成功，否则False
+        """
         try:
             if not self.get_isSupportSMT():
                 logging.info("set_smt not support")
                 return False
             logging.debug("set_smt {}".format(value))
-            global cpu_smt
-            cpu_smt = value
+            self.cpu_smt = value
             return True
         except Exception as e:
             logging.error(traceback.format_exc())
             logging.error(e)
             return False
 
-    def set_cpuBoost(self, value: bool):
+    def set_cpuBoost(self, value: bool) -> bool:
+        """设置CPU Boost状态。
+        
+        Args:
+            value (bool): CPU Boost状态
+        
+        Returns:
+            bool: True如果设置成功，否则False
+        """
         boost_path = "/sys/devices/system/cpu/cpufreq/boost"
 
         # amd
@@ -353,8 +461,7 @@ class CPUManager:
 
         try:
             logging.debug("set_cpuBoost {}".format(value))
-            global cpu_boost
-            cpu_boost = value
+            self.cpu_boost = value
 
             # 如果不存在 pstate_boost_path
             if not os.path.exists(pstate_boost_path):
@@ -365,7 +472,7 @@ class CPUManager:
             # 设置 boost
             if os.path.exists(boost_path):
                 with open(boost_path, "w") as file:
-                    if cpu_boost:
+                    if self.cpu_boost:
                         file.write("1")
                     else:
                         file.write("0")
@@ -373,7 +480,7 @@ class CPUManager:
             # 设置 pstate_boost
             if os.path.exists(pstate_boost_path):
                 with open(pstate_boost_path, "w") as file:
-                    if cpu_boost:
+                    if self.cpu_boost:
                         file.write("1")
                     else:
                         file.write("0")
@@ -386,7 +493,7 @@ class CPUManager:
             # 设置 no_turbo
             if os.path.exists(no_turbo_path):
                 with open(no_turbo_path, "w") as file:
-                    if cpu_boost:
+                    if self.cpu_boost:
                         file.write("0")
                     else:
                         file.write("1")
@@ -397,15 +504,20 @@ class CPUManager:
             logging.error(e)
             return False
 
-    def check_cpuFreq(self):
+    def check_cpuFreq(self) -> bool:
+        """检查CPU频率是否低于限制频率。
+        
+        Returns:
+            bool: True如果频率低于限制频率，否则False
+        """
         try:
-            logging.debug(f"check_cpuFreq cpu_nowLimitFreq = {cpu_nowLimitFreq}")
-            if cpu_nowLimitFreq == 0:
+            logging.debug(f"check_cpuFreq cpu_nowLimitFreq = {self.cpu_nowLimitFreq}")
+            if self.cpu_nowLimitFreq == 0:
                 return False
             need_set = False
             # 检测已开启的cpu的频率是否全部低于限制频率
-            for cpu in range(0, enable_cpu_num * 2):
-                if cpu_smt or cpu % 2 == 0:
+            for cpu in range(0, self.enable_cpu_num * 2):
+                if self.cpu_smt or cpu % 2 == 0:
                     # command="sudo sh {} get_cpu_nowFreq {}".format(SH_PATH, cpu)
                     # cpu_freq=int(subprocess.getoutput(command))
                     cpu_path = (
@@ -415,7 +527,7 @@ class CPUManager:
                     )
                     with open(cpu_path, "r") as file:
                         cpu_freq = int(file.read().strip())
-                    if cpu_freq > cpu_nowLimitFreq:
+                    if cpu_freq > self.cpu_nowLimitFreq:
                         need_set = True
                         return True
             return False
@@ -423,32 +535,39 @@ class CPUManager:
             logging.error(e)
             return False
 
-    def set_cpuFreq(self, value: int):
+    def set_cpuFreq(self, value: int) -> bool:
+        """设置CPU频率。
+        
+        Args:
+            value (int): 频率值
+        
+        Returns:
+            bool: True如果设置成功，否则False
+        """
         try:
-            global cpu_nowLimitFreq
             logging.debug(
-                f"set_cpuFreq cpu_nowLimitFreq = {cpu_nowLimitFreq} value ={value}"
+                f"set_cpuFreq cpu_nowLimitFreq = {self.cpu_nowLimitFreq} value ={value}"
             )
             # 频率不同才可设置，设置相同频率时检测当前频率是否已经生效，未生效时再设置一次
-            if cpu_nowLimitFreq != value:
+            if self.cpu_nowLimitFreq != value:
                 need_set = True
-                cpu_nowLimitFreq = value
+                self.cpu_nowLimitFreq = value
             else:
                 need_set = self.check_cpuFreq()
             if need_set:
                 # 除最小最大频率外 需要先设置到最小才能使该次设置生效
                 if (
-                    cpu_nowLimitFreq != cpu_avaMinFreq
-                    or cpu_nowLimitFreq != cpu_avaMaxFreq
+                    self.cpu_nowLimitFreq != self.cpu_avaMinFreq
+                    or self.cpu_nowLimitFreq != self.cpu_avaMaxFreq
                 ):
-                    for cpu in range(0, cpu_maxNum * 2):
+                    for cpu in range(0, self.cpu_maxNum * 2):
                         command = "sudo sh {} set_cpu_Freq {} {}".format(
-                            SH_PATH, cpu, cpu_avaMinFreq
+                            SH_PATH, cpu, self.cpu_avaMinFreq
                         )
                         os.system(command)
-                for cpu in range(0, cpu_maxNum * 2):
+                for cpu in range(0, self.cpu_maxNum * 2):
                     command = "sudo sh {} set_cpu_Freq {} {}".format(
-                        SH_PATH, cpu, cpu_nowLimitFreq
+                        SH_PATH, cpu, self.cpu_nowLimitFreq
                     )
                     os.system(command)
                 return True
@@ -458,7 +577,12 @@ class CPUManager:
             logging.error(e)
             return False
 
-    def get_cpu_topology(self):
+    def get_cpu_topology(self) -> Dict[int, int]:
+        """获取CPU拓扑信息。
+        
+        Returns:
+            Dict[int, int]: CPU拓扑信息，键为处理器ID，值为核心ID
+        """
         cpu_topology = {}
 
         # 遍历每个 CPU
@@ -481,27 +605,48 @@ class CPUManager:
 
         return cpu_topology
 
-    def offline_cpu(self, cpu_number: int):
+    def offline_cpu(self, cpu_number: int) -> None:
+        """关闭CPU核心。
+        
+        Args:
+            cpu_number (int): CPU核心号
+        """
         if int(cpu_number) == 0:
             return
         cpu_online_path = f"/sys/devices/system/cpu/cpu{cpu_number}/online"
         with open(cpu_online_path, "w") as file:
             file.write("0")
 
-    def online_cpu(self, cpu_number: int):
+    def online_cpu(self, cpu_number: int) -> None:
+        """启用CPU核心。
+        
+        Args:
+            cpu_number (int): CPU核心号
+        """
         if int(cpu_number) == 0:
             return
         cpu_online_path = f"/sys/devices/system/cpu/cpu{cpu_number}/online"
         with open(cpu_online_path, "w") as file:
             file.write("1")
 
-    def set_cpu_online(self, cpu_number, online):
+    def set_cpu_online(self, cpu_number: int, online: bool) -> None:
+        """设置CPU核心状态。
+        
+        Args:
+            cpu_number (int): CPU核心号
+            online (bool): 核心状态
+        """
         if online:
             self.online_cpu(cpu_number)
         else:
             self.offline_cpu(cpu_number)
 
-    def get_ryzenadj_info(self):
+    def get_ryzenadj_info(self) -> str:
+        """获取Ryzenadj信息。
+        
+        Returns:
+            str: Ryzenadj信息
+        """
         try:
             sys_ryzenadj_path = "/usr/bin/ryzenadj"
             if not os.path.exists(sys_ryzenadj_path):
@@ -524,7 +669,12 @@ class CPUManager:
             logging.error(e)
             return f"get_ryzenadj_info error:\n{e}"
 
-    def get_max_perf_pct(self):
+    def get_max_perf_pct(self) -> int:
+        """获取最大性能百分比。
+        
+        Returns:
+            int: 最大性能百分比
+        """
         max_perf_pct_path = "/sys/devices/system/cpu/intel_pstate/max_perf_pct"
         if os.path.exists(max_perf_pct_path):
             with open(max_perf_pct_path, "r") as file:
@@ -532,7 +682,15 @@ class CPUManager:
         else:
             return 0
 
-    def set_max_perf_pct(self, value: int):
+    def set_max_perf_pct(self, value: int) -> bool:
+        """设置最大性能百分比。
+        
+        Args:
+            value (int): 最大性能百分比
+        
+        Returns:
+            bool: True如果设置成功，否则False
+        """
         max_perf_pct_path = "/sys/devices/system/cpu/intel_pstate/max_perf_pct"
         try:
             if value < 10 or value > 100:
