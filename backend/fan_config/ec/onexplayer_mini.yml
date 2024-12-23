@@ -1,6 +1,7 @@
 product_name: # /sys/devices/virtual/dmi/id/product_name 内容
   - AOKZOE A1 AR07
   - ONEXPLAYER Mini Pro
+  - ONEXPLAYER mini A07
 fans:
   - manual_offset: 0x4a # 风扇自动控制ec地址
     rpmwrite_offset: 0x4b # 风扇写入转速ec地址

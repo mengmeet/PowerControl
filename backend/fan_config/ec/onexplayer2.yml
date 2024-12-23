@@ -1,5 +1,10 @@
 product_name:
   - ONEXPLAYER 2 ARP23
+  - ONEXPLAYER 2 PRO ARP23P
+  - ONEXPLAYER 2 PRO ARP23P EVA-01
+  - ONEXPLAYER X1
+  - ONEXPLAYER X1 A
+  - ONEXPLAYER X1 mini
 fans:
   - manual_offset: 0x4a
     rpmwrite_offset: 0x4b
