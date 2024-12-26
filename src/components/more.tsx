@@ -1,7 +1,7 @@
 import { ButtonItem, Field, PanelSection, PanelSectionRow } from "@decky/ui";
 import { FC, useEffect, useState } from "react";
 import { localizationManager, localizeStrEnum } from "../i18n";
-import { Backend, Settings } from "../util";
+import { Backend, Settings, compareVersions } from "../util";
 import { ActionButtonItem } from ".";
 
 export const MoreComponent: FC = () => {
@@ -10,8 +10,6 @@ export const MoreComponent: FC = () => {
 
     useEffect(() => {
         const getData = async () => {
-            // const latestVersion = await Backend.getLatestVersion();
-            // setLatestVersion(latestVersion);
             setTimeout(() => {
                 setLatestVersion(latestVersion);
                 Backend.getLatestVersion().then((latestVersion) => {
@@ -25,7 +23,12 @@ export const MoreComponent: FC = () => {
     let uptButtonText = localizationManager.getString(localizeStrEnum.REINSTALL_PLUGIN);
 
     if (currentVersion !== latestVersion && Boolean(latestVersion)) {
-        uptButtonText = `${localizationManager.getString(localizeStrEnum.UPDATE_PLUGIN)} ${latestVersion}`;
+        const versionCompare = compareVersions(latestVersion, currentVersion);
+        if (versionCompare > 0) {
+            uptButtonText = `${localizationManager.getString(localizeStrEnum.UPDATE_PLUGIN)} ${latestVersion}`;
+        } else if (versionCompare < 0) {
+            uptButtonText = `${localizationManager.getString(localizeStrEnum.ROLLBACK_PLUGIN)} ${latestVersion}`;
+        }
     }
 
     return (
