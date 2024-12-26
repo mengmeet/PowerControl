@@ -19,7 +19,6 @@ fans:
       pwm_write_path: pwm1 # 写入数值的文件路径
 
     pwm_input:
-      hwmon_label: oxpec # 读转速的hwmon标签(读取转速和写入转速可能不在同一个hwmon)
       pwm_read_path: fan1_input # 读取转速的文件路径
       pwm_read_max: 5000 # 读取转速的最大值
 

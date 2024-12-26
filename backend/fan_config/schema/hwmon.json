@@ -105,7 +105,7 @@
           "description": "读取数值最大值"
         }
       },
-      "required": ["hwmon_label", "pwm_read_path", "pwm_read_max"]
+      "required": ["pwm_read_path", "pwm_read_max"]
     },
     "PWMWrite": {
       "title": "PWMWrite",

@@ -160,7 +160,11 @@ class FanManager:
                             fc.hwmon_mode1_auto_val.append(value_info)
 
                     fan_pwm_input = hwmon_config["pwm_input"]
-                    fan_hwmon_label_input = fan_pwm_input["hwmon_label"]
+                    fan_hwmon_label_input = (
+                        fan_pwm_input["hwmon_label"]
+                        if "hwmon_label" in fan_pwm_input
+                        else hwmon_name
+                    )
                     fc.hwmon_input_path = (
                         name_path_map[fan_hwmon_label_input]
                         + "/"
