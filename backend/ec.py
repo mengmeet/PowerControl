@@ -1,6 +1,6 @@
 import portio
 import time
-from config import logging
+from config import logger
 
 EC_CMD_STATUS_REGISTER_PORT = 0x66
 EC_DATA_REGISTER_PORT = 0x62
@@ -32,7 +32,7 @@ class EC:
         portio.outb(address, EC_DATA_REGISTER_PORT)
         EC.Wait(EC_CMD_STATUS_REGISTER_PORT, EC_OBF_BIT, 1)
         result = portio.inb(EC_DATA_REGISTER_PORT)
-        logging.debug(f"ECRead  address:{hex(address)} value:{result}")
+        logger.debug(f"ECRead  address:{hex(address)} value:{result}")
         return result
 
     @staticmethod
@@ -41,8 +41,8 @@ class EC:
         for len in range(length):
             value = EC.Read(address + len)
             sum = (sum << 8) + value
-            # logging.debug(f"count={len} sum={sum} address={address+len} value={value}")
-        logging.debug(f"ECReadLonger  address:{hex(address)} value:{sum}")
+            # logger.debug(f"count={len} sum={sum} address={address+len} value={value}")
+        logger.debug(f"ECReadLonger  address:{hex(address)} value:{sum}")
         return sum
 
     @staticmethod
@@ -54,7 +54,7 @@ class EC:
         EC.Wait(EC_CMD_STATUS_REGISTER_PORT, EC_IBF_BIT, 0)
         portio.outb(data, EC_DATA_REGISTER_PORT)
         EC.Wait(EC_CMD_STATUS_REGISTER_PORT, EC_IBF_BIT, 0)
-        logging.debug(f"ECWrite  address:{hex(address)} value:{data}")
+        logger.debug(f"ECWrite  address:{hex(address)} value:{data}")
 
     @staticmethod
     def RamWrite(reg_addr: int, reg_data: int, address: int, data: int):
@@ -74,7 +74,7 @@ class EC:
         portio.outb(0x12, reg_data)
         portio.outb(0x2F, reg_addr)
         portio.outb(data, reg_data)
-        logging.debug(
+        logger.debug(
             f"ECRamWrite high_byte={hex(high_byte)} low_byte={hex(low_byte)} address:{hex(address)} value:{data}"
         )
 
@@ -96,7 +96,7 @@ class EC:
         portio.outb(0x12, reg_data)
         portio.outb(0x2F, reg_addr)
         data = portio.inb(reg_data)
-        logging.debug(
+        logger.debug(
             f"ECRamRead high_byte={hex(high_byte)} low_byte={hex(low_byte)} address:{hex(address)} value:{data}"
         )
         return data
@@ -107,8 +107,8 @@ class EC:
         for len in range(length):
             value = EC.RamRead(reg_addr, reg_data, address + len)
             sum = (sum << 8) + value
-            # logging.debug(f"count={len} sum={sum} address={address+len} value={value}")
-        logging.debug(f"ECReadLonger  address:{hex(address)} value:{sum}")
+            # logger.debug(f"count={len} sum={sum} address={address+len} value={value}")
+        logger.debug(f"ECReadLonger  address:{hex(address)} value:{sum}")
         return sum
 
     def PrintAll():

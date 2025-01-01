@@ -10,7 +10,7 @@ from config import (
     PRODUCT_NAME,
     CPU_ID,
     CPU_VENDOR,
-    logging,
+    logger,
     SH_PATH,
     RYZENADJ_PATH,
 )
@@ -72,8 +72,8 @@ class CPUManager:
         self.cpu_topology = self.get_cpu_topology()
         self.cps_ids: List[int] = sorted(list(set(self.cpu_topology.values())))
         
-        logging.info(f"self.cpu_topology {self.cpu_topology}")
-        logging.info(f"cpu_ids {self.cps_ids}")
+        logger.info(f"self.cpu_topology {self.cpu_topology}")
+        logger.info(f"cpu_ids {self.cps_ids}")
 
     def get_hasRyzenadj(self) -> bool:
         """检查系统是否安装了ryzenadj工具。
@@ -84,14 +84,14 @@ class CPUManager:
         try:
             # 查看ryzenadj路径是否有该文件
             if os.path.exists(RYZENADJ_PATH) or os.path.exists("/usr/bin/ryzenadj"):
-                logging.info("get_hasRyzenadj {}".format(True))
+                logger.info("get_hasRyzenadj {}".format(True))
                 return True
             else:
-                logging.info("get_hasRyzenadj {}".format(False))
+                logger.info("get_hasRyzenadj {}".format(False))
                 return False
         except Exception as e:
-            logging.error(traceback.format_exc())
-            logging.error(e)
+            logger.error(traceback.format_exc())
+            logger.error(e)
             return False
 
     def get_cpuMaxNum(self) -> int:
@@ -115,10 +115,10 @@ class CPUManager:
                 self.cpu_maxNum = int(cpu_index / 2)
             else:
                 self.cpu_maxNum = cpu_index
-            logging.info("get_cpuMaxNum {}".format(self.cpu_maxNum))
+            logger.info("get_cpuMaxNum {}".format(self.cpu_maxNum))
             return self.cpu_maxNum
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             return 0
 
     def get_tdpMax(self) -> int:
@@ -138,10 +138,10 @@ class CPUManager:
                         break
                     else:
                         self.cpu_tdpMax = 15
-            logging.info("get_tdpMax {}".format(self.cpu_tdpMax))
+            logger.info("get_tdpMax {}".format(self.cpu_tdpMax))
             return self.cpu_tdpMax
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             return 0
 
     # 弃用
@@ -167,12 +167,12 @@ class CPUManager:
                 self.cpu_avaFreq.sort()
                 self.cpu_avaMinFreq = self.cpu_avaFreq[0]
                 self.cpu_avaMaxFreq = self.cpu_avaFreq[len(self.cpu_avaFreq) - 1]
-            logging.info(
+            logger.info(
                 f"cpu_avaFreqData={[self.cpu_avaFreq,self.cpu_avaMinFreq,self.cpu_avaMaxFreq]}"
             )
             return self.cpu_avaFreq
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             return []
 
     def set_cpuTDP(self, value: int) -> bool:
@@ -189,7 +189,7 @@ class CPUManager:
         elif CPU_VENDOR == "AuthenticAMD":
             self.set_cpuTDP_AMD(value)
         else:
-            logging.error("set_cpuTDP error: unknown CPU_VENDOR")
+            logger.error("set_cpuTDP error: unknown CPU_VENDOR")
             return False
 
     def __get_intel_rapl_path(self) -> Tuple[str, str]:
@@ -221,7 +221,7 @@ class CPUManager:
                         rapl_long = f.replace("_name", "_power_limit_uw")
             return rapl_long, rapl_short
         except Exception as e:
-            logging.error(e, exc_info=True)
+            logger.error(e, exc_info=True)
 
     def set_cpuTDP_Intel(self, value: int) -> bool:
         """设置Intel CPU TDP值。
@@ -234,11 +234,11 @@ class CPUManager:
         """
         try:
             # 遍历 /sys/class/powercap/intel-rapl/*/ 如果 name 是 package-0 则是cpu
-            logging.debug("set_cpuTDP_Intel {}".format(value))
+            logger.debug("set_cpuTDP_Intel {}".format(value))
             tdp = value * 1000000
             rapl_long, rapl_short = self.__get_intel_rapl_path()
             if rapl_long == "" or rapl_short == "":
-                logging.error("set_cpuTDP_Intel error: rapl path not found")
+                logger.error("set_cpuTDP_Intel error: rapl path not found")
                 return False
             with open(rapl_long, "w") as file:
                 file.write(str(tdp))
@@ -247,7 +247,7 @@ class CPUManager:
             return True
 
         except Exception as e:
-            logging.error(e, exc_info=True)
+            logger.error(e, exc_info=True)
             return False
 
     def set_cpuTDP_AMD(self, value: int) -> bool:
@@ -273,8 +273,8 @@ class CPUManager:
 
                 command = f"{sys_ryzenadj_path} -a {stapm_limit} -b {fast_minit} -c {slow_limit} -f {tctl_temp}"
                 command_args = command.split()
-                logging.debug(f"set_cpuTDP command: {command}")
-                logging.debug(f"set_cpuTDP {value}")
+                logger.debug(f"set_cpuTDP command: {command}")
+                logger.debug(f"set_cpuTDP {value}")
                 process = subprocess.run(
                     command_args,
                     stdout=subprocess.PIPE,
@@ -282,16 +282,16 @@ class CPUManager:
                     text=True,
                 )
                 stdout, stderr = process.stdout, process.stderr
-                logging.debug(f"set_cpuTDP result:\n{stdout}")
+                logger.debug(f"set_cpuTDP result:\n{stdout}")
                 if stderr:
-                    logging.error(f"set_cpuTDP error:\n{stderr}")
+                    logger.error(f"set_cpuTDP error:\n{stderr}")
 
                 return True
             else:
                 return False
         except Exception as e:
-            logging.error(traceback.format_exc())
-            logging.error(e)
+            logger.error(traceback.format_exc())
+            logger.error(e)
             return False
 
     def set_cpuOnline(self, value: int) -> bool:
@@ -304,7 +304,7 @@ class CPUManager:
             bool: True如果设置成功，否则False
         """
         try:
-            logging.debug("set_cpuOnline {} {}".format(value, self.cpu_maxNum))
+            logger.debug("set_cpuOnline {} {}".format(value, self.cpu_maxNum))
             self.enable_cpu_num = value
 
             cpu_topology = self.cpu_topology
@@ -325,13 +325,13 @@ class CPUManager:
             #
             # cpu_num 作为索引, 取出对应的核心, 作为开启的最大 cpuid, 关闭大于最大 cpuid 的线程
             max_enable_cpuid = self.cps_ids[self.enable_cpu_num - 1]
-            logging.debug(
+            logger.debug(
                 f"enable_cpu_num {self.enable_cpu_num}, max_enable_cpuid {max_enable_cpuid}"
             )
             if self.enable_cpu_num is not None and self.enable_cpu_num < len(enabled_cores):
                 for processor_id, core_id in cpu_topology.items():
                     if int(core_id) > max_enable_cpuid:
-                        logging.info(
+                        logger.info(
                             f"add offline - processor_id:{processor_id}, core_id:{core_id}"
                         )
                         to_offline.add(int(processor_id))
@@ -348,7 +348,7 @@ class CPUManager:
                     core_to_keep = core_threads[0]
                     to_offline.update(set(core_threads[1:]))
 
-            logging.debug(f"to_offline {sorted(to_offline)}")
+            logger.debug(f"to_offline {sorted(to_offline)}")
 
             # 遍历判断，执行关闭和启用操作
             for cpu in cpu_topology.keys():
@@ -358,8 +358,8 @@ class CPUManager:
                     self.online_cpu(int(cpu))
             return True
         except Exception as e:
-            logging.error(traceback.format_exc())
-            logging.error(e)
+            logger.error(traceback.format_exc())
+            logger.error(e)
             return False
 
     def set_enable_All(self) -> bool:
@@ -369,7 +369,7 @@ class CPUManager:
             bool: True如果设置成功，否则False
         """
         try:
-            logging.debug("set_enable_All")
+            logger.debug("set_enable_All")
             cpu_path = "/sys/devices/system/cpu/"
             cpu_pattern = re.compile(r"^cpu(\d+)$")
 
@@ -380,7 +380,7 @@ class CPUManager:
                     self.online_cpu(int(cpu_number))
             return True
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             return False
 
     # 不能在cpu offline 之后进行判断，会不准确
@@ -406,13 +406,13 @@ class CPUManager:
             )
             stdout, stderr = process.stdout, process.stderr
             if stderr:
-                logging.error(f"is_support_smt error:\n{stderr}")
+                logger.error(f"is_support_smt error:\n{stderr}")
                 self.is_support_smt = False
             else:
                 self.is_support_smt = int(stdout) > 1
         except Exception as e:
-            logging.error(traceback.format_exc())
-            logging.error(e)
+            logger.error(traceback.format_exc())
+            logger.error(e)
             self.is_support_smt = False
         return self.is_support_smt
 
@@ -427,14 +427,14 @@ class CPUManager:
         """
         try:
             if not self.get_isSupportSMT():
-                logging.info("set_smt not support")
+                logger.info("set_smt not support")
                 return False
-            logging.debug("set_smt {}".format(value))
+            logger.debug("set_smt {}".format(value))
             self.cpu_smt = value
             return True
         except Exception as e:
-            logging.error(traceback.format_exc())
-            logging.error(e)
+            logger.error(traceback.format_exc())
+            logger.error(e)
             return False
 
     def set_cpuBoost(self, value: bool) -> bool:
@@ -460,7 +460,7 @@ class CPUManager:
         no_turbo_path = "/sys/devices/system/cpu/intel_pstate/no_turbo"
 
         try:
-            logging.debug("set_cpuBoost {}".format(value))
+            logger.debug("set_cpuBoost {}".format(value))
             self.cpu_boost = value
 
             # 如果不存在 pstate_boost_path
@@ -500,8 +500,8 @@ class CPUManager:
 
             return True
         except Exception as e:
-            logging.error(traceback.format_exc())
-            logging.error(e)
+            logger.error(traceback.format_exc())
+            logger.error(e)
             return False
 
     def check_cpuFreq(self) -> bool:
@@ -511,7 +511,7 @@ class CPUManager:
             bool: True如果频率低于限制频率，否则False
         """
         try:
-            logging.debug(f"check_cpuFreq cpu_nowLimitFreq = {self.cpu_nowLimitFreq}")
+            logger.debug(f"check_cpuFreq cpu_nowLimitFreq = {self.cpu_nowLimitFreq}")
             if self.cpu_nowLimitFreq == 0:
                 return False
             need_set = False
@@ -532,7 +532,7 @@ class CPUManager:
                         return True
             return False
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             return False
 
     def set_cpuFreq(self, value: int) -> bool:
@@ -545,7 +545,7 @@ class CPUManager:
             bool: True如果设置成功，否则False
         """
         try:
-            logging.debug(
+            logger.debug(
                 f"set_cpuFreq cpu_nowLimitFreq = {self.cpu_nowLimitFreq} value ={value}"
             )
             # 频率不同才可设置，设置相同频率时检测当前频率是否已经生效，未生效时再设置一次
@@ -574,7 +574,7 @@ class CPUManager:
             else:
                 return False
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             return False
 
     def get_cpu_topology(self) -> Dict[int, int]:
@@ -661,12 +661,12 @@ class CPUManager:
             )
             stdout, stderr = process.stdout, process.stderr
             if stderr:
-                logging.error(f"get_ryzenadj_info error:\n{stderr}")
+                logger.error(f"get_ryzenadj_info error:\n{stderr}")
                 return f"get_ryzenadj_info error:\n{stderr}"
             else:
                 return stdout
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             return f"get_ryzenadj_info error:\n{e}"
 
     def get_max_perf_pct(self) -> int:
@@ -702,7 +702,7 @@ class CPUManager:
             else:
                 return False
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             return False
 
 

@@ -3,7 +3,7 @@ import subprocess
 import threading
 import time
 import os
-from config import AMD_GPU_DEVICE_PATH, logging
+from config import AMD_GPU_DEVICE_PATH, logger
 from helpers import get_user
 
 cpu_busyPercent = 0
@@ -30,7 +30,7 @@ class GPUData:
             self.gpuBusyPercent = int(busyPercent)
             return True
         except Exception as e:
-            logging.error(f"setBusyPercent数据异常{e}", exc_info=True)
+            logger.error(f"setBusyPercent数据异常{e}", exc_info=True)
             return False
 
     def getBusyPercent(self):
@@ -66,7 +66,7 @@ class CPUData:
             self.guestnice = int(StatInfo[10])
             return True
         except Exception as e:
-            logging.error(f"StatInfo数据异常{e} ={StatInfo}", exc_info=True)
+            logger.error(f"StatInfo数据异常{e} ={StatInfo}", exc_info=True)
             return False
 
     def getFreeTime(self):
@@ -118,11 +118,11 @@ class SysInfoManager(threading.Thread):
                             self._language = line.split('"')[3]
                             break
             else:
-                logging.error(f"語言檢測路徑{lang_path}不存在該文件")
-            logging.info(f"get_language {self._language} path={lang_path}")
+                logger.error(f"語言檢測路徑{lang_path}不存在該文件")
+            logger.info(f"get_language {self._language} path={lang_path}")
             return self._language
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             return self._language
 
     def updateCpuData(self):
@@ -149,7 +149,7 @@ class SysInfoManager(threading.Thread):
             )
             cpu_busyPercent = 100 - freeTimeIncrease * 100 / totaltimeIncrease
         except Exception as e:
-            logging.error(f"更新CPU信息时异常 {e}")
+            logger.error(f"更新CPU信息时异常 {e}")
             cpu_DataErrCnt = cpu_DataErrCnt + 1
             if cpu_DataErrCnt >= self._cpu_QueueMaxLength / 2:
                 has_cpuData = False
@@ -180,24 +180,24 @@ class SysInfoManager(threading.Thread):
                     break
                 if output:
                     line_count += 1
-                    # logging.info(f"Line {line_count}: {output.strip()}")
+                    # logger.info(f"Line {line_count}: {output.strip()}")
                     if line_count == 4:
                         # 按空格分割
                         parts = output.strip().split()
                         if len(parts) >= 7:
                             # 取第七项
                             seventh_item = parts[6]
-                            # logging.info(f"The seventh item in the fourth line is: {seventh_item}")
+                            # logger.info(f"The seventh item in the fourth line is: {seventh_item}")
                             percent = seventh_item
                         else:
-                            logging.error(
+                            logger.error(
                                 "The fourth line does not have at least seven items."
                             )
                         process.terminate()  # 停止命令
                         break
             return round(float(percent))
         except Exception as e:
-            logging.error(f"An error occurred: {e}")
+            logger.error(f"An error occurred: {e}")
             return 0
         finally:
             process.stdout.close()
@@ -227,7 +227,7 @@ class SysInfoManager(threading.Thread):
                 self._gpu_NowQueueLength, 1
             )
         except Exception as e:
-            logging.error(f"更新GPU信息时异常 {e}")
+            logger.error(f"更新GPU信息时异常 {e}")
             gpu_DataErrCnt = gpu_DataErrCnt + 1
             if gpu_DataErrCnt >= self._gpu_QueueMaxLength / 2:
                 has_gpuData = False
@@ -246,7 +246,7 @@ class SysInfoManager(threading.Thread):
                 self.updateCpuData()
             if self._enableUpdateGPUInfo:
                 self.updateGpuData()
-            # logging.info(f"cpu_busyPercent={cpu_busyPercent} gpu_busyPercent={gpu_busyPercent}")
+            # logger.info(f"cpu_busyPercent={cpu_busyPercent} gpu_busyPercent={gpu_busyPercent}")
             time.sleep(self._collectInfoInterval)
 
 

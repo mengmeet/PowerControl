@@ -10,21 +10,35 @@ from logging_handler import SystemdHandler
 
 # 日志配置
 LOG_LOCATION = "/tmp/PowerControl_py.log"
-try:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="[%(asctime)s | %(filename)s:%(lineno)s:%(funcName)s] %(levelname)s: %(message)s",
-        force=True,
-        handlers=[
-            SystemdHandler(),
-            logging.FileHandler(filename=LOG_LOCATION, mode="w"),
-        ],
-    )
-except Exception as e:
-    stack = traceback.format_exc()
-    with open(LOG_LOCATION, "a") as f:
-        f.write(str(e))
-        f.write(stack)
+
+
+def setup_logger():
+    # 定义日志格式
+    file_format = "[%(asctime)s | %(filename)s:%(lineno)s:%(funcName)s] %(levelname)s: %(message)s"
+    systemd_format = "[%(filename)s:%(lineno)s:%(funcName)s] %(levelname)s: %(message)s"
+
+    # 创建并配置 handlers
+    systemd_handler = SystemdHandler()
+    systemd_handler.setFormatter(logging.Formatter(systemd_format))
+    
+    file_handler = logging.FileHandler(filename=LOG_LOCATION, mode="w")
+    file_handler.setFormatter(logging.Formatter(file_format))
+
+    # 获取 logger
+    try:
+        logger = decky.logger
+    except Exception:
+        logger = logging.getLogger(__name__)
+
+    logger.setLevel(logging.INFO)
+    logger.addHandler(systemd_handler)
+    logger.addHandler(file_handler)
+
+    return logger
+
+
+# 初始化 logger
+logger = setup_logger()
 
 # 路径配置
 try:
@@ -63,7 +77,7 @@ try:
     FAN_HWMON_CONFIG_DIR = f"{DECKY_PLUGIN_DIR}/backend/fan_config/hwmon"
     FAN_EC_CONFIG_DIR = f"{DECKY_PLUGIN_DIR}/backend/fan_config/ec"
 except Exception as e:
-    logging.error(f"路径配置异常|{e}", exc_info=True)
+    logger.error(f"路径配置异常|{e}", exc_info=True)
 
 # 设备信息获取配置
 try:
@@ -75,11 +89,11 @@ try:
     PRODUCT_VERSION = (
         open("/sys/devices/virtual/dmi/id/product_version", "r").read().strip()
     )
-    logging.info(
+    logger.info(
         f"CPU_ID: {CPU_ID}, PRODUCT_NAME: {PRODUCT_NAME}, PRODUCT_VERSION: {PRODUCT_VERSION}"
     )
 except Exception as e:
-    logging.error(f"设备信息配置异常|{e}")
+    logger.error(f"设备信息配置异常|{e}")
 
 API_URL = "https://api.github.com/repos/mengmeet/PowerControl/releases/latest"
 
@@ -141,7 +155,7 @@ try:
         "8850": 45,
     }
 except Exception as e:
-    logging.error(f"TDP配置异常|{e}")
+    logger.error(f"TDP配置异常|{e}")
 
 
 def load_yaml(file_path: str, chk_schema=None) -> dict:
@@ -156,10 +170,10 @@ def load_yaml(file_path: str, chk_schema=None) -> dict:
             try:
                 validate(instance=data, schema=chk_schema)
             except Exception as e:
-                logging.error(f"配置文件 {file_path} 验证失败 | {e}")
+                logger.error(f"配置文件 {file_path} 验证失败 | {e}")
                 return {}
         except Exception as e:
-            logging.error(f"验证模块导入失败, 跳过检查 | {e}")
+            logger.error(f"验证模块导入失败, 跳过检查 | {e}")
     return data
 
 
@@ -225,7 +239,7 @@ def get_device_ec_fans(p_name, p_version):
 
     # 通过产品名获得所有配置，然后分成带版本号和不带版本号的配置
     for conf in FAN_EC_CONFIG_MAP.get(p_name, []):
-        logging.info(f"conf of {p_name}: {conf}")
+        logger.info(f"conf of {p_name}: {conf}")
         if (
             p_version in conf["product_version"]
             and conf["product_version"] is not None
@@ -252,10 +266,10 @@ try:
 
     FAN_EC_CONFIG = get_device_ec_fans(PRODUCT_NAME, PRODUCT_VERSION)
 
-    logging.info(f"FAN_EC_CONFIG: {FAN_EC_CONFIG}")
+    logger.info(f"FAN_EC_CONFIG: {FAN_EC_CONFIG}")
 
 except Exception as e:
     import traceback
 
-    logging.error(f"风扇配置异常|{e}")
-    logging.error(traceback.format_exc())
+    logger.error(f"风扇配置异常|{e}")
+    logger.error(traceback.format_exc())

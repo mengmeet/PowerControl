@@ -12,8 +12,8 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2
       '@decky/ui':
-        specifier: ^4.7.2
-        version: 4.7.2
+        specifier: ^4.8.3
+        version: 4.8.3
       i18next:
         specifier: ^23.15.1
         version: 23.15.1
@@ -85,8 +85,8 @@ packages:
   '@decky/api@1.1.2':
     resolution: {integrity: sha512-lTMqRpHOrGTCyH2c1jJvkmWhOq2dcnX5/ioHbfCVmyQOBik1OM1BnzF1uROsnNDC5GkRvl3J/ATqYp6vhYpRqw==}
 
-  '@decky/ui@4.7.2':
-    resolution: {integrity: sha512-jYXVhbyyupXAcCuFqr7G2qjYVjp8hlMGF8zl8ALv67y0YhikAtfhA2rGUjCuaV3kdo9YrpBh8djRUJXdFPg/Eg==}
+  '@decky/ui@4.8.3':
+    resolution: {integrity: sha512-Y1KciazgvKqMEVBGrWFCTGOqgVi5sHbcQNoCZRMbPpcI0U3j7udl6mkfe/NBa16oRDZ03ljS41SmrAgKAAt/pA==}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -1015,7 +1015,7 @@ snapshots:
 
   '@decky/api@1.1.2': {}
 
-  '@decky/ui@4.7.2': {}
+  '@decky/ui@4.8.3': {}
 
   '@isaacs/cliui@8.0.2':
     dependencies:
