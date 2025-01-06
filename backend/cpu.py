@@ -730,31 +730,21 @@ class CPUManager:
         Returns:
             bool: 设置成功返回 True，否则返回 False
         """
-        available_governors = self.get_available_governors()
-        if not available_governors:
-            logger.error("无法获取可用的调度器列表")
-            return False
-            
-        if governor not in available_governors:
-            logger.error(f"无效的调度器名称: {governor}")
-            logger.info(f"可用的调度器: {available_governors}")
-            return False
-
         try:
-            cpu_count = os.cpu_count() or 1
-            success = True
-            for cpu in range(cpu_count):
-                governor_path = f"/sys/devices/system/cpu/cpu{cpu}/cpufreq/scaling_governor"
+            if governor not in self.get_available_governors():
+                return False
+
+            success = False
+            for cpu_id in self.get_online_cpus():
+                governor_path = f"/sys/devices/system/cpu/cpu{cpu_id}/cpufreq/scaling_governor"
                 if os.path.exists(governor_path):
-                    try:
-                        with open(governor_path, 'w') as f:
-                            f.write(governor)
-                    except Exception as e:
-                        logger.error(f"设置 CPU{cpu} 调度器失败: {e}")
-                        success = False
+                    with open(governor_path, "w") as f:
+                        f.write(governor)
+                    success = True
+            
             return success
         except Exception as e:
-            logger.error(f"设置 CPU 调度器失败: {e}")
+            logger.error(f"设置 CPU 调度器失败: {str(e)}")
             return False
 
     def get_available_governors(self) -> List[str]:
@@ -773,6 +763,105 @@ class CPUManager:
         except Exception as e:
             logger.error(f"获取可用 CPU 调度器失败: {e}")
             return []
+
+    def is_epp_supported(self) -> bool:
+        """检查系统是否支持 EPP 功能。
+        
+        Returns:
+            bool: 如果系统支持 EPP 则返回 True，否则返回 False
+        """
+        try:
+            epp_path = "/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences"
+            return os.path.exists(epp_path)
+        except Exception as e:
+            logger.error(f"检查 EPP 支持失败: {str(e)}")
+            return False
+
+    def get_epp_modes(self) -> List[str]:
+        """获取可用的 EPP 模式列表。
+        
+        Returns:
+            List[str]: 系统支持的 EPP 模式列表，如果不支持或获取失败则返回空列表
+        """
+        try:
+            if not self.is_epp_supported():
+                return []
+                
+            with open("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences", "r") as f:
+                return f.read().strip().split()
+        except Exception as e:
+            logger.error(f"获取可用 EPP 模式失败: {str(e)}")
+            return []
+
+    def get_current_epp(self) -> Optional[str]:
+        """获取当前的 EPP 模式。
+        
+        Returns:
+            Optional[str]: 当前的 EPP 模式，如果不支持或无法获取则返回 None
+        """
+        try:
+            if not self.is_epp_supported():
+                return None
+                
+            with open("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference", "r") as f:
+                return f.read().strip()
+        except Exception as e:
+            logger.error(f"获取 EPP 模式失败: {str(e)}")
+            return None
+
+    def get_online_cpus(self) -> List[int]:
+        """获取在线的 CPU 核心 ID 列表。
+        
+        Returns:
+            List[int]: 在线的 CPU ID 列表
+        """
+        try:
+            cpu_pattern = "/sys/devices/system/cpu/cpu[0-9]*"
+            cpu_dirs = glob.glob(cpu_pattern)
+            cpu_ids = []
+            for cpu_dir in cpu_dirs:
+                try:
+                    cpu_id = int(cpu_dir.split("cpu")[-1])
+                    # 检查 CPU 是否在线
+                    online_path = f"{cpu_dir}/online"
+                    # cpu0 没有 online 文件，默认总是在线
+                    if cpu_id == 0 or (os.path.exists(online_path) and open(online_path).read().strip() == "1"):
+                        cpu_ids.append(cpu_id)
+                except (ValueError, IOError):
+                    continue
+            return sorted(cpu_ids)
+        except Exception as e:
+            logger.error(f"获取在线 CPU 列表失败: {str(e)}")
+            return []
+
+    def set_epp(self, mode: str) -> bool:
+        """设置 EPP 模式。
+        
+        Args:
+            mode (str): EPP 模式，可用值可通过 get_epp_modes() 获取
+        
+        Returns:
+            bool: 设置是否成功
+        """
+        try:
+            if not self.is_epp_supported():
+                return False
+                
+            if mode not in self.get_epp_modes():
+                return False
+            
+            success = False
+            for cpu_id in self.get_online_cpus():
+                epp_path = f"/sys/devices/system/cpu/cpu{cpu_id}/cpufreq/energy_performance_preference"
+                if os.path.exists(epp_path):
+                    with open(epp_path, "w") as f:
+                        f.write(mode)
+                    success = True
+            
+            return success
+        except Exception as e:
+            logger.error(f"设置 EPP 模式失败: epp_path: {epp_path}", exc_info=True)
+            return False
 
 
 cpuManager = CPUManager()

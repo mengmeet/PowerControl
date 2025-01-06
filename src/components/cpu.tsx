@@ -374,6 +374,65 @@ const CPUGovernorComponent: FC = () => {
   );
 };
 
+const CPUEPPComponent: FC = () => {
+  const [epp, setEPP] = useState<string>(Settings.appEPPMode());
+  const [eppModes, setEPPModes] = useState<string[]>([]);
+
+  const refresh = () => {
+    setEPP(Settings.appEPPMode());
+    if (Backend.data.hasEPPModes()) {
+      setEPPModes(Backend.data.getEPPModes());
+    }
+  };
+
+  // 初始化和监听设置变化
+  useEffect(() => {
+    refresh();
+    PluginManager.listenUpdateComponent(
+      ComponentName.CPU_EPP,
+      [
+        ComponentName.CPU_EPP,
+        ComponentName.CPU_GOVERNOR,
+        ComponentName.CPU_TDP,
+        ComponentName.CPU_BOOST,
+      ],
+      (_ComponentName, updateType) => {
+        if (updateType === UpdateType.UPDATE) {
+          refresh();
+        }
+      }
+    );
+  }, []);
+
+  if (!Backend.data.hasEPPModes() || eppModes.length === 0) {
+    return null;
+  }
+
+  return (
+    <div>
+      <PanelSectionRow>
+        <DropdownItem
+          label={localizationManager.getString(localizeStrEnum.CPU_EPP)}
+          description={localizationManager.getString(
+            localizeStrEnum.CPU_EPP_DESC
+          )}
+          menuLabel={localizationManager.getString(
+            localizeStrEnum.CPU_EPP
+          )}
+          rgOptions={eppModes.map((mode) => ({
+            data: mode,
+            label: mode.charAt(0).toUpperCase() + mode.slice(1),
+          }))}
+          selectedOption={epp}
+          onChange={(value) => {
+            Settings.setEPP(value.data);
+          }}
+        />
+      </PanelSectionRow>
+    </div>
+  );
+};
+
 export const CPUComponent: FC = () => {
   const [show, setShow] = useState<boolean>(Settings.ensureEnable());
 
@@ -413,6 +472,7 @@ export const CPUComponent: FC = () => {
           <CPUBoostComponent />
           {isSpportSMT && <CPUSmtComponent />}
           <CPUGovernorComponent />
+          {/* {Backend.data.hasEPPModes() && <CPUEPPComponent />} */}
           <CPUNumComponent />
           <CPUTDPComponent />
           <CustomTDPComponent />

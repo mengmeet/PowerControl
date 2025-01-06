@@ -278,3 +278,35 @@ class Plugin:
         except Exception as e:
             logger.error(e, exc_info=True)
             return False
+
+    async def is_epp_supported(self):
+        """检查系统是否支持 EPP 功能。"""
+        try:
+            return cpuManager.is_epp_supported()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
+    async def get_epp_modes(self):
+        """获取可用的 EPP 模式列表。"""
+        try:
+            return cpuManager.get_epp_modes()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return []
+
+    async def get_current_epp(self):
+        """获取当前的 EPP 模式。"""
+        try:
+            return cpuManager.get_current_epp()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return None
+
+    async def set_epp(self, mode: str):
+        """设置 EPP 模式。"""
+        try:
+            return cpuManager.set_epp(mode)
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False

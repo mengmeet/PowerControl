@@ -28,6 +28,12 @@ export class BackendData {
   private systemInfo: SystemInfo | undefined;
   private availableGovernors: string[] = [];
   private has_availableGovernors = false;
+  private isEppSupported = false;
+  private has_isEppSupported = false;
+  private eppModes: string[] = [];
+  private has_eppModes = false;
+  private currentEpp: string | null = null;
+  private has_currentEpp = false;
 
   public async init() {
     await call<[], number>("get_cpuMaxNum")
@@ -85,6 +91,39 @@ export class BackendData {
         console.error("获取可用 CPU 调度器失败:", err);
         this.availableGovernors = [];
         this.has_availableGovernors = false;
+      });
+
+    await call<[], boolean>("is_epp_supported")
+      .then((res) => {
+        this.isEppSupported = res;
+        this.has_isEppSupported = true;
+      })
+      .catch((err) => {
+        console.error("检查 EPP 支持失败:", err);
+        this.isEppSupported = false;
+        this.has_isEppSupported = false;
+      });
+
+    await call<[], string[]>("get_epp_modes")
+      .then((res) => {
+        this.eppModes = res;
+        this.has_eppModes = true;
+      })
+      .catch((err) => {
+        console.error("获取可用 EPP 模式失败:", err);
+        this.eppModes = [];
+        this.has_eppModes = false;
+      });
+
+    await call<[], string | null>("get_current_epp")
+      .then((res) => {
+        this.currentEpp = res;
+        this.has_currentEpp = true;
+      })
+      .catch((err) => {
+        console.error("获取当前 EPP 模式失败:", err);
+        this.currentEpp = null;
+        this.has_currentEpp = false;
       });
   }
 
@@ -216,6 +255,30 @@ export class BackendData {
       console.error("get_fanIsAuto error", error);
     });
     return fanIsAuto;
+  }
+
+  public isEPPSupported() {
+    return this.isEppSupported;
+  }
+
+  public hasEPPSupported() {
+    return this.has_isEppSupported;
+  }
+
+  public getEPPModes() {
+    return this.eppModes;
+  }
+
+  public hasEPPModes() {
+    return this.has_eppModes;
+  }
+
+  public getCurrentEPP() {
+    return this.currentEpp;
+  }
+
+  public hasCurrentEPP() {
+    return this.has_currentEpp;
   }
 }
 
@@ -514,6 +577,26 @@ export class Backend {
       }
     }
 
+    if (
+      applyTarget == APPLYTYPE.SET_ALL ||
+      applyTarget == APPLYTYPE.SET_CPU_GOVERNOR
+    ) {
+      const cpuGovernor = Settings.appCPUGovernor();
+      if (cpuGovernor) {
+        Backend.setCpuGovernor(cpuGovernor);
+      }
+    }
+
+    if (
+      applyTarget == APPLYTYPE.SET_ALL ||
+      applyTarget == APPLYTYPE.SET_EPP
+    ) {
+      const eppMode = Settings.appEPPMode();
+      if (eppMode) {
+        Backend.setEPP(eppMode);
+      }
+    }
+
     /*
     if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_FANMODE){
       if(!FanControl.fanIsEnable){
@@ -624,5 +707,25 @@ export class Backend {
       console.error("设置 CPU 调度器失败:", error);
       return false;
     }
+  }
+
+  // 获取当前 EPP 模式
+  public static getCurrentEPP(): Promise<string | null> {
+    return call("get_current_epp");
+  }
+
+  // 获取可用的 EPP 模式列表
+  public static getEPPModes(): Promise<string[]> {
+    return call("get_epp_modes");
+  }
+
+  // 检查是否支持 EPP 功能
+  public static isEPPSupported(): Promise<boolean> {
+    return call("is_epp_supported");
+  }
+
+  // 设置 EPP 模式
+  public static setEPP(mode: string): Promise<boolean> {
+    return call("set_epp", mode);
   }
 }

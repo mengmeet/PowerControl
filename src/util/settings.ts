@@ -52,6 +52,8 @@ export class AppSetting {
   cpuMaxPerfPct?: number;
   @JsonProperty()
   cpuGovernor?: string;
+  @JsonProperty()
+  epp?: string;
 
   constructor() {
     this.smt = true;
@@ -81,6 +83,7 @@ export class AppSetting {
     this.fanProfileNameList = [];
     this.cpuMaxPerfPct = 100;
     this.cpuGovernor = "performance"; // 默认使用性能模式
+    this.epp = "performance"; // 默认使用性能模式
   }
   deepCopy(copyTarget: AppSetting) {
     // this.overwrite=copyTarget.overwrite;
@@ -99,6 +102,7 @@ export class AppSetting {
     this.fanProfileNameList = copyTarget.fanProfileNameList?.slice();
     this.cpuMaxPerfPct = copyTarget.cpuMaxPerfPct;
     this.cpuGovernor = copyTarget.cpuGovernor;
+    this.epp = copyTarget.epp;
   }
 }
 
@@ -860,7 +864,11 @@ export class Settings {
   static setCPUGovernor(governor: string) {
     const app = Settings.ensureApp();
     app.cpuGovernor = governor;
-    Backend.setCpuGovernor(governor);
+    Backend.applySettings(APPLYTYPE.SET_CPU_GOVERNOR);
+    PluginManager.updateComponent(
+      ComponentName.CPU_GOVERNOR,
+      UpdateType.UPDATE
+    );
     this.saveSettingsToLocalStorage();
     this._instance.settingChangeEvent.dispatchEvent(
       new Event("CPU_GOVERNOR_Change")
@@ -878,6 +886,39 @@ export class Settings {
   static removeCpuGovernorEventListener(callback: () => void) {
     this._instance.settingChangeEvent.removeEventListener(
       "CPU_GOVERNOR_Change",
+      callback
+    );
+  }
+
+  // 获取当前 EPP 模式
+  public static appEPPMode(): string {
+    return this.ensureApp().epp || "performance";
+  }
+
+  // 设置 EPP 模式
+  public static setEPP(epp: string) {
+    const app = this.ensureApp();
+    app.epp = epp;
+    this.saveSettingsToLocalStorage();
+    Backend.applySettings(APPLYTYPE.SET_EPP);
+    PluginManager.updateComponent(ComponentName.CPU_EPP, UpdateType.UPDATE);
+    this._instance.settingChangeEvent.dispatchEvent(
+      new CustomEvent(APPLYTYPE.SET_EPP, { detail: epp })
+    );
+  }
+
+  // 监听 EPP 模式变化
+  public static addEppEventListener(callback: () => void) {
+    this._instance.settingChangeEvent.addEventListener(
+      APPLYTYPE.SET_EPP,
+      callback
+    );
+  }
+
+  // 移除 EPP 模式变化监听
+  public static removeEppEventListener(callback: () => void) {
+    this._instance.settingChangeEvent.removeEventListener(
+      APPLYTYPE.SET_EPP,
       callback
     );
   }

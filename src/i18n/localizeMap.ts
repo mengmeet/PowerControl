@@ -161,4 +161,6 @@ export enum localizeStrEnum {
 
   CPU_GOVERNOR = "CPU_GOVERNOR",
   CPU_GOVERNOR_DESC = "CPU_GOVERNOR_DESC",
+  CPU_EPP = "CPU_EPP",
+  CPU_EPP_DESC = "CPU_EPP_DESC",
 }
