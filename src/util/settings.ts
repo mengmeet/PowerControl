@@ -50,6 +50,9 @@ export class AppSetting {
   gpuSliderFix?: boolean;
   @JsonProperty()
   cpuMaxPerfPct?: number;
+  @JsonProperty()
+  cpuGovernor?: string;
+
   constructor() {
     this.smt = true;
     this.cpuNum = Backend.data?.HasCpuMaxNum()
@@ -77,6 +80,7 @@ export class AppSetting {
       : 200;
     this.fanProfileNameList = [];
     this.cpuMaxPerfPct = 100;
+    this.cpuGovernor = "performance"; // 默认使用性能模式
   }
   deepCopy(copyTarget: AppSetting) {
     // this.overwrite=copyTarget.overwrite;
@@ -94,6 +98,7 @@ export class AppSetting {
     this.gpuRangeMinFreq = copyTarget.gpuAutoMinFreq;
     this.fanProfileNameList = copyTarget.fanProfileNameList?.slice();
     this.cpuMaxPerfPct = copyTarget.cpuMaxPerfPct;
+    this.cpuGovernor = copyTarget.cpuGovernor;
   }
 }
 
@@ -846,5 +851,34 @@ export class Settings {
     if (apply) {
       Backend.applySettings(APPLYTYPE.SET_ALL);
     }
+  }
+
+  static appCPUGovernor(): string {
+    return Settings.ensureApp().cpuGovernor || "performance";
+  }
+
+  static setCPUGovernor(governor: string) {
+    const app = Settings.ensureApp();
+    app.cpuGovernor = governor;
+    Backend.setCpuGovernor(governor);
+    this.saveSettingsToLocalStorage();
+    this._instance.settingChangeEvent.dispatchEvent(
+      new Event("CPU_GOVERNOR_Change")
+    );
+  }
+
+  // 监听 CPU 调度器变化
+  static addCpuGovernorEventListener(callback: () => void) {
+    this._instance.settingChangeEvent.addEventListener(
+      "CPU_GOVERNOR_Change",
+      callback
+    );
+  }
+
+  static removeCpuGovernorEventListener(callback: () => void) {
+    this._instance.settingChangeEvent.removeEventListener(
+      "CPU_GOVERNOR_Change",
+      callback
+    );
   }
 }

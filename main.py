@@ -250,3 +250,31 @@ class Plugin:
         except Exception as e:
             logger.error(e, exc_info=True)
             return False
+
+    async def get_cpu_governor(self):
+        """获取当前 CPU 调度器"""
+        try:
+            return cpuManager.get_cpu_governor()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return ""
+
+    async def get_available_governors(self):
+        """获取所有可用的 CPU 调度器"""
+        try:
+            return cpuManager.get_available_governors()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return []
+
+    async def set_cpu_governor(self, governor: str):
+        """设置 CPU 调度器
+        
+        Args:
+            governor (str): 调度器名称
+        """
+        try:
+            return cpuManager.set_cpu_governor(governor)
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False

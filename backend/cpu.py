@@ -705,5 +705,74 @@ class CPUManager:
             logger.error(e)
             return False
 
+    def get_cpu_governor(self) -> str:
+        """获取当前 CPU 调度器。
+        
+        Returns:
+            str: 当前的 CPU 调度器名称，如果获取失败则返回空字符串
+        """
+        try:
+            governor_path = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
+            if os.path.exists(governor_path):
+                with open(governor_path, 'r') as f:
+                    return f.read().strip()
+            return ""
+        except Exception as e:
+            logger.error(f"获取 CPU 调度器失败: {e}")
+            return ""
+
+    def set_cpu_governor(self, governor: str) -> bool:
+        """设置 CPU 调度器。
+        
+        Args:
+            governor (str): 调度器名称
+        
+        Returns:
+            bool: 设置成功返回 True，否则返回 False
+        """
+        available_governors = self.get_available_governors()
+        if not available_governors:
+            logger.error("无法获取可用的调度器列表")
+            return False
+            
+        if governor not in available_governors:
+            logger.error(f"无效的调度器名称: {governor}")
+            logger.info(f"可用的调度器: {available_governors}")
+            return False
+
+        try:
+            cpu_count = os.cpu_count() or 1
+            success = True
+            for cpu in range(cpu_count):
+                governor_path = f"/sys/devices/system/cpu/cpu{cpu}/cpufreq/scaling_governor"
+                if os.path.exists(governor_path):
+                    try:
+                        with open(governor_path, 'w') as f:
+                            f.write(governor)
+                    except Exception as e:
+                        logger.error(f"设置 CPU{cpu} 调度器失败: {e}")
+                        success = False
+            return success
+        except Exception as e:
+            logger.error(f"设置 CPU 调度器失败: {e}")
+            return False
+
+    def get_available_governors(self) -> List[str]:
+        """获取系统支持的所有 CPU 调度器。
+        
+        Returns:
+            List[str]: 可用的调度器列表，如果获取失败则返回空列表
+        """
+        try:
+            governor_path = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors"
+            if os.path.exists(governor_path):
+                with open(governor_path, 'r') as f:
+                    governors = f.read().strip().split()
+                    return governors
+            return []
+        except Exception as e:
+            logger.error(f"获取可用 CPU 调度器失败: {e}")
+            return []
+
 
 cpuManager = CPUManager()

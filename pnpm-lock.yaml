@@ -12,14 +12,14 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2
       '@decky/ui':
-        specifier: ^4.8.3
-        version: 4.8.3
+        specifier: ^4.9.0
+        version: 4.9.0
       i18next:
         specifier: ^23.15.1
         version: 23.15.1
       react-icons:
         specifier: ^4.12.0
-        version: 4.12.0(react@18.3.1)
+        version: 4.12.0(react@19.0.0)
       typescript-json-serializer:
         specifier: ^4.3.0
         version: 4.3.0
@@ -85,8 +85,8 @@ packages:
   '@decky/api@1.1.2':
     resolution: {integrity: sha512-lTMqRpHOrGTCyH2c1jJvkmWhOq2dcnX5/ioHbfCVmyQOBik1OM1BnzF1uROsnNDC5GkRvl3J/ATqYp6vhYpRqw==}
 
-  '@decky/ui@4.8.3':
-    resolution: {integrity: sha512-Y1KciazgvKqMEVBGrWFCTGOqgVi5sHbcQNoCZRMbPpcI0U3j7udl6mkfe/NBa16oRDZ03ljS41SmrAgKAAt/pA==}
+  '@decky/ui@4.9.0':
+    resolution: {integrity: sha512-5iN8UciEpL4WHPdUr4Nzl4/y3CBnLfUN+/1q+WeMUNOzPJICLiwlltfBbyZyMM/ST3nPrDYCLbZCYD9jKWFLXQ==}
 
   '@isaacs/cliui@8.0.2':
     resolution: {integrity: sha512-O8jcjabXaleOG9DQ0+ARXWZBTfnP4WNAqzuiJK7ll44AmxGKv/J2M4TPjxjY3znBCfvBXFzucm1twdyFybFqEA==}
@@ -667,9 +667,6 @@ packages:
     resolution: {integrity: sha512-7vuh85V5cdDofPyxn58nrPjBktZo0u9x1g8WtjQol+jZDaE+fhN+cIvTj11GndBnMnyfrUOG1sZQxCdjKh+DKg==}
     engines: {node: '>= 10.13.0'}
 
-  js-tokens@4.0.0:
-    resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
-
   json-parse-even-better-errors@2.3.1:
     resolution: {integrity: sha512-xyFwyhro/JEof6Ghe2iz2NcXoj2sloNsWr/XsERDK/oiPCfaNhl5ONfp+jQdAZRQQ0IJWNzH9zIZF7li91kh2w==}
 
@@ -682,10 +679,6 @@ packages:
   loader-runner@4.3.0:
     resolution: {integrity: sha512-3R/1M+yS3j5ou80Me59j7F9IMs4PXs3VqRrm0TU3AbKPxlmpoY1TNscJV/oGJXo8qCatFGTfDbY6W6ipGOYXfg==}
     engines: {node: '>=6.11.5'}
-
-  loose-envify@1.4.0:
-    resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
-    hasBin: true
 
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
@@ -794,8 +787,8 @@ packages:
     peerDependencies:
       react: '*'
 
-  react@18.3.1:
-    resolution: {integrity: sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==}
+  react@19.0.0:
+    resolution: {integrity: sha512-V8AVnmPIICiWpGfm6GLzCR/W5FXLchHop40W4nXBmdlEceh16rCN8O8LNWm5bh5XUX91fh7KpA+W0TgMKmgTpQ==}
     engines: {node: '>=0.10.0'}
 
   rechoir@0.6.2:
@@ -1015,7 +1008,7 @@ snapshots:
 
   '@decky/api@1.1.2': {}
 
-  '@decky/ui@4.8.3': {}
+  '@decky/ui@4.9.0': {}
 
   '@isaacs/cliui@8.0.2':
     dependencies:
@@ -1578,8 +1571,6 @@ snapshots:
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
-  js-tokens@4.0.0: {}
-
   json-parse-even-better-errors@2.3.1: {}
 
   json-schema-traverse@0.4.1: {}
@@ -1589,10 +1580,6 @@ snapshots:
       uc.micro: 2.1.0
 
   loader-runner@4.3.0: {}
-
-  loose-envify@1.4.0:
-    dependencies:
-      js-tokens: 4.0.0
 
   lru-cache@10.4.3: {}
 
@@ -1679,13 +1666,11 @@ snapshots:
     dependencies:
       safe-buffer: 5.2.1
 
-  react-icons@4.12.0(react@18.3.1):
+  react-icons@4.12.0(react@19.0.0):
     dependencies:
-      react: 18.3.1
+      react: 19.0.0
 
-  react@18.3.1:
-    dependencies:
-      loose-envify: 1.4.0
+  react@19.0.0: {}
 
   rechoir@0.6.2:
     dependencies:

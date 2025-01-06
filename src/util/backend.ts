@@ -26,6 +26,9 @@ export class BackendData {
   private latest_version = "";
   private supportCPUMaxPct = false;
   private systemInfo: SystemInfo | undefined;
+  private availableGovernors: string[] = [];
+  private has_availableGovernors = false;
+
   public async init() {
     await call<[], number>("get_cpuMaxNum")
       .then((res) => {
@@ -72,6 +75,17 @@ export class BackendData {
     SteamUtils.getSystemInfo().then((systemInfo) => {
       this.systemInfo = systemInfo;
     });
+
+    await call<[], string[]>("get_available_governors")
+      .then((res) => {
+        this.availableGovernors = res;
+        this.has_availableGovernors = true;
+      })
+      .catch((err) => {
+        console.error("获取可用 CPU 调度器失败:", err);
+        this.availableGovernors = [];
+        this.has_availableGovernors = false;
+      });
   }
 
   public getForceShowTDP() {
@@ -164,6 +178,14 @@ export class BackendData {
 
   public getSupportCPUMaxPct() {
     return this.supportCPUMaxPct;
+  }
+
+  public HasAvailableGovernors() {
+    return this.has_availableGovernors;
+  }
+
+  public getAvailableGovernors(): string[] {
+    return this.availableGovernors;
   }
 
   public async getFanRPM(index: number) {
@@ -573,4 +595,34 @@ export class Backend {
       Backend.applyFanAuto(index, true);
     });
   };
+
+  // 获取当前 CPU 调度器
+  public static async getCpuGovernor(): Promise<string> {
+    try {
+      return await call<[], string>("get_cpu_governor");
+    } catch (error) {
+      console.error("获取 CPU 调度器失败:", error);
+      return "";
+    }
+  }
+
+  // 获取所有可用的 CPU 调度器
+  public static async getAvailableGovernors(): Promise<string[]> {
+    try {
+      return await call<[], string[]>("get_available_governors");
+    } catch (error) {
+      console.error("获取可用 CPU 调度器列表失败:", error);
+      return [];
+    }
+  }
+
+  // 设置 CPU 调度器
+  public static async setCpuGovernor(governor: string): Promise<boolean> {
+    try {
+      return await call<[string], boolean>("set_cpu_governor", governor);
+    } catch (error) {
+      console.error("设置 CPU 调度器失败:", error);
+      return false;
+    }
+  }
 }

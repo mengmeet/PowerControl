@@ -11,6 +11,8 @@
     "CPU_NUM":"CPU コア数",
     "CPU_NUM_DESC":"有効な物理コアを設定",
     "CPU_MAX_PERF":"CPU 最大パフォーマンス",
+    "CPU_GOVERNOR": "CPU ガバナー",
+    "CPU_GOVERNOR_DESC": "CPU パフォーマンススケジューリングポリシーを設定",
     "TDP":"熱設計電力 (TDP) 制限",
     "TDP_DESC":"総消費電力を抑えるためにプロセッサの電力を制限",
     "RYZENADJ_NOT_FOUND":"RyzenAdj が見つかりません",
