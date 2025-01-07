@@ -379,8 +379,13 @@ export class Backend {
     return await call("set_max_perf_pct", value);
   }
 
-  public static applySettings = async (applyTarget: APPLYTYPE) => {
+  public static async applySettings(applyTarget: APPLYTYPE) {
     try {
+      if (!Settings.ensureEnable()) {
+        Backend.resetSettings();
+        return;
+      }
+
       if (applyTarget === APPLYTYPE.SET_ALL) {
         // 同步 OverWrite 到 QAM
         QAMPatch.togglePreferAppProfile(Settings.appOverWrite());
@@ -413,76 +418,7 @@ export class Backend {
         }
       }
 
-      // 其他设置处理
-      if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_CPU_MAX_PERF) {
-        const maxPerfPct = Settings.appCpuMaxPerfPct();
-        Backend.setMaxPerfPct(maxPerfPct);
-      }
-
-      if (
-        applyTarget == APPLYTYPE.SET_ALL ||
-        applyTarget == APPLYTYPE.SET_GPUMODE
-      ) {
-        const gpuMode = Settings.appGPUMode();
-        const gpuFreq = Settings.appGPUFreq();
-        const gpuSliderFix = Settings.appGPUSliderFix();
-        const gpuAutoMaxFreq = Settings.appGPUAutoMaxFreq();
-        const gpuAutoMinFreq = Settings.appGPUAutoMinFreq();
-        const gpuRangeMaxFreq = Settings.appGPURangeMaxFreq();
-        const gpuRangeMinFreq = Settings.appGPURangeMinFreq();
-        if (gpuMode == GPUMODE.NOLIMIT) {
-          Backend.applyGPUAuto(false);
-          Backend.applyGPUFreq(0);
-        } else if (gpuMode == GPUMODE.FIX) {
-          Backend.applyGPUAuto(false);
-          Backend.applyGPUFreq(gpuFreq);
-        } else if (gpuMode == GPUMODE.NATIVE && gpuSliderFix) {
-          console.log(`原生设置无需处理`);
-        } else if (gpuMode == GPUMODE.AUTO) {
-          console.log(`开始自动优化GPU频率`);
-          Settings.setTDPEnable(false);
-          Settings.setCpuboost(false);
-          Backend.applyGPUAutoRange(gpuAutoMinFreq, gpuAutoMaxFreq);
-          Backend.applyGPUAuto(true);
-        } else if (gpuMode == GPUMODE.RANGE) {
-          Backend.applyGPUAuto(false);
-          Backend.applyGPUFreqRange(gpuRangeMinFreq, gpuRangeMaxFreq);
-        } else {
-          console.log(`出现意外的GPUmode = ${gpuMode}`);
-          Backend.applyGPUFreq(0);
-        }
-      }
-
-      if (
-        applyTarget == APPLYTYPE.SET_ALL ||
-        applyTarget == APPLYTYPE.SET_GPUSLIDERFIX
-      ) {
-        const gpuSlideFix = Settings.appGPUSliderFix();
-        if (gpuSlideFix) {
-          Backend.applyGPUSliderFix();
-        }
-      }
-
-      if (
-        applyTarget == APPLYTYPE.SET_ALL ||
-        applyTarget == APPLYTYPE.SET_CPU_GOVERNOR
-      ) {
-        const cpuGovernor = Settings.appCPUGovernor();
-        if (cpuGovernor) {
-          Backend.setCpuGovernor(cpuGovernor);
-        }
-      }
-
-      if (
-        applyTarget == APPLYTYPE.SET_ALL ||
-        applyTarget == APPLYTYPE.SET_EPP
-      ) {
-        const eppMode = Settings.appEPPMode();
-        if (eppMode) {
-          Backend.setEPP(eppMode);
-        }
-      }
-
+      // 风扇控制设置处理
       if (
         applyTarget == APPLYTYPE.SET_ALL ||
         applyTarget == APPLYTYPE.SET_FANRPM
