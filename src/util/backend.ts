@@ -395,6 +395,13 @@ export class Backend {
           Backend.handleEPP,
         ];
         await Promise.all(cpuHandlers.map(handler => handler()));
+
+        // GPU 相关设置处理
+        const gpuHandlers = [
+          Backend.handleGPUMode,
+          Backend.handleGPUSliderFix,
+        ];
+        await Promise.all(gpuHandlers.map(handler => handler()));
       } else {
         const handler = Backend.settingsHandlers.get(applyTarget);
         if (handler) {
@@ -613,11 +620,59 @@ export class Backend {
     }
   }
 
+  private static async handleGPUMode(): Promise<void> {
+    const gpuMode = Settings.appGPUMode();
+    const gpuFreq = Settings.appGPUFreq();
+    const gpuSliderFix = Settings.appGPUSliderFix();
+    const gpuAutoMaxFreq = Settings.appGPUAutoMaxFreq();
+    const gpuAutoMinFreq = Settings.appGPUAutoMinFreq();
+    const gpuRangeMaxFreq = Settings.appGPURangeMaxFreq();
+    const gpuRangeMinFreq = Settings.appGPURangeMinFreq();
+
+    switch (gpuMode) {
+      case GPUMODE.NOLIMIT:
+        await Backend.applyGPUAuto(false);
+        await Backend.applyGPUFreq(0);
+        break;
+      case GPUMODE.FIX:
+        await Backend.applyGPUAuto(false);
+        await Backend.applyGPUFreq(gpuFreq);
+        break;
+      case GPUMODE.NATIVE:
+        if (gpuSliderFix) {
+          console.log(`原生设置无需处理`);
+        }
+        break;
+      case GPUMODE.AUTO:
+        Settings.setTDPEnable(false);
+        Settings.setCpuboost(false);
+        await Backend.applyGPUAutoRange(gpuAutoMinFreq, gpuAutoMaxFreq);
+        await Backend.applyGPUAuto(true);
+        break;
+      case GPUMODE.RANGE:
+        await Backend.applyGPUAuto(false);
+        await Backend.applyGPUFreqRange(gpuRangeMinFreq, gpuRangeMaxFreq);
+        break;
+      default:
+        console.log(`出现意外的GPUmode = ${gpuMode}`);
+        await Backend.applyGPUFreq(0);
+    }
+  }
+
+  private static async handleGPUSliderFix(): Promise<void> {
+    const gpuSliderFix = Settings.appGPUSliderFix();
+    if (gpuSliderFix) {
+      await Backend.applyGPUSliderFix();
+    }
+  }
+
   private static settingsHandlers: Map<APPLYTYPE, () => Promise<void>> = new Map([
     [APPLYTYPE.SET_CPUCORE, Backend.handleCPUNum],
     [APPLYTYPE.SET_CPUBOOST, Backend.handleCPUBoost],
     [APPLYTYPE.SET_CPU_GOVERNOR, Backend.handleCPUGovernor],
     [APPLYTYPE.SET_EPP, Backend.handleEPP],
+    [APPLYTYPE.SET_GPUMODE, Backend.handleGPUMode],
+    [APPLYTYPE.SET_GPUSLIDERFIX, Backend.handleGPUSliderFix],
   ]);
 
   public static resetFanSettings = () => {
