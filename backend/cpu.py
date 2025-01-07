@@ -91,8 +91,7 @@ class CPUManager:
                 logger.info("get_hasRyzenadj {}".format(False))
                 return False
         except Exception as e:
-            logger.error(traceback.format_exc())
-            logger.error(e)
+            logger.error("Failed to check ryzenadj tool", exc_info=True)
             return False
 
     def get_cpuMaxNum(self) -> int:
@@ -119,7 +118,7 @@ class CPUManager:
             logger.info("get_cpuMaxNum {}".format(self.cpu_maxNum))
             return self.cpu_maxNum
         except Exception as e:
-            logger.error(e)
+            logger.error("Failed to get max CPU cores", exc_info=True)
             return 0
 
     def get_tdpMax(self) -> int:
@@ -142,7 +141,7 @@ class CPUManager:
             logger.info("get_tdpMax {}".format(self.cpu_tdpMax))
             return self.cpu_tdpMax
         except Exception as e:
-            logger.error(e)
+            logger.error("Failed to get max TDP value", exc_info=True)
             return 0
 
     # 弃用
@@ -173,7 +172,7 @@ class CPUManager:
             )
             return self.cpu_avaFreq
         except Exception as e:
-            logger.error(e)
+            logger.error("Failed to get available CPU frequencies", exc_info=True)
             return []
 
     def set_cpuTDP(self, value: int) -> bool:
@@ -222,7 +221,8 @@ class CPUManager:
                         rapl_long = f.replace("_name", "_power_limit_uw")
             return rapl_long, rapl_short
         except Exception as e:
-            logger.error(e, exc_info=True)
+            logger.error("Failed to get Intel RAPL path", exc_info=True)
+            return "", ""
 
     def set_cpuTDP_Intel(self, value: int) -> bool:
         """设置Intel CPU TDP值。
@@ -239,7 +239,7 @@ class CPUManager:
             tdp = value * 1000000
             rapl_long, rapl_short = self.__get_intel_rapl_path()
             if rapl_long == "" or rapl_short == "":
-                logger.error("set_cpuTDP_Intel error: rapl path not found")
+                logger.error("Failed to set Intel CPU TDP: RAPL path not found")
                 return False
             with open(rapl_long, "w") as file:
                 file.write(str(tdp))
@@ -248,7 +248,7 @@ class CPUManager:
             return True
 
         except Exception as e:
-            logger.error(e, exc_info=True)
+            logger.error(f"Failed to set Intel CPU TDP: value={value}", exc_info=True)
             return False
 
     def set_cpuTDP_AMD(self, value: int) -> bool:
@@ -285,14 +285,15 @@ class CPUManager:
                 stdout, stderr = process.stdout, process.stderr
                 logger.debug(f"set_cpuTDP result:\n{stdout}")
                 if stderr:
-                    logger.error(f"set_cpuTDP error:\n{stderr}")
+                    logger.error(f"Failed to set AMD CPU TDP:\n{stderr}")
+                    return False
 
                 return True
             else:
+                logger.error(f"Failed to set AMD CPU TDP: value less than 3W (value={value})")
                 return False
         except Exception as e:
-            logger.error(traceback.format_exc())
-            logger.error(e)
+            logger.error(f"Failed to set AMD CPU TDP: value={value}", exc_info=True)
             return False
 
     def set_cpuOnline(self, value: int) -> bool:
@@ -313,12 +314,6 @@ class CPUManager:
 
             # 初始化关闭 Set
             to_offline = set()
-
-            # 超过 enable_cpu_num 个核心之外的线程, 都关闭
-            # if enable_cpu_num is not None and enable_cpu_num < len(enabled_cores):
-            #     for processor_id, core_id in cpu_topology.items():
-            #         if int(core_id) >= enable_cpu_num:
-            #             to_offline.add(int(processor_id))
 
             # cpuid 可能存在不连续的情况
             # 如 4500u 为 [0, 1, 2, 4, 5, 6] {0: 0, 1: 1, 2: 2, 3: 4, 4: 5, 5: 6}
@@ -361,8 +356,7 @@ class CPUManager:
                     self.online_cpu(int(cpu))
             return True
         except Exception as e:
-            logger.error(traceback.format_exc())
-            logger.error(e)
+            logger.error(f"Failed to set CPU online status: value={value}", exc_info=True)
             return False
 
     def set_enable_All(self) -> bool:
@@ -383,7 +377,7 @@ class CPUManager:
                     self.online_cpu(int(cpu_number))
             return True
         except Exception as e:
-            logger.error(e)
+            logger.error("Failed to enable all CPU cores", exc_info=True)
             return False
 
     # 不能在cpu offline 之后进行判断，会不准确
@@ -409,13 +403,12 @@ class CPUManager:
             )
             stdout, stderr = process.stdout, process.stderr
             if stderr:
-                logger.error(f"is_support_smt error:\n{stderr}")
+                logger.error(f"Failed to check SMT support:\n{stderr}")
                 self.is_support_smt = False
             else:
                 self.is_support_smt = int(stdout) > 1
         except Exception as e:
-            logger.error(traceback.format_exc())
-            logger.error(e)
+            logger.error("Failed to check SMT support", exc_info=True)
             self.is_support_smt = False
         return self.is_support_smt
 
@@ -430,14 +423,13 @@ class CPUManager:
         """
         try:
             if not self.get_isSupportSMT():
-                logger.info("set_smt not support")
+                logger.info("Failed to set SMT: system does not support SMT")
                 return False
             logger.debug("set_smt {}".format(value))
             self.cpu_smt = value
             return True
         except Exception as e:
-            logger.error(traceback.format_exc())
-            logger.error(e)
+            logger.error(f"Failed to set SMT: value={value}", exc_info=True)
             return False
 
     def set_cpuBoost(self, value: bool) -> bool:
@@ -861,9 +853,11 @@ class CPUManager:
         """
         try:
             if not self.is_epp_supported():
+                logger.error("Failed to set EPP mode: system does not support EPP")
                 return False
 
             if mode not in self.get_epp_modes():
+                logger.error(f"Failed to set EPP mode: unsupported mode {mode}")
                 return False
 
             success = False
@@ -875,8 +869,8 @@ class CPUManager:
                     success = True
 
             return success
-        except Exception:
-            logger.error(f"设置 EPP 模式失败: epp_path: {epp_path}", exc_info=True)
+        except Exception as e:
+            logger.error(f"Failed to set EPP mode: mode={mode}", exc_info=True)
             return False
 
 

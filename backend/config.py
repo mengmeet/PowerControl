@@ -10,6 +10,7 @@ from logging_handler import SystemdHandler
 
 # 日志配置
 LOG_LOCATION = "/tmp/PowerControl_py.log"
+LOG_LEVEL = logging.DEBUG
 
 
 def setup_logger():
@@ -30,7 +31,7 @@ def setup_logger():
     except Exception:
         logger = logging.getLogger(__name__)
 
-    logger.setLevel(logging.INFO)
+    logger.setLevel(LOG_LEVEL)
     logger.addHandler(systemd_handler)
     logger.addHandler(file_handler)
 

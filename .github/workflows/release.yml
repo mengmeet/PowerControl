@@ -36,6 +36,10 @@ jobs:
           make
           cp -f ryzenadj ../../../bin
 
+      - name: change log level
+        run: |
+          sed -i 's/logging.DEBUG/logging.INFO/' backend/config.py
+
       - name: build plugin
         run: |
           npm i -g pnpm
