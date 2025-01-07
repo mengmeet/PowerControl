@@ -1,6 +1,6 @@
 import logging
-import subprocess
 import os
+import subprocess
 
 LOG = "/tmp/PowerControl_systemd.log"
 LOG_TAG = "powercontrol"

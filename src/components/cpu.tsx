@@ -374,7 +374,7 @@ const CPUGovernorComponent: FC = () => {
   );
 };
 
-const CPUEPPComponent: FC = () => {
+export const CPUEPPComponent: FC = () => {
   const [epp, setEPP] = useState<string>(Settings.appEPPMode());
   const [eppModes, setEPPModes] = useState<string[]>([]);
 

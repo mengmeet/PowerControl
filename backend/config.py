@@ -1,10 +1,10 @@
+import glob
 import json
 import logging
-import glob
 import os
-import yaml
-import traceback
+
 import decky
+import yaml
 from helpers import get_homebrew_path
 from logging_handler import SystemdHandler
 
@@ -20,7 +20,7 @@ def setup_logger():
     # 创建并配置 handlers
     systemd_handler = SystemdHandler()
     systemd_handler.setFormatter(logging.Formatter(systemd_format))
-    
+
     file_handler = logging.FileHandler(filename=LOG_LOCATION, mode="w")
     file_handler.setFormatter(logging.Formatter(file_format))
 
@@ -93,7 +93,7 @@ try:
         f"CPU_ID: {CPU_ID}, PRODUCT_NAME: {PRODUCT_NAME}, PRODUCT_VERSION: {PRODUCT_VERSION}"
     )
 except Exception as e:
-    logger.error(f"设备信息配置异常|{e}")
+    logger.error(f"设备信息配置异常|{e}", exc_info=True)
 
 API_URL = "https://api.github.com/repos/mengmeet/PowerControl/releases/latest"
 
@@ -269,7 +269,4 @@ try:
     logger.info(f"FAN_EC_CONFIG: {FAN_EC_CONFIG}")
 
 except Exception as e:
-    import traceback
-
-    logger.error(f"风扇配置异常|{e}")
-    logger.error(traceback.format_exc())
+    logger.error(f"风扇配置异常|{e}", exc_info=True)

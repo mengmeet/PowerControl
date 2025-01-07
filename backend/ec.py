@@ -1,5 +1,6 @@
-import portio
 import time
+
+import portio
 from config import logger
 
 EC_CMD_STATUS_REGISTER_PORT = 0x66

@@ -1,31 +1,32 @@
 import glob
-import subprocess
 import os
 import re
+import subprocess
 import traceback
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
+
 from config import (
-    TDP_LIMIT_CONFIG_CPU,
-    TDP_LIMIT_CONFIG_PRODUCT,
-    PRODUCT_NAME,
     CPU_ID,
     CPU_VENDOR,
-    logger,
-    SH_PATH,
+    PRODUCT_NAME,
     RYZENADJ_PATH,
+    SH_PATH,
+    TDP_LIMIT_CONFIG_CPU,
+    TDP_LIMIT_CONFIG_PRODUCT,
+    logger,
 )
 
 
 class CPUManager:
     """CPU管理器类，提供CPU相关的控制和监控功能。
-    
+
     该类提供了对CPU的全面控制，包括：
     - TDP（热设计功耗）控制
     - CPU核心启用/禁用
     - SMT（超线程）控制
     - CPU频率管理
     - CPU Boost控制
-    
+
     Attributes:
         cpu_boost (bool): CPU Boost状态
         cpu_smt (bool): SMT（超线程）状态
@@ -38,10 +39,10 @@ class CPUManager:
         cpu_nowLimitFreq (int): 当前频率限制
         cpu_topology (Dict[int, int]): CPU拓扑信息，键为处理器ID，值为核心ID
     """
-    
+
     def __init__(self) -> None:
         """初始化CPU管理器。
-        
+
         初始化过程包括：
         1. 设置默认属性值
         2. 获取CPU拓扑信息
@@ -58,26 +59,26 @@ class CPUManager:
         self.cpu_avaMaxFreq: int = 1600000
         self.cpu_avaMinFreq: int = 1600000
         self.cpu_nowLimitFreq: int = 0
-        
+
         # CPU拓扑相关属性
         self.cpu_topology: Dict[int, int] = {}
         self.is_support_smt: Optional[bool] = None
-        
+
         # 初始化CPU信息
         self.set_enable_All()  # 先开启所有cpu, 否则拓扑信息不全
         self.get_isSupportSMT()  # 获取 is_support_smt
         self.get_cpuMaxNum()  # 获取 cpu_maxNum
-        
+
         # 获取并存储CPU拓扑信息
         self.cpu_topology = self.get_cpu_topology()
         self.cps_ids: List[int] = sorted(list(set(self.cpu_topology.values())))
-        
+
         logger.info(f"self.cpu_topology {self.cpu_topology}")
         logger.info(f"cpu_ids {self.cps_ids}")
 
     def get_hasRyzenadj(self) -> bool:
         """检查系统是否安装了ryzenadj工具。
-        
+
         Returns:
             bool: True如果ryzenadj可用，否则False
         """
@@ -96,7 +97,7 @@ class CPUManager:
 
     def get_cpuMaxNum(self) -> int:
         """获取最大CPU核心数。
-        
+
         Returns:
             int: 最大CPU核心数
         """
@@ -123,7 +124,7 @@ class CPUManager:
 
     def get_tdpMax(self) -> int:
         """获取最大TDP值。
-        
+
         Returns:
             int: 最大TDP值（瓦特）
         """
@@ -147,7 +148,7 @@ class CPUManager:
     # 弃用
     def get_cpu_AvailableFreq(self) -> List[int]:
         """获取可用的CPU频率列表。
-        
+
         Returns:
             List[int]: 可用的CPU频率列表
         """
@@ -177,10 +178,10 @@ class CPUManager:
 
     def set_cpuTDP(self, value: int) -> bool:
         """设置CPU TDP值。
-        
+
         Args:
             value (int): TDP值（瓦特）
-        
+
         Returns:
             bool: True如果设置成功，否则False
         """
@@ -194,7 +195,7 @@ class CPUManager:
 
     def __get_intel_rapl_path(self) -> Tuple[str, str]:
         """获取Intel RAPL路径。
-        
+
         Returns:
             Tuple[str, str]: RAPL路径
         """
@@ -225,10 +226,10 @@ class CPUManager:
 
     def set_cpuTDP_Intel(self, value: int) -> bool:
         """设置Intel CPU TDP值。
-        
+
         Args:
             value (int): TDP值（瓦特）
-        
+
         Returns:
             bool: True如果设置成功，否则False
         """
@@ -252,10 +253,10 @@ class CPUManager:
 
     def set_cpuTDP_AMD(self, value: int) -> bool:
         """设置AMD CPU TDP值。
-        
+
         Args:
             value (int): TDP值（瓦特）
-        
+
         Returns:
             bool: True如果设置成功，否则False
         """
@@ -296,10 +297,10 @@ class CPUManager:
 
     def set_cpuOnline(self, value: int) -> bool:
         """设置CPU在线状态。
-        
+
         Args:
             value (int): CPU在线状态
-        
+
         Returns:
             bool: True如果设置成功，否则False
         """
@@ -328,7 +329,9 @@ class CPUManager:
             logger.debug(
                 f"enable_cpu_num {self.enable_cpu_num}, max_enable_cpuid {max_enable_cpuid}"
             )
-            if self.enable_cpu_num is not None and self.enable_cpu_num < len(enabled_cores):
+            if self.enable_cpu_num is not None and self.enable_cpu_num < len(
+                enabled_cores
+            ):
                 for processor_id, core_id in cpu_topology.items():
                     if int(core_id) > max_enable_cpuid:
                         logger.info(
@@ -338,7 +341,7 @@ class CPUManager:
 
             # 如果关闭SMT，关闭每个核心中数字更大的线程
             if not self.cpu_smt:
-                for core_id in enabled_cores[:self.enable_cpu_num]:
+                for core_id in enabled_cores[: self.enable_cpu_num]:
                     core_threads = [
                         cpu
                         for cpu, core in cpu_topology.items()
@@ -364,7 +367,7 @@ class CPUManager:
 
     def set_enable_All(self) -> bool:
         """启用所有CPU核心。
-        
+
         Returns:
             bool: True如果设置成功，否则False
         """
@@ -386,7 +389,7 @@ class CPUManager:
     # 不能在cpu offline 之后进行判断，会不准确
     def get_isSupportSMT(self) -> bool:
         """检查系统是否支持SMT。
-        
+
         Returns:
             bool: True如果支持SMT，否则False
         """
@@ -418,10 +421,10 @@ class CPUManager:
 
     def set_smt(self, value: bool) -> bool:
         """设置SMT状态。
-        
+
         Args:
             value (bool): SMT状态
-        
+
         Returns:
             bool: True如果设置成功，否则False
         """
@@ -439,10 +442,10 @@ class CPUManager:
 
     def set_cpuBoost(self, value: bool) -> bool:
         """设置CPU Boost状态。
-        
+
         Args:
             value (bool): CPU Boost状态
-        
+
         Returns:
             bool: True如果设置成功，否则False
         """
@@ -506,7 +509,7 @@ class CPUManager:
 
     def check_cpuFreq(self) -> bool:
         """检查CPU频率是否低于限制频率。
-        
+
         Returns:
             bool: True如果频率低于限制频率，否则False
         """
@@ -537,10 +540,10 @@ class CPUManager:
 
     def set_cpuFreq(self, value: int) -> bool:
         """设置CPU频率。
-        
+
         Args:
             value (int): 频率值
-        
+
         Returns:
             bool: True如果设置成功，否则False
         """
@@ -579,7 +582,7 @@ class CPUManager:
 
     def get_cpu_topology(self) -> Dict[int, int]:
         """获取CPU拓扑信息。
-        
+
         Returns:
             Dict[int, int]: CPU拓扑信息，键为处理器ID，值为核心ID
         """
@@ -607,7 +610,7 @@ class CPUManager:
 
     def offline_cpu(self, cpu_number: int) -> None:
         """关闭CPU核心。
-        
+
         Args:
             cpu_number (int): CPU核心号
         """
@@ -619,7 +622,7 @@ class CPUManager:
 
     def online_cpu(self, cpu_number: int) -> None:
         """启用CPU核心。
-        
+
         Args:
             cpu_number (int): CPU核心号
         """
@@ -631,7 +634,7 @@ class CPUManager:
 
     def set_cpu_online(self, cpu_number: int, online: bool) -> None:
         """设置CPU核心状态。
-        
+
         Args:
             cpu_number (int): CPU核心号
             online (bool): 核心状态
@@ -643,7 +646,7 @@ class CPUManager:
 
     def get_ryzenadj_info(self) -> str:
         """获取Ryzenadj信息。
-        
+
         Returns:
             str: Ryzenadj信息
         """
@@ -671,7 +674,7 @@ class CPUManager:
 
     def get_max_perf_pct(self) -> int:
         """获取最大性能百分比。
-        
+
         Returns:
             int: 最大性能百分比
         """
@@ -684,10 +687,10 @@ class CPUManager:
 
     def set_max_perf_pct(self, value: int) -> bool:
         """设置最大性能百分比。
-        
+
         Args:
             value (int): 最大性能百分比
-        
+
         Returns:
             bool: True如果设置成功，否则False
         """
@@ -707,14 +710,14 @@ class CPUManager:
 
     def get_cpu_governor(self) -> str:
         """获取当前 CPU 调度器。
-        
+
         Returns:
             str: 当前的 CPU 调度器名称，如果获取失败则返回空字符串
         """
         try:
             governor_path = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
             if os.path.exists(governor_path):
-                with open(governor_path, 'r') as f:
+                with open(governor_path, "r") as f:
                     return f.read().strip()
             return ""
         except Exception as e:
@@ -723,10 +726,10 @@ class CPUManager:
 
     def set_cpu_governor(self, governor: str) -> bool:
         """设置 CPU 调度器。
-        
+
         Args:
             governor (str): 调度器名称
-        
+
         Returns:
             bool: 设置成功返回 True，否则返回 False
         """
@@ -736,12 +739,14 @@ class CPUManager:
 
             success = False
             for cpu_id in self.get_online_cpus():
-                governor_path = f"/sys/devices/system/cpu/cpu{cpu_id}/cpufreq/scaling_governor"
+                governor_path = (
+                    f"/sys/devices/system/cpu/cpu{cpu_id}/cpufreq/scaling_governor"
+                )
                 if os.path.exists(governor_path):
                     with open(governor_path, "w") as f:
                         f.write(governor)
                     success = True
-            
+
             return success
         except Exception as e:
             logger.error(f"设置 CPU 调度器失败: {str(e)}")
@@ -749,14 +754,16 @@ class CPUManager:
 
     def get_available_governors(self) -> List[str]:
         """获取系统支持的所有 CPU 调度器。
-        
+
         Returns:
             List[str]: 可用的调度器列表，如果获取失败则返回空列表
         """
         try:
-            governor_path = "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors"
+            governor_path = (
+                "/sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors"
+            )
             if os.path.exists(governor_path):
-                with open(governor_path, 'r') as f:
+                with open(governor_path, "r") as f:
                     governors = f.read().strip().split()
                     return governors
             return []
@@ -766,7 +773,7 @@ class CPUManager:
 
     def is_epp_supported(self) -> bool:
         """检查系统是否支持 EPP 功能。
-        
+
         Returns:
             bool: 如果系统支持 EPP 则返回 True，否则返回 False
         """
@@ -779,15 +786,18 @@ class CPUManager:
 
     def get_epp_modes(self) -> List[str]:
         """获取可用的 EPP 模式列表。
-        
+
         Returns:
             List[str]: 系统支持的 EPP 模式列表，如果不支持或获取失败则返回空列表
         """
         try:
             if not self.is_epp_supported():
                 return []
-                
-            with open("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences", "r") as f:
+
+            with open(
+                "/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_available_preferences",
+                "r",
+            ) as f:
                 return f.read().strip().split()
         except Exception as e:
             logger.error(f"获取可用 EPP 模式失败: {str(e)}")
@@ -795,15 +805,18 @@ class CPUManager:
 
     def get_current_epp(self) -> Optional[str]:
         """获取当前的 EPP 模式。
-        
+
         Returns:
             Optional[str]: 当前的 EPP 模式，如果不支持或无法获取则返回 None
         """
         try:
             if not self.is_epp_supported():
                 return None
-                
-            with open("/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference", "r") as f:
+
+            with open(
+                "/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference",
+                "r",
+            ) as f:
                 return f.read().strip()
         except Exception as e:
             logger.error(f"获取 EPP 模式失败: {str(e)}")
@@ -811,7 +824,7 @@ class CPUManager:
 
     def get_online_cpus(self) -> List[int]:
         """获取在线的 CPU 核心 ID 列表。
-        
+
         Returns:
             List[int]: 在线的 CPU ID 列表
         """
@@ -825,7 +838,10 @@ class CPUManager:
                     # 检查 CPU 是否在线
                     online_path = f"{cpu_dir}/online"
                     # cpu0 没有 online 文件，默认总是在线
-                    if cpu_id == 0 or (os.path.exists(online_path) and open(online_path).read().strip() == "1"):
+                    if cpu_id == 0 or (
+                        os.path.exists(online_path)
+                        and open(online_path).read().strip() == "1"
+                    ):
                         cpu_ids.append(cpu_id)
                 except (ValueError, IOError):
                     continue
@@ -836,20 +852,20 @@ class CPUManager:
 
     def set_epp(self, mode: str) -> bool:
         """设置 EPP 模式。
-        
+
         Args:
             mode (str): EPP 模式，可用值可通过 get_epp_modes() 获取
-        
+
         Returns:
             bool: 设置是否成功
         """
         try:
             if not self.is_epp_supported():
                 return False
-                
+
             if mode not in self.get_epp_modes():
                 return False
-            
+
             success = False
             for cpu_id in self.get_online_cpus():
                 epp_path = f"/sys/devices/system/cpu/cpu{cpu_id}/cpufreq/energy_performance_preference"
@@ -857,9 +873,9 @@ class CPUManager:
                     with open(epp_path, "w") as f:
                         f.write(mode)
                     success = True
-            
+
             return success
-        except Exception as e:
+        except Exception:
             logger.error(f"设置 EPP 模式失败: epp_path: {epp_path}", exc_info=True)
             return False
 

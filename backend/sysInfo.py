@@ -1,8 +1,9 @@
 import collections
+import os
 import subprocess
 import threading
 import time
-import os
+
 from config import AMD_GPU_DEVICE_PATH, logger
 from helpers import get_user
 

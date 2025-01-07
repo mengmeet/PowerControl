@@ -1,7 +1,8 @@
 import os
-from ec import EC
-from config import logger, PRODUCT_NAME, FAN_HWMON_LIST, FAN_EC_CONFIG, PRODUCT_VERSION
+
 import decky
+from config import FAN_EC_CONFIG, FAN_HWMON_LIST, PRODUCT_NAME, PRODUCT_VERSION, logger
+from ec import EC
 from settings import SettingsManager
 
 
@@ -189,9 +190,7 @@ class FanManager:
                     fc.temp_mode = hwmon_config["temp_mode"]
                     self.fan_config_list.append(fc)
                 except Exception:
-                    logger.error(
-                        f"获取风扇({hwmon_name})hwmon信息失败:", exc_info=True
-                    )
+                    logger.error(f"获取风扇({hwmon_name})hwmon信息失败:", exc_info=True)
 
     # 解析处理 EC 风扇配置
     def __parse_fan_configuration_EC(self):
@@ -1035,7 +1034,7 @@ class FanManager:
                     currentVal > 0
                     and abs(currentVal - fanWriteValue) / currentVal < 0.05
                 ):
-                    logger.info(
+                    logger.debug(
                         f"当前风扇转速{currentVal} 与目标转速{fanWriteValue} 相差小于5% 不写入"
                     )
                     return True

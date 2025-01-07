@@ -4,11 +4,10 @@ import shutil
 import ssl
 import stat
 import subprocess
-
 import urllib.request
 
-from config import logger, API_URL
 import decky
+from config import API_URL, logger
 
 
 def recursive_chmod(path, perms):

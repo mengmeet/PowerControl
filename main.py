@@ -1,5 +1,5 @@
 import sys
-import traceback
+
 import decky
 from settings import SettingsManager
 
@@ -9,16 +9,14 @@ try:
 
     HOMEBREW_PATH = get_homebrew_path()
     sys.path.append("{}/plugins/PowerControl/backend".format(HOMEBREW_PATH))
-    from config import logger, CONFIG_KEY
-    from gpu import gpuManager
+    import update
+    from config import CONFIG_KEY, logger
     from cpu import cpuManager
     from fan import fanManager
+    from gpu import gpuManager
     from sysInfo import sysInfoManager
-    import update
 except Exception as e:
-    # 堆栈跟踪
-    decky.logger.error(traceback.format_exc())
-    decky.logger.error(e)
+    decky.logger.error(e, exc_info=True)
 
 
 class Plugin:
@@ -269,7 +267,7 @@ class Plugin:
 
     async def set_cpu_governor(self, governor: str):
         """设置 CPU 调度器
-        
+
         Args:
             governor (str): 调度器名称
         """

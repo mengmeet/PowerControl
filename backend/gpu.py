@@ -1,19 +1,20 @@
+import os
+import re
 import subprocess
 import threading
 import time
-import os
-import re
+
+import sysInfo
 from config import (
+    AMD_GPUFREQ_PATH,
+    AMD_GPULEVEL_PATH,
     INTEL_GPU_MAX_FREQ,
     INTEL_GPU_MAX_LIMIT,
     INTEL_GPU_MIN_FREQ,
     INTEL_GPU_MIN_LIMIT,
     logger,
-    AMD_GPUFREQ_PATH,
-    AMD_GPULEVEL_PATH,
 )
-import sysInfo
-from inotify import notify, IN_MODIFY
+from inotify import IN_MODIFY, notify
 
 
 class GPUAutoFreqManager(threading.Thread):
@@ -200,7 +201,7 @@ class GPUFreqNotifier:
                     return False
             # 查不到gpu设置频率时，不进行设置
             else:
-                logger.debug(f"无法查询当前系统GPU频率")
+                logger.debug("无法查询当前系统GPU频率")
                 return False
         except Exception as e:
             logger.error(e)
@@ -308,7 +309,7 @@ class GPUManager:
 
     def set_gpuFreq(self, minValue: int, maxValue: int):
         try:
-            logger.info(
+            logger.debug(
                 f"set_gpuFreq: [{minValue}, {maxValue}], gpu_freqRange={self.gpu_freqRange}"
             )
             if (
@@ -407,7 +408,7 @@ class GPUManager:
             elif distribution == "SteamOS":
                 result = subprocess.run(["steamos-readonly", "disable"])
 
-            if not result is None:
+            if result is not None:
                 if result.stdout:
                     logger.info(f"stdout {result.stdout.strip()}")
                 if result.stderr:
@@ -475,7 +476,7 @@ class GPUManager:
         echo "commit: $max_freq -> $GPU_MAX_FREQ" | systemd-cat -t p-steamos-priv-write -p warning
         echo "$max_freq" >"$GPU_MAX_FREQ"
     fi
-    exit 0""".format(path)
+    exit 0""".format()
             # 匹配目标if语句，并检查then部分的代码
             if_match = re.search(
                 r"\nif([\s\S]*?)\[\[([\s\S]*?){}([\s\S]*?)]]([\s\S]*?)then([\s\S]*?)\nfi".format(
@@ -511,7 +512,9 @@ class GPUManager:
                 add_code = """
 if [[ "$WRITE_PATH" == /sys/class/drm/card*/device/{} ]]; then
 {}
-fi""".format(path, new_then_code)
+fi""".format(
+                    path, new_then_code
+                )
                 # 文件最后一个if，换行后添加
                 if last_if_match:
                     sh_code = sh_code.replace(
@@ -544,7 +547,9 @@ fi""".format(path, new_then_code)
                     # 获取then部分的代码
                     then_code = if_match.group(5)
                     new_then_code = """   WRITE_PATH=$(ls /sys/class/drm/*/device/{} | head -n 1)
-   CommitWrite""".format(path)
+   CommitWrite""".format(
+                        path
+                    )
 
                     # 如果then部分的代码与目标不同，则将其替换
                     if then_code.strip() != new_then_code.strip():
@@ -568,7 +573,9 @@ fi""".format(path, new_then_code)
 if [[ "$WRITE_PATH" == /sys/class/drm/card*/device/{} ]]; then
    WRITE_PATH=$(ls /sys/class/drm/*/device/{} | head -n 1)
    CommitWrite
-fi""".format(path, path)
+fi""".format(
+                        path, path
+                    )
                     # 文件最后一个if，换行后添加
                     if last_if_match:
                         sh_code = sh_code.replace(
