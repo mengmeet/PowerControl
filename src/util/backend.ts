@@ -411,6 +411,9 @@ export class Backend {
         // TDP 相关设置处理
         await Backend.handleTDPRange();
         await Backend.handleTDP();
+
+        // 风扇控制设置处理
+        await Backend.handleFanControl();
       } else {
         const handler = Backend.settingsHandlers.get(applyTarget);
         if (handler) {
@@ -418,51 +421,10 @@ export class Backend {
         }
       }
 
-      // 风扇控制设置处理
-      if (
-        applyTarget == APPLYTYPE.SET_ALL ||
-        applyTarget == APPLYTYPE.SET_FANRPM
-      ) {
-        if (!FanControl.fanIsEnable) {
-          return;
-        }
-        const fanSettings = Settings.appFanSettings();
-        for (var index = 0; index < fanSettings.length; index++) {
-          var fanSetting = Settings.appFanSettings()?.[index];
-          //没有配置时转自动
-          if (!fanSetting) {
-            Backend.applyFanAuto(index, true);
-            // console.log(`没有配置 index= ${index}`);
-            continue;
-          }
-          const fanMode = fanSetting.fanMode;
-          //写入转速后再写入控制位
-          if (fanMode == FANMODE.NOCONTROL) {
-            // console.log(`不控制 index= ${index}`);
-            Backend.applyFanAuto(index, true);
-          } else if (fanMode == FANMODE.FIX) {
-            // console.log(`直线 index= ${index}`);
-            Backend.applyFanPercent(
-              index,
-              FanControl.fanInfo[index].setPoint.fanRPMpercent!!
-            );
-            Backend.applyFanAuto(index, false);
-          } else if (fanMode == FANMODE.CURVE) {
-            // console.log(`曲线 index= ${index}`);
-            Backend.applyFanPercent(
-              index,
-              FanControl.fanInfo[index].setPoint.fanRPMpercent!!
-            );
-            Backend.applyFanAuto(index, false);
-          } else {
-            console.error(`出现意外的FanMode = ${fanMode}`);
-          }
-        }
-      }
     } catch (error) {
       console.error(`应用设置失败: ${applyTarget}`, error);
     }
-  };
+  }
 
   private static async handleCPUNum(): Promise<void> {
     const cpuNum = Settings.appCpuNum();
@@ -601,6 +563,48 @@ export class Backend {
     }
   }
 
+  private static async handleFanControl(): Promise<void> {
+    if (!FanControl.fanIsEnable) {
+      return;
+    }
+
+    const fanSettings = Settings.appFanSettings();
+    for (let index = 0; index < fanSettings.length; index++) {
+      const fanSetting = Settings.appFanSettings()?.[index];
+      //没有配置时转自动
+      if (!fanSetting) {
+        await Backend.applyFanAuto(index, true);
+        // console.log(`没有配置 index= ${index}`);
+        continue;
+      }
+
+      const fanMode = fanSetting.fanMode;
+      const fanRPMPercent = FanControl.fanInfo[index].setPoint.fanRPMpercent;
+      
+      if (!fanRPMPercent) {
+        console.error(`风扇转速百分比未设置: index=${index}`);
+        continue;
+      }
+
+      //写入转速后再写入控制位
+      switch (fanMode) {
+        case FANMODE.NOCONTROL:
+          // console.log(`不控制 index= ${index}`);
+          await Backend.applyFanAuto(index, true);
+          break;
+        case FANMODE.FIX:
+        case FANMODE.CURVE:
+          // console.log(`${fanMode == FANMODE.FIX ? '直线' : '曲线'} index= ${index}`);
+          await Backend.applyFanPercent(index, fanRPMPercent);
+          await Backend.applyFanAuto(index, false);
+          break;
+        default:
+          console.error(`出现意外的FanMode = ${fanMode}`);
+          await Backend.applyFanAuto(index, true);
+      }
+    }
+  }
+
   private static settingsHandlers: Map<APPLYTYPE, () => Promise<void>> = new Map([
     [APPLYTYPE.SET_CPUCORE, Backend.handleCPUNum],
     [APPLYTYPE.SET_CPUBOOST, Backend.handleCPUBoost],
@@ -609,6 +613,7 @@ export class Backend {
     [APPLYTYPE.SET_GPUMODE, Backend.handleGPUMode],
     [APPLYTYPE.SET_GPUSLIDERFIX, Backend.handleGPUSliderFix],
     [APPLYTYPE.SET_TDP, Backend.handleTDP],
+    [APPLYTYPE.SET_FANRPM, Backend.handleFanControl],
   ]);
 
   public static resetFanSettings = () => {
