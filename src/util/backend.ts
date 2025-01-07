@@ -402,6 +402,10 @@ export class Backend {
           Backend.handleGPUSliderFix,
         ];
         await Promise.all(gpuHandlers.map(handler => handler()));
+
+        // TDP 相关设置处理
+        await Backend.handleTDPRange();
+        await Backend.handleTDP();
       } else {
         const handler = Backend.settingsHandlers.get(applyTarget);
         if (handler) {
@@ -410,70 +414,6 @@ export class Backend {
       }
 
       // 其他设置处理
-      if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_TDP) {
-        // 自定义 QAM TDP范围
-        const enableCustomTDPRange = Settings.appEnableCustomTDPRange();
-        const customTDPRangeMax = Settings.appCustomTDPRangeMax();
-        const customTDPRangeMin = Settings.appCustomTDPRangeMin();
-
-        // patch 成功才设置 QAM 的 TDP 范围
-        if (PluginManager.isPatchSuccess(Patch.TDPPatch)) {
-          if (enableCustomTDPRange) {
-            QAMPatch.setTDPRange(customTDPRangeMin, customTDPRangeMax);
-          } else {
-            QAMPatch.setTDPRange(
-              DEFAULT_TDP_MIN,
-              Backend.data.getTDPMax() !== 0
-                ? Backend.data.getTDPMax()
-                : DEFAULT_TDP_MAX
-            );
-          }
-        }
-
-        // 应用 TDP
-        const tdp = Settings.appTDP();
-        const tdpEnable = Settings.appTDPEnable();
-        const _tdp = enableCustomTDPRange
-          ? Math.min(customTDPRangeMax, Math.max(customTDPRangeMin, tdp))
-          : tdp;
-
-        if (!PluginManager.isPatchSuccess(Patch.TDPPatch) || Settings.appForceShowTDP()) {
-          console.log(
-            `>>>>> 插件方式更新 TDP = ${_tdp} TDPEnable = ${tdpEnable}`
-          );
-
-          if (tdpEnable) {
-            Backend.applyTDP(_tdp);
-          } else {
-            Backend.applyTDP(Backend.data.getTDPMax());
-          }
-
-          try {
-            QAMPatch.setTDPEanble(tdpEnable);
-            if (tdpEnable) {
-              QAMPatch.setTDP(_tdp);
-            }
-          } catch (error) {
-            console.error(`>>>>> 强制显示 TDP 时设置QAM失败`, error);
-          }
-        }
-
-        // patch 成功, 更新 QAM 中设置的值
-        if (PluginManager.isPatchSuccess(Patch.TDPPatch)) {
-          console.log(
-            `>>>>> 原生设置更新 TDP = ${_tdp} TDPEnable = ${tdpEnable}`
-          );
-          // patch 成功才更新 QAM 中设置的值
-          QAMPatch.setTDPEanble(tdpEnable);
-          QAMPatch.setTDP(_tdp);
-          if (tdpEnable) {
-            Backend.applyTDP(_tdp);
-          } else {
-            Backend.applyTDP(Backend.data.getTDPMax());
-          }
-        }
-      }
-
       if (applyTarget == APPLYTYPE.SET_ALL || applyTarget == APPLYTYPE.SET_CPU_MAX_PERF) {
         const maxPerfPct = Settings.appCpuMaxPerfPct();
         Backend.setMaxPerfPct(maxPerfPct);
@@ -666,6 +606,65 @@ export class Backend {
     }
   }
 
+  private static async handleTDPRange(): Promise<void> {
+    const enableCustomTDPRange = Settings.appEnableCustomTDPRange();
+    const customTDPRangeMax = Settings.appCustomTDPRangeMax();
+    const customTDPRangeMin = Settings.appCustomTDPRangeMin();
+
+    if (PluginManager.isPatchSuccess(Patch.TDPPatch)) {
+      if (enableCustomTDPRange) {
+        await QAMPatch.setTDPRange(customTDPRangeMin, customTDPRangeMax);
+      } else {
+        await QAMPatch.setTDPRange(
+          DEFAULT_TDP_MIN,
+          Backend.data.getTDPMax() !== 0
+            ? Backend.data.getTDPMax()
+            : DEFAULT_TDP_MAX
+        );
+      }
+    }
+  }
+
+  private static async handleTDP(): Promise<void> {
+    const enableCustomTDPRange = Settings.appEnableCustomTDPRange();
+    const customTDPRangeMax = Settings.appCustomTDPRangeMax();
+    const customTDPRangeMin = Settings.appCustomTDPRangeMin();
+    const tdp = Settings.appTDP();
+    const tdpEnable = Settings.appTDPEnable();
+    const _tdp = enableCustomTDPRange
+      ? Math.min(customTDPRangeMax, Math.max(customTDPRangeMin, tdp))
+      : tdp;
+
+    // 处理非插件模式或强制显示 TDP 的情况
+    if (!PluginManager.isPatchSuccess(Patch.TDPPatch) || Settings.appForceShowTDP()) {
+      if (tdpEnable) {
+        await Backend.applyTDP(_tdp);
+      } else {
+        await Backend.applyTDP(Backend.data.getTDPMax());
+      }
+
+      try {
+        await QAMPatch.setTDPEanble(tdpEnable);
+        if (tdpEnable) {
+          await QAMPatch.setTDP(_tdp);
+        }
+      } catch (error) {
+        console.error(`强制显示 TDP 时设置QAM失败`, error);
+      }
+    }
+
+    // 处理插件模式的情况
+    if (PluginManager.isPatchSuccess(Patch.TDPPatch)) {
+      await QAMPatch.setTDPEanble(tdpEnable);
+      await QAMPatch.setTDP(_tdp);
+      if (tdpEnable) {
+        await Backend.applyTDP(_tdp);
+      } else {
+        await Backend.applyTDP(Backend.data.getTDPMax());
+      }
+    }
+  }
+
   private static settingsHandlers: Map<APPLYTYPE, () => Promise<void>> = new Map([
     [APPLYTYPE.SET_CPUCORE, Backend.handleCPUNum],
     [APPLYTYPE.SET_CPUBOOST, Backend.handleCPUBoost],
@@ -673,6 +672,7 @@ export class Backend {
     [APPLYTYPE.SET_EPP, Backend.handleEPP],
     [APPLYTYPE.SET_GPUMODE, Backend.handleGPUMode],
     [APPLYTYPE.SET_GPUSLIDERFIX, Backend.handleGPUSliderFix],
+    [APPLYTYPE.SET_TDP, Backend.handleTDP],
   ]);
 
   public static resetFanSettings = () => {
