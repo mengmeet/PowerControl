@@ -22,7 +22,7 @@ coverage
 # Dependency directory
 node_modules
 bower_components
-py_modules
+# py_modules
 
 # Editors
 .idea
