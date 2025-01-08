@@ -6,6 +6,7 @@ import { Settings } from "./settings";
 import { ACState, AppOverviewExt, BatteryStateChange } from "./steamClient";
 import { calPointInLine, FanPosition } from "./position";
 import { QAMPatch } from "./patch";
+import { addEventListener } from "@decky/api";
 
 type ActiveAppChangedHandler = (newAppId: string, oldAppId: string) => void;
 type ComponentUpdateHandler = (componentsName: ComponentName,updateType:UpdateType) => void;
@@ -254,6 +255,18 @@ export class PluginManager{
         Backend.applySettings(APPLYTYPE.SET_ALL);
       }, 10000)
     });
+
+    // 监听后端事件
+    addEventListener("QAM_setTDP", (tdp: number) => {
+      console.log(">>>>> Received TDP value:", tdp);
+      if (tdp == 500) {
+        Settings.setTDPEnable(false);
+      } else {
+        Settings.setTDPEnable(true);
+        Settings.setTDP(tdp);
+      }
+    });
+
     PluginManager.state = PluginState.RUN;
   }
 

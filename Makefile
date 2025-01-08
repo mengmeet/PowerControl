@@ -97,9 +97,9 @@ deploy-release: ## Deploy release to steamdeck and restart Decky
 set-loglevel: ## Set log level to info
 	@echo "+ $@"
 	@ssh -t $(DECK_USER)@$(DECK_HOST) -p $(DECK_PORT) -i $(DECK_KEY) \
-		'chmod -v 755 $(DECK_HOME)/homebrew/plugins/$(PLUGIN_FOLDER)/backend'
+		'chmod -v 755 $(DECK_HOME)/homebrew/plugins/$(PLUGIN_FOLDER)/py_modules'
 	@ssh -t $(DECK_USER)@$(DECK_HOST) -p $(DECK_PORT) -i $(DECK_KEY) \
- 		"sed -i 's/logging.DEBUG/logging.INFO/' $(DECK_HOME)/homebrew/plugins/$(PLUGIN_FOLDER)/backend/config.py"
+ 		"sed -i 's/logging.DEBUG/logging.INFO/' $(DECK_HOME)/homebrew/plugins/$(PLUGIN_FOLDER)/py_modules/config.py"
 
 it: ## Build all code, deploy it to steamdeck, restart Decky
 	@$(MAKE) build deploy

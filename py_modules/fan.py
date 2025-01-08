@@ -3,6 +3,7 @@ import os
 import decky
 from config import FAN_EC_CONFIG, FAN_HWMON_LIST, PRODUCT_NAME, PRODUCT_VERSION, logger
 from ec import EC
+from pfuse import umount_fuse_igpu
 from settings import SettingsManager
 
 
@@ -52,6 +53,7 @@ class FanManager:
             name="fans_config",
             settings_directory=decky.DECKY_PLUGIN_SETTINGS_DIR,
         )
+
         self.fan_config_list: list[FanConfig] = []  # 记录每一个风扇的配置
         self.cpu_temp_path = ""  # CPU温度路径
         self.gpu_temp_path = ""  # GPU温度路径
@@ -308,6 +310,8 @@ class FanManager:
         hwmon_path = "/sys/class/hwmon"
         hwmon_files = os.listdir(hwmon_path)
         name_path_map = {}
+
+        umount_fuse_igpu()
 
         # 转化hwmon信息
         for file in hwmon_files:

@@ -181,8 +181,8 @@ def load_yaml(file_path: str, chk_schema=None) -> dict:
 HWMON_CONFS = glob.glob(f"{FAN_HWMON_CONFIG_DIR}/*.yml")
 EC_CONFS = glob.glob(f"{FAN_EC_CONFIG_DIR}/*.yml")
 
-HWMON_SCHEMA = f"{DECKY_PLUGIN_DIR}/backend/fan_config/schema/hwmon.json"
-EC_SCHEMA = f"{DECKY_PLUGIN_DIR}/backend/fan_config/schema/ec.json"
+HWMON_SCHEMA = f"{DECKY_PLUGIN_DIR}/py_modules/fan_config/schema/hwmon.json"
+EC_SCHEMA = f"{DECKY_PLUGIN_DIR}/py_modules/fan_config/schema/ec.json"
 
 
 def get_all_howmon_fans():
