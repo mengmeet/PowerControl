@@ -526,67 +526,136 @@ fi""".format(
             file.write(sh_code)
         pass
 
-    def fix_gpuFreqSlider_AMD(self):
-        try:
-            steamos_priv_path = "/usr/bin/steamos-polkit-helpers/steamos-priv-write"
-            gpu_file_path = ["power_dpm_force_performance_level", "pp_od_clk_voltage"]
-            # 读取sh文件内容
-            with open(steamos_priv_path, "r") as file:
-                sh_code = file.read()
+    def _create_amd_gpu_script_block(self, path: str) -> str:
+        """创建 AMD GPU 控制脚本块。
 
-            for path in gpu_file_path:
-                # 匹配目标if语句，并检查then部分的代码
-                if_match = re.search(
-                    r"if([\s\S]*?)\[\[([\s\S]*?){}([\s\S]*?)]]([\s\S]*?)then([\s\S]*?)fi".format(
-                        path
-                    ),
-                    sh_code,
-                    flags=re.DOTALL,
-                )
-                if if_match:
-                    # 获取then部分的代码
-                    then_code = if_match.group(5)
-                    new_then_code = """   WRITE_PATH=$(ls /sys/class/drm/*/device/{} | head -n 1)
-   CommitWrite""".format(
-                        path
-                    )
+        为指定的路径创建完整的 if 条件块，包括路径匹配和执行命令。
 
-                    # 如果then部分的代码与目标不同，则将其替换
-                    if then_code.strip() != new_then_code.strip():
-                        new_if_code = re.sub(
-                            r"if([\s\S]*?)\[\[([\s\S]*?){}([\s\S]*?)]]([\s\S]*?)then([\s\S]*?)fi".format(
-                                path
-                            ),
-                            r"if\1[[\2{}\3]]\4then\n{}\nfi".format(path, new_then_code),
-                            sh_code,
-                        )
+        Args:
+            path: GPU 控制文件路径（如 power_dpm_force_performance_level）
 
-                        sh_code = new_if_code
-                else:
-                    # 没有匹配到目标if语句，在文件能匹配到的最后一个if [[ ]] then fi后面添加代码
-                    last_if_match = re.findall(
-                        r"if[\s\S]*?\[\[[\s\S]*?]][\s\S]*?then[\s\S]*?fi",
-                        sh_code,
-                        flags=re.DOTALL,
-                    )
-                    add_code = """
-if [[ "$WRITE_PATH" == /sys/class/drm/card*/device/{} ]]; then
-   WRITE_PATH=$(ls /sys/class/drm/*/device/{} | head -n 1)
+        Returns:
+            完整的脚本代码块
+        """
+        return f"""
+if [[ "$WRITE_PATH" == /sys/class/drm/card*/device/{path} ]]; then
+   WRITE_PATH=$(ls /sys/class/drm/*/device/{path} | head -n 1)
    CommitWrite
-fi""".format(
-                        path, path
-                    )
-                    # 文件最后一个if，换行后添加
-                    if last_if_match:
-                        sh_code = sh_code.replace(
-                            last_if_match[-1], f"{last_if_match[-1]}\n{add_code}"
-                        )
+fi
+"""
 
-            # 将修改后的代码写回文件
-            with open(steamos_priv_path, "w") as file:
-                file.write(sh_code)
-        except Exception as e:
-            logger.error(e, exc_info=True)
+    def _find_script_section(self, script: str, path: str) -> tuple[bool, str, int]:
+        """在脚本中查找特定路径的代码段。
+
+        Args:
+            script: 完整的脚本内容
+            path: 要查找的 GPU 控制文件路径
+
+        Returns:
+            tuple[bool, str, int]:
+            - 是否找到匹配的代码段
+            - 找到的代码段内容（如果有）
+            - 代码段的起始位置（如果有）或建议插入的位置
+        """
+        # 查找匹配的代码块
+        # 注意：原始文件中的格式是 if [[ "$WRITE_PATH" == xxx ]]
+        pattern = r'\nif \[\[ "\$WRITE_PATH" == /sys/class/drm/card\*/device/{0} \]\];'.format(
+            re.escape(path)
+        )
+
+        # 先找到所有匹配的起始位置
+        matches = list(re.finditer(pattern, script))
+
+        if matches:
+            # 对于每个匹配，找到对应的完整代码块
+            for match in matches:
+                # 注意：start_pos 现在包含了换行符，所以不需要调整
+                start_pos = match.start()
+                # 从匹配位置开始查找下一个 fi
+                remaining_text = script[start_pos:]
+                fi_match = re.search(r"\bfi\b", remaining_text)
+                if fi_match:
+                    end_pos = start_pos + fi_match.end()
+                    block = script[start_pos:end_pos]
+                    return True, block, start_pos
+
+        # 如果没找到，查找 DeclineWrite 的位置
+        decline_pos = script.find("\nDeclineWrite")
+        if decline_pos != -1:
+            return False, "", decline_pos
+
+        # 如果找不到 DeclineWrite，就放在文件末尾
+        return False, "", len(script)
+
+    def fix_gpuFreqSlider_AMD(self):
+        """修复 AMD GPU 频率滑块功能。
+
+        修改 steamos-priv-write 脚本，确保其能正确处理 AMD GPU 的频率控制。
+        主要处理两个控制文件：
+        1. power_dpm_force_performance_level：性能级别控制
+        2. pp_od_clk_voltage：频率和电压控制
+
+        Returns:
+            bool: 操作是否成功
+        """
+        steamos_priv_path = "/usr/bin/steamos-polkit-helpers/steamos-priv-write"
+        gpu_control_paths = [
+            "power_dpm_force_performance_level",  # 性能级别控制
+            "pp_od_clk_voltage",  # 频率和电压控制
+        ]
+
+        try:
+            # 读取原始脚本
+            with open(steamos_priv_path, "r") as file:
+                script_content = file.read()
+        except IOError as e:
+            logger.error(f"无法读取 steamos-priv-write 脚本: {e}")
+            return False
+
+        # 跟踪是否有修改
+        script_modified = False
+
+        # 处理每个 GPU 控制路径
+        for path in gpu_control_paths:
+            # 生成新的代码块
+            new_code_block = self._create_amd_gpu_script_block(path)
+
+            # 在脚本中查找对应的部分
+            found, existing_block, position = self._find_script_section(
+                script_content, path
+            )
+
+            if found:
+                # 如果找到现有代码块且内容不同，则更新
+                if existing_block.strip() != new_code_block.strip():
+                    logger.info(f"更新 AMD GPU 控制代码块: {path}")
+                    script_content = script_content.replace(
+                        existing_block, new_code_block
+                    )
+                    script_modified = True
+            else:
+                # 如果没找到，在 DeclineWrite 之前添加新代码块
+                logger.info(f"添加新的 AMD GPU 控制代码块: {path}")
+                script_content = (
+                    script_content[:position]
+                    + new_code_block
+                    + script_content[position:]
+                )
+                script_modified = True
+
+        # 如果有修改，写回文件
+        if script_modified:
+            try:
+                with open(steamos_priv_path, "w") as file:
+                    file.write(script_content)
+                logger.info("成功更新 steamos-priv-write 脚本")
+                return True
+            except IOError as e:
+                logger.error(f"写入 steamos-priv-write 脚本失败: {e}")
+                return False
+
+        logger.info("AMD GPU 控制脚本无需更新")
+        return True
 
     def get_gpuFreqMin(self):
         gpuFreqMin, _ = self.get_gpuFreqRange()
