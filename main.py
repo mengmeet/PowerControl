@@ -1,6 +1,3 @@
-import asyncio
-from threading import Event
-
 import decky
 from settings import SettingsManager
 
@@ -9,6 +6,7 @@ try:
     from config import CONFIG_KEY, logger
     from cpu import cpuManager
     from fan import fanManager
+    from fuse_manager import FuseManager
     from gpu import gpuManager
     from sysInfo import sysInfoManager
 except Exception as e:
@@ -17,71 +15,22 @@ except Exception as e:
 
 class Plugin:
     def __init__(self):
-        self.t = None
-        self.t_sys = None
-        self.should_exit = None
-        self.emit = None
-        self.min_tdp = 3
-        self.default_tdp = 500
-        self.max_tdp = 30
-
-        self.emit = lambda tdp: self.set_tdp(tdp)
-        self.igpu_path = None
-
-    async def _unload(self):
-        decky.logger.info("start _unload")
-        if not self.should_exit:
-            return
-        self.should_exit.set()
-        if self.igpu_path:
-            # umount igpu
-            try:
-                import subprocess
-
-                subprocess.run(["umount", "-f", self.igpu_path])
-            except Exception:
-                pass
+        self.fuseManager = FuseManager()
 
     async def _migration(self):
         decky.logger.info("start _migration")
-        # self.fuse_init()
-        decky.logger.info("Start PowerControl")
+        self.fuseManager.fuse_init()
 
     async def _main(self):
         self.settings = SettingsManager(
             name="config", settings_directory=decky.DECKY_PLUGIN_SETTINGS_DIR
         )
 
-    def fuse_init(self):
-        from pfuse import (
-            find_igpu,
-            prepare_tdp_mount,
-            start_tdp_client,
-            umount_fuse_igpu,
-        )
-
-        umount_fuse_igpu()
-        self.igpu_path = find_igpu()
-
-        if self.should_exit:
-            return
-        self.should_exit = Event()
-        try:
-            stat = prepare_tdp_mount()
-            if stat:
-                self.t_sys = start_tdp_client(
-                    self.should_exit,
-                    self.emit,
-                    self.min_tdp,
-                    self.default_tdp,
-                    self.max_tdp,
-                )
-        except Exception:
-            decky.logger.error("Failed to start", exc_info=True)
-
-    def set_tdp(self, tdp):
-        logger.info(f"QAM Set TDPLimit: {tdp}")
-        asyncio.run(decky.emit("QAM_setTDP", tdp))
+    async def _unload(self):
+        decky.logger.info("start _unload")
+        gpuManager.unload()
+        self.fuseManager.unload()
+        logger.info("End PowerControl")
 
     async def get_settings(self):
         return self.settings.getSetting(CONFIG_KEY)
@@ -90,10 +39,6 @@ class Plugin:
         self.settings.setSetting(CONFIG_KEY, settings)
         # logger.info(f"save Settings: {settings}")
         return True
-
-    async def _unload(self):
-        gpuManager.unload()
-        logger.info("End PowerControl")
 
     async def get_hasRyzenadj(self):
         try:
