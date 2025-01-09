@@ -1,6 +1,4 @@
-import {
-  NotchLabel, SliderField,
-} from "@decky/ui";
+import { NotchLabel, SliderField } from "@decky/ui";
 import { ItemProps } from "@decky/ui/dist/components/Item";
 import { useEffect, useRef } from "react";
 import { useState } from "react";
@@ -20,26 +18,26 @@ export interface SlowSliderFieldProps extends ItemProps {
   resetValue?: number;
   disabled?: boolean;
   editableValue?: boolean;
-  validValues?: 'steps' | 'range' | ((value: number) => boolean);
+  validValues?: "steps" | "range" | ((value: number) => boolean);
   valueSuffix?: string;
   minimumDpadGranularity?: number;
   onChange?(value: number): void;
-  onChangeEnd?(value:number): void;
+  onChangeEnd?(value: number): void;
 }
 export const SlowSliderField: FC<SlowSliderFieldProps> = (slider) => {
-  const [changeValue,SetChangeValue] = useState<number>(slider.value);
-  const isChanging=useRef<Boolean>(false);
+  const [changeValue, SetChangeValue] = useState<number>(slider.value);
+  const isChanging = useRef<Boolean>(false);
   useEffect(() => {
-    setTimeout(()=>{
+    setTimeout(() => {
       //console.debug("changeValue=",changeValue,"slider=",slider.value)
-      if(changeValue==slider.value){
-        slider.onChangeEnd?.call(slider,slider.value);
-        isChanging.current=false;
+      if (changeValue == slider.value) {
+        slider.onChangeEnd?.call(slider, slider.value);
+        isChanging.current = false;
       }
-    },500)
+    }, 500);
   }, [changeValue]);
-  return(
-    <SliderField 
+  return (
+    <SliderField
       value={slider.value}
       label={slider.label}
       description={slider.description}
@@ -56,18 +54,17 @@ export const SlowSliderField: FC<SlowSliderFieldProps> = (slider) => {
       validValues={slider.validValues}
       valueSuffix={slider.valueSuffix}
       minimumDpadGranularity={slider.minimumDpadGranularity}
-      onChange={(value:number)=>{
-        var tpvalue=value;
-        if(slider.changeMax!=undefined)
-          tpvalue=slider.changeMax<=value?slider.changeMax:value;
-        if(slider.changeMin!=undefined)
-          tpvalue=slider.changeMin>=value?slider.changeMin:value;
-        isChanging.current=true;
-        slider.onChange?.call(slider,tpvalue);
-        slider.value=tpvalue;
+      onChange={(value: number) => {
+        var tpvalue = value;
+        if (slider.changeMax != undefined)
+          tpvalue = slider.changeMax <= value ? slider.changeMax : value;
+        if (slider.changeMin != undefined)
+          tpvalue = slider.changeMin >= value ? slider.changeMin : value;
+        isChanging.current = true;
+        slider.onChange?.call(slider, tpvalue);
+        slider.value = tpvalue;
         SetChangeValue(tpvalue);
       }}
     />
   );
 };
-

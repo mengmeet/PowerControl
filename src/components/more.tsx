@@ -5,62 +5,86 @@ import { Backend, Settings, compareVersions } from "../util";
 import { ActionButtonItem } from ".";
 
 export const MoreComponent: FC = () => {
-    const [currentVersion, _] = useState<string>(Backend.data.getCurrentVersion());
-    const [latestVersion, setLatestVersion] = useState<string>(Backend.data.getLatestVersion());
+  const [currentVersion, _] = useState<string>(
+    Backend.data.getCurrentVersion()
+  );
+  const [latestVersion, setLatestVersion] = useState<string>(
+    Backend.data.getLatestVersion()
+  );
 
-    useEffect(() => {
-        const getData = async () => {
-            setTimeout(() => {
-                setLatestVersion(latestVersion);
-                Backend.getLatestVersion().then((latestVersion) => {
-                    setLatestVersion(latestVersion);
-                })
-            }, 3000);
-        };
-        getData();
-    });
+  useEffect(() => {
+    const getData = async () => {
+      setTimeout(() => {
+        setLatestVersion(latestVersion);
+        Backend.getLatestVersion().then((latestVersion) => {
+          setLatestVersion(latestVersion);
+        });
+      }, 3000);
+    };
+    getData();
+  });
 
-    let uptButtonText = localizationManager.getString(localizeStrEnum.REINSTALL_PLUGIN);
+  let uptButtonText = localizationManager.getString(
+    localizeStrEnum.REINSTALL_PLUGIN
+  );
 
-    if (currentVersion !== latestVersion && Boolean(latestVersion)) {
-        const versionCompare = compareVersions(latestVersion, currentVersion);
-        if (versionCompare > 0) {
-            uptButtonText = `${localizationManager.getString(localizeStrEnum.UPDATE_PLUGIN)} ${latestVersion}`;
-        } else if (versionCompare < 0) {
-            uptButtonText = `${localizationManager.getString(localizeStrEnum.ROLLBACK_PLUGIN)} ${latestVersion}`;
-        }
+  if (currentVersion !== latestVersion && Boolean(latestVersion)) {
+    const versionCompare = compareVersions(latestVersion, currentVersion);
+    if (versionCompare > 0) {
+      uptButtonText = `${localizationManager.getString(
+        localizeStrEnum.UPDATE_PLUGIN
+      )} ${latestVersion}`;
+    } else if (versionCompare < 0) {
+      uptButtonText = `${localizationManager.getString(
+        localizeStrEnum.ROLLBACK_PLUGIN
+      )} ${latestVersion}`;
     }
+  }
 
-    return (
-        <PanelSection title={localizationManager.getString(localizeStrEnum.MORE)}>
-            <PanelSectionRow>
-                <ActionButtonItem
-                    layout="below"
-                    onClick={async () => {
-                        await Backend.updateLatest();
-                    }}
-                >{uptButtonText}</ActionButtonItem>
-            </PanelSectionRow>
-            <PanelSectionRow>
-                <ButtonItem
-                    layout="below"
-                    onClick={() => {
-                        Settings.resetToLocalStorage();
-                    }}
-                >{localizationManager.getString(localizeStrEnum.RESET_ALL)}</ButtonItem>
-            </PanelSectionRow>
-            <PanelSectionRow>
-                <Field disabled label={localizationManager.getString(localizeStrEnum.INSTALLED_VERSION)}>
-                    {currentVersion}
-                </Field>
-            </PanelSectionRow>
-            {Boolean(latestVersion) && (
-                <PanelSectionRow>
-                    <Field disabled label={localizationManager.getString(localizeStrEnum.LATEST_VERSION)}>
-                        {latestVersion}
-                    </Field>
-                </PanelSectionRow>
+  return (
+    <PanelSection title={localizationManager.getString(localizeStrEnum.MORE)}>
+      <PanelSectionRow>
+        <ActionButtonItem
+          layout="below"
+          onClick={async () => {
+            await Backend.updateLatest();
+          }}
+        >
+          {uptButtonText}
+        </ActionButtonItem>
+      </PanelSectionRow>
+      <PanelSectionRow>
+        <ButtonItem
+          layout="below"
+          onClick={() => {
+            Settings.resetToLocalStorage();
+          }}
+        >
+          {localizationManager.getString(localizeStrEnum.RESET_ALL)}
+        </ButtonItem>
+      </PanelSectionRow>
+      <PanelSectionRow>
+        <Field
+          disabled
+          label={localizationManager.getString(
+            localizeStrEnum.INSTALLED_VERSION
+          )}
+        >
+          {currentVersion}
+        </Field>
+      </PanelSectionRow>
+      {Boolean(latestVersion) && (
+        <PanelSectionRow>
+          <Field
+            disabled
+            label={localizationManager.getString(
+              localizeStrEnum.LATEST_VERSION
             )}
-        </PanelSection>
-    )
-}
+          >
+            {latestVersion}
+          </Field>
+        </PanelSectionRow>
+      )}
+    </PanelSection>
+  );
+};

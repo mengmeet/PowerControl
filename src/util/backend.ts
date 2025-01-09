@@ -1,7 +1,13 @@
 import { APPLYTYPE, FANMODE, GPUMODE, Patch } from "./enum";
 import { FanControl, PluginManager } from "./pluginMain";
 import { Settings, SettingsData } from "./settings";
-import { DEFAULT_TDP_MAX, DEFAULT_TDP_MIN, QAMPatch, SteamUtils, SystemInfo } from ".";
+import {
+  DEFAULT_TDP_MAX,
+  DEFAULT_TDP_MIN,
+  QAMPatch,
+  SteamUtils,
+  SystemInfo,
+} from ".";
 import { JsonSerializer } from "typescript-json-serializer";
 import { call } from "@decky/api";
 
@@ -36,34 +42,27 @@ export class BackendData {
   private has_currentEpp = false;
 
   public async init() {
-    await call<[], number>("get_cpuMaxNum")
-      .then((res) => {
-        // console.info("cpuMaxNum = " + res.result);
-        this.cpuMaxNum = res;
-        this.has_cpuMaxNum = true;
-      });
-    await call<[], number>("get_tdpMax")
-      .then((res) => {
-        this.tdpMax = res;
-        this.has_tdpMax = true;
-      });
-    await call<[], number[]>("get_gpuFreqRange")
-      .then((res) => {
-        this.gpuMin = res[0];
-        this.gpuMax = res[1];
-        this.has_gpuMin = true;
-        this.has_gpuMax = true;
-      });
-    await call<[], []>(
-      "get_fanConfigList"
-    ).then((res) => {
+    await call<[], number>("get_cpuMaxNum").then((res) => {
+      // console.info("cpuMaxNum = " + res.result);
+      this.cpuMaxNum = res;
+      this.has_cpuMaxNum = true;
+    });
+    await call<[], number>("get_tdpMax").then((res) => {
+      this.tdpMax = res;
+      this.has_tdpMax = true;
+    });
+    await call<[], number[]>("get_gpuFreqRange").then((res) => {
+      this.gpuMin = res[0];
+      this.gpuMax = res[1];
+      this.has_gpuMin = true;
+      this.has_gpuMax = true;
+    });
+    await call<[], []>("get_fanConfigList").then((res) => {
       this.fanConfigs = res;
       this.has_fanConfigs = res.length > 0;
     });
 
-    await call<[], boolean>(
-      "get_isSupportSMT"
-    ).then((res) => {
+    await call<[], boolean>("get_isSupportSMT").then((res) => {
       this.isSupportSMT = res;
       this.has_isSupportSMT = true;
     });
@@ -72,11 +71,9 @@ export class BackendData {
       this.supportCPUMaxPct = value > 0;
     });
 
-    await call<[], string>("get_version").then(
-      (res) => {
-        this.current_version = res;
-      }
-    );
+    await call<[], string>("get_version").then((res) => {
+      this.current_version = res;
+    });
 
     SteamUtils.getSystemInfo().then((systemInfo) => {
       this.systemInfo = systemInfo;
@@ -129,7 +126,7 @@ export class BackendData {
 
   public getForceShowTDP() {
     // 检查 Steam 客户端版本，如果版本大于等于 minSteamVersion。不显示强制 TDP 开关。并默认显示 TDP 控制组件
-    return this.systemInfo!.nSteamVersion >= minSteamVersion
+    return this.systemInfo!.nSteamVersion >= minSteamVersion;
   }
 
   public getCpuMaxNum() {
@@ -229,31 +226,37 @@ export class BackendData {
 
   public async getFanRPM(index: number) {
     var fanPRM: number = 0;
-    await call<[index: number], number>("get_fanRPM", index).then((res) => {
-      fanPRM = res;
-    }).catch((error) => {
-      console.error("get_fanRPM error", error);
-    });
+    await call<[index: number], number>("get_fanRPM", index)
+      .then((res) => {
+        fanPRM = res;
+      })
+      .catch((error) => {
+        console.error("get_fanRPM error", error);
+      });
     return fanPRM;
   }
 
   public async getFanTemp(index: number) {
     var fanTemp: number = -1;
-    await call<[index: number], number>("get_fanTemp", index).then((res) => {
-      fanTemp = res / 1000;
-    }).catch((error) => {
-      console.error("get_fanTemp error", error);
-    });
+    await call<[index: number], number>("get_fanTemp", index)
+      .then((res) => {
+        fanTemp = res / 1000;
+      })
+      .catch((error) => {
+        console.error("get_fanTemp error", error);
+      });
     return fanTemp;
   }
 
   public async getFanIsAuto(index: number) {
     var fanIsAuto: boolean = false;
-    await call<[index: number], boolean>("get_fanIsAuto", index).then((res) => {
-      fanIsAuto = res;
-    }).catch((error) => {
-      console.error("get_fanIsAuto error", error);
-    });
+    await call<[index: number], boolean>("get_fanIsAuto", index)
+      .then((res) => {
+        fanIsAuto = res;
+      })
+      .catch((error) => {
+        console.error("get_fanIsAuto error", error);
+      });
     return fanIsAuto;
   }
 
@@ -310,7 +313,11 @@ export class Backend {
   }
 
   private static applyGPUFreqRange(freqMin: number, freqMax: number) {
-    call<[value: number, value2: number], void>("set_gpuFreqRange", freqMin, freqMax);
+    call<[value: number, value2: number], void>(
+      "set_gpuFreqRange",
+      freqMin,
+      freqMax
+    );
   }
 
   private static applyGPUAuto(auto: boolean) {
@@ -318,7 +325,11 @@ export class Backend {
   }
 
   private static applyGPUAutoRange(minAutoFreq: number, maxAutoFreq: number) {
-    call<[min: number, max: number], void>("set_gpuAutoFreqRange", minAutoFreq, maxAutoFreq);
+    call<[min: number, max: number], void>(
+      "set_gpuAutoFreqRange",
+      minAutoFreq,
+      maxAutoFreq
+    );
   }
 
   private static applyFanAuto(index: number, auto: boolean) {
@@ -326,7 +337,11 @@ export class Backend {
   }
 
   private static applyFanPercent(index: number, percent: number) {
-    call<[index: number, value: number], void>("set_fanPercent", index, percent);
+    call<[index: number, value: number], void>(
+      "set_fanPercent",
+      index,
+      percent
+    );
   }
   public static throwSuspendEvt() {
     console.log("throwSuspendEvt");
@@ -361,8 +376,10 @@ export class Backend {
   // get_settings
   public static async getSettings(): Promise<SettingsData> {
     try {
-      const res = await call("get_settings") as string;
-      return serializer.deserializeObject(res, SettingsData) ?? new SettingsData();
+      const res = (await call("get_settings")) as string;
+      return (
+        serializer.deserializeObject(res, SettingsData) ?? new SettingsData()
+      );
     } catch (error) {
       console.error("getSettings error", error);
       return new SettingsData();
@@ -399,14 +416,11 @@ export class Backend {
           Backend.handleCPUGovernor,
           Backend.handleEPP,
         ];
-        await Promise.all(cpuHandlers.map(handler => handler()));
+        await Promise.all(cpuHandlers.map((handler) => handler()));
 
         // GPU 相关设置处理
-        const gpuHandlers = [
-          Backend.handleGPUMode,
-          Backend.handleGPUSliderFix,
-        ];
-        await Promise.all(gpuHandlers.map(handler => handler()));
+        const gpuHandlers = [Backend.handleGPUMode, Backend.handleGPUSliderFix];
+        await Promise.all(gpuHandlers.map((handler) => handler()));
 
         // TDP 相关设置处理
         await Backend.handleTDPRange();
@@ -420,7 +434,6 @@ export class Backend {
           await handler();
         }
       }
-
     } catch (error) {
       console.error(`应用设置失败: ${applyTarget}`, error);
     }
@@ -534,7 +547,10 @@ export class Backend {
       : tdp;
 
     // 处理非插件模式或强制显示 TDP 的情况
-    if (!PluginManager.isPatchSuccess(Patch.TDPPatch) || Settings.appForceShowTDP()) {
+    if (
+      !PluginManager.isPatchSuccess(Patch.TDPPatch) ||
+      Settings.appForceShowTDP()
+    ) {
       if (tdpEnable) {
         await Backend.applyTDP(_tdp);
       } else {
@@ -580,7 +596,7 @@ export class Backend {
 
       const fanMode = fanSetting.fanMode;
       const fanRPMPercent = FanControl.fanInfo[index].setPoint.fanRPMpercent;
-      
+
       if (!fanRPMPercent) {
         console.error(`风扇转速百分比未设置: index=${index}`);
         continue;
@@ -605,16 +621,17 @@ export class Backend {
     }
   }
 
-  private static settingsHandlers: Map<APPLYTYPE, () => Promise<void>> = new Map([
-    [APPLYTYPE.SET_CPUCORE, Backend.handleCPUNum],
-    [APPLYTYPE.SET_CPUBOOST, Backend.handleCPUBoost],
-    [APPLYTYPE.SET_CPU_GOVERNOR, Backend.handleCPUGovernor],
-    [APPLYTYPE.SET_EPP, Backend.handleEPP],
-    [APPLYTYPE.SET_GPUMODE, Backend.handleGPUMode],
-    [APPLYTYPE.SET_GPUSLIDERFIX, Backend.handleGPUSliderFix],
-    [APPLYTYPE.SET_TDP, Backend.handleTDP],
-    [APPLYTYPE.SET_FANRPM, Backend.handleFanControl],
-  ]);
+  private static settingsHandlers: Map<APPLYTYPE, () => Promise<void>> =
+    new Map([
+      [APPLYTYPE.SET_CPUCORE, Backend.handleCPUNum],
+      [APPLYTYPE.SET_CPUBOOST, Backend.handleCPUBoost],
+      [APPLYTYPE.SET_CPU_GOVERNOR, Backend.handleCPUGovernor],
+      [APPLYTYPE.SET_EPP, Backend.handleEPP],
+      [APPLYTYPE.SET_GPUMODE, Backend.handleGPUMode],
+      [APPLYTYPE.SET_GPUSLIDERFIX, Backend.handleGPUSliderFix],
+      [APPLYTYPE.SET_TDP, Backend.handleTDP],
+      [APPLYTYPE.SET_FANRPM, Backend.handleFanControl],
+    ]);
 
   public static resetFanSettings = () => {
     FanControl.fanInfo.forEach((_value, index) => {

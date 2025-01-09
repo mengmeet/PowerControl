@@ -24,23 +24,32 @@ import {
 import { FC } from "react";
 import { FaSuperpowers } from "react-icons/fa";
 import { PluginManager } from "./util";
-import { GPUComponent, CPUComponent, SettingsComponent, FANComponent, MoreComponent, QuickAccessTitleView } from "./components";
+import {
+  GPUComponent,
+  CPUComponent,
+  SettingsComponent,
+  FANComponent,
+  MoreComponent,
+  QuickAccessTitleView,
+} from "./components";
 
-const Content: FC<{}> = ({ }) => {
+const Content: FC<{}> = ({}) => {
   return (
     <div>
-      {PluginManager.isIniting() &&
+      {PluginManager.isIniting() && (
         <PanelSectionRow>
           <SteamSpinner />
-        </PanelSectionRow>}
-      {!PluginManager.isIniting() &&
+        </PanelSectionRow>
+      )}
+      {!PluginManager.isIniting() && (
         <div>
           <SettingsComponent />
           <CPUComponent />
           <GPUComponent />
           <FANComponent />
           <MoreComponent />
-        </div>}
+        </div>
+      )}
     </div>
   );
 };
@@ -59,6 +68,6 @@ export default definePlugin(() => {
     icon: <FaSuperpowers />,
     onDismount() {
       PluginManager?.unregister();
-    }
+    },
   };
 });

@@ -416,9 +416,7 @@ export const CPUEPPComponent: FC = () => {
           description={localizationManager.getString(
             localizeStrEnum.CPU_EPP_DESC
           )}
-          menuLabel={localizationManager.getString(
-            localizeStrEnum.CPU_EPP
-          )}
+          menuLabel={localizationManager.getString(localizeStrEnum.CPU_EPP)}
           rgOptions={eppModes.map((mode) => ({
             data: mode,
             label: mode.charAt(0).toUpperCase() + mode.slice(1),

@@ -11,12 +11,15 @@ export class localizationManager {
     this.language = language;
     console.log("Language: " + this.language);
 
-    const resources: Resource = Object.keys(localizeMap).reduce((acc : Resource, key) => {
-      acc[localizeMap[key].locale] = {
-        translation: localizeMap[key].strings,
-      };
-      return acc;
-    }, {});
+    const resources: Resource = Object.keys(localizeMap).reduce(
+      (acc: Resource, key) => {
+        acc[localizeMap[key].locale] = {
+          translation: localizeMap[key].strings,
+        };
+        return acc;
+      },
+      {}
+    );
 
     i18n.init({
       resources: resources,
@@ -33,7 +36,10 @@ export class localizationManager {
     return localizeMap[this.language]?.locale ?? defaultLocale;
   }
 
-  public static getString(defaultString: localizeStrEnum, variables?: Record<string, unknown>) {
+  public static getString(
+    defaultString: localizeStrEnum,
+    variables?: Record<string, unknown>
+  ) {
     return i18n.t(defaultString, variables);
   }
 }

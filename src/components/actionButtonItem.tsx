@@ -11,7 +11,10 @@ export const ActionButtonItem: FC<ActionButtonItemProps> = (props) => {
 
   const [_loading, setLoading] = useState(loading);
 
-  const handClick = async (event: MouseEvent, onClick?: (e: MouseEvent) => void) => {
+  const handClick = async (
+    event: MouseEvent,
+    onClick?: (e: MouseEvent) => void
+  ) => {
     try {
       console.log(`ActionButtonItem: ${debugLabel}`);
       setLoading(true);
@@ -23,7 +26,7 @@ export const ActionButtonItem: FC<ActionButtonItemProps> = (props) => {
       // console.log(`ActionButtonItem: ${debugLabel} disable loading`);
       setLoading(false);
     }
-  }
+  };
 
   const isLoading = _loading;
 
@@ -33,11 +36,17 @@ export const ActionButtonItem: FC<ActionButtonItemProps> = (props) => {
       layout={layout ?? "below"}
       disabled={isLoading || disabled}
       onClick={(e) => handClick(e, onClick)}
-
     >
-      <span style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }} >
-        {children} {isLoading && <Spinner style={{ margin: '0px 8px', width: '1.1em' }} />}
+      <span
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        {children}{" "}
+        {isLoading && <Spinner style={{ margin: "0px 8px", width: "1.1em" }} />}
       </span>
     </ButtonItem>
   );
-}
+};

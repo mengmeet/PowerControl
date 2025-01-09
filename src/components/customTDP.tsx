@@ -1,12 +1,22 @@
 import { FC, useEffect, useState } from "react";
-import { ComponentName, DEFAULT_TDP_MIN, PluginManager, Settings, UpdateType } from "../util";
+import {
+  ComponentName,
+  DEFAULT_TDP_MIN,
+  PluginManager,
+  Settings,
+  UpdateType,
+} from "../util";
 import { PanelSectionRow, SliderField, ToggleField } from "@decky/ui";
 import { localizationManager, localizeStrEnum } from "../i18n";
 
 export const CustomTDPComponent: FC = () => {
   const [show, setShow] = useState<boolean>(Settings.ensureEnable());
-  const [enableCustomTDPRange, setEnableCustomTDPRange] = useState<boolean>(Settings.appEnableCustomTDPRange());
-  const [customTDPRangeMax, setCustomTDPRangeMax] = useState<number>(Settings.appCustomTDPRangeMax());
+  const [enableCustomTDPRange, setEnableCustomTDPRange] = useState<boolean>(
+    Settings.appEnableCustomTDPRange()
+  );
+  const [customTDPRangeMax, setCustomTDPRangeMax] = useState<number>(
+    Settings.appCustomTDPRangeMax()
+  );
   // const [customTDPRangeMin, setCustomTDPRangeMin] = useState<number>(Settings.appCustomTDPRangeMin());
 
   const hide = (ishide: boolean) => {
@@ -19,19 +29,23 @@ export const CustomTDPComponent: FC = () => {
   };
 
   useEffect(() => {
-    PluginManager.listenUpdateComponent(ComponentName.CUSTOM_TDP, [ComponentName.CPU_TDP,ComponentName.CUSTOM_TDP], (_ComponentName, updateType: string) => {
-      switch (updateType) {
-        case UpdateType.UPDATE:
-          refresh();
-          break;
-        case UpdateType.SHOW:
-          hide(false);
-          break;
-        case UpdateType.HIDE:
-          hide(true);
-          break;
+    PluginManager.listenUpdateComponent(
+      ComponentName.CUSTOM_TDP,
+      [ComponentName.CPU_TDP, ComponentName.CUSTOM_TDP],
+      (_ComponentName, updateType: string) => {
+        switch (updateType) {
+          case UpdateType.UPDATE:
+            refresh();
+            break;
+          case UpdateType.SHOW:
+            hide(false);
+            break;
+          case UpdateType.HIDE:
+            hide(true);
+            break;
+        }
       }
-    });
+    );
   });
 
   const _sliderMin = DEFAULT_TDP_MIN;
@@ -39,16 +53,20 @@ export const CustomTDPComponent: FC = () => {
 
   return (
     <div>
-      {show && <PanelSectionRow>
-        <ToggleField
-          label={localizationManager.getString(localizeStrEnum.CUSTOM_TDP_RANGE)}
-          checked={enableCustomTDPRange}
-          onChange={(val) => {
-            Settings.setEnableCustomTDPRange(val);
-          }}
-        />
-      </PanelSectionRow>}
-      {show && enableCustomTDPRange &&
+      {show && (
+        <PanelSectionRow>
+          <ToggleField
+            label={localizationManager.getString(
+              localizeStrEnum.CUSTOM_TDP_RANGE
+            )}
+            checked={enableCustomTDPRange}
+            onChange={(val) => {
+              Settings.setEnableCustomTDPRange(val);
+            }}
+          />
+        </PanelSectionRow>
+      )}
+      {show && enableCustomTDPRange && (
         <PanelSectionRow>
           <SliderField
             label={"Max"}
@@ -64,7 +82,8 @@ export const CustomTDPComponent: FC = () => {
               }
             }}
           />
-        </PanelSectionRow>}
+        </PanelSectionRow>
+      )}
       {/* {show && enableCustomTDPRange &&
         <PanelSectionRow>
           <SliderField
@@ -83,5 +102,5 @@ export const CustomTDPComponent: FC = () => {
           />
         </PanelSectionRow>} */}
     </div>
-  )
-}
+  );
+};
