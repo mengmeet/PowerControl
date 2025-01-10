@@ -1,3 +1,6 @@
 [submodule "submodule/RyzenAdj"]
 	path = submodule/RyzenAdj
 	url = https://github.com/FlyGoat/RyzenAdj.git
+[submodule "submodule/python-fuse"]
+	path = submodule/python-fuse
+	url = https://github.com/libfuse/python-fuse.git

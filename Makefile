@@ -64,6 +64,7 @@ deploy-steamdeck: ## Deploy plugin build to steamdeck
 	@rsync -azp --delete --progress -e "ssh -p $(DECK_PORT) -i $(DECK_KEY)" \
 		--chmod=Du=rwx,Dg=rx,Do=rx,Fu=rwx,Fg=rx,Fo=rx \
 		--exclude='.git/' \
+		--exclude='*.pyc' \
 		--exclude='.github/' \
 		--exclude='.vscode/' \
 		--exclude='node_modules/' \
@@ -78,6 +79,18 @@ deploy-steamdeck: ## Deploy plugin build to steamdeck
  		./ $(DECK_USER)@$(DECK_HOST):$(DECK_HOME)/homebrew/plugins/$(PLUGIN_FOLDER)/
 	@ssh $(DECK_USER)@$(DECK_HOST) -p $(DECK_PORT) -i $(DECK_KEY) \
  		'chmod -v 755 $(DECK_HOME)/homebrew/plugins/'
+
+local-fuse: ## Copy fuse module to local site-packages
+	@echo "+ $@"
+	@mkdir -p ./py_modules/site-packages
+	@rm -rf ./py_modules/site-packages/fuse* ./py_modules/site-packages/fuseparts
+	@rm -rf ./submodule/python-fuse/build
+	@cd ./submodule/python-fuse && \
+		PYTHONPATH=$(PWD)/py_modules/site-packages \
+		python3 setup.py install --prefix=$(PWD) --install-lib=install && \
+		cp -r ./install/fuse*/fuse* $(PWD)/py_modules/site-packages/ 
+	@rm -rf $(PWD)/submodule/python-fuse/build
+
 
 restart-decky: ## Restart Decky on remote steamdeck
 	@echo "+ $@"

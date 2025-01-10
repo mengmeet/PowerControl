@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: set git global safe directory
         run: |
-          pacman -Syu git npm --noconfirm
+          pacman -Syu git npm tree --noconfirm
           git config --global --add safe.directory $(realpath .)
 
       - uses: actions/checkout@v3
@@ -36,6 +36,19 @@ jobs:
           make
           cp -f ryzenadj ../../../bin
 
+      - name: build python-fuse
+        run: |
+          PWD=$(pwd)
+          echo "PWD: $PWD"
+          mkdir -p py_modules/site-packages
+          pacman -S python-fuse python-setuptools python-wheel python-installer --noconfirm --needed --overwrite='*'
+          cd ${PWD}/submodule/python-fuse && \
+            PYTHONPATH=${PWD}/py_modules/site-packages \
+            python3 setup.py install --prefix=${PWD} --install-lib=install
+          cd -
+          tree .
+          cp -a submodule/python-fuse/install/fuse*/fuse* py_modules/site-packages/
+          
       - name: change log level
         run: |
           sed -i 's/logging.DEBUG/logging.INFO/' py_modules/config.py

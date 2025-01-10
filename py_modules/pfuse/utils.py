@@ -2,8 +2,10 @@ import logging
 import os
 import time
 from threading import Event, Thread
+import subprocess
 
 from config import logger
+import decky
 
 TDP_MOUNT = "/run/powercontrol/hwmon"
 FUSE_MOUNT_SOCKET = "/run/powercontrol/socket"
@@ -98,12 +100,25 @@ def prepare_tdp_mount(debug: bool = False, passhtrough: bool = False):
         if not os.path.ismount(TDP_MOUNT):
             logger.info(f"Creating bind mount for:\n'{gpu}'\nto:\n'{TDP_MOUNT}'")
             cmd = f"mount --bind '{gpu}' '{TDP_MOUNT}'"
-            r = os.system(cmd)
-            assert not r, f"Failed:\n{cmd}"
+            try:
+                result = subprocess.run(
+                    cmd, shell=True, capture_output=True, text=True, check=True
+                )
+            except subprocess.CalledProcessError as e:
+                error_msg = f"Failed to create bind mount:\nCommand: {cmd}\nReturn code: {e.returncode}\nError: {e.stderr}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
+
             logger.info("Making bind mount private.")
             cmd = f"mount --make-private '{TDP_MOUNT}'"
-            r = os.system(cmd)
-            assert not r, f"Failed:\n{cmd}"
+            try:
+                result = subprocess.run(
+                    cmd, shell=True, capture_output=True, text=True, check=True
+                )
+            except subprocess.CalledProcessError as e:
+                error_msg = f"Failed to make mount private:\nCommand: {cmd}\nReturn code: {e.returncode}\nError: {e.stderr}"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
         else:
             logger.info(f"Bind mount already exists at:\n'{TDP_MOUNT}'")
 
@@ -116,6 +131,11 @@ def prepare_tdp_mount(debug: bool = False, passhtrough: bool = False):
         logger.info(f"Using Python: '{exe_python}'")
         # get this file's directory
         thisdir = os.path.dirname(os.path.abspath(__file__))
+
+        # add py_modules/site-packages to PYTHONPATH
+        custom_python_path = os.environ.get("PYTHONPATH", "")
+        custom_python_path += f":{decky.DECKY_PLUGIN_DIR}/py_modules/site-packages"
+        os.environ["PYTHONPATH"] = custom_python_path
         cmd = (
             f"{exe_python} {thisdir}/driver.py '{gpu}'"
             + f" -o root={TDP_MOUNT} -o nonempty -o allow_other"
@@ -125,8 +145,15 @@ def prepare_tdp_mount(debug: bool = False, passhtrough: bool = False):
         if debug:
             cmd += " -f"
         logger.info(f"Executing:\n'{cmd}'")
-        r = os.system(cmd)
-        assert not r, f"Failed:\n{cmd}"
+        try:
+            result = subprocess.run(
+                cmd, shell=True, capture_output=True, text=True, check=True
+            )
+            logger.debug(f"Command output:\n{result.stdout}")
+        except subprocess.CalledProcessError as e:
+            error_msg = f"Failed to launch FUSE mount:\nCommand: {cmd}\nReturn code: {e.returncode}\nError: {e.stderr}"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
     except Exception:
         logger.error("Error preparing fuse mount.", exc_info=True)
         return False

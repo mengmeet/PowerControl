@@ -1,4 +1,5 @@
 import os
+import json
 
 from conf_manager import confManager
 from config import FAN_EC_CONFIG, FAN_HWMON_LIST, PRODUCT_NAME, PRODUCT_VERSION, logger
@@ -76,7 +77,9 @@ class FanManager:
 
     # 解析处理 HWMON 风扇配置
     def __parse_fan_configuration_HWMON(self, name_path_map):
+        logger.info(f"解析 HWMON 风扇配置, len:{len(FAN_HWMON_LIST)}")
         for hwmon_name in FAN_HWMON_LIST:
+            logger.debug(f"解析 HWMON 风扇配置, hwmon_name:{hwmon_name}")
             if hwmon_name not in name_path_map:
                 continue
             for hwmon_config in FAN_HWMON_LIST[hwmon_name]:
@@ -304,15 +307,20 @@ class FanManager:
     # 转化风扇配置
     def parse_fan_configuration(self):
         hwmon_path = "/sys/class/hwmon"
-        hwmon_files = os.listdir(hwmon_path)
+        hwmon_dirs = os.listdir(hwmon_path)
+        logger.info(f"解析 HWMON 风扇配置, hwmon_dirs:{hwmon_dirs}")
         name_path_map = {}
 
-        umount_fuse_igpu()
+        try:
+            umount_fuse_igpu()
+        except Exception:
+            logger.error("umount_fuse_igpu error", exc_info=True)
 
         # 转化hwmon信息
-        for file in hwmon_files:
-            path = hwmon_path + "/" + file
+        for dir in hwmon_dirs:
+            path = hwmon_path + "/" + dir
             name = open(path + "/name").read().strip()
+            logger.debug(f">>> name:{name}, path:{path}")
             name_path_map[name] = path
             if name == "amdgpu":
                 self.gpu_temp_path = path + "/temp1_input"
@@ -324,6 +332,10 @@ class FanManager:
                 self.cpu_temp_path = path + "/temp1_input"
             if not self.cpu_temp_path and name == "acpitz":
                 self.cpu_temp_path = path + "/temp1_input"
+
+        logger.info(
+            f">>> name_path_map {json.dumps(name_path_map, indent=4, ensure_ascii=False)}"
+        )
 
         # 解析 hwmon 信息
         self.__parse_fan_configuration_HWMON(name_path_map)

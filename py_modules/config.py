@@ -5,7 +5,6 @@ import os
 
 import decky
 import yaml
-from helpers import get_homebrew_path
 from logging_handler import SystemdHandler
 
 # 日志配置
@@ -41,18 +40,33 @@ def setup_logger():
 # 初始化 logger
 logger = setup_logger()
 
+
+DECKY_PLUGIN_DIR = decky.DECKY_PLUGIN_DIR
+DECKY_PLUGIN_PY_DIR = f"{DECKY_PLUGIN_DIR}/py_modules"
+SH_PATH = "{}/backend/sh_tools.sh".format(DECKY_PLUGIN_DIR)
+RYZENADJ_PATH = "{}/bin/ryzenadj".format(DECKY_PLUGIN_DIR)
+# AMD_GPU_DEVICE_PATH = glob.glob("/sys/class/drm/card?/device")[0]
+# AMD_GPUFREQ_PATH = "{}/pp_od_clk_voltage".format(AMD_GPU_DEVICE_PATH)
+# AMD_GPULEVEL_PATH = "{}/power_dpm_force_performance_level".format(AMD_GPU_DEVICE_PATH)
+PLATFORM_PROFILE_PATH = "/sys/firmware/acpi/platform_profile"
+PLATFORM_PROFILE_CHOICES_PATH = "/sys/firmware/acpi/platform_profile_choices"
+
+FAN_CONFIG_DIR = f"{DECKY_PLUGIN_PY_DIR}/fan_config"
+FAN_HWMON_CONFIG_DIR = f"{FAN_CONFIG_DIR}/hwmon"
+FAN_EC_CONFIG_DIR = f"{FAN_CONFIG_DIR}/ec"
+
+HWMON_CONFS = glob.glob(f"{FAN_HWMON_CONFIG_DIR}/*.yml")
+EC_CONFS = glob.glob(f"{FAN_EC_CONFIG_DIR}/*.yml")
+
+HWMON_SCHEMA = f"{FAN_CONFIG_DIR}/schema/hwmon.json"
+EC_SCHEMA = f"{FAN_CONFIG_DIR}/schema/ec.json"
+
+API_URL = "https://api.github.com/repos/mengmeet/PowerControl/releases/latest"
+
+CONFIG_KEY = "PowerControl"
+
 # 路径配置
 try:
-    HOMEBREW_PATH = get_homebrew_path()
-    DECKY_PLUGIN_DIR = decky.DECKY_PLUGIN_DIR
-    SH_PATH = "{}/backend/sh_tools.sh".format(DECKY_PLUGIN_DIR)
-    RYZENADJ_PATH = "{}/bin/ryzenadj".format(DECKY_PLUGIN_DIR)
-    # AMD_GPU_DEVICE_PATH = glob.glob("/sys/class/drm/card?/device")[0]
-    # AMD_GPUFREQ_PATH = "{}/pp_od_clk_voltage".format(AMD_GPU_DEVICE_PATH)
-    # AMD_GPULEVEL_PATH = "{}/power_dpm_force_performance_level".format(AMD_GPU_DEVICE_PATH)
-    PLATFORM_PROFILE_PATH = "/sys/firmware/acpi/platform_profile"
-    PLATFORM_PROFILE_CHOICES_PATH = "/sys/firmware/acpi/platform_profile_choices"
-
     for p in glob.glob("/sys/class/drm/card?"):
         if os.path.exists(f"{p}/device/enable"):
             with open(f"{p}/device/enable", "r") as f:
@@ -74,9 +88,6 @@ try:
                     INTEL_GPU_MIN_LIMIT = f"{p}/gt_RPn_freq_mhz"
                     INTEL_GPU_CUR_FREQ = f"{p}/gt_cur_freq_mhz"
                     break
-
-    FAN_HWMON_CONFIG_DIR = f"{DECKY_PLUGIN_DIR}/backend/fan_config/hwmon"
-    FAN_EC_CONFIG_DIR = f"{DECKY_PLUGIN_DIR}/backend/fan_config/ec"
 except Exception as e:
     logger.error(f"路径配置异常|{e}", exc_info=True)
 
@@ -96,9 +107,6 @@ try:
 except Exception as e:
     logger.error(f"设备信息配置异常|{e}", exc_info=True)
 
-API_URL = "https://api.github.com/repos/mengmeet/PowerControl/releases/latest"
-
-CONFIG_KEY = "PowerControl"
 
 # 是否验证 yml 配置文件
 VERIFY_YML = False
@@ -176,13 +184,6 @@ def load_yaml(file_path: str, chk_schema=None) -> dict:
         except Exception as e:
             logger.error(f"验证模块导入失败, 跳过检查 | {e}")
     return data
-
-
-HWMON_CONFS = glob.glob(f"{FAN_HWMON_CONFIG_DIR}/*.yml")
-EC_CONFS = glob.glob(f"{FAN_EC_CONFIG_DIR}/*.yml")
-
-HWMON_SCHEMA = f"{DECKY_PLUGIN_DIR}/py_modules/fan_config/schema/hwmon.json"
-EC_SCHEMA = f"{DECKY_PLUGIN_DIR}/py_modules/fan_config/schema/ec.json"
 
 
 def get_all_howmon_fans():
