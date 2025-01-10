@@ -14,8 +14,8 @@ from config import (
     INTEL_GPU_MIN_LIMIT,
     logger,
 )
-from gpu_fix import fix_gpuFreqSlider_AMD, fix_gpuFreqSlider_INTEL
 from inotify import IN_MODIFY, notify
+from utils import fix_gpuFreqSlider_AMD, fix_gpuFreqSlider_INTEL
 
 
 class GPUAutoFreqManager(threading.Thread):
@@ -440,4 +440,6 @@ class GPUManager:
 
 
 gpuManager = GPUManager()
+# gpuManager.fix_gpuFreqSlider()
+# gpuManager.fix_gpuFreqSlider()
 # gpuManager.fix_gpuFreqSlider()

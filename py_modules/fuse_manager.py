@@ -2,18 +2,22 @@ import asyncio
 from threading import Event
 
 import decky
+from conf_manager import confManager
 from config import logger
 
 
 class FuseManager:
-    def __init__(self):
+    def __init__(
+        self,
+        max_tdp=30,
+    ):
         self.t = None
         self.t_sys = None
         self.should_exit = None
         self.emit = None
         self.min_tdp = 3
         self.default_tdp = 500
-        self.max_tdp = 30
+        self.max_tdp = max_tdp
 
         self.igpu_path = None
 
@@ -61,9 +65,25 @@ class FuseManager:
             start_tdp_client,
             umount_fuse_igpu,
         )
+        from utils.tdp import getMaxTDP
 
+        # umount igpu
         umount_fuse_igpu()
+
+        # find igpu
         self.igpu_path = find_igpu()
+
+        settings = confManager.getSettings()
+        tdpMax = getMaxTDP()
+        enableCustomTDPRange = settings.get("enableCustomTDPRange", False)
+        realTDPMax = (
+            settings.get("customTDPRangeMax", tdpMax)
+            if enableCustomTDPRange
+            else tdpMax
+        )
+
+        logger.info(f">>>> FuseManager tdpMax: {realTDPMax}")
+        self.max_tdp = realTDPMax
 
         if self.should_exit:
             return
@@ -79,4 +99,5 @@ class FuseManager:
                     self.max_tdp,
                 )
         except Exception:
+            logger.error("Failed to start", exc_info=True)
             logger.error("Failed to start", exc_info=True)

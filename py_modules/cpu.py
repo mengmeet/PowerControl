@@ -5,16 +5,8 @@ import subprocess
 import traceback
 from typing import Dict, List, Optional, Tuple
 
-from config import (
-    CPU_ID,
-    CPU_VENDOR,
-    PRODUCT_NAME,
-    RYZENADJ_PATH,
-    SH_PATH,
-    TDP_LIMIT_CONFIG_CPU,
-    TDP_LIMIT_CONFIG_PRODUCT,
-    logger,
-)
+from config import CPU_VENDOR, RYZENADJ_PATH, SH_PATH, logger
+from utils import getMaxTDP
 
 
 class CPUManager:
@@ -90,7 +82,7 @@ class CPUManager:
             else:
                 logger.info("get_hasRyzenadj {}".format(False))
                 return False
-        except Exception as e:
+        except Exception:
             logger.error("Failed to check ryzenadj tool", exc_info=True)
             return False
 
@@ -117,7 +109,7 @@ class CPUManager:
                 self.cpu_maxNum = cpu_index
             logger.info("get_cpuMaxNum {}".format(self.cpu_maxNum))
             return self.cpu_maxNum
-        except Exception as e:
+        except Exception:
             logger.error("Failed to get max CPU cores", exc_info=True)
             return 0
 
@@ -127,22 +119,7 @@ class CPUManager:
         Returns:
             int: 最大TDP值（瓦特）
         """
-        try:
-            # 根据机器型号或者CPU型号返回tdp最大值
-            if PRODUCT_NAME in TDP_LIMIT_CONFIG_PRODUCT:
-                self.cpu_tdpMax = TDP_LIMIT_CONFIG_PRODUCT[PRODUCT_NAME]
-            else:
-                for model in TDP_LIMIT_CONFIG_CPU:
-                    if model in CPU_ID:
-                        self.cpu_tdpMax = TDP_LIMIT_CONFIG_CPU[model]
-                        break
-                    else:
-                        self.cpu_tdpMax = 15
-            logger.info("get_tdpMax {}".format(self.cpu_tdpMax))
-            return self.cpu_tdpMax
-        except Exception as e:
-            logger.error("Failed to get max TDP value", exc_info=True)
-            return 0
+        return getMaxTDP()
 
     # 弃用
     def get_cpu_AvailableFreq(self) -> List[int]:
@@ -171,7 +148,7 @@ class CPUManager:
                 f"cpu_avaFreqData={[self.cpu_avaFreq,self.cpu_avaMinFreq,self.cpu_avaMaxFreq]}"
             )
             return self.cpu_avaFreq
-        except Exception as e:
+        except Exception:
             logger.error("Failed to get available CPU frequencies", exc_info=True)
             return []
 
@@ -220,7 +197,7 @@ class CPUManager:
                     elif name == "long_term":
                         rapl_long = f.replace("_name", "_power_limit_uw")
             return rapl_long, rapl_short
-        except Exception as e:
+        except Exception:
             logger.error("Failed to get Intel RAPL path", exc_info=True)
             return "", ""
 
@@ -247,7 +224,7 @@ class CPUManager:
                 file.write(str(tdp))
             return True
 
-        except Exception as e:
+        except Exception:
             logger.error(f"Failed to set Intel CPU TDP: value={value}", exc_info=True)
             return False
 
@@ -290,9 +267,11 @@ class CPUManager:
 
                 return True
             else:
-                logger.error(f"Failed to set AMD CPU TDP: value less than 3W (value={value})")
+                logger.error(
+                    f"Failed to set AMD CPU TDP: value less than 3W (value={value})"
+                )
                 return False
-        except Exception as e:
+        except Exception:
             logger.error(f"Failed to set AMD CPU TDP: value={value}", exc_info=True)
             return False
 
@@ -355,8 +334,10 @@ class CPUManager:
                 else:
                     self.online_cpu(int(cpu))
             return True
-        except Exception as e:
-            logger.error(f"Failed to set CPU online status: value={value}", exc_info=True)
+        except Exception:
+            logger.error(
+                f"Failed to set CPU online status: value={value}", exc_info=True
+            )
             return False
 
     def set_enable_All(self) -> bool:
@@ -376,7 +357,7 @@ class CPUManager:
                     cpu_number = match.group(1)
                     self.online_cpu(int(cpu_number))
             return True
-        except Exception as e:
+        except Exception:
             logger.error("Failed to enable all CPU cores", exc_info=True)
             return False
 
@@ -407,7 +388,7 @@ class CPUManager:
                 self.is_support_smt = False
             else:
                 self.is_support_smt = int(stdout) > 1
-        except Exception as e:
+        except Exception:
             logger.error("Failed to check SMT support", exc_info=True)
             self.is_support_smt = False
         return self.is_support_smt
@@ -428,7 +409,7 @@ class CPUManager:
             logger.debug("set_smt {}".format(value))
             self.cpu_smt = value
             return True
-        except Exception as e:
+        except Exception:
             logger.error(f"Failed to set SMT: value={value}", exc_info=True)
             return False
 
@@ -869,7 +850,7 @@ class CPUManager:
                     success = True
 
             return success
-        except Exception as e:
+        except Exception:
             logger.error(f"Failed to set EPP mode: mode={mode}", exc_info=True)
             return False
 

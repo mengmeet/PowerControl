@@ -1,10 +1,9 @@
 import os
 
-import decky
+from conf_manager import confManager
 from config import FAN_EC_CONFIG, FAN_HWMON_LIST, PRODUCT_NAME, PRODUCT_VERSION, logger
 from ec import EC
 from pfuse import umount_fuse_igpu
-from settings import SettingsManager
 
 
 class FanConfig:
@@ -49,10 +48,7 @@ class FanConfig:
 
 class FanManager:
     def __init__(self):
-        self.settings = SettingsManager(
-            name="fans_config",
-            settings_directory=decky.DECKY_PLUGIN_SETTINGS_DIR,
-        )
+        self.fansSettings = confManager.fansSettings
 
         self.fan_config_list: list[FanConfig] = []  # 记录每一个风扇的配置
         self.cpu_temp_path = ""  # CPU温度路径
@@ -76,7 +72,7 @@ class FanManager:
                     f"cup_temp {cup_temp}, 风扇{index} 当前转速已达到最大值, 更新最大值: {max_value} -> {current_rpm}"
                 )
                 fan_config.pwm_value_max = current_rpm
-                self.settings.setSetting(f"fan{index}_max", current_rpm)
+                self.fansSettings.setSetting(f"fan{index}_max", current_rpm)
 
     # 解析处理 HWMON 风扇配置
     def __parse_fan_configuration_HWMON(self, name_path_map):
@@ -178,7 +174,7 @@ class FanManager:
                         if "pwm_read_max" in fan_pwm_input
                         else 0
                     )
-                    max_value_from_settings = self.settings.getSetting(
+                    max_value_from_settings = self.fansSettings.getSetting(
                         f"fan{len(self.fan_config_list)}_max"
                     )
                     fc.pwm_value_max = (
@@ -258,7 +254,7 @@ class FanManager:
                 fc.fan_value_max = (
                     ec_info["rpm_value_max"] if "rpm_value_max" in ec_info else 0
                 )
-                max_value_from_settings = self.settings.getSetting(
+                max_value_from_settings = self.fansSettings.getSetting(
                     f"fan{len(self.fan_config_list)}_max"
                 )
                 logger.info(

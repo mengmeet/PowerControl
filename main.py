@@ -1,9 +1,9 @@
 import decky
-from settings import SettingsManager
 
 try:
     import update
-    from config import CONFIG_KEY, logger
+    from conf_manager import confManager
+    from config import logger
     from cpu import cpuManager
     from fan import fanManager
     from fuse_manager import FuseManager
@@ -15,16 +15,18 @@ except Exception as e:
 
 class Plugin:
     def __init__(self):
-        self.fuseManager = FuseManager()
+        self.fuseManager = None
+        self.confManager = confManager
 
     async def _migration(self):
         decky.logger.info("start _migration")
+
+        self.fuseManager = FuseManager()
         self.fuseManager.fuse_init()
 
     async def _main(self):
-        self.settings = SettingsManager(
-            name="config", settings_directory=decky.DECKY_PLUGIN_SETTINGS_DIR
-        )
+        decky.logger.info("start _main")
+        pass
 
     async def _unload(self):
         decky.logger.info("start _unload")
@@ -33,11 +35,10 @@ class Plugin:
         logger.info("End PowerControl")
 
     async def get_settings(self):
-        return self.settings.getSetting(CONFIG_KEY)
+        return self.confManager.getSettings()
 
     async def set_settings(self, settings):
-        self.settings.setSetting(CONFIG_KEY, settings)
-        # logger.info(f"save Settings: {settings}")
+        self.confManager.setSettings(settings)
         return True
 
     async def get_hasRyzenadj(self):
