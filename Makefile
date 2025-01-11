@@ -76,6 +76,7 @@ deploy-steamdeck: ## Deploy plugin build to steamdeck
 		--exclude='.env' . \
 		--exclude='Makefile' . \
 		--exclude='submodule' . \
+		--exclude='__pycache__' . \
  		./ $(DECK_USER)@$(DECK_HOST):$(DECK_HOME)/homebrew/plugins/$(PLUGIN_FOLDER)/
 	@ssh $(DECK_USER)@$(DECK_HOST) -p $(DECK_PORT) -i $(DECK_KEY) \
  		'chmod -v 755 $(DECK_HOME)/homebrew/plugins/'
@@ -87,8 +88,8 @@ local-fuse: ## Copy fuse module to local site-packages
 	@rm -rf ./submodule/python-fuse/build
 	@cd ./submodule/python-fuse && \
 		PYTHONPATH=$(PWD)/py_modules/site-packages \
-		python3 setup.py install --prefix=$(PWD) --install-lib=install && \
-		cp -r ./install/fuse*/fuse* $(PWD)/py_modules/site-packages/ 
+		python3 setup.py install --prefix=dist/install --install-lib=dist/install && \
+		rsync -a --exclude=*.pyc --exclude=__pycache__ ./dist/install/fuse*/fuse* $(PWD)/py_modules/site-packages/ 
 	@rm -rf $(PWD)/submodule/python-fuse/build
 
 
