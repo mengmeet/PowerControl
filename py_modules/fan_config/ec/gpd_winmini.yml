@@ -2,6 +2,7 @@
 # 内核补丁使用的是 ECIO 的方式
 product_name:
   - G1617-01
+  - G1617-02
 fans:
   - ram_reg_addr: 0x4E
     ram_reg_data: 0x4F

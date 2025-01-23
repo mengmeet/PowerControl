@@ -6,7 +6,7 @@
     "./backend"
   ],
   "yaml.schemas": {
-    "./backend/fan_config/schema/ec.json": ["backend/fan_config/ec/*.yml"],
-    "./backend/fan_config/schema/hwmon.json": ["backend/fan_config/hwmon/*.yml"],
+    "./py_modules/fan_config/schema/ec.json": ["py_modules/fan_config/ec/*.yml"],
+    "./py_modules/fan_config/schema/hwmon.json": ["py_modules/fan_config/hwmon/*.yml"],
   }
 }
