@@ -1,5 +1,6 @@
-import decky
 import sys
+
+import decky
 
 try:
     import update
@@ -10,6 +11,7 @@ try:
     from fuse_manager import FuseManager
     from gpu import gpuManager
     from sysInfo import sysInfoManager
+
     sys.path.append(f"{decky.DECKY_PLUGIN_DIR}/py_modules/site-packages")
 except Exception as e:
     decky.logger.error(e, exc_info=True)
@@ -24,7 +26,7 @@ class Plugin:
         decky.logger.info("start _migration")
 
         self.fuseManager = FuseManager()
-        self.fuseManager.fuse_init()
+        # self.fuseManager.fuse_init()
 
     async def _main(self):
         decky.logger.info("start _main")
