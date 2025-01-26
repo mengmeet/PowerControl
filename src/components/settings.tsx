@@ -102,6 +102,12 @@ const SettingsPerAppComponent: FC = () => {
       }
     );
   }, []);
+
+  // console.log(
+  //   `######## >>>>>>>> active_appInfo:`,
+  //   JSON.stringify(RunningApps.active_appInfo(), null, 2)
+  // );
+
   return (
     <div>
       {show && (
@@ -121,8 +127,10 @@ const SettingsPerAppComponent: FC = () => {
                         RunningApps.active_appInfo()?.icon_data
                       : "/assets/" +
                         RunningApps.active_appInfo()?.appid +
-                        "_icon.jpg?v=" +
-                        RunningApps.active_appInfo()?.icon_hash
+                        "/" +
+                        RunningApps.active_appInfo()?.icon_hash +
+                        ".jpg?c=" +
+                        RunningApps.active_appInfo()?.local_cache_version
                   }
                   width={20}
                   height={20}
