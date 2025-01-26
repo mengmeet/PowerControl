@@ -77,16 +77,27 @@ try:
                         f"{AMD_GPU_DEVICE_PATH}/power_dpm_force_performance_level"
                     )
 
-                    # read adn write
-                    INTEL_GPU_MIN_FREQ = f"{p}/gt_min_freq_mhz"
-                    INTEL_GPU_MAX_FREQ = f"{p}/gt_max_freq_mhz"
-                    INTEL_GPU_BOOST_FREQ = f"{p}/gt_boost_freq_mhz"
+                    # check if xe driver
+                    if os.path.exists(f"{p}/device/tile0/gt0/freq0/min_freq"):
+                        # xe driver paths for gt0 (graphics engine)
+                        INTEL_GPU_MIN_FREQ = f"{p}/device/tile0/gt0/freq0/min_freq"
+                        INTEL_GPU_MAX_FREQ = f"{p}/device/tile0/gt0/freq0/max_freq"
+                        INTEL_GPU_CUR_FREQ = f"{p}/device/tile0/gt0/freq0/cur_freq"
+                        INTEL_GPU_MAX_LIMIT = f"{p}/device/tile0/gt0/freq0/rp0_freq"
+                        INTEL_GPU_NORMAL_LIMIT = f"{p}/device/tile0/gt0/freq0/rpe_freq"
+                        INTEL_GPU_MIN_LIMIT = f"{p}/device/tile0/gt0/freq0/rpn_freq"
 
-                    # read only
-                    INTEL_GPU_MAX_LIMIT = f"{p}/gt_RP0_freq_mhz"
-                    INTEL_GPU_NORMAL_LIMIT = f"{p}/gt_RP1_freq_mhz"
-                    INTEL_GPU_MIN_LIMIT = f"{p}/gt_RPn_freq_mhz"
-                    INTEL_GPU_CUR_FREQ = f"{p}/gt_cur_freq_mhz"
+                    else:
+                        # i915 driver paths
+                        INTEL_GPU_MIN_FREQ = f"{p}/gt_min_freq_mhz"
+                        INTEL_GPU_MAX_FREQ = f"{p}/gt_max_freq_mhz"
+                        INTEL_GPU_BOOST_FREQ = f"{p}/gt_boost_freq_mhz"
+
+                        # read only
+                        INTEL_GPU_MAX_LIMIT = f"{p}/gt_RP0_freq_mhz"
+                        INTEL_GPU_NORMAL_LIMIT = f"{p}/gt_RP1_freq_mhz"
+                        INTEL_GPU_MIN_LIMIT = f"{p}/gt_RPn_freq_mhz"
+                        INTEL_GPU_CUR_FREQ = f"{p}/gt_cur_freq_mhz"
                     break
 except Exception as e:
     logger.error(f"路径配置异常|{e}", exc_info=True)

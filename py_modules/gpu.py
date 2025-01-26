@@ -353,9 +353,9 @@ class GPUManager:
                     # 如果要设置 min 大于当前 max，要先设置 max
                     if minValue > currentMax:
                         with open(INTEL_GPU_MAX_FREQ, "w") as file:
-                            file.write(str(minValue))
-                        with open(INTEL_GPU_MIN_FREQ, "w") as file:
                             file.write(str(maxValue))
+                        with open(INTEL_GPU_MIN_FREQ, "w") as file:
+                            file.write(str(minValue))
                     else:
                         with open(INTEL_GPU_MIN_FREQ, "w") as file:
                             file.write(str(minValue))
