@@ -138,6 +138,7 @@ try:
         "ROG Ally RC71L": 30,
         "Jupiter": 20,
         "V3": 45,
+        "Claw 8 AI+ A2VM": 30,
     }
     TDP_LIMIT_CONFIG_CPU = {
         "7735HS": 65,
@@ -162,6 +163,15 @@ try:
         "8840": 45,
         "8850U": 40,
         "8850": 45,
+        "238V": 37,
+        "256V": 37,
+        "228V": 37,
+        "266V": 37,
+        "258V": 37,
+        "268V": 37,
+        "236V": 37,
+        "226V": 37,
+        "288V": 37,
     }
 except Exception as e:
     logger.error(f"TDP配置异常|{e}")

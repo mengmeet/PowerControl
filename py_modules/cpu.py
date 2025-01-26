@@ -404,7 +404,7 @@ class CPUManager:
         """
         try:
             if not self.get_isSupportSMT():
-                logger.info("Failed to set SMT: system does not support SMT")
+                logger.debug("Failed to set SMT: system does not support SMT")
                 return False
             logger.debug("set_smt {}".format(value))
             self.cpu_smt = value
