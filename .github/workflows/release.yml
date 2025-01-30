@@ -22,7 +22,7 @@ jobs:
           pacman -Syu git npm tree --noconfirm
           git config --global --add safe.directory $(realpath .)
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: update submodules
         run: git submodule update --init --recursive
@@ -65,7 +65,7 @@ jobs:
           tar -tzvf PowerControl.tar.gz
       
       - name: Publish Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: PowerControl
           path: PowerControl.tar.gz
@@ -78,14 +78,14 @@ jobs:
       - run: mkdir /tmp/artifacts
 
       - name: download artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: /tmp/artifacts
 
       - run: ls -R /tmp/artifacts
 
       - name: publish to github release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: /tmp/artifacts/PowerControl/PowerControl.tar.gz
           tag_name: ${{ github.ref_name }}
