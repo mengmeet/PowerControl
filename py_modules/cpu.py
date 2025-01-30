@@ -6,7 +6,7 @@ import traceback
 from typing import Dict, List, Optional, Tuple
 
 from config import CPU_VENDOR, RYZENADJ_PATH, SH_PATH, logger
-from utils import getMaxTDP
+from utils import get_env, getMaxTDP
 
 
 class CPUManager:
@@ -258,6 +258,7 @@ class CPUManager:
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
+                    env=get_env(),
                 )
                 stdout, stderr = process.stdout, process.stderr
                 logger.debug(f"set_cpuTDP result:\n{stdout}")

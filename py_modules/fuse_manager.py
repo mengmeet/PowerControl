@@ -4,6 +4,7 @@ from threading import Event
 import decky
 from conf_manager import confManager
 from config import logger
+from utils import get_env
 
 
 class FuseManager:
@@ -33,7 +34,7 @@ class FuseManager:
             try:
                 import subprocess
 
-                subprocess.run(["umount", "-f", self.igpu_path])
+                subprocess.run(["umount", "-f", self.igpu_path], env=get_env())
             except Exception:
                 pass
 

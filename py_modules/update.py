@@ -8,6 +8,7 @@ import urllib.request
 
 import decky
 from config import API_URL, logger
+from utils import get_env
 
 
 def recursive_chmod(path, perms):
@@ -58,6 +59,7 @@ def update_latest():
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            env=get_env(),
         )
         logger.info(result.stdout)
         return result

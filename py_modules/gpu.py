@@ -15,7 +15,7 @@ from config import (
     logger,
 )
 from inotify import IN_MODIFY, notify
-from utils import fix_gpuFreqSlider_AMD, fix_gpuFreqSlider_INTEL
+from utils import fix_gpuFreqSlider_AMD, fix_gpuFreqSlider_INTEL, get_env
 
 
 class GPUAutoFreqManager(threading.Thread):
@@ -402,6 +402,7 @@ class GPUManager:
                 stderr=subprocess.PIPE,
                 text=True,
                 check=True,
+                env=get_env(),
             )
             # 获取输出并去除空白字符
             distribution = result.stdout.strip()
@@ -409,9 +410,11 @@ class GPUManager:
             result = None
             # 判断是否为 ChimeraOS
             if distribution == "chimeraos":
-                result = subprocess.run(["frzr-unlock"])
+                result = subprocess.run(["frzr-unlock"], env=get_env(), check=True)
             elif distribution == "SteamOS":
-                result = subprocess.run(["steamos-readonly", "disable"])
+                result = subprocess.run(
+                    ["steamos-readonly", "disable"], env=get_env(), check=True
+                )
 
             if result is not None:
                 if result.stdout:

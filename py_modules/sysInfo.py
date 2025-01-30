@@ -6,6 +6,7 @@ import time
 
 from config import AMD_GPU_DEVICE_PATH, logger
 from helpers import get_user
+from utils import get_env
 
 cpu_busyPercent = 0
 cpu_DataErrCnt = 0
@@ -170,7 +171,11 @@ class SysInfoManager(threading.Thread):
     def _getGPUBusyPercentByIntelGPUTop(self):
         command = ["stdbuf", "-oL", "intel_gpu_top", "-l", "-s", "1"]
         process = subprocess.Popen(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            env=get_env(),
         )
         line_count = 0
         percent = 0

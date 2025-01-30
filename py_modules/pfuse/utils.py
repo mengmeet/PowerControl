@@ -1,11 +1,11 @@
 import logging
 import os
+import subprocess
 import time
 from threading import Event, Thread
-import subprocess
 
-from config import logger
 import decky
+from config import logger
 
 TDP_MOUNT = "/run/powercontrol/hwmon"
 FUSE_MOUNT_SOCKET = "/run/powercontrol/socket"
@@ -102,7 +102,11 @@ def prepare_tdp_mount(debug: bool = False, passhtrough: bool = False):
             cmd = f"mount --bind '{gpu}' '{TDP_MOUNT}'"
             try:
                 result = subprocess.run(
-                    cmd, shell=True, capture_output=True, text=True, check=True
+                    cmd,
+                    shell=True,
+                    capture_output=True,
+                    text=True,
+                    check=True,
                 )
             except subprocess.CalledProcessError as e:
                 error_msg = f"Failed to create bind mount:\nCommand: {cmd}\nReturn code: {e.returncode}\nError: {e.stderr}"
