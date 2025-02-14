@@ -415,6 +415,7 @@ export class Backend {
           Backend.handleCPUBoost,
           Backend.handleCPUGovernor,
           Backend.handleEPP,
+          Backend.handleCpuMaxPerfPct,
         ];
         await Promise.all(cpuHandlers.map((handler) => handler()));
 
@@ -461,6 +462,13 @@ export class Backend {
     const cpuGovernor = Settings.appCPUGovernor();
     if (cpuGovernor) {
       await Backend.setCpuGovernor(cpuGovernor);
+    }
+  }
+
+  private static async handleCpuMaxPerfPct(): Promise<void> {
+    const cpuMaxPerfPct = Settings.appCpuMaxPerfPct();
+    if (cpuMaxPerfPct) {
+      await Backend.setMaxPerfPct(cpuMaxPerfPct);
     }
   }
 
@@ -626,6 +634,7 @@ export class Backend {
       [APPLYTYPE.SET_CPUCORE, Backend.handleCPUNum],
       [APPLYTYPE.SET_CPUBOOST, Backend.handleCPUBoost],
       [APPLYTYPE.SET_CPU_GOVERNOR, Backend.handleCPUGovernor],
+      [APPLYTYPE.SET_CPU_MAX_PERF, Backend.handleCpuMaxPerfPct],
       [APPLYTYPE.SET_EPP, Backend.handleEPP],
       [APPLYTYPE.SET_GPUMODE, Backend.handleGPUMode],
       [APPLYTYPE.SET_GPUSLIDERFIX, Backend.handleGPUSliderFix],
