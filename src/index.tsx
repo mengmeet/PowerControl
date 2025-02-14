@@ -33,24 +33,24 @@ import {
   QuickAccessTitleView,
 } from "./components";
 
-const Content: FC<{}> = ({}) => {
+const Content: FC<{}> = ({ }) => {
   return (
-    <div>
+    <>
       {PluginManager.isIniting() && (
         <PanelSectionRow>
           <SteamSpinner />
         </PanelSectionRow>
       )}
       {!PluginManager.isIniting() && (
-        <div>
+        <>
           <SettingsComponent />
           <CPUComponent />
           <GPUComponent />
           <FANComponent />
           <MoreComponent />
-        </div>
+        </>
       )}
-    </div>
+    </>
   );
 };
 
