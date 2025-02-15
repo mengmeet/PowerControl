@@ -51,6 +51,8 @@ export class AppSetting {
   @JsonProperty()
   cpuMaxPerfPct?: number;
   @JsonProperty()
+  autoCPUMaxPct?: boolean;
+  @JsonProperty()
   cpuGovernor?: string;
   @JsonProperty()
   epp?: string;
@@ -82,6 +84,7 @@ export class AppSetting {
       : 200;
     this.fanProfileNameList = [];
     this.cpuMaxPerfPct = 100;
+    this.autoCPUMaxPct = false; // 默认关闭自动CPU最大性能百分比
     this.cpuGovernor = "performance"; // 默认使用性能模式
     this.epp = "performance"; // 默认使用性能模式
   }
@@ -101,6 +104,7 @@ export class AppSetting {
     this.gpuRangeMinFreq = copyTarget.gpuAutoMinFreq;
     this.fanProfileNameList = copyTarget.fanProfileNameList?.slice();
     this.cpuMaxPerfPct = copyTarget.cpuMaxPerfPct;
+    this.autoCPUMaxPct = copyTarget.autoCPUMaxPct;
     this.cpuGovernor = copyTarget.cpuGovernor;
     this.epp = copyTarget.epp;
   }
@@ -114,7 +118,7 @@ export class FanSetting {
   fanMode?: number = FANMODE.NOCONTROL;
   @JsonProperty()
   fixSpeed?: number = 50;
-  @JsonProperty({ type: FanPosition })
+  @JsonProperty({ type: FanPosition, dataStructure: "array" })
   curvePoints?: FanPosition[] = [];
   constructor(
     snapToGrid: boolean,
@@ -181,10 +185,10 @@ export class SettingsData {
   @JsonProperty()
   public forceShowTDP: boolean = false;
 
-  @JsonProperty({ isDictionary: true, type: AppSettingData })
+  @JsonProperty({ type: AppSettingData, dataStructure: "dictionary" })
   public perApp: { [appId: string]: AppSettingData } = {};
 
-  @JsonProperty({ isDictionary: true, type: FanSetting })
+  @JsonProperty({ type: FanSetting, dataStructure: "dictionary" })
   public fanSettings: { [fanProfile: string]: FanSetting } = {};
 
   constructor() {
@@ -199,6 +203,20 @@ export class SettingsData {
     this.forceShowTDP = copyTarget.forceShowTDP;
     // this.customTDPRangeMin = copyTarget.customTDPRangeMin;
     this.perApp = {};
+    // formart copyTarget.perApp to json string
+    // console.log(
+    //   `!!!!!!!!!!!!!!! deepCopy: copyTarget.perApp: ${JSON.stringify(
+    //     copyTarget,
+    //     (key, value) => {
+    //       if (typeof value === "object" && value !== null) {
+    //         return Object.assign({}, value);
+    //       }
+    //       return value;
+    //     },
+    //     2
+    //   )}`
+    // );
+
     Object.entries(copyTarget.perApp).forEach(([key, value]) => {
       this.perApp[key] = new AppSettingData();
       this.perApp[key].deepCopy(value);
@@ -421,6 +439,22 @@ export class Settings {
 
   static appCpuMaxPerfPct() {
     return Settings.ensureApp().cpuMaxPerfPct ?? 100;
+  }
+
+  static appAutoCPUMaxPct() {
+    return Settings.ensureApp().autoCPUMaxPct ?? false;
+  }
+
+  static setAutoCPUMaxPct(autoPerf: boolean) {
+    if (Settings.ensureApp().autoCPUMaxPct != autoPerf) {
+      Settings.ensureApp().autoCPUMaxPct = autoPerf;
+      Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_CPU_MAX_PERF);
+      PluginManager.updateComponent(
+        ComponentName.CPU_PERFORMANCE,
+        UpdateType.UPDATE
+      );
+    }
   }
 
   static setCpuMaxPerfPct(cpuMaxPerfPct: number) {

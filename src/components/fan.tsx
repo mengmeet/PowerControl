@@ -143,7 +143,7 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
                 <FANCretateProfileModelComponent
                   fanProfileName={item.data.profileName}
                   fanSetting={Settings.getFanSetting(item.data.profileName)}
-                  closeModal={()=>{}}
+                  closeModal={() => {}}
                 />
               );
               return;
@@ -158,7 +158,7 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
                 <FANCretateProfileModelComponent
                   fanProfileName={item.data.profileName}
                   fanSetting={Settings.getFanSetting(item.data.profileName)}
-                  closeModal={()=>{}}
+                  closeModal={() => {}}
                 />
               );
             } else if (item.data.type == FANPROFILEACTION.CANCEL) {

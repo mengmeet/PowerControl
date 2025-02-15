@@ -143,10 +143,12 @@ const CPUPerformancePerfComponent: FC = () => {
   const [supportPerf, _] = useState<boolean>(
     Backend.data.getSupportCPUMaxPct()
   );
+  const [autoPerf, setAutoPerf] = useState<boolean>(Settings.appAutoCPUMaxPct());
   const [maxPerf, setMaxPerf] = useState<number>(Settings.appCpuMaxPerfPct());
 
   const refresh = () => {
     setMaxPerf(Settings.appCpuMaxPerfPct());
+    setAutoPerf(Settings.appAutoCPUMaxPct());
   };
 
   useEffect(() => {
@@ -167,20 +169,31 @@ const CPUPerformancePerfComponent: FC = () => {
   return (
     <>
       {supportPerf && (
-        <PanelSectionRow>
-          <SlowSliderField
-            label={localizationManager.getString(localizeStrEnum.CPU_MAX_PERF)}
-            value={maxPerf}
-            valueSuffix=" %"
-            step={1}
-            max={100}
-            min={10}
-            showValue={true}
-            onChangeEnd={(value: number) => {
-              Settings.setCpuMaxPerfPct(value);
-            }}
-          />
-        </PanelSectionRow>
+        <>
+          <PanelSectionRow>
+            <ToggleField
+              label={"Auto CPU Performance"}
+              checked={autoPerf}
+              onChange={(val) => {
+                Settings.setAutoCPUMaxPct(val);
+              }}
+            />
+          </PanelSectionRow>
+          {!autoPerf && <PanelSectionRow>
+            <SlowSliderField
+              label={localizationManager.getString(localizeStrEnum.CPU_MAX_PERF)}
+              value={maxPerf}
+              valueSuffix=" %"
+              step={1}
+              max={100}
+              min={10}
+              showValue={true}
+              onChangeEnd={(value: number) => {
+                Settings.setCpuMaxPerfPct(value);
+              }}
+            />
+          </PanelSectionRow>}
+        </>
       )}
     </>
   );
@@ -289,7 +302,7 @@ const CPUTDPComponent: FC = () => {
           {tdpEnable && (
             <PanelSectionRow>
               <SlowSliderField
-                // label={localizationManager.getString(localizeStrEnum.WATTS)}
+                label="TDP"
                 value={tdp}
                 valueSuffix=" W"
                 step={1}

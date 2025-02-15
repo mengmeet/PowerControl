@@ -33,7 +33,7 @@ import {
   QuickAccessTitleView,
 } from "./components";
 
-const Content: FC<{}> = ({ }) => {
+const Content: FC<{}> = ({}) => {
   return (
     <>
       {PluginManager.isIniting() && (
