@@ -11,6 +11,7 @@
     "CPU_NUM":"Numero di core CPU",
     "CPU_NUM_DESC":"Imposta i core fisici attivi",
     "CPU_MAX_PERF":"Prestazioni massime della CPU",
+    "CPU_MAX_PERF_AUTO":"Auto prestazioni massime della CPU",
     "CPU_GOVERNOR": "Governatore CPU",
     "CPU_GOVERNOR_DESC": "Imposta la politica di pianificazione delle prestazioni della CPU",
     "TDP":"Limite di potenza termica (TDP)",

@@ -11,6 +11,7 @@
     "CPU_NUM":"CPU 코어 수",
     "CPU_NUM_DESC":"활성화할 물리적 코어 설정",
     "CPU_MAX_PERF":"CPU 최대 성능",
+    "CPU_MAX_PERF_AUTO":"자동 CPU 최대 성능",
     "CPU_GOVERNOR": "CPU 거버너",
     "CPU_GOVERNOR_DESC": "CPU 성능 스케줄링 정책 설정",
     "TDP":"열 설계 전력 (TDP) 제한",

@@ -11,6 +11,7 @@
     "CPU_NUM":"CPU コア数",
     "CPU_NUM_DESC":"有効な物理コアを設定",
     "CPU_MAX_PERF":"CPU 最大パフォーマンス",
+    "CPU_MAX_PERF_AUTO":"自動 CPU 最大パフォーマンス",
     "CPU_GOVERNOR": "CPU ガバナー",
     "CPU_GOVERNOR_DESC": "CPU パフォーマンススケジューリングポリシーを設定",
     "TDP":"熱設計電力 (TDP) 制限",

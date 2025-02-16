@@ -11,6 +11,7 @@
     "CPU_NUM":"Nombre de cœurs CPU",
     "CPU_NUM_DESC":"Définir les cœurs physiques activés",
     "CPU_MAX_PERF":"Performance maximale du CPU",
+    "CPU_MAX_PERF_AUTO":"Auto CPU Maximum Performance",
     "CPU_GOVERNOR": "Gouverneur CPU",
     "CPU_GOVERNOR_DESC": "Définir la politique de planification des performances du CPU",
     "TDP":"Limite de puissance thermique (TDP)",

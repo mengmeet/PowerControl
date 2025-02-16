@@ -172,7 +172,7 @@ const CPUPerformancePerfComponent: FC = () => {
         <>
           <PanelSectionRow>
             <ToggleField
-              label={"Auto CPU Performance"}
+              label={localizationManager.getString(localizeStrEnum.CPU_MAX_PERF_AUTO)}
               checked={autoPerf}
               onChange={(val) => {
                 Settings.setAutoCPUMaxPct(val);

@@ -2,11 +2,114 @@ import glob
 import os
 import re
 import subprocess
+import threading
 import traceback
+import time
 from typing import Dict, List, Optional, Tuple
 
+import sysInfo
 from config import CPU_VENDOR, RYZENADJ_PATH, SH_PATH, logger
 from utils import get_env, getMaxTDP
+
+
+class CPUAutoMaxFreqManager(threading.Thread):
+    def __init__(self, cpuManager: "CPUManager") -> None:
+        self._cpu_enableAutoMaxFreq = False  # 标记是否开启CPU频率优化
+        self._cpu_autoFreqCheckInterval = 0.005  # cpu占用率数据检测间隔
+        self._cpu_adjustFreqInterval = 0.5  # cpu调整间隔
+        self._cpu_addPctBase = 5  # 自动优化性能百分比的基准大小 (5%)
+        self._cpu_minBusyPercent = 40  # 优化占用率的区间最小值
+        self._cpu_maxBusyPercent = 70  # 优化占用率的区间最大值
+        self._isRunning = False  # 标记是否正在运行cpu频率优化
+        self._cpuManager = cpuManager  # 用来获取和设置cpu频率
+        self._current_pct = 100  # 当前性能百分比
+
+        threading.Thread.__init__(self)
+
+    def Set_cpuMaxPct(self, pct: int):
+        """设置 CPU 最大性能百分比
+
+        Args:
+            pct (int): 性能百分比 (0-100)
+        """
+        try:
+            self._current_pct = max(0, min(100, pct))  # 确保百分比在 0-100 之间
+            return self._cpuManager.set_max_perf_pct(self._current_pct)
+        except Exception as e:
+            logger.error(e)
+            return False
+
+    def CPU_enableAutoMaxFreq(self, enable):
+        # 初始化并开启自动优化线程
+        self._cpu_enableAutoMaxFreq = enable
+        # 自动频率开启时去开启数据收集，避免不必要的性能浪费
+        sysInfo.sysInfoManager.EnableCPUINFO(enable)
+        if enable and not self._isRunning:
+            self.start()
+
+    def optimization_CPUFreq(self):
+        try:
+            cpu_avgPercent = sysInfo.cpu_busyPercent
+
+            # 判断cpu占用率 过高时认定cpu不够用 增加性能百分比
+            if cpu_avgPercent >= self._cpu_maxBusyPercent:
+                pct_add = (
+                    self._cpu_addPctBase * 2
+                    if cpu_avgPercent >= 99
+                    else self._cpu_addPctBase
+                )
+                new_pct = min(100, self._current_pct + pct_add)
+                if new_pct != self._current_pct:
+                    self.Set_cpuMaxPct(new_pct)
+                    logger.debug(
+                        f"当前平均CPU使用率::{cpu_avgPercent}% 大于目标范围最大值:{self._cpu_maxBusyPercent}% 增加{pct_add}% CPU性能上限 增加后的性能上限:{new_pct}%"
+                    )
+            # 判断cpu占用率 过低时认定cpu富余 降低性能百分比
+            elif cpu_avgPercent <= self._cpu_minBusyPercent:
+                pct_sub = self._cpu_addPctBase
+                new_pct = max(30, self._current_pct - pct_sub)  # 保持最低 30% 性能
+                if new_pct != self._current_pct:
+                    self.Set_cpuMaxPct(new_pct)
+                    logger.debug(
+                        f"当前平均CPU使用率::{cpu_avgPercent}% 小于目标范围最小值:{self._cpu_minBusyPercent}% 降低{pct_sub}% CPU性能上限 降低后的性能上限:{new_pct}%"
+                    )
+            # 不做任何调整
+            else:
+                logger.debug(
+                    f"当前平均CPU使用率::{cpu_avgPercent}% 处于目标范围{self._cpu_minBusyPercent}%-{self._cpu_maxBusyPercent}% 无需修改CPU性能上限 当前的性能上限:{self._current_pct}%"
+                )
+        except Exception as e:
+            logger.error(e)
+
+    def isRunning(self) -> bool:
+        return self._isRunning
+
+    def run(self):
+        logger.info("开始自动优化CPU性能上限:" + self.name)
+        adjust_count = 0
+        self._isRunning = True
+        while True:
+            try:
+                if not self._cpu_enableAutoMaxFreq:
+                    self._isRunning = False
+                    logger.debug("退出自动优化CPU性能上限：" + self.name)
+                    break
+                if not sysInfo.has_cpuData:
+                    self.CPU_enableAutoMaxFreq(False)
+                    self.Set_cpuMaxPct(100)  # 退出时恢复到 100% 性能
+                    self._isRunning = False
+                    logger.debug("退出自动优化CPU性能上限：" + self.name)
+                    break
+                adjust_count = adjust_count + 1
+                if adjust_count >= int(
+                    self._cpu_adjustFreqInterval / self._cpu_autoFreqCheckInterval
+                ):
+                    self.optimization_CPUFreq()
+                    adjust_count = 0
+                time.sleep(self._cpu_autoFreqCheckInterval)
+            except Exception as e:
+                logger.error(e)
+                time.sleep(self._cpu_autoFreqCheckInterval)
 
 
 class CPUManager:
@@ -64,6 +167,8 @@ class CPUManager:
         # 获取并存储CPU拓扑信息
         self.cpu_topology = self.get_cpu_topology()
         self.cps_ids: List[int] = sorted(list(set(self.cpu_topology.values())))
+
+        self._cpuAutoMaxFreqManager = None
 
         logger.info(f"self.cpu_topology {self.cpu_topology}")
         logger.info(f"cpu_ids {self.cps_ids}")
@@ -145,7 +250,7 @@ class CPUManager:
                 self.cpu_avaMinFreq = self.cpu_avaFreq[0]
                 self.cpu_avaMaxFreq = self.cpu_avaFreq[len(self.cpu_avaFreq) - 1]
             logger.info(
-                f"cpu_avaFreqData={[self.cpu_avaFreq,self.cpu_avaMinFreq,self.cpu_avaMaxFreq]}"
+                f"cpu_avaFreqData={[self.cpu_avaFreq, self.cpu_avaMinFreq, self.cpu_avaMaxFreq]}"
             )
             return self.cpu_avaFreq
         except Exception:
@@ -678,6 +783,36 @@ class CPUManager:
                 return True
             else:
                 return False
+        except Exception as e:
+            logger.error(e)
+            return False
+
+    def set_auto_cpumax_pct(self, value: bool) -> bool:
+        """设置自动调整CPU最大性能百分比。
+
+        Args:
+            value (bool): True启用,False禁用
+
+        Returns:
+            bool: True如果设置成功，否则False
+        """
+        try:
+            logger.debug(f"set_cpuMaxAuto  isAuto: {value}")
+            # 判断是否已经有自动频率管理
+            if (
+                self._cpuAutoMaxFreqManager is None
+                or not self._cpuAutoMaxFreqManager.isRunning()
+            ):
+                # 没有管理器或者当前管理器已经停止运行，则实例化一个并开启
+                if value:
+                    self._cpuAutoMaxFreqManager = CPUAutoMaxFreqManager(self)
+                    self._cpuAutoMaxFreqManager.CPU_enableAutoMaxFreq(True)
+            else:
+                # 有管理器且管理器正在运行，则直接关闭当前的管理器
+                if not value:
+                    self._cpuAutoMaxFreqManager.CPU_enableAutoMaxFreq(False)
+                    self._cpuAutoMaxFreqManager = None
+
         except Exception as e:
             logger.error(e)
             return False

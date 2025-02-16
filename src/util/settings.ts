@@ -204,18 +204,18 @@ export class SettingsData {
     // this.customTDPRangeMin = copyTarget.customTDPRangeMin;
     this.perApp = {};
     // formart copyTarget.perApp to json string
-    // console.log(
-    //   `!!!!!!!!!!!!!!! deepCopy: copyTarget.perApp: ${JSON.stringify(
-    //     copyTarget,
-    //     (key, value) => {
-    //       if (typeof value === "object" && value !== null) {
-    //         return Object.assign({}, value);
-    //       }
-    //       return value;
-    //     },
-    //     2
-    //   )}`
-    // );
+    console.log(
+      `!!!!!!!!!!!!!!! deepCopy copyTarget.fanSettings: ${JSON.stringify(
+        copyTarget.fanSettings,
+        (key, value) => {
+          if (typeof value === "object" && value !== null) {
+            return Object.assign({}, value);
+          }
+          return value;
+        },
+        2
+      )}`
+    );
 
     Object.entries(copyTarget.perApp).forEach(([key, value]) => {
       this.perApp[key] = new AppSettingData();

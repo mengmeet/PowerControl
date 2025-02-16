@@ -11,6 +11,7 @@
     "CPU_NUM":"CPU 核心數",
     "CPU_NUM_DESC":"設定啟用的實體核心數",
     "CPU_MAX_PERF":"最大效能百分比",
+    "CPU_MAX_PERF_AUTO":"自動最大效能百分比",
     "CPU_GOVERNOR": "CPU 調度器",
     "CPU_GOVERNOR_DESC": "設置 CPU 效能調度策略",
     "TDP":"熱設計功耗 (TDP) 限制",

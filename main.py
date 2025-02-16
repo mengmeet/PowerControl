@@ -256,6 +256,13 @@ class Plugin:
         except Exception as e:
             logger.error(e, exc_info=True)
             return False
+    
+    async def set_auto_cpumax_pct(self, value: bool):
+        try:
+            return cpuManager.set_auto_cpumax_pct(value)
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
 
     async def get_cpu_governor(self):
         """获取当前 CPU 调度器"""

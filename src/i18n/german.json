@@ -11,6 +11,7 @@
     "CPU_NUM":"Anzahl CPU-Kerne",
     "CPU_NUM_DESC":"Anzahl physischer CPU-Kerne",
     "CPU_MAX_PERF":"CPU Maximale Leistung",
+    "CPU_MAX_PERF_AUTO":"Automatische CPU Maximale Leistung",
     "CPU_GOVERNOR": "CPU-Taktgeber",
     "CPU_GOVERNOR_DESC": "CPU-Leistungsplanungsrichtlinie festlegen",
     "TDP":"Thermische Verlustleistung (TDP) Limit",

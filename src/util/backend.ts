@@ -396,6 +396,11 @@ export class Backend {
     return await call("set_max_perf_pct", value);
   }
 
+  // set_auto_cpumax_pct
+  public static async setAutoCPUMaxPct(value: boolean) {
+    return await call("set_auto_cpumax_pct", value);
+  }
+
   public static async applySettings(applyTarget: APPLYTYPE) {
     try {
       if (!Settings.ensureEnable()) {
@@ -467,7 +472,9 @@ export class Backend {
 
   private static async handleCpuMaxPerfPct(): Promise<void> {
     const cpuMaxPerfPct = Settings.appCpuMaxPerfPct();
-    if (cpuMaxPerfPct) {
+    const autoCPUMaxPct = Settings.appAutoCPUMaxPct();
+    await Backend.setAutoCPUMaxPct(autoCPUMaxPct);
+    if (!autoCPUMaxPct) {
       await Backend.setMaxPerfPct(cpuMaxPerfPct);
     }
   }

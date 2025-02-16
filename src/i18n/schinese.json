@@ -11,6 +11,7 @@
     "CPU_NUM":"核 心 数",
     "CPU_NUM_DESC":"设置启用的物理核心数量",
     "CPU_MAX_PERF":"最大性能百分比",
+    "CPU_MAX_PERF_AUTO":"自动最大性能百分比",
     "CPU_GOVERNOR": "CPU 调度器",
     "CPU_GOVERNOR_DESC": "选择 CPU 频率调度器",
     "CPU_EPP": "能耗性能偏好",

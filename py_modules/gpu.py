@@ -443,6 +443,3 @@ class GPUManager:
 
 
 gpuManager = GPUManager()
-# gpuManager.fix_gpuFreqSlider()
-# gpuManager.fix_gpuFreqSlider()
-# gpuManager.fix_gpuFreqSlider()

@@ -96,6 +96,7 @@ export enum localizeStrEnum {
   CPU_NUM = "CPU_NUM",
   CPU_NUM_DESC = "CPU_NUM_DESC",
   CPU_MAX_PERF = "CPU_MAX_PERF",
+  CPU_MAX_PERF_AUTO = "CPU_MAX_PERF_AUTO",
 
   TDP = "TDP",
   TDP_DESC = "TDP_DESC",
