@@ -419,9 +419,9 @@ class FanManager:
         try:
             hwmon_input_path = fc.hwmon_input_path
             fanRPM = int(open(hwmon_input_path).read().strip())
-            logger.debug(
-                f"使用hwmon数据 当前机型:{PRODUCT_NAME} hwmon地址:{hwmon_input_path} 风扇转速:{fanRPM}"
-            )
+            # logger.debug(
+            #     f"使用hwmon数据 当前机型:{PRODUCT_NAME} hwmon地址:{hwmon_input_path} 风扇转速:{fanRPM}"
+            # )
             return fanRPM
         except Exception:
             logger.error("使用hwmon获取风扇转速异常:", exc_info=True)

@@ -5,7 +5,7 @@ import decky
 try:
     import update
     from conf_manager import confManager
-    from config import logger
+    from config import logger, CPU_VENDOR
     from cpu import cpuManager
     from fan import fanManager
     from fuse_manager import FuseManager
@@ -72,6 +72,13 @@ class Plugin:
         except Exception as e:
             logger.error(e, exc_info=True)
             return 0
+
+    async def get_cpu_vendor(self):
+        try:
+            return CPU_VENDOR
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return ""
 
     async def get_gpuFreqRange(self):
         try:
@@ -179,6 +186,13 @@ class Plugin:
             logger.error(e, exc_info=True)
             return False
 
+    async def is_intel(self):
+        try:
+            return cpuManager.is_intel()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
     async def set_cpuOnline(self, value: int):
         try:
             return cpuManager.set_cpuOnline(value)
@@ -256,7 +270,7 @@ class Plugin:
         except Exception as e:
             logger.error(e, exc_info=True)
             return False
-    
+
     async def set_auto_cpumax_pct(self, value: bool):
         try:
             return cpuManager.set_auto_cpumax_pct(value)

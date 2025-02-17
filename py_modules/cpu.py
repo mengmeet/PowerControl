@@ -163,11 +163,13 @@ class CPUManager:
         self.set_enable_All()  # 先开启所有cpu, 否则拓扑信息不全
         self.get_isSupportSMT()  # 获取 is_support_smt
         self.get_cpuMaxNum()  # 获取 cpu_maxNum
+        self.__get_tdpMax()  # 获取 cpu_tdpMax
 
         # 获取并存储CPU拓扑信息
         self.cpu_topology = self.get_cpu_topology()
         self.cps_ids: List[int] = sorted(list(set(self.cpu_topology.values())))
 
+        # CPU自动优化线程
         self._cpuAutoMaxFreqManager = None
 
         logger.info(f"self.cpu_topology {self.cpu_topology}")
@@ -218,13 +220,68 @@ class CPUManager:
             logger.error("Failed to get max CPU cores", exc_info=True)
             return 0
 
-    def get_tdpMax(self) -> int:
+    def __get_tdpMax(self) -> int:
         """获取最大TDP值。
 
         Returns:
             int: 最大TDP值（瓦特）
         """
-        return getMaxTDP()
+        if self.is_intel():
+            self.cpu_tdpMax = self.get_cpuTDP_Intel()
+        elif self.is_amd():
+            self.cpu_tdpMax = self.get_cpuTDP_AMD()
+        else:
+            self.cpu_tdpMax = 0
+
+    def get_tdpMax(self) -> int:
+        return self.cpu_tdpMax
+
+    def get_cpuTDP_Intel(self) -> int:
+        """获取Intel CPU最大TDP值。
+
+        Returns:
+            int: Intel CPU最大TDP值
+        """
+        _, __, rapl_max = self.__get_intel_rapl_path()
+        if rapl_max == "":
+            logger.error("Failed to get Intel CPU TDP: RAPL path not found")
+            return 0
+        with open(rapl_max, "r") as file:
+            tdp = int(file.read().strip())
+            return tdp / 1000000
+
+    def get_cpuTDP_AMD(self) -> int:
+        """获取AMD CPU最大TDP值。
+
+        Returns:
+            int: AMD CPU最大TDP值
+        """
+        # 使用 ryzenadj 设置 200w 的 stapm-limit， 然后使用 ryzenadj -i 获取实际设置的 STAPM LIMIT， 保留整数
+        try:
+            subprocess.run(["ryzenadj", "-a", "200000"], check=True)
+            process = subprocess.run(
+                ["ryzenadj", "-i"],
+                check=True,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            stdout, stderr = process.stdout, process.stderr
+            if stderr:
+                logger.error(stderr)
+            if stdout:
+                # "| STAPM LIMIT" 开头的行
+                stdout = stdout.splitlines()
+                for line in stdout:
+                    if line.startswith("| STAPM LIMIT"):
+                        arrays = line.split("|")
+                        # float arrays[2] to int
+                        tdp = int(float(arrays[2]))
+                        logger.info(f">>>>>>>>> get_cpuTDP_AMD {tdp}")
+                        return tdp
+        except Exception as e:
+            logger.error(e)
+            return getMaxTDP()
 
     # 弃用
     def get_cpu_AvailableFreq(self) -> List[int]:
@@ -274,7 +331,13 @@ class CPUManager:
             logger.error("set_cpuTDP error: unknown CPU_VENDOR")
             return False
 
-    def __get_intel_rapl_path(self) -> Tuple[str, str]:
+    def is_intel(self):
+        return CPU_VENDOR == "GenuineIntel"
+
+    def is_amd(self):
+        return CPU_VENDOR == "AuthenticAMD"
+
+    def __get_legacy_intel_rapl_path(self) -> Tuple[str, str]:
         """获取Intel RAPL路径。
 
         Returns:
@@ -283,6 +346,7 @@ class CPUManager:
         rapl_path = ""
         rapl_long = ""
         rapl_short = ""
+        rapl_max = ""
         try:
             # 遍历 /sys/class/powercap/intel-rapl/intel-rapl:*/ 如果 name 是 package-0 则是cpu
             for r_path in glob.glob("/sys/class/powercap/intel-rapl/intel-rapl:?"):
@@ -301,10 +365,47 @@ class CPUManager:
                         rapl_short = f.replace("_name", "_power_limit_uw")
                     elif name == "long_term":
                         rapl_long = f.replace("_name", "_power_limit_uw")
-            return rapl_long, rapl_short
+                        rapl_max = f.replace("_name", "_max_power_uw")
+            return rapl_long, rapl_short, rapl_max
         except Exception:
             logger.error("Failed to get Intel RAPL path", exc_info=True)
-            return "", ""
+            return "", "", ""
+
+    def __get_intel_rapl_path(self) -> Tuple[str, str]:
+        """获取Intel RAPL路径。
+
+        Returns:
+            Tuple[str, str]: RAPL路径
+        """
+        rapl_path = ""
+        rapl_long = ""
+        rapl_short = ""
+        rapl_max = ""
+        try:
+            # 遍历 /sys/class/powercap/intel-rapl-mmio/intel-rapl-mmio:*/ 如果 name 是 package-0 则是cpu
+            for r_path in glob.glob(
+                "/sys/class/powercap/intel-rapl-mmio/intel-rapl-mmio:?"
+            ):
+                if os.path.isdir(r_path):
+                    name_path = os.path.join(r_path, "name")
+                    with open(name_path, "r") as file:
+                        name = file.read().strip()
+                    if name == "package-0":
+                        rapl_path = r_path
+                        break
+            for f in glob.glob(f"{rapl_path}/constraint_?_name"):
+                if os.path.isfile(f):
+                    with open(f, "r") as file:
+                        name = file.read().strip()
+                    if name == "short_term":
+                        rapl_short = f.replace("_name", "_power_limit_uw")
+                    elif name == "long_term":
+                        rapl_long = f.replace("_name", "_power_limit_uw")
+                        rapl_max = f.replace("_name", "_max_power_uw")
+            return rapl_long, rapl_short, rapl_max
+        except Exception:
+            logger.error("Failed to get Intel RAPL path", exc_info=True)
+            return "", "", ""
 
     def set_cpuTDP_Intel(self, value: int) -> bool:
         """设置Intel CPU TDP值。
@@ -319,13 +420,20 @@ class CPUManager:
             # 遍历 /sys/class/powercap/intel-rapl/*/ 如果 name 是 package-0 则是cpu
             logger.debug("set_cpuTDP_Intel {}".format(value))
             tdp = value * 1000000
-            rapl_long, rapl_short = self.__get_intel_rapl_path()
-            if rapl_long == "" or rapl_short == "":
+            rapl_long, rapl_short, _ = self.__get_intel_rapl_path()
+            legacy_rapl_long, legacy_rapl_short, _ = self.__get_legacy_intel_rapl_path()
+            if (rapl_long == "" or rapl_short == "") and (
+                legacy_rapl_long == "" or legacy_rapl_short == ""
+            ):
                 logger.error("Failed to set Intel CPU TDP: RAPL path not found")
                 return False
             with open(rapl_long, "w") as file:
                 file.write(str(tdp))
             with open(rapl_short, "w") as file:
+                file.write(str(tdp))
+            with open(legacy_rapl_long, "w") as file:
+                file.write(str(tdp))
+            with open(legacy_rapl_short, "w") as file:
                 file.write(str(tdp))
             return True
 

@@ -40,6 +40,8 @@ export class BackendData {
   private has_eppModes = false;
   private currentEpp: string | null = null;
   private has_currentEpp = false;
+  private cpuVendor: string = "";
+  private has_cpuVendor = false;
 
   public async init() {
     await call<[], number>("get_cpuMaxNum").then((res) => {
@@ -121,6 +123,17 @@ export class BackendData {
         console.error("获取当前 EPP 模式失败:", err);
         this.currentEpp = null;
         this.has_currentEpp = false;
+      });
+
+    await call<[], string>("get_cpu_vendor")
+      .then((res) => {
+        this.cpuVendor = res;
+        this.has_cpuVendor = true;
+      })
+      .catch((err) => {
+        console.error("获取 CPU 厂商失败:", err);
+        this.cpuVendor = "";
+        this.has_cpuVendor = false;
       });
   }
 
@@ -283,6 +296,14 @@ export class BackendData {
   public hasCurrentEPP() {
     return this.has_currentEpp;
   }
+
+  public getCpuVendor() {
+    return this.cpuVendor;
+  }
+
+  public hasCpuVendor() {
+    return this.has_cpuVendor;
+  }
 }
 
 export class Backend {
@@ -399,6 +420,11 @@ export class Backend {
   // set_auto_cpumax_pct
   public static async setAutoCPUMaxPct(value: boolean) {
     return await call("set_auto_cpumax_pct", value);
+  }
+
+  // get_cpu_vendor
+  public static async getCpuVendor(): Promise<string> {
+    return (await call("get_cpu_vendor")) as string;
   }
 
   public static async applySettings(applyTarget: APPLYTYPE) {

@@ -143,7 +143,9 @@ const CPUPerformancePerfComponent: FC = () => {
   const [supportPerf, _] = useState<boolean>(
     Backend.data.getSupportCPUMaxPct()
   );
-  const [autoPerf, setAutoPerf] = useState<boolean>(Settings.appAutoCPUMaxPct());
+  const [autoPerf, setAutoPerf] = useState<boolean>(
+    Settings.appAutoCPUMaxPct()
+  );
   const [maxPerf, setMaxPerf] = useState<number>(Settings.appCpuMaxPerfPct());
 
   const refresh = () => {
@@ -172,27 +174,33 @@ const CPUPerformancePerfComponent: FC = () => {
         <>
           <PanelSectionRow>
             <ToggleField
-              label={localizationManager.getString(localizeStrEnum.CPU_MAX_PERF_AUTO)}
+              label={localizationManager.getString(
+                localizeStrEnum.CPU_MAX_PERF_AUTO
+              )}
               checked={autoPerf}
               onChange={(val) => {
                 Settings.setAutoCPUMaxPct(val);
               }}
             />
           </PanelSectionRow>
-          {!autoPerf && <PanelSectionRow>
-            <SlowSliderField
-              label={localizationManager.getString(localizeStrEnum.CPU_MAX_PERF)}
-              value={maxPerf}
-              valueSuffix=" %"
-              step={1}
-              max={100}
-              min={10}
-              showValue={true}
-              onChangeEnd={(value: number) => {
-                Settings.setCpuMaxPerfPct(value);
-              }}
-            />
-          </PanelSectionRow>}
+          {!autoPerf && (
+            <PanelSectionRow>
+              <SlowSliderField
+                label={localizationManager.getString(
+                  localizeStrEnum.CPU_MAX_PERF
+                )}
+                value={maxPerf}
+                valueSuffix=" %"
+                step={1}
+                max={100}
+                min={10}
+                showValue={true}
+                onChangeEnd={(value: number) => {
+                  Settings.setCpuMaxPerfPct(value);
+                }}
+              />
+            </PanelSectionRow>
+          )}
         </>
       )}
     </>
@@ -450,8 +458,12 @@ export const CPUComponent: FC = () => {
   const [isSpportSMT, setIsSpportSMT] = useState<boolean>(
     Settings.appIsSupportSMT()
   );
+  const [cpuVendor, setCpuVendor] = useState<string>(
+    Backend.data.getCpuVendor()
+  );
   useEffect(() => {
     setIsSpportSMT(Settings.appIsSupportSMT());
+    setCpuVendor(Backend.data.getCpuVendor());
   }, []);
 
   const hide = (ishide: boolean) => {
@@ -486,7 +498,7 @@ export const CPUComponent: FC = () => {
           {/* {Backend.data.hasEPPModes() && <CPUEPPComponent />} */}
           <CPUNumComponent />
           <CPUTDPComponent />
-          <CustomTDPComponent />
+          {cpuVendor != "GenuineIntel" && <CustomTDPComponent />}
           <CPUPerformancePerfComponent />
         </PanelSection>
       )}
