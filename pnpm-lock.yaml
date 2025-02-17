@@ -11,28 +11,37 @@ importers:
       '@decky/api':
         specifier: ^1.1.2
         version: 1.1.2
+      '@decky/ui':
+        specifier: ^4.9.1
+        version: 4.9.1
       i18next:
-        specifier: ^23.16.8
+        specifier: ^23.15.1
         version: 23.16.8
       react-icons:
         specifier: ^4.12.0
         version: 4.12.0(react@19.0.0)
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
-      tslib:
-        specifier: ^2.8.1
-        version: 2.8.1
       typescript-json-serializer:
-        specifier: ^6.0.1
-        version: 6.0.1
+        specifier: ^4.3.0
+        version: 4.3.0
     devDependencies:
       '@decky/rollup':
         specifier: ^1.0.1
         version: 1.0.1
-      '@decky/ui':
-        specifier: ^4.9.1
-        version: 4.9.1
+      '@rollup/plugin-commonjs':
+        specifier: ^26.0.1
+        version: 26.0.3(rollup@4.34.7)
+      '@rollup/plugin-json':
+        specifier: ^6.1.0
+        version: 6.1.0(rollup@4.34.7)
+      '@rollup/plugin-node-resolve':
+        specifier: ^15.2.3
+        version: 15.3.1(rollup@4.34.7)
+      '@rollup/plugin-replace':
+        specifier: ^5.0.7
+        version: 5.0.7(rollup@4.34.7)
+      '@rollup/plugin-typescript':
+        specifier: ^11.1.6
+        version: 11.1.6(rollup@4.34.7)(tslib@2.8.1)(typescript@5.7.3)
       '@types/markdown-it':
         specifier: ^14.1.2
         version: 14.1.2
@@ -49,11 +58,23 @@ importers:
         specifier: ^14.1.0
         version: 14.1.0
       rollup:
-        specifier: ^4.22.5
+        specifier: ^4.21.3
         version: 4.34.7
+      rollup-plugin-delete:
+        specifier: ^2.1.0
+        version: 2.1.0(rollup@4.34.7)
+      rollup-plugin-external-globals:
+        specifier: ^0.10.0
+        version: 0.10.0(rollup@4.34.7)
+      rollup-plugin-import-assets:
+        specifier: ^1.1.1
+        version: 1.1.1(rollup@4.34.7)
       shx:
         specifier: ^0.3.4
         version: 0.3.4
+      tslib:
+        specifier: ^2.7.0
+        version: 2.8.1
       typescript:
         specifier: ^5.6.2
         version: 5.7.3
@@ -804,9 +825,6 @@ packages:
   reflect-metadata@0.1.14:
     resolution: {integrity: sha512-ZhYeb6nRaXCfhnndflDK8qI6ZQ/YcWZCISRAWICW9XYqMUwjZM9Z0DveWX/ABN01oxSHwVxKQmxeYZSsm0jh5A==}
 
-  reflect-metadata@0.2.2:
-    resolution: {integrity: sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q==}
-
   regenerator-runtime@0.14.1:
     resolution: {integrity: sha512-dYnhHh0nJoMfnkZs6GmmhFknAGRrLznOu5nc9ML+EJxGvrx6H7teuevqVqCuPcPK//3eDrrjQhehXVx9cnkGdw==}
 
@@ -833,6 +851,11 @@ packages:
     engines: {node: '>=10'}
     peerDependencies:
       rollup: '*'
+
+  rollup-plugin-external-globals@0.10.0:
+    resolution: {integrity: sha512-RXlupZrmn97AaaS5dWnktkjM+Iy+od0E+8L0mUkMIs3iuoUXNJebueQocQKV7Ircd54fSGGmkBaXwNzY05J1yQ==}
+    peerDependencies:
+      rollup: ^2.25.0 || ^3.3.0 || ^4.1.4
 
   rollup-plugin-external-globals@0.11.0:
     resolution: {integrity: sha512-LR+sH2WkgWMPxsA5o5rT7uW7BeWXSeygLe60QQi9qoN/ufaCuHDaVOIbndIkqDPnZt/wZugJh5DCzkZFdSWlLQ==}
@@ -954,8 +977,8 @@ packages:
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
-  typescript-json-serializer@6.0.1:
-    resolution: {integrity: sha512-95UQOeV3V+WIx5+7dBZd6/pN+cQSsGXxIdDvPmYhkHYH6VrIgQ3DK+IM3ixKVjFwvch8LnWhIY3F/Zhp4bNfSA==}
+  typescript-json-serializer@4.3.0:
+    resolution: {integrity: sha512-992VnHgazGO0S2AxN2UOCB8BjUOMvmhi0wUIJb89URtLuPayxsED8w10gWhzSPAxlu97p6M76ZSeiKzLtSEaQg==}
 
   typescript@5.7.3:
     resolution: {integrity: sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw==}
@@ -1721,8 +1744,6 @@ snapshots:
 
   reflect-metadata@0.1.14: {}
 
-  reflect-metadata@0.2.2: {}
-
   regenerator-runtime@0.14.1: {}
 
   require-from-string@2.0.2: {}
@@ -1742,6 +1763,14 @@ snapshots:
   rollup-plugin-delete@2.1.0(rollup@4.34.7):
     dependencies:
       del: 5.1.0
+      rollup: 4.34.7
+
+  rollup-plugin-external-globals@0.10.0(rollup@4.34.7):
+    dependencies:
+      '@rollup/pluginutils': 5.1.4(rollup@4.34.7)
+      estree-walker: 3.0.3
+      is-reference: 3.0.3
+      magic-string: 0.30.17
       rollup: 4.34.7
 
   rollup-plugin-external-globals@0.11.0(rollup@4.34.7):
@@ -1882,7 +1911,7 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  typescript-json-serializer@6.0.1:
+  typescript-json-serializer@4.3.0:
     dependencies:
       reflect-metadata: 0.1.14
       tslib: 2.8.1

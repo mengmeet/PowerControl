@@ -118,7 +118,7 @@ export class FanSetting {
   fanMode?: number = FANMODE.NOCONTROL;
   @JsonProperty()
   fixSpeed?: number = 50;
-  @JsonProperty({ type: FanPosition, dataStructure: "array" })
+  @JsonProperty({ type: FanPosition })
   curvePoints?: FanPosition[] = [];
   constructor(
     snapToGrid: boolean,
@@ -185,10 +185,10 @@ export class SettingsData {
   @JsonProperty()
   public forceShowTDP: boolean = false;
 
-  @JsonProperty({ type: AppSettingData, dataStructure: "dictionary" })
+  @JsonProperty({ type: AppSettingData, isDictionary: true })
   public perApp: { [appId: string]: AppSettingData } = {};
 
-  @JsonProperty({ type: FanSetting, dataStructure: "dictionary" })
+  @JsonProperty({ type: FanSetting, isDictionary: true })
   public fanSettings: { [fanProfile: string]: FanSetting } = {};
 
   constructor() {
