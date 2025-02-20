@@ -226,12 +226,14 @@ class CPUManager:
         Returns:
             int: 最大TDP值（瓦特）
         """
-        if self.is_intel():
-            self.cpu_tdpMax = self.get_cpuTDP_Intel()
-        elif self.is_amd():
-            self.cpu_tdpMax = self.get_cpuTDP_AMD()
-        else:
-            self.cpu_tdpMax = 0
+        self.cpu_tdpMax = getMaxTDP()
+        if self.cpu_tdpMax == 0:
+            if self.is_intel():
+                self.cpu_tdpMax = self.get_cpuTDP_Intel()
+            elif self.is_amd():
+                self.cpu_tdpMax = self.get_cpuTDP_AMD()
+            else:
+                self.cpu_tdpMax = 0
 
     def get_tdpMax(self) -> int:
         return self.cpu_tdpMax
@@ -420,6 +422,7 @@ class CPUManager:
             # 遍历 /sys/class/powercap/intel-rapl/*/ 如果 name 是 package-0 则是cpu
             logger.debug("set_cpuTDP_Intel {}".format(value))
             tdp = value * 1000000
+            tdp_short = (value + 5) * 1000000
             rapl_long, rapl_short, _ = self.__get_intel_rapl_path()
             legacy_rapl_long, legacy_rapl_short, _ = self.__get_legacy_intel_rapl_path()
             if (rapl_long == "" or rapl_short == "") and (
@@ -430,11 +433,11 @@ class CPUManager:
             with open(rapl_long, "w") as file:
                 file.write(str(tdp))
             with open(rapl_short, "w") as file:
-                file.write(str(tdp))
+                file.write(str(tdp_short))
             with open(legacy_rapl_long, "w") as file:
                 file.write(str(tdp))
             with open(legacy_rapl_short, "w") as file:
-                file.write(str(tdp))
+                file.write(str(tdp_short))
             return True
 
         except Exception:
