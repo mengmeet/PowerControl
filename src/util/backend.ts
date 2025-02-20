@@ -42,6 +42,8 @@ export class BackendData {
   private has_currentEpp = false;
   private cpuVendor: string = "";
   private has_cpuVendor = false;
+  private bypassCharge = false;
+  private has_bypassCharge = false;
 
   public async init() {
     await call<[], number>("get_cpuMaxNum").then((res) => {
@@ -134,6 +136,18 @@ export class BackendData {
         console.error("获取 CPU 厂商失败:", err);
         this.cpuVendor = "";
         this.has_cpuVendor = false;
+      });
+
+    await call<[], boolean>("get_bypass_charge")
+      .then((res) => {
+        console.log(`>>>> get_bypass_charge ${res}`);
+        this.bypassCharge = res;
+        this.has_bypassCharge = true;
+      })
+      .catch((err) => {
+        console.error("检查 BYPASS_CHARGE 支持失败:", err);
+        this.bypassCharge = false;
+        this.has_bypassCharge = false;
       });
   }
 
@@ -304,6 +318,18 @@ export class BackendData {
   public hasCpuVendor() {
     return this.has_cpuVendor;
   }
+
+  public getIsSupportBypassCharge() {
+    return this.bypassCharge !== undefined;
+  }
+
+  public getBypassCharge() {
+    return this.bypassCharge;
+  }
+
+  public hasBypassCharge() {
+    return this.has_bypassCharge;
+  }
 }
 
 export class Backend {
@@ -425,6 +451,16 @@ export class Backend {
   // get_cpu_vendor
   public static async getCpuVendor(): Promise<string> {
     return (await call("get_cpu_vendor")) as string;
+  }
+
+  // set_bypass_charge
+  public static async setBypassCharge(value: boolean) {
+    return await call("set_bypass_charge", value);
+  }
+
+  // get_bypass_charge
+  public static async getBypassCharge(): Promise<boolean> {
+    return (await call("get_bypass_charge")) as boolean;
   }
 
   public static async applySettings(applyTarget: APPLYTYPE) {

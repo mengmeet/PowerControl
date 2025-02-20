@@ -398,6 +398,20 @@ export class Settings {
     return Backend.data?.HasSupportSMT() ? Backend.data?.getSupportSMT() : true;
   }
 
+  static appBypassCharge(): boolean {
+    return Backend.data?.hasBypassCharge()
+      ? Backend.data?.getBypassCharge()
+      : false;
+  }
+
+  static setBypassCharge(bypassCharge: boolean) {
+    Backend.setBypassCharge(bypassCharge);
+    PluginManager.updateComponent(
+      ComponentName.POWER_BYPASS_CHARGE,
+      UpdateType.UPDATE
+    );
+  }
+
   static appCpuNum() {
     return Settings.ensureApp().cpuNum!!;
   }

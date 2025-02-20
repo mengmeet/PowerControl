@@ -1,9 +1,11 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+
+from .idevice import IDevice
 
 
-class PowerDevice(ABC):
+class PowerDevice(IDevice):
     @abstractmethod
-    def get_baypassCharge(self) -> bool:
+    def get_bypass_charge(self) -> bool:
         """
         获取旁路供电开关状态
         :return:
@@ -11,7 +13,7 @@ class PowerDevice(ABC):
         pass
 
     @abstractmethod
-    def set_baypassCharge(self, value: bool) -> None:
+    def set_bypass_charge(self, value: bool) -> None:
         """
         设置旁路供电开关状态
         :param value:

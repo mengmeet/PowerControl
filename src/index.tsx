@@ -31,6 +31,7 @@ import {
   FANComponent,
   MoreComponent,
   QuickAccessTitleView,
+  PowerComponent,
 } from "./components";
 
 const Content: FC<{}> = ({}) => {
@@ -46,6 +47,7 @@ const Content: FC<{}> = ({}) => {
           <SettingsComponent />
           <CPUComponent />
           <GPUComponent />
+          <PowerComponent />
           <FANComponent />
           <MoreComponent />
         </>

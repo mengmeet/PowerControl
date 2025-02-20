@@ -1,5 +1,7 @@
 from ec import EC
 
+from .power_device import PowerDevice
+
 EC_BYPASS_CHARGE_ADDR = 0x1E
 EC_BYPASS_CHARGE_OPEN = 0x55
 EC_BYPASS_CHARGE_CLOSE = 0xAA
@@ -26,26 +28,29 @@ class AyaneoDevice(PowerDevice):
     def _ec_write(self, address: int, data: int) -> None:
         EC.Write(address, data)
 
-    def get_baypassCharge(self) -> bool:
+    def get_bypass_charge(self) -> bool | None:
         """
         获取旁路供电开关状态
         :return:
         """
         value = self._ec_read(self.ec_bypass_charge_addr)
-        return value == self.ec_bypass_charge_open
+        if value == self.ec_bypass_charge_open:
+            return True
+        elif value == self.ec_bypass_charge_close:
+            return False
+        else:
+            return None
 
-    def set_baypassCharge(self, value: bool) -> None:
+    def set_bypass_charge(self, value: bool) -> None:
         """
         设置旁路供电开关状态
         :param value:
         :return:
         """
-        if value:
-            data = self.ec_bypass_charge_open
-            need_write = self.get_baypassCharge() != value
-        else:
-            data = self.ec_bypass_charge_close
-            need_write = self.get_baypassCharge() != value
+        current_value = self.get_bypass_charge()
 
-        if need_write:
-            self._ec_write(self.ec_bypass_charge_addr, data)
+        if current_value != value:
+            self._ec_write(
+                self.ec_bypass_charge_addr,
+                self.ec_bypass_charge_open if value else self.ec_bypass_charge_close,
+            )

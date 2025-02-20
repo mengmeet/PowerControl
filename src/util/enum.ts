@@ -58,6 +58,8 @@ export enum ComponentName {
   FAN_DISPLAY = "FAN_DISPLAY",
   SET_PERACMODE = "SET_PERACMODE",
   CUSTOM_TDP = "CUSTOM_TDP",
+  POWER_ALL = "POWER_ALL",
+  POWER_BYPASS_CHARGE = "POWER_BYPASS_CHARGE",
 }
 
 export enum UpdateType {

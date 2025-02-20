@@ -1,4 +1,7 @@
+from config import logger
 from ec import EC
+
+from .ayaneo_device import AyaneoDevice
 
 EC_BYPASS_CHARGE_ADDR = 0xD1
 EC_BYPASS_CHARGE_OPEN = 0x65
@@ -25,26 +28,26 @@ class AyaneoDeviceII(AyaneoDevice):
         address2 = address | (offset << 8)
         EC.RamWrite(self.ec_comm_port, self.ec_data_port, address2, data)
 
-    def get_baypassCharge(self) -> bool:
+    def get_bypass_charge(self) -> bool:
         """
         获取旁路供电开关状态
         :return:
         """
         value = self._ec_ram_direct_read(self.ec_bypass_charge_addr)
+        logger.info(f"get_bypass_charge: {hex(value)}")
         return value == self.ec_bypass_charge_open
 
-    def set_baypassCharge(self, value: bool) -> None:
+    def set_bypass_charge(self, value: bool) -> None:
         """
         设置旁路供电开关状态
         :param value:
         :return:
         """
-        if value:
-            data = self.ec_bypass_charge_open
-            need_write = self.get_baypassCharge() != value
-        else:
-            data = self.ec_bypass_charge_close
-            need_write = self.get_baypassCharge() != value
+        current_value = self.get_bypass_charge()
 
-        if need_write:
-            self._ec_ram_direct_write(self.ec_bypass_charge_addr, data)
+        if current_value != value:
+            write_value = (
+                self.ec_bypass_charge_open if value else self.ec_bypass_charge_close
+            )
+            logger.info(f"set_bypass_charge: {hex(write_value)}")
+            self._ec_ram_direct_write(self.ec_bypass_charge_addr, write_value)

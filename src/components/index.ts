@@ -6,5 +6,6 @@ export * from "./fan"
 export * from "./fanCanvas"
 export * from "./more"
 export * from "./customTDP"
+export * from "./power"
 export * from "./actionButtonItem"
 

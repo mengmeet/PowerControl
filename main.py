@@ -5,11 +5,12 @@ import decky
 try:
     import update
     from conf_manager import confManager
-    from config import logger, CPU_VENDOR
+    from config import CPU_VENDOR, logger
     from cpu import cpuManager
     from fan import fanManager
     from fuse_manager import FuseManager
     from gpu import gpuManager
+    from power_manager import powerManager
     from sysInfo import sysInfoManager
 
     sys.path.append(f"{decky.DECKY_PLUGIN_DIR}/py_modules/site-packages")
@@ -30,6 +31,8 @@ class Plugin:
 
     async def _main(self):
         decky.logger.info("start _main")
+        bypass_charge_value = powerManager.get_bypass_charge()
+        logger.info(f"Bypass Charge: {bypass_charge_value}")
         pass
 
     async def _unload(self):
@@ -334,6 +337,22 @@ class Plugin:
         """设置 EPP 模式。"""
         try:
             return cpuManager.set_epp(mode)
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
+    async def get_bypass_charge(self) -> bool | None:
+        """获取 Bypass Charge 值。"""
+        try:
+            return powerManager.get_bypass_charge()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return None
+
+    async def set_bypass_charge(self, value: int):
+        """设置 Bypass Charge 值。"""
+        try:
+            return powerManager.set_bypass_charge(value)
         except Exception as e:
             logger.error(e, exc_info=True)
             return False
