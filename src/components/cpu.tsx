@@ -227,9 +227,11 @@ const CPUTDPComponent: FC = () => {
   );
 
   // 隐藏强制显示TDP开关, 并默认显示 TDP 控制组件。新版 Steam 客户端临时方案
-  const [hideForceShowSwitch, _] = useState<boolean>(
-    Backend.data.getForceShowTDP()
-  );
+  // const [hideForceShowSwitch, _] = useState<boolean>(
+  //   Backend.data.getForceShowTDP()
+  // );
+
+  const hideForceShowSwitch = true;
 
   // const minSteamVersion = 1714854927;
 

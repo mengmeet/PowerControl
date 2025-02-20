@@ -42,8 +42,10 @@ export class BackendData {
   private has_currentEpp = false;
   private cpuVendor: string = "";
   private has_cpuVendor = false;
-  private bypassCharge = false;
-  private has_bypassCharge = false;
+  private supportsBypassCharge = false;
+  private has_supportsBypassCharge = false;
+  private supportsChargeLimit = false;
+  private has_supportsChargeLimit = false;
 
   public async init() {
     await call<[], number>("get_cpuMaxNum").then((res) => {
@@ -138,16 +140,26 @@ export class BackendData {
         this.has_cpuVendor = false;
       });
 
-    await call<[], boolean>("get_bypass_charge")
+    await call<[], boolean>("get_supports_bypass_charge")
       .then((res) => {
-        console.log(`>>>> get_bypass_charge ${res}`);
-        this.bypassCharge = res;
-        this.has_bypassCharge = true;
+        this.supportsBypassCharge = res;
+        this.has_supportsBypassCharge = true;
       })
       .catch((err) => {
         console.error("检查 BYPASS_CHARGE 支持失败:", err);
-        this.bypassCharge = false;
-        this.has_bypassCharge = false;
+        this.supportsBypassCharge = false;
+        this.has_supportsBypassCharge = false;
+      });
+
+    await call<[], boolean>("get_supports_charge_limit")
+      .then((res) => {
+        this.supportsChargeLimit = res;
+        this.has_supportsChargeLimit = true;
+      })
+      .catch((err) => {
+        console.error("检查 CHARGE_LIMIT 支持失败:", err);
+        this.supportsChargeLimit = false;
+        this.has_supportsChargeLimit = false;
       });
   }
 
@@ -320,15 +332,19 @@ export class BackendData {
   }
 
   public getIsSupportBypassCharge() {
-    return this.bypassCharge !== undefined;
+    return this.supportsBypassCharge;
   }
 
-  public getBypassCharge() {
-    return this.bypassCharge;
+  public hasIsSupportBypassCharge() {
+    return this.has_supportsBypassCharge;
   }
 
-  public hasBypassCharge() {
-    return this.has_bypassCharge;
+  public getIsSupportChargeLimit() {
+    return this.supportsChargeLimit;
+  }
+
+  public hasIsSupportChargeLimit() {
+    return this.has_supportsChargeLimit;
   }
 }
 

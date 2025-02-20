@@ -42,7 +42,7 @@ const Content: FC<{}> = ({}) => {
           <SteamSpinner />
         </PanelSectionRow>
       )}
-      {!PluginManager.isIniting() && (
+      {PluginManager.isRunning() && (
         <>
           <SettingsComponent />
           <CPUComponent />
@@ -52,12 +52,16 @@ const Content: FC<{}> = ({}) => {
           <MoreComponent />
         </>
       )}
+      {PluginManager.isError() && (
+        <PanelSectionRow>Loading error</PanelSectionRow>
+      )}
     </>
   );
 };
 
 export default definePlugin(() => {
   try {
+    console.log(">>>>>>>>>>>>>>>> Registering plugin PowerControl");
     PluginManager.register();
   } catch (e) {
     console.log("Error while registering plugin", e);

@@ -1,9 +1,8 @@
-from abc import abstractmethod
 
-from .idevice import IDevice
+from .power_device import PowerDevice
 
 
-class PowerDevice(IDevice):
+class DefaultDevice(PowerDevice):
     def __init__(self):
         super().__init__()
 

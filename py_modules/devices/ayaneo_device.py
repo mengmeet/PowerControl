@@ -35,6 +35,12 @@ class AyaneoDevice(PowerDevice):
         logger.info(f"_ec_write address={hex(address)} data={hex(data)}")
         EC.Write(address, data)
 
+    def supports_bypass_charge(self) -> bool:
+        return True
+
+    def supports_charge_limit(self) -> bool:
+        return True
+
     def get_bypass_charge(self) -> bool | None:
         """
         获取旁路供电开关状态

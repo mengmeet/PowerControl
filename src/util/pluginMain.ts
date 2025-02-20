@@ -298,48 +298,106 @@ export class PluginManager {
   > = new Map();
   private static suspendEndHook: any;
   public static register = async () => {
-    PluginManager.state = PluginState.INIT;
-    await Backend.init();
-    await localizationManager.init();
-    RunningApps.register();
-    FanControl.register();
-    RunningApps.listenActiveChange((newAppId, oldAppId) => {
-      console.log(`newAppId=${newAppId} oldAppId=${oldAppId}`);
-      if (Settings.ensureEnable()) {
-        Backend.applySettings(APPLYTYPE.SET_ALL);
-      }
-    });
-    await Settings.loadSettings();
-    ACStateManager.register();
-    await QAMPatch.init();
+    const INIT_TIMEOUT = 20000;
+
     try {
-      Backend.applySettings(APPLYTYPE.SET_ALL);
-    } catch (e) {
-      console.error("Error while applying settings", e);
-      Settings.resetToLocalStorage(false);
-    }
-    PluginManager.suspendEndHook =
-      SteamClient.System.RegisterForOnResumeFromSuspend(async () => {
-        setTimeout(() => {
-          if (Settings.ensureEnable()) {
-            Backend.throwSuspendEvt();
-          }
-          Backend.applySettings(APPLYTYPE.SET_ALL);
-        }, 10000);
+      PluginManager.state = PluginState.INIT;
+
+      // 创建一个超时 Promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(
+          () => reject(new Error("Plugin initialization timeout")),
+          INIT_TIMEOUT
+        );
       });
 
-    // 监听后端事件
-    addEventListener("QAM_setTDP", (tdp: number) => {
-      console.log(">>>>> Received TDP value:", tdp);
-      if (tdp == 500) {
-        Settings.setTDPEnable(false);
-      } else {
-        Settings.setTDPEnable(true);
-        Settings.setTDP(tdp);
-      }
-    });
+      // 初始化主要流程
+      const initPromise = (async () => {
+        try {
+          console.log("Plugin initialization start");
 
-    PluginManager.state = PluginState.RUN;
+          await Backend.init();
+          await localizationManager.init();
+
+          RunningApps.register();
+          FanControl.register();
+
+          // 注册应用切换监听
+          RunningApps.listenActiveChange((newAppId, oldAppId) => {
+            console.log(`newAppId=${newAppId} oldAppId=${oldAppId}`);
+            if (Settings.ensureEnable()) {
+              Backend.applySettings(APPLYTYPE.SET_ALL).catch((e) => {
+                console.error("Error while applying settings on app change", e);
+              });
+            }
+          });
+
+          await Settings.loadSettings();
+          ACStateManager.register();
+          // await QAMPatch.init();
+
+          try {
+            await Backend.applySettings(APPLYTYPE.SET_ALL);
+          } catch (e) {
+            console.error("Error while applying settings", e);
+            Settings.resetToLocalStorage(false);
+          }
+
+          // 注册休眠恢复监听
+          PluginManager.suspendEndHook =
+            SteamClient.System.RegisterForOnResumeFromSuspend(async () => {
+              try {
+                await new Promise((resolve) => setTimeout(resolve, 10000));
+                if (Settings.ensureEnable()) {
+                  await Backend.throwSuspendEvt();
+                }
+                await Backend.applySettings(APPLYTYPE.SET_ALL);
+              } catch (e) {
+                console.error("Error in suspend resume handler", e);
+              }
+            });
+
+          // 监听后端事件
+          addEventListener("QAM_setTDP", (tdp: number) => {
+            try {
+              console.log(">>>>> Received TDP value:", tdp);
+              if (tdp == 500) {
+                Settings.setTDPEnable(false);
+              } else {
+                Settings.setTDPEnable(true);
+                Settings.setTDP(tdp);
+              }
+            } catch (e) {
+              console.error("Error in QAM_setTDP event handler", e);
+            }
+          });
+
+          console.log("Plugin initialization complete 6");
+
+          PluginManager.state = PluginState.RUN;
+        } catch (e) {
+          console.error("Error during plugin initialization", e);
+          PluginManager.state = PluginState.ERROR;
+          throw e;
+        }
+      })();
+
+      // 使用 Promise.race 实现超时机制
+      await Promise.race([initPromise, timeoutPromise]);
+    } catch (e) {
+      console.error("Plugin initialization failed", e);
+      PluginManager.state = PluginState.ERROR;
+      // 清理已注册的资源
+      try {
+        await PluginManager.unregister();
+      } catch (cleanupError) {
+        console.error(
+          "Error during cleanup after initialization failure",
+          cleanupError
+        );
+      }
+      throw e;
+    }
   };
 
   public static isPatchSuccess(patch: Patch) {
@@ -348,6 +406,18 @@ export class PluginManager {
 
   public static isIniting() {
     return PluginManager.state == PluginState.INIT;
+  }
+
+  public static isRunning() {
+    return PluginManager.state == PluginState.RUN;
+  }
+
+  public static isQuit() {
+    return PluginManager.state == PluginState.QUIT;
+  }
+
+  public static isError() {
+    return PluginManager.state == PluginState.ERROR;
   }
 
   public static unregister() {

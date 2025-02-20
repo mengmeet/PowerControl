@@ -77,6 +77,7 @@ export enum PluginState {
   INIT = "0",
   RUN = "1",
   QUIT = "2",
+  ERROR = "3",
 }
 
 export enum Patch {

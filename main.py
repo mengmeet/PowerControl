@@ -365,3 +365,19 @@ class Plugin:
         except Exception as e:
             logger.error(e, exc_info=True)
             return False
+
+    async def supports_bypass_charge(self) -> bool:
+        """判断设备是否支持旁路供电"""
+        try:
+            return self.powerManager.supports_bypass_charge()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
+    async def supports_charge_limit(self) -> bool:
+        """判断设备是否支持充电限制"""
+        try:
+            return self.powerManager.supports_charge_limit()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False

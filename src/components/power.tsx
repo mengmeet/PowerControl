@@ -1,6 +1,12 @@
 import { PanelSection, PanelSectionRow, ToggleField } from "@decky/ui";
 import { FC, useEffect, useState } from "react";
-import { ComponentName, PluginManager, Settings, UpdateType } from "../util";
+import {
+  Backend,
+  ComponentName,
+  PluginManager,
+  Settings,
+  UpdateType,
+} from "../util";
 import { SlowSliderField } from "./SlowSliderField";
 import { localizationManager, localizeStrEnum } from "../i18n";
 
@@ -128,6 +134,13 @@ const ChargeLimitComponent: FC = () => {
 export const PowerComponent: FC = () => {
   const [show, setShow] = useState<boolean>(Settings.ensureEnable());
 
+  const [supportChargeLimit, _] = useState<boolean>(
+    Backend.data.getIsSupportChargeLimit()
+  );
+  const [supportBypassCharge, __] = useState<boolean>(
+    Backend.data.getIsSupportBypassCharge()
+  );
+
   const hide = (ishide: boolean) => {
     setShow(!ishide);
   };
@@ -151,12 +164,18 @@ export const PowerComponent: FC = () => {
     );
   }, []);
 
+  useEffect(() => {
+    setShow(
+      Settings.ensureEnable() && supportChargeLimit && supportBypassCharge
+    );
+  }, [supportChargeLimit, supportBypassCharge]);
+
   return (
     <>
       {show && (
         <PanelSection title="Power">
-          <ChargeLimitComponent />
-          <BypassChargeComponent />
+          {supportChargeLimit && <ChargeLimitComponent />}
+          {supportBypassCharge && <BypassChargeComponent />}
         </PanelSection>
       )}
     </>

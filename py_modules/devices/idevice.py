@@ -36,6 +36,13 @@ class IDevice(ABC):
                         from .ayaneo_device_ii import AyaneoDeviceII
 
                         IDevice.device = AyaneoDeviceII()
+                    case _:
+                        from .default_device import DefaultDevice
+
+                        IDevice.device = DefaultDevice()
+            case _:
+                from .default_device import DefaultDevice
+                IDevice.device = DefaultDevice()
 
         return IDevice.device
 
@@ -49,6 +56,14 @@ class IDevice(ABC):
 
     @abstractmethod
     def set_charge_limit(self, value: int) -> None:
+        pass
+
+    @abstractmethod
+    def supports_bypass_charge(self) -> bool:
+        pass
+
+    @abstractmethod
+    def supports_charge_limit(self) -> bool:
         pass
 
     @abstractmethod
