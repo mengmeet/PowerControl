@@ -463,6 +463,11 @@ export class Backend {
     return (await call("get_bypass_charge")) as boolean;
   }
 
+  // set_charge_limit
+  public static async setChargeLimit(value: number) {
+    return await call("set_charge_limit", value);
+  }
+
   public static async applySettings(applyTarget: APPLYTYPE) {
     try {
       if (!Settings.ensureEnable()) {
@@ -496,6 +501,9 @@ export class Backend {
 
         // 风扇控制设置处理
         await Backend.handleFanControl();
+
+        // 电池限制设置处理
+        await Backend.handleChargeLimit();
       } else {
         const handler = Backend.settingsHandlers.get(applyTarget);
         if (handler) {
@@ -698,6 +706,18 @@ export class Backend {
     }
   }
 
+  private static async handleChargeLimit() {
+    const chargeLimit = Settings.appChargeLimit();
+    const bypassCharge = Settings.appBypassCharge();
+    console.log(`电池充电限制 = ${chargeLimit}, 旁路供电 = ${bypassCharge}`);
+    if (chargeLimit) {
+      await Backend.setChargeLimit(chargeLimit);
+    }
+    if (bypassCharge) {
+      await Backend.setBypassCharge(bypassCharge);
+    }
+  }
+
   private static settingsHandlers: Map<APPLYTYPE, () => Promise<void>> =
     new Map([
       [APPLYTYPE.SET_CPUCORE, Backend.handleCPUNum],
@@ -709,6 +729,7 @@ export class Backend {
       [APPLYTYPE.SET_GPUSLIDERFIX, Backend.handleGPUSliderFix],
       [APPLYTYPE.SET_TDP, Backend.handleTDP],
       [APPLYTYPE.SET_FANRPM, Backend.handleFanControl],
+      [APPLYTYPE.SET_POWER_BATTERY, Backend.handleChargeLimit],
     ]);
 
   public static resetFanSettings = () => {

@@ -46,3 +46,15 @@ class IDevice(ABC):
     @abstractmethod
     def set_bypass_charge(self, value: bool) -> None:
         pass
+
+    @abstractmethod
+    def set_charge_limit(self, value: int) -> None:
+        pass
+
+    @abstractmethod
+    def load(self) -> None:
+        pass
+
+    @abstractmethod
+    def unload(self) -> None:
+        pass

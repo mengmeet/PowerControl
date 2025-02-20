@@ -67,5 +67,11 @@
     "AUTO_FREQ_DESC": "Fréquence GPU adaptative, limite TDP désactivée de force, Boost désactivé",
     "AUTO_FREQ_TDP_NOTIF": "Mode GPU {{mode}}, limite TDP désactivée",
     "FORCE_SHOW_TDP": "Forcer l'affichage du contrôle TDP",
-    "FORCE_SHOW_TDP_DESC": "Par défaut, le plugin traite le curseur TDP natif. Si le curseur natif pose problème, activez cette option pour utiliser le contrôle TDP interne du plugin"
+    "FORCE_SHOW_TDP_DESC": "Par défaut, le plugin traite le curseur TDP natif. Si le curseur natif pose problème, activez cette option pour utiliser le contrôle TDP interne du plugin",
+    "MANUAL_BYPASS_CHARGE": "Charge en dérivation manuelle",
+    "MANUAL_BYPASS_CHARGE_DESC": "Contrôler manuellement la charge en dérivation",
+    "MANUAL_BYPASS_CHARGE_DESC_WITH_LIMIT": "L'activation désactivera temporairement la limite de charge",
+    "CHARGE_LIMIT": "Limite de charge",
+    "CHARGE_LIMIT_DESC": "Définir une limite de charge pour prolonger la durée de vie de la batterie",
+    "CHARGE_LIMIT_DESC_WITH_BYPASS": "Charge en dérivation activée, limite de charge temporairement désactivée"
 }

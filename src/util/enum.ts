@@ -31,6 +31,7 @@ export enum APPLYTYPE {
   SET_GPUSLIDERFIX = "SET_GPUSLIDEFIX",
   SET_CPU_GOVERNOR = "SET_CPU_GOVERNOR",
   SET_EPP = "SET_EPP",
+  SET_POWER_BATTERY = "SET_POWER_BATTERY",
 }
 
 export enum ComponentName {
@@ -60,6 +61,7 @@ export enum ComponentName {
   CUSTOM_TDP = "CUSTOM_TDP",
   POWER_ALL = "POWER_ALL",
   POWER_BYPASS_CHARGE = "POWER_BYPASS_CHARGE",
+  POWER_CHARGE_LIMIT = "POWER_CHARGE_LIMIT",
 }
 
 export enum UpdateType {

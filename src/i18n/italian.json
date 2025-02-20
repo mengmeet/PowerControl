@@ -67,5 +67,11 @@
     "AUTO_FREQ_DESC": "Frequenza GPU adattiva, limite TDP disabilitato forzatamente, Boost disabilitato",
     "AUTO_FREQ_TDP_NOTIF": "Modalità GPU {{mode}}, limite TDP disabilitato",
     "FORCE_SHOW_TDP": "Forza visualizzazione controllo TDP",
-    "FORCE_SHOW_TDP_DESC": "Per impostazione predefinita, il plugin elabora lo slider TDP nativo. Se lo slider nativo presenta problemi, abilita questa opzione per utilizzare il controllo TDP interno del plugin"
+    "FORCE_SHOW_TDP_DESC": "Per impostazione predefinita, il plugin elabora lo slider TDP nativo. Se lo slider nativo presenta problemi, abilita questa opzione per utilizzare il controllo TDP interno del plugin",
+    "MANUAL_BYPASS_CHARGE": "Carica bypass manuale",
+    "MANUAL_BYPASS_CHARGE_DESC": "Controlla manualmente la carica bypass",
+    "MANUAL_BYPASS_CHARGE_DESC_WITH_LIMIT": "L'attivazione disabiliterà temporaneamente il limite di carica",
+    "CHARGE_LIMIT": "Limite di carica",
+    "CHARGE_LIMIT_DESC": "Imposta un limite di carica per prolungare la durata della batteria",
+    "CHARGE_LIMIT_DESC_WITH_BYPASS": "Carica bypass attiva, limite di carica temporaneamente disabilitato"
 }

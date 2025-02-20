@@ -69,5 +69,11 @@
     "AUTO_FREQ_DESC": "自适应 GPU 频率, 强制关闭 TDP 限制, 关闭 Boost",
     "AUTO_FREQ_TDP_NOTIF": "GPU 模式为{{mode}}, 关闭 TDP 限制",
     "FORCE_SHOW_TDP": "强制显示 TDP 控制",
-    "FORCE_SHOW_TDP_DESC": "默认情况下插件会对原生 TDP 滑动条进行处理, 如果原生滑动条异常, 打开此项使用插件内 TDP 控制"
+    "FORCE_SHOW_TDP_DESC": "默认情况下插件会对原生 TDP 滑动条进行处理, 如果原生滑动条异常, 打开此项使用插件内 TDP 控制",
+    "MANUAL_BYPASS_CHARGE": "手动旁路供电",
+    "MANUAL_BYPASS_CHARGE_DESC": "手动控制旁路供电开关",
+    "MANUAL_BYPASS_CHARGE_DESC_WITH_LIMIT": "开启后将暂时禁用充电限制功能",
+    "CHARGE_LIMIT": "充电限制",
+    "CHARGE_LIMIT_DESC": "设置电池充电限制，延长电池寿命",
+    "CHARGE_LIMIT_DESC_WITH_BYPASS": "手动旁路供电已开启，充电限制暂时无效"
 }

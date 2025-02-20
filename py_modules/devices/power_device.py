@@ -4,19 +4,20 @@ from .idevice import IDevice
 
 
 class PowerDevice(IDevice):
-    @abstractmethod
-    def get_bypass_charge(self) -> bool:
-        """
-        获取旁路供电开关状态
-        :return:
-        """
+    def __init__(self):
+        super().__init__()
+
+    def load(self) -> None:
         pass
 
-    @abstractmethod
+    def unload(self) -> None:
+        pass
+
+    def get_bypass_charge(self) -> bool | None:
+        pass
+
     def set_bypass_charge(self, value: bool) -> None:
-        """
-        设置旁路供电开关状态
-        :param value:
-        :return:
-        """
+        pass
+
+    def set_charge_limit(self, value: int) -> None:
         pass

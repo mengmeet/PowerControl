@@ -67,5 +67,11 @@
     "AUTO_FREQ_DESC": "GPU 頻率自動調整，強制關閉 TDP 限制，關閉超頻",
     "AUTO_FREQ_TDP_NOTIF": "GPU 模式 {{mode}}，TDP 限制已關閉",
     "FORCE_SHOW_TDP": "強制顯示 TDP 控制",
-    "FORCE_SHOW_TDP_DESC": "預設情況下外掛程式會處理原生 TDP 滑桿。如果原生滑桿有問題，請開啟此選項以使用外掛程式內建的 TDP 控制"
+    "FORCE_SHOW_TDP_DESC": "預設情況下外掛程式會處理原生 TDP 滑桿。如果原生滑桿有問題，請開啟此選項以使用外掛程式內建的 TDP 控制",
+    "MANUAL_BYPASS_CHARGE": "手動旁路供電",
+    "MANUAL_BYPASS_CHARGE_DESC": "手動控制旁路供電開關",
+    "MANUAL_BYPASS_CHARGE_DESC_WITH_LIMIT": "開啟後將暫時禁用充電限制功能",
+    "CHARGE_LIMIT": "充電限制",
+    "CHARGE_LIMIT_DESC": "設置電池充電限制，延長電池壽命",
+    "CHARGE_LIMIT_DESC_WITH_BYPASS": "手動旁路供電已開啟，充電限制暫時無效"
 }

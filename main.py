@@ -10,7 +10,7 @@ try:
     from fan import fanManager
     from fuse_manager import FuseManager
     from gpu import gpuManager
-    from power_manager import powerManager
+    from power_manager import PowerManager
     from sysInfo import sysInfoManager
 
     sys.path.append(f"{decky.DECKY_PLUGIN_DIR}/py_modules/site-packages")
@@ -22,6 +22,7 @@ class Plugin:
     def __init__(self):
         self.fuseManager = None
         self.confManager = confManager
+        self.powerManager = PowerManager()
 
     async def _migration(self):
         decky.logger.info("start _migration")
@@ -31,14 +32,14 @@ class Plugin:
 
     async def _main(self):
         decky.logger.info("start _main")
-        bypass_charge_value = powerManager.get_bypass_charge()
-        logger.info(f"Bypass Charge: {bypass_charge_value}")
+        self.powerManager.load()
         pass
 
     async def _unload(self):
         decky.logger.info("start _unload")
         gpuManager.unload()
         self.fuseManager.unload()
+        self.powerManager.unload()
         logger.info("End PowerControl")
 
     async def get_settings(self):
@@ -344,7 +345,7 @@ class Plugin:
     async def get_bypass_charge(self) -> bool | None:
         """获取 Bypass Charge 值。"""
         try:
-            return powerManager.get_bypass_charge()
+            return self.powerManager.get_bypass_charge()
         except Exception as e:
             logger.error(e, exc_info=True)
             return None
@@ -352,7 +353,15 @@ class Plugin:
     async def set_bypass_charge(self, value: int):
         """设置 Bypass Charge 值。"""
         try:
-            return powerManager.set_bypass_charge(value)
+            return self.powerManager.set_bypass_charge(value)
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
+    async def set_charge_limit(self, value: int):
+        """设置充电限制电量"""
+        try:
+            return self.powerManager.set_charge_limit(value)
         except Exception as e:
             logger.error(e, exc_info=True)
             return False

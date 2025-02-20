@@ -67,5 +67,11 @@
     "AUTO_FREQ_DESC": "GPU 周波数を自動調整、TDP 制限を強制的に無効化、ブーストを無効化",
     "AUTO_FREQ_TDP_NOTIF": "GPU モード {{mode}}、TDP 制限無効",
     "FORCE_SHOW_TDP": "TDP 制御を強制表示",
-    "FORCE_SHOW_TDP_DESC": "デフォルトでは、プラグインはネイティブ TDP スライダーを処理します。ネイティブスライダーに問題がある場合、このオプションを有効にしてプラグイン内部の TDP 制御を使用してください"
+    "FORCE_SHOW_TDP_DESC": "デフォルトでは、プラグインはネイティブ TDP スライダーを処理します。ネイティブスライダーに問題がある場合、このオプションを有効にしてプラグイン内部の TDP 制御を使用してください",
+    "MANUAL_BYPASS_CHARGE": "手動バイパス充電",
+    "MANUAL_BYPASS_CHARGE_DESC": "バイパス充電を手動で制御",
+    "MANUAL_BYPASS_CHARGE_DESC_WITH_LIMIT": "有効にすると充電制限が一時的に無効になります",
+    "CHARGE_LIMIT": "充電制限",
+    "CHARGE_LIMIT_DESC": "バッテリー寿命を延ばすために充電制限を設定",
+    "CHARGE_LIMIT_DESC_WITH_BYPASS": "手動バイパス充電が有効、充電制限は一時的に無効"
 }

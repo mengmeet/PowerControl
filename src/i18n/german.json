@@ -67,5 +67,11 @@
     "AUTO_FREQ_DESC": "Adaptive GPU-Frequenz, TDP-Limit deaktiviert, Boost deaktiviert",
     "AUTO_FREQ_TDP_NOTIF": "GPU-Modus {{mode}}, TDP-Limit deaktiviert",
     "FORCE_SHOW_TDP": "TDP-Steuerung erzwingen",
-    "FORCE_SHOW_TDP_DESC": "Standardmäßig verarbeitet das Plugin den nativen TDP-Schieberegler. Bei Problemen mit dem nativen Schieberegler aktivieren Sie diese Option, um die interne TDP-Steuerung des Plugins zu verwenden"
+    "FORCE_SHOW_TDP_DESC": "Standardmäßig verarbeitet das Plugin den nativen TDP-Schieberegler. Bei Problemen mit dem nativen Schieberegler aktivieren Sie diese Option, um die interne TDP-Steuerung des Plugins zu verwenden",
+    "MANUAL_BYPASS_CHARGE": "Manuelle Bypass-Ladung",
+    "MANUAL_BYPASS_CHARGE_DESC": "Bypass-Ladung manuell steuern",
+    "MANUAL_BYPASS_CHARGE_DESC_WITH_LIMIT": "Bei Aktivierung wird die Ladelimitierung vorübergehend deaktiviert",
+    "CHARGE_LIMIT": "Ladelimitierung",
+    "CHARGE_LIMIT_DESC": "Ladelimitierung zum Schutz der Akkulebensdauer einstellen",
+    "CHARGE_LIMIT_DESC_WITH_BYPASS": "Bypass-Ladung ist aktiv, Ladelimitierung vorübergehend deaktiviert"
 }

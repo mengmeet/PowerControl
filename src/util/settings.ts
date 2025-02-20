@@ -179,6 +179,12 @@ export class SettingsData {
   @JsonProperty()
   public customTDPRangeMax: number;
 
+  @JsonProperty()
+  public bypassCharge?: boolean;
+
+  @JsonProperty()
+  public chargeLimit?: number;
+
   // @JsonProperty()
   // public customTDPRangeMin: number;
 
@@ -201,13 +207,15 @@ export class SettingsData {
     this.enableCustomTDPRange = copyTarget.enableCustomTDPRange;
     this.customTDPRangeMax = copyTarget.customTDPRangeMax;
     this.forceShowTDP = copyTarget.forceShowTDP;
+    this.bypassCharge = copyTarget.bypassCharge;
+    this.chargeLimit = copyTarget.chargeLimit;
     // this.customTDPRangeMin = copyTarget.customTDPRangeMin;
     this.perApp = {};
     // formart copyTarget.perApp to json string
     console.log(
       `!!!!!!!!!!!!!!! deepCopy copyTarget.fanSettings: ${JSON.stringify(
         copyTarget.fanSettings,
-        (key, value) => {
+        (_, value) => {
           if (typeof value === "object" && value !== null) {
             return Object.assign({}, value);
           }
@@ -399,17 +407,29 @@ export class Settings {
   }
 
   static appBypassCharge(): boolean {
-    return Backend.data?.hasBypassCharge()
-      ? Backend.data?.getBypassCharge()
-      : false;
+    return Settings._instance.data.bypassCharge ?? false;
   }
 
   static setBypassCharge(bypassCharge: boolean) {
-    Backend.setBypassCharge(bypassCharge);
-    PluginManager.updateComponent(
-      ComponentName.POWER_BYPASS_CHARGE,
-      UpdateType.UPDATE
-    );
+    if (Settings._instance.data.bypassCharge != bypassCharge) {
+      Settings._instance.data.bypassCharge = bypassCharge;
+      Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_POWER_BATTERY);
+      PluginManager.updateComponent(ComponentName.POWER_ALL, UpdateType.UPDATE);
+    }
+  }
+
+  static appChargeLimit(): number {
+    return Settings._instance.data.chargeLimit ?? 100;
+  }
+
+  static setChargeLimit(chargeLimit: number) {
+    if (Settings._instance.data.chargeLimit != chargeLimit) {
+      Settings._instance.data.chargeLimit = chargeLimit;
+      Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_POWER_BATTERY);
+      PluginManager.updateComponent(ComponentName.POWER_ALL, UpdateType.UPDATE);
+    }
   }
 
   static appCpuNum() {
