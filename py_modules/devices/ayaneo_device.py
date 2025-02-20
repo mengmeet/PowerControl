@@ -1,3 +1,4 @@
+from config import logger
 from ec import EC
 
 from .power_device import PowerDevice
@@ -26,6 +27,7 @@ class AyaneoDevice(PowerDevice):
         return EC.ReadLonger(address, length)
 
     def _ec_write(self, address: int, data: int) -> None:
+        logger.info(f"_ec_write address={hex(address)} data={hex(data)}")
         EC.Write(address, data)
 
     def get_bypass_charge(self) -> bool | None:
@@ -47,10 +49,13 @@ class AyaneoDevice(PowerDevice):
         :param value:
         :return:
         """
-        current_value = self.get_bypass_charge()
+        current_value = self._ec_read(self.ec_bypass_charge_addr)
+        write_value = (
+            self.ec_bypass_charge_open if value else self.ec_bypass_charge_close
+        )
 
-        if current_value != value:
-            self._ec_write(
-                self.ec_bypass_charge_addr,
-                self.ec_bypass_charge_open if value else self.ec_bypass_charge_close,
+        if current_value != write_value:
+            logger.info(
+                f"set_bypass_charge: {value} current: {hex(current_value)}, write: {hex(write_value)}"
             )
+            self._ec_write(self.ec_bypass_charge_addr, write_value)

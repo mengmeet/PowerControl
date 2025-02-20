@@ -26,6 +26,7 @@ class AyaneoDeviceII(AyaneoDevice):
 
     def _ec_ram_direct_write(self, address: int, data: int, offset=0xD1) -> None:
         address2 = address | (offset << 8)
+        logger.info(f"_ec_ram_direct_write address={hex(address2)} data={hex(data)}")
         EC.RamWrite(self.ec_comm_port, self.ec_data_port, address2, data)
 
     def get_bypass_charge(self) -> bool:
@@ -43,11 +44,13 @@ class AyaneoDeviceII(AyaneoDevice):
         :param value:
         :return:
         """
-        current_value = self.get_bypass_charge()
+        current_value = self._ec_ram_direct_read(self.ec_bypass_charge_addr)
+        write_value = (
+            self.ec_bypass_charge_open if value else self.ec_bypass_charge_close
+        )
+        logger.info(
+            f"set_bypass_charge: {value} current: {hex(current_value)}, write: {hex(write_value)}"
+        )
 
-        if current_value != value:
-            write_value = (
-                self.ec_bypass_charge_open if value else self.ec_bypass_charge_close
-            )
-            logger.info(f"set_bypass_charge: {hex(write_value)}")
+        if current_value != write_value:
             self._ec_ram_direct_write(self.ec_bypass_charge_addr, write_value)
