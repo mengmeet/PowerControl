@@ -1,4 +1,11 @@
-from abc import abstractmethod
+from config import logger
+from utils import (
+    get_charge_behaviour,
+    set_charge_behaviour,
+    set_charge_control_end_threshold,
+    support_charge_behaviour,
+    support_charge_control_end_threshold,
+)
 
 from .idevice import IDevice
 
@@ -14,16 +21,22 @@ class PowerDevice(IDevice):
         pass
 
     def supports_bypass_charge(self) -> bool:
-        return False
+        return support_charge_behaviour()
 
     def supports_charge_limit(self) -> bool:
-        return False
+        return support_charge_control_end_threshold()
 
     def get_bypass_charge(self) -> bool:
-        return False
+        return get_charge_behaviour() == "inhibit-charge"
 
     def set_bypass_charge(self, value: bool) -> None:
-        pass
+        set_charge_behaviour("inhibit-charge" if value else "auto")
 
     def set_charge_limit(self, value: int) -> None:
-        pass
+        # check value
+        if not 0 <= value <= 100:
+            logger.error(f"充电限制电量必须在 0-100 之间，当前值: {value}")
+            return
+        if not support_charge_control_end_threshold():
+            return
+        set_charge_control_end_threshold(value)
