@@ -597,11 +597,11 @@ export class Backend {
     const chargeLimit = Settings.appChargeLimit();
     const bypassCharge = Settings.appBypassCharge();
     console.log(`电池充电限制 = ${chargeLimit}, 旁路供电 = ${bypassCharge}`);
-    if (chargeLimit >= 0 && chargeLimit <= 100) {
-      await Backend.setChargeLimit(chargeLimit);
-    }
     if (bypassCharge !== undefined) {
       await Backend.setBypassCharge(bypassCharge);
+    }
+    if (chargeLimit >= 0 && chargeLimit <= 100) {
+      await Backend.setChargeLimit(chargeLimit);
     }
   }
 

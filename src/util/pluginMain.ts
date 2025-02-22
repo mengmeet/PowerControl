@@ -334,7 +334,7 @@ export class PluginManager {
 
           await Settings.loadSettings();
           ACStateManager.register();
-          // await QAMPatch.init();
+          await QAMPatch.init();
 
           try {
             await Backend.applySettings(APPLYTYPE.SET_ALL);

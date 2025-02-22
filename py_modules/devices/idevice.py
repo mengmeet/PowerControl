@@ -20,8 +20,6 @@ class IDevice(ABC):
                     case (
                         "AIR"
                         | "AIR Pro"
-                        | "AIR 1S"
-                        | "AIR 1S Limited"
                         | "KUN"
                         | "AYANEO 2"
                         | "AYANEO 2S"
@@ -31,15 +29,23 @@ class IDevice(ABC):
                         | "FLIP DS"
                     ):
                         from .ayaneo_device import AyaneoDevice
+
                         cls._instance = AyaneoDevice()
                     case "AIR Plus" | "SLIDE":
                         from .ayaneo_air_plus import AyaneoAirPlus
+
                         cls._instance = AyaneoAirPlus()
+                    case "AIR 1S" | "AIR 1S Limited":
+                        from .ayaneo_air_1s import AyaneoAir1S
+
+                        cls._instance = AyaneoAir1S()
                     case _:
                         from .power_device import PowerDevice
+
                         cls._instance = PowerDevice()
             case _:
                 from .power_device import PowerDevice
+
                 cls._instance = PowerDevice()
 
         return cls._instance

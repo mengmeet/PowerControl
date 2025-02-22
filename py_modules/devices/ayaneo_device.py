@@ -50,7 +50,7 @@ class AyaneoDevice(PowerDevice):
         :return: None
         """
         logger.info(f"Setting bypass charge: {value}")
-        
+
         if value:
             # 如果手动开启旁路供电，暂时停止充电限制监控
             self._stop_monitor()
@@ -60,7 +60,7 @@ class AyaneoDevice(PowerDevice):
             # 如果关闭旁路供电，且有充电限制，重新启动监控
             if self._charge_limit is not None:
                 self._start_monitor()
-        
+
         self._ec_write(self.ec_bypass_charge_addr, write_value)
 
     class _MonitorThread(threading.Thread):
@@ -89,6 +89,11 @@ class AyaneoDevice(PowerDevice):
             f"Thread status: {self._monitor_thread and self._monitor_thread.is_alive()}"
         )
 
+        last_bypass = None
+        last_battery_status = None
+
+        logger.info(f"Battery limit: {self._charge_limit}%")
+
         while self._monitor_thread and self._monitor_thread.is_alive():
             try:
                 battery_percentage = get_battery_percentage()
@@ -99,14 +104,45 @@ class AyaneoDevice(PowerDevice):
                 )
 
                 # 获取当前旁路供电状态
-                current_bypass = self._ec_read(self.ec_bypass_charge_addr) == self.ec_bypass_charge_open
+                current_bypass = (
+                    self._ec_read(self.ec_bypass_charge_addr)
+                    == self.ec_bypass_charge_open
+                )
 
-                if battery_percentage >= self._charge_limit and is_charging and not current_bypass:
-                    logger.debug(f"Battery level reached limit {self._charge_limit}%, enabling bypass charge")
-                    self._ec_write(self.ec_bypass_charge_addr, self.ec_bypass_charge_open)
-                elif battery_percentage < self._charge_limit - 2 and not is_charging and current_bypass:
-                    logger.debug(f"Battery level below limit {self._charge_limit}%, disabling bypass charge")
-                    self._ec_write(self.ec_bypass_charge_addr, self.ec_bypass_charge_close)
+                # Only log when status changes
+                current_status = (battery_percentage, is_charging, current_bypass)
+                if current_status != last_battery_status:
+                    logger.debug(
+                        f"Battery status: {battery_percentage}%, charging: {is_charging}, bypass: {current_bypass}"
+                    )
+                    last_battery_status = current_status
+
+                if (
+                    battery_percentage >= self._charge_limit
+                    and is_charging
+                    and not current_bypass
+                ):
+                    if last_bypass is not True:
+                        logger.info(
+                            f"Battery level reached limit {self._charge_limit}%, enabling bypass charge"
+                        )
+                        last_bypass = True
+                    self._ec_write(
+                        self.ec_bypass_charge_addr, self.ec_bypass_charge_open
+                    )
+                elif (
+                    battery_percentage < self._charge_limit - 2
+                    and not is_charging
+                    and current_bypass
+                ):
+                    if last_bypass is not False:
+                        logger.info(
+                            f"Battery level below limit {self._charge_limit}%, disabling bypass charge"
+                        )
+                        last_bypass = False
+                    self._ec_write(
+                        self.ec_bypass_charge_addr, self.ec_bypass_charge_close
+                    )
             except Exception as e:
                 logger.error(f"Error monitoring battery status: {str(e)}")
                 logger.error(f"Error details: {str(sys.exc_info())}")
@@ -150,7 +186,9 @@ class AyaneoDevice(PowerDevice):
                 logger.error(f"Exception value: {exc_value}")
                 import traceback
 
-                logger.error(f"Exception traceback: {''.join(traceback.format_tb(exc_traceback))}")
+                logger.error(
+                    f"Exception traceback: {''.join(traceback.format_tb(exc_traceback))}"
+                )
 
             self._monitor_thread = None
             logger.info("Monitor thread stopped")
@@ -176,13 +214,15 @@ class AyaneoDevice(PowerDevice):
             return
 
         logger.info(f"Setting charge limit to: {value}%")
-        
+
         # 如果当前是手动旁路供电状态，先关闭旁路供电
-        current_bypass = self._ec_read(self.ec_bypass_charge_addr) == self.ec_bypass_charge_open
+        current_bypass = (
+            self._ec_read(self.ec_bypass_charge_addr) == self.ec_bypass_charge_open
+        )
         if current_bypass:
             logger.info("Manual bypass charge detected, disabling bypass charge first")
             self._ec_write(self.ec_bypass_charge_addr, self.ec_bypass_charge_close)
-        
+
         self._charge_limit = value
         self._start_monitor()
 
