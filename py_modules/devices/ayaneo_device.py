@@ -2,6 +2,7 @@ import threading
 import sys
 
 from config import logger
+from ec import EC
 
 from .power_device import PowerDevice
 
@@ -23,12 +24,18 @@ class AyaneoDevice(PowerDevice):
         self.ec_bypass_charge_close = EC_BYPASS_CHARGE_CLOSE
         self._charge_limit: int | None = None
         self._monitor_thread = None
+        self.ec_version_of_bypass_charge = None
 
     def supports_bypass_charge(self) -> bool:
-        return True
+        ec_version = EC.Read(0x04)
+        logger.info(f">>>>>>>>>>>>>> EC version: {hex(ec_version)}")
+        return (
+            self.ec_version_of_bypass_charge is not None
+            and ec_version >= self.ec_version_of_bypass_charge
+        )
 
     def supports_charge_limit(self) -> bool:
-        return True
+        return self.supports_bypass_charge()
 
     def get_bypass_charge(self) -> bool | None:
         """

@@ -110,6 +110,7 @@ try:
     CPU_VENDOR = cpuinfo.split("vendor_id")[1].split(":")[1].split("\n")[0].strip()
     VENDOR_NAME = open("/sys/devices/virtual/dmi/id/sys_vendor", "r").read().strip()
     PRODUCT_NAME = open("/sys/devices/virtual/dmi/id/product_name", "r").read().strip()
+    BOARD_NAME = open("/sys/devices/virtual/dmi/id/board_name", "r").read().strip()
     PRODUCT_VERSION = (
         open("/sys/devices/virtual/dmi/id/product_version", "r").read().strip()
     )

@@ -1,16 +1,8 @@
-from .ayaneo_device import AyaneoDevice
-from ec import EC
-from config import logger
+from .ayaneo_air import AyaneoAir
 
 
-class AyaneoAir1S(AyaneoDevice):
+class AyaneoAir1S(AyaneoAir):
     def __init__(self) -> None:
         super().__init__()
-
-    def supports_bypass_charge(self) -> bool:
-        ec_version = EC.Read(0x01)
-        logger.info(f">>>>>>>>>>>>>> EC version: {hex(ec_version)}")
-        return ec_version >= 0x27
-
-    def supports_charge_limit(self) -> bool:
-        return self.supports_bypass_charge()
+        # 8.4.0.0.27 or later
+        self.ec_version_of_bypass_charge = 0x1B

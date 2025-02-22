@@ -1,6 +1,11 @@
 from abc import ABC, abstractmethod
 
-from config import PRODUCT_NAME, PRODUCT_VERSION, VENDOR_NAME
+from config import (
+    PRODUCT_NAME,
+    PRODUCT_VERSION,
+    VENDOR_NAME,
+    BOARD_NAME,
+)
 
 
 class IDevice(ABC):
@@ -8,6 +13,7 @@ class IDevice(ABC):
     vendor_name = VENDOR_NAME
     product_name = PRODUCT_NAME
     product_version = PRODUCT_VERSION
+    board_name = BOARD_NAME
 
     @classmethod
     def get_current(cls) -> "IDevice":
@@ -16,29 +22,44 @@ class IDevice(ABC):
 
         match VENDOR_NAME:
             case "AYADEVICE" | "AYANEO":
-                match PRODUCT_NAME:
-                    case (
-                        "AIR"
-                        | "AIR Pro"
-                        | "KUN"
-                        | "AYANEO 2"
-                        | "AYANEO 2S"
-                        | "GEEK"
-                        | "GEEK 1S"
-                        | "FLIP KB"
-                        | "FLIP DS"
-                    ):
+                match BOARD_NAME:
+                    case "AYANEO 2" | "AYANEO 2S" | "GEEK" | "GEEK 1S":
                         from .ayaneo_device import AyaneoDevice
 
                         cls._instance = AyaneoDevice()
-                    case "AIR Plus" | "SLIDE":
+                    case "AB05-AMD" | "AS01":
                         from .ayaneo_air_plus import AyaneoAirPlus
 
                         cls._instance = AyaneoAirPlus()
+
+                    case "AB05-Intel":
+                        from .ayaneo_air_plus_intel import AyaneoAirPlusIntel
+
+                        cls._instance = AyaneoAirPlusIntel()
+                    case "AB05-Mendocino":
+                        from .ayaneo_air_plus_mendocino import AyaneoAirPlusMendocino
+
+                        cls._instance = AyaneoAirPlusMendocino()
+                    case "AIR" | "AIR Pro":
+                        from .ayaneo_air import AyaneoAir
+
+                        cls._instance = AyaneoAir()
                     case "AIR 1S" | "AIR 1S Limited":
                         from .ayaneo_air_1s import AyaneoAir1S
 
                         cls._instance = AyaneoAir1S()
+                    case "FLIP KB":
+                        from .ayaneo_flip_kb import AyaneoFlipKB
+
+                        cls._instance = AyaneoFlipKB()
+                    case "FLIP DS":
+                        from .ayaneo_flip_ds import AyaneoFlipDS
+
+                        cls._instance = AyaneoFlipDS()
+                    case "KUN":
+                        from .ayaneo_kun import AyaneoKun
+
+                        cls._instance = AyaneoKun()
                     case _:
                         from .power_device import PowerDevice
 
