@@ -46,7 +46,7 @@ class AyaneoDeviceII(AyaneoDevice):
         :return:
         """
         value = self._ec_ram_direct_read(self.ec_bypass_charge_addr)
-        logger.info(f"Bypass charge status: {hex(value)}")
+        logger.debug(f"Bypass charge status: {hex(value)}")
         return value == self.ec_bypass_charge_open
 
     def set_bypass_charge(self, value: bool) -> None:

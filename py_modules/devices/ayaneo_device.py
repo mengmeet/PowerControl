@@ -111,45 +111,38 @@ class AyaneoDevice(PowerDevice):
                 )
 
                 # 获取当前旁路供电状态
-                current_bypass = (
-                    self._ec_read(self.ec_bypass_charge_addr)
-                    == self.ec_bypass_charge_open
-                )
+                current_bypass = self.get_bypass_charge()
 
                 # Only log when status changes
                 current_status = (battery_percentage, is_charging, current_bypass)
                 if current_status != last_battery_status:
-                    logger.debug(
+                    logger.info(
                         f"Battery status: {battery_percentage}%, charging: {is_charging}, bypass: {current_bypass}"
                     )
                     last_battery_status = current_status
 
                 if (
                     battery_percentage >= self._charge_limit
-                    and is_charging
                     and not current_bypass
+                    and is_charging
                 ):
                     if last_bypass is not True:
                         logger.info(
                             f"Battery level reached limit {self._charge_limit}%, enabling bypass charge"
                         )
                         last_bypass = True
-                    self._ec_write(
-                        self.ec_bypass_charge_addr, self.ec_bypass_charge_open
-                    )
+                    self.set_bypass_charge(True)
                 elif (
-                    battery_percentage < self._charge_limit - 2
-                    and not is_charging
+                    battery_percentage < self._charge_limit
                     and current_bypass
+                    and not is_charging
                 ):
                     if last_bypass is not False:
                         logger.info(
                             f"Battery level below limit {self._charge_limit}%, disabling bypass charge"
                         )
                         last_bypass = False
-                    self._ec_write(
-                        self.ec_bypass_charge_addr, self.ec_bypass_charge_close
-                    )
+                    self.set_bypass_charge(False)
             except Exception as e:
                 logger.error(f"Error monitoring battery status: {str(e)}")
                 logger.error(f"Error details: {str(sys.exc_info())}")
@@ -220,15 +213,13 @@ class AyaneoDevice(PowerDevice):
             logger.error(f"Charge limit must be between 0-100, current value: {value}")
             return
 
-        logger.info(f"Setting charge limit to: {value}%")
+        logger.debug(f"Setting charge limit to: {value}%")
 
         # 如果当前是手动旁路供电状态，先关闭旁路供电
-        current_bypass = (
-            self._ec_read(self.ec_bypass_charge_addr) == self.ec_bypass_charge_open
-        )
+        current_bypass = self.get_bypass_charge()
         if current_bypass:
             logger.info("Manual bypass charge detected, disabling bypass charge first")
-            self._ec_write(self.ec_bypass_charge_addr, self.ec_bypass_charge_close)
+            self.set_bypass_charge(False)
 
         self._charge_limit = value
         self._start_monitor()

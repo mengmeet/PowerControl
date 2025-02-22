@@ -354,8 +354,8 @@ class Plugin:
             return None
 
     async def set_bypass_charge(self, value: int):
-        """设置 Bypass Charge 值。"""
-        logger.info(f"设置 Bypass Charge 值为 {value}")
+        """设置旁路供电值。"""
+        logger.debug(f"设置旁路供电值为 {value}")
         try:
             return self.powerManager.set_bypass_charge(value)
         except Exception as e:
@@ -364,7 +364,7 @@ class Plugin:
 
     async def set_charge_limit(self, value: int):
         """设置充电限制电量"""
-        logger.info(f"设置充电限制电量为 {value}")
+        logger.debug(f"设置充电限制电量为 {value}")
         try:
             return self.powerManager.set_charge_limit(value)
         except Exception as e:
