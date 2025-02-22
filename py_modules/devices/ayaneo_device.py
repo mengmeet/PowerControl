@@ -49,7 +49,7 @@ class AyaneoDevice(PowerDevice):
         :param value: True 开启旁路供电，False 关闭旁路供电
         :return: None
         """
-        logger.info(f"设置旁路供电: {value}")
+        logger.info(f"Setting bypass charge: {value}")
         
         if value:
             # 如果手动开启旁路供电，暂时停止充电限制监控
@@ -84,9 +84,9 @@ class AyaneoDevice(PowerDevice):
         from utils import get_battery_percentage, is_battery_charging
         from config import logger
 
-        logger.info("开始监控电池状态")
+        logger.info("Start monitoring battery status")
         logger.debug(
-            f"线程状态: {self._monitor_thread and self._monitor_thread.is_alive()}"
+            f"Thread status: {self._monitor_thread and self._monitor_thread.is_alive()}"
         )
 
         while self._monitor_thread and self._monitor_thread.is_alive():
@@ -94,44 +94,44 @@ class AyaneoDevice(PowerDevice):
                 battery_percentage = get_battery_percentage()
                 is_charging = is_battery_charging()
 
-                logger.info(
-                    f"电池状态: 电量 {battery_percentage}%, 充电中: {is_charging}, 限制值: {self._charge_limit}%"
+                logger.debug(
+                    f"Battery status: {battery_percentage}%, charging: {is_charging}, limit: {self._charge_limit}%"
                 )
 
                 # 获取当前旁路供电状态
                 current_bypass = self._ec_read(self.ec_bypass_charge_addr) == self.ec_bypass_charge_open
 
                 if battery_percentage >= self._charge_limit and is_charging and not current_bypass:
-                    logger.info(f"电量已达到限制值 {self._charge_limit}%，打开旁路供电")
+                    logger.debug(f"Battery level reached limit {self._charge_limit}%, enabling bypass charge")
                     self._ec_write(self.ec_bypass_charge_addr, self.ec_bypass_charge_open)
                 elif battery_percentage < self._charge_limit - 2 and not is_charging and current_bypass:
-                    logger.info(f"电量低于限制值 {self._charge_limit}%，关闭旁路供电")
+                    logger.debug(f"Battery level below limit {self._charge_limit}%, disabling bypass charge")
                     self._ec_write(self.ec_bypass_charge_addr, self.ec_bypass_charge_close)
             except Exception as e:
-                logger.error(f"监控电池状态时发生错误: {str(e)}")
-                logger.error(f"错误详情: {str(sys.exc_info())}")
+                logger.error(f"Error monitoring battery status: {str(e)}")
+                logger.error(f"Error details: {str(sys.exc_info())}")
                 raise  # 重新抛出异常，让外部能够捕获
 
             time.sleep(10)
 
-        # logger.info(f"电池监控线程已停止，线程ID: {id(self._monitor_thread)}")
+        # logger.info(f"Battery monitoring thread stopped, thread ID: {id(self._monitor_thread)}")
 
     def _start_monitor(self):
         """
         启动电池监控线程
         """
         if self._monitor_thread and self._monitor_thread.is_alive():
-            # logger.info(f"监控线程已在运行，线程ID: {id(self._monitor_thread)}")
+            # logger.info(f"Monitor thread is already running, thread ID: {id(self._monitor_thread)}")
             return
 
-        logger.info("创建新的监控线程")
+        logger.info("Creating new monitor thread")
         self._monitor_thread = self._MonitorThread(
             target=self._monitor_battery, daemon=True
         )
         thread_id = id(self._monitor_thread)
         self._monitor_thread.start()
         logger.debug(
-            f"监控线程已启动，线程ID: {thread_id}, 是否活跃: {self._monitor_thread.is_alive()}"
+            f"Monitor thread started, thread ID: {thread_id}, is alive: {self._monitor_thread.is_alive()}"
         )
 
     def _stop_monitor(self):
@@ -139,27 +139,27 @@ class AyaneoDevice(PowerDevice):
         停止电池监控线程
         """
         if self._monitor_thread and self._monitor_thread.is_alive():
-            logger.info("正在停止监控线程")
+            logger.info("Stopping monitor thread")
             self._monitor_thread.join()
 
             # 检查线程是否有异常
             if hasattr(self._monitor_thread, "exc") and self._monitor_thread.exc:
-                logger.error("监控线程发生异常")
+                logger.error("Monitor thread encountered an error")
                 exc_type, exc_value, exc_traceback = self._monitor_thread.exc
-                logger.error(f"异常类型: {exc_type}")
-                logger.error(f"异常信息: {exc_value}")
+                logger.error(f"Exception type: {exc_type}")
+                logger.error(f"Exception value: {exc_value}")
                 import traceback
 
-                logger.error(f"异常堆栈: {''.join(traceback.format_tb(exc_traceback))}")
+                logger.error(f"Exception traceback: {''.join(traceback.format_tb(exc_traceback))}")
 
             self._monitor_thread = None
-            logger.info("监控线程已停止")
+            logger.info("Monitor thread stopped")
 
     def load(self) -> None:
         """
         加载设备时的初始化工作
         """
-        # logger.info(f"加载设备，当前充电限制: {self._charge_limit}")
+        # logger.info(f"Loading device, current charge limit: {self._charge_limit}")
         pass
         # 设置默认的充电限制
         # if self._charge_limit is None:
@@ -172,15 +172,15 @@ class AyaneoDevice(PowerDevice):
         :return: None
         """
         if not 0 <= value <= 100:
-            logger.error(f"充电限制电量必须在 0-100 之间，当前值: {value}")
+            logger.error(f"Charge limit must be between 0-100, current value: {value}")
             return
 
-        logger.info(f"设置充电限制为: {value}%")
+        logger.info(f"Setting charge limit to: {value}%")
         
         # 如果当前是手动旁路供电状态，先关闭旁路供电
         current_bypass = self._ec_read(self.ec_bypass_charge_addr) == self.ec_bypass_charge_open
         if current_bypass:
-            logger.info("检测到手动旁路供电已开启，先关闭旁路供电")
+            logger.info("Manual bypass charge detected, disabling bypass charge first")
             self._ec_write(self.ec_bypass_charge_addr, self.ec_bypass_charge_close)
         
         self._charge_limit = value
@@ -190,7 +190,7 @@ class AyaneoDevice(PowerDevice):
         """
         卸载设备时的清理工作
         """
-        logger.info("开始卸载设备")
+        logger.info("Starting device unload")
         self._stop_monitor()
         self.set_bypass_charge(False)
-        logger.info("设备卸载完成")
+        logger.info("Device unload complete")

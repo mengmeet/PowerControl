@@ -355,135 +355,6 @@ export class Backend {
     await this.data.init();
   }
 
-  private static applySmt(smt: boolean) {
-    call("set_smt", smt);
-  }
-
-  private static applyCpuNum(cpuNum: number) {
-    call("set_cpuOnline", cpuNum);
-  }
-
-  private static applyCpuBoost(cpuBoost: boolean) {
-    call("set_cpuBoost", cpuBoost);
-  }
-
-  public static applyTDP = (tdp: number) => {
-    call("set_cpuTDP", tdp);
-  };
-
-  public static applyGPUFreq(freq: number) {
-    call("set_gpuFreq", freq);
-  }
-
-  private static applyGPUFreqRange(freqMin: number, freqMax: number) {
-    call<[value: number, value2: number], void>(
-      "set_gpuFreqRange",
-      freqMin,
-      freqMax
-    );
-  }
-
-  private static applyGPUAuto(auto: boolean) {
-    call("set_gpuAuto", auto);
-  }
-
-  private static applyGPUAutoRange(minAutoFreq: number, maxAutoFreq: number) {
-    call<[min: number, max: number], void>(
-      "set_gpuAutoFreqRange",
-      minAutoFreq,
-      maxAutoFreq
-    );
-  }
-
-  private static applyFanAuto(index: number, auto: boolean) {
-    call<[index: number, value: boolean], void>("set_fanAuto", index, auto);
-  }
-
-  private static applyFanPercent(index: number, percent: number) {
-    call<[index: number, value: number], void>(
-      "set_fanPercent",
-      index,
-      percent
-    );
-  }
-  public static throwSuspendEvt() {
-    console.log("throwSuspendEvt");
-    call("receive_suspendEvent");
-  }
-
-  public static async getLatestVersion(): Promise<string> {
-    return (await call("get_latest_version")) as string;
-  }
-
-  // updateLatest
-  public static async updateLatest() {
-    return await call("update_latest");
-  }
-
-  public static async applyGPUSliderFix() {
-    console.log("applyGPUSliderFix");
-    return await call("fix_gpuFreqSlider");
-  }
-
-  // get_ryzenadj_info
-  public static async getRyzenadjInfo(): Promise<string> {
-    return (await call("get_ryzenadj_info")) as string;
-  }
-
-  // set_settings
-  public static async setSettings(settingsData: SettingsData) {
-    const obj = serializer.serializeObject(settingsData);
-    await call("set_settings", obj);
-  }
-
-  // get_settings
-  public static async getSettings(): Promise<SettingsData> {
-    try {
-      const res = (await call("get_settings")) as string;
-      return (
-        serializer.deserializeObject(res, SettingsData) ?? new SettingsData()
-      );
-    } catch (error) {
-      console.error("getSettings error", error);
-      return new SettingsData();
-    }
-  }
-
-  // get_max_perf_pct
-  public static async getMaxPerfPct(): Promise<number> {
-    return (await call("get_max_perf_pct")) as number;
-  }
-
-  // set_max_perf_pct
-  public static async setMaxPerfPct(value: number) {
-    return await call("set_max_perf_pct", value);
-  }
-
-  // set_auto_cpumax_pct
-  public static async setAutoCPUMaxPct(value: boolean) {
-    return await call("set_auto_cpumax_pct", value);
-  }
-
-  // get_cpu_vendor
-  public static async getCpuVendor(): Promise<string> {
-    return (await call("get_cpu_vendor")) as string;
-  }
-
-  // set_bypass_charge
-  public static async setBypassCharge(value: boolean) {
-    return await call("set_bypass_charge", value);
-  }
-
-  // get_bypass_charge
-  public static async getBypassCharge(): Promise<boolean> {
-    return (await call("get_bypass_charge")) as boolean;
-  }
-
-  // set_charge_limit
-  public static async setChargeLimit(value: number) {
-    return await call("set_charge_limit", value);
-  }
-
   public static async applySettings(applyTarget: APPLYTYPE) {
     try {
       if (!Settings.ensureEnable()) {
@@ -726,10 +597,10 @@ export class Backend {
     const chargeLimit = Settings.appChargeLimit();
     const bypassCharge = Settings.appBypassCharge();
     console.log(`电池充电限制 = ${chargeLimit}, 旁路供电 = ${bypassCharge}`);
-    if (chargeLimit) {
+    if (chargeLimit >= 0 && chargeLimit <= 100) {
       await Backend.setChargeLimit(chargeLimit);
     }
-    if (bypassCharge) {
+    if (bypassCharge !== undefined) {
       await Backend.setBypassCharge(bypassCharge);
     }
   }
@@ -765,6 +636,135 @@ export class Backend {
       Backend.applyFanAuto(index, true);
     });
   };
+
+  private static applySmt(smt: boolean) {
+    call("set_smt", smt);
+  }
+
+  private static applyCpuNum(cpuNum: number) {
+    call("set_cpuOnline", cpuNum);
+  }
+
+  private static applyCpuBoost(cpuBoost: boolean) {
+    call("set_cpuBoost", cpuBoost);
+  }
+
+  public static applyTDP = (tdp: number) => {
+    call("set_cpuTDP", tdp);
+  };
+
+  public static applyGPUFreq(freq: number) {
+    call("set_gpuFreq", freq);
+  }
+
+  private static applyGPUFreqRange(freqMin: number, freqMax: number) {
+    call<[value: number, value2: number], void>(
+      "set_gpuFreqRange",
+      freqMin,
+      freqMax
+    );
+  }
+
+  private static applyGPUAuto(auto: boolean) {
+    call("set_gpuAuto", auto);
+  }
+
+  private static applyGPUAutoRange(minAutoFreq: number, maxAutoFreq: number) {
+    call<[min: number, max: number], void>(
+      "set_gpuAutoFreqRange",
+      minAutoFreq,
+      maxAutoFreq
+    );
+  }
+
+  private static applyFanAuto(index: number, auto: boolean) {
+    call<[index: number, value: boolean], void>("set_fanAuto", index, auto);
+  }
+
+  private static applyFanPercent(index: number, percent: number) {
+    call<[index: number, value: number], void>(
+      "set_fanPercent",
+      index,
+      percent
+    );
+  }
+  public static throwSuspendEvt() {
+    console.log("throwSuspendEvt");
+    call("receive_suspendEvent");
+  }
+
+  public static async getLatestVersion(): Promise<string> {
+    return (await call("get_latest_version")) as string;
+  }
+
+  // updateLatest
+  public static async updateLatest() {
+    return await call("update_latest");
+  }
+
+  public static async applyGPUSliderFix() {
+    console.log("applyGPUSliderFix");
+    return await call("fix_gpuFreqSlider");
+  }
+
+  // get_ryzenadj_info
+  public static async getRyzenadjInfo(): Promise<string> {
+    return (await call("get_ryzenadj_info")) as string;
+  }
+
+  // set_settings
+  public static async setSettings(settingsData: SettingsData) {
+    const obj = serializer.serializeObject(settingsData);
+    await call("set_settings", obj);
+  }
+
+  // get_settings
+  public static async getSettings(): Promise<SettingsData> {
+    try {
+      const res = (await call("get_settings")) as string;
+      return (
+        serializer.deserializeObject(res, SettingsData) ?? new SettingsData()
+      );
+    } catch (error) {
+      console.error("getSettings error", error);
+      return new SettingsData();
+    }
+  }
+
+  // get_max_perf_pct
+  public static async getMaxPerfPct(): Promise<number> {
+    return (await call("get_max_perf_pct")) as number;
+  }
+
+  // set_max_perf_pct
+  public static async setMaxPerfPct(value: number) {
+    return await call("set_max_perf_pct", value);
+  }
+
+  // set_auto_cpumax_pct
+  public static async setAutoCPUMaxPct(value: boolean) {
+    return await call("set_auto_cpumax_pct", value);
+  }
+
+  // get_cpu_vendor
+  public static async getCpuVendor(): Promise<string> {
+    return (await call("get_cpu_vendor")) as string;
+  }
+
+  // set_bypass_charge
+  public static async setBypassCharge(value: boolean) {
+    return await call("set_bypass_charge", value);
+  }
+
+  // get_bypass_charge
+  public static async getBypassCharge(): Promise<boolean> {
+    return (await call("get_bypass_charge")) as boolean;
+  }
+
+  // set_charge_limit
+  public static async setChargeLimit(value: number) {
+    return await call("set_charge_limit", value);
+  }
 
   // 获取当前 CPU 调度器
   public static async getCpuGovernor(): Promise<string> {

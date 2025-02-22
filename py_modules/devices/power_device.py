@@ -47,7 +47,7 @@ class PowerDevice(IDevice):
     def set_charge_limit(self, value: int) -> None:
         # check value
         if not 0 <= value <= 100:
-            logger.error(f"充电限制电量必须在 0-100 之间，当前值: {value}")
+            logger.error(f"Charge limit must be between 0-100, current value: {value}")
             return
         if not support_charge_control_end_threshold():
             return
