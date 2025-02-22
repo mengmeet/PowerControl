@@ -96,7 +96,7 @@ class AyaneoDevice(PowerDevice):
             f"Thread status: {self._monitor_thread and self._monitor_thread.is_alive()}"
         )
 
-        last_bypass = None
+        # last_bypass = None
         last_battery_status = None
 
         logger.info(f"Battery limit: {self._charge_limit}%")
@@ -126,22 +126,28 @@ class AyaneoDevice(PowerDevice):
                     and not current_bypass
                     and is_charging
                 ):
-                    if last_bypass is not True:
-                        logger.info(
-                            f"Battery level reached limit {self._charge_limit}%, enabling bypass charge"
-                        )
-                        last_bypass = True
+                    # if last_bypass is not True:
+                    #     logger.info(
+                    #         f"Battery level reached limit {self._charge_limit}%, enabling bypass charge"
+                    #     )
+                    #     last_bypass = True
+                    logger.info(
+                        f"Battery level reached limit {self._charge_limit}%, enabling bypass charge"
+                    )
                     self.set_bypass_charge(True)
                 elif (
                     battery_percentage < self._charge_limit
                     and current_bypass
                     and not is_charging
                 ):
-                    if last_bypass is not False:
-                        logger.info(
-                            f"Battery level below limit {self._charge_limit}%, disabling bypass charge"
-                        )
-                        last_bypass = False
+                    # if last_bypass is not False:
+                    #     logger.info(
+                    #         f"Battery level below limit {self._charge_limit}%, disabling bypass charge"
+                    #     )
+                    #     last_bypass = False
+                    logger.info(
+                        f"Battery level below limit {self._charge_limit}%, disabling bypass charge"
+                    )
                     self.set_bypass_charge(False)
             except Exception as e:
                 logger.error(f"Error monitoring battery status: {str(e)}")
