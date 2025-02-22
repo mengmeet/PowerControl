@@ -596,18 +596,18 @@ export class Backend {
   private static async handleChargeLimit() {
     const chargeLimit = Settings.appChargeLimit();
     const bypassCharge = Settings.appBypassCharge();
-    const currentBypassCharge = await Backend.getBypassCharge();
+    const supportsChargeLimit = Backend.data.getIsSupportChargeLimit();
+    // const currentBypassCharge = await Backend.getBypassCharge();
     console.log(`电池充电限制 = ${chargeLimit}, 旁路供电 = ${bypassCharge}`);
-    if (bypassCharge && !currentBypassCharge) {
+    if (bypassCharge) {
       console.log(`手动开启旁路供电`);
       await Backend.setBypassCharge(bypassCharge);
-    }
-    if (!bypassCharge && chargeLimit >= 0 && chargeLimit <= 100) {
+    } else if (supportsChargeLimit) {
       console.log(`关闭旁路供电, 但设置了电池充电限制 = ${chargeLimit}`);
-      if (currentBypassCharge) {
-        await Backend.setBypassCharge(false);
-      }
       await Backend.setChargeLimit(chargeLimit);
+    } else {
+      console.log(`关闭旁路供电`);
+      await Backend.setBypassCharge(false);
     }
   }
 

@@ -355,7 +355,7 @@ class Plugin:
 
     async def set_bypass_charge(self, value: int):
         """设置旁路供电值。"""
-        logger.debug(f"设置旁路供电值为 {value}")
+        logger.info(f"Main 设置旁路供电值为 {value}")
         try:
             return self.powerManager.set_bypass_charge(value)
         except Exception as e:

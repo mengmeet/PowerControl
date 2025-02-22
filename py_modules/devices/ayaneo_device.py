@@ -50,6 +50,12 @@ class AyaneoDevice(PowerDevice):
         else:
             return None
 
+    def _set_bypass_charge(self, value: bool) -> None:
+        self._ec_write(
+            self.ec_bypass_charge_addr,
+            self.ec_bypass_charge_open if value else self.ec_bypass_charge_close,
+        )
+
     def set_bypass_charge(self, value: bool) -> None:
         """
         设置旁路供电
@@ -61,14 +67,12 @@ class AyaneoDevice(PowerDevice):
         if value:
             # 如果手动开启旁路供电，暂时停止充电限制监控
             self._stop_monitor()
-            write_value = self.ec_bypass_charge_open
         else:
-            write_value = self.ec_bypass_charge_close
             # 如果关闭旁路供电，且有充电限制，重新启动监控
             if self._charge_limit is not None:
                 self._start_monitor()
 
-        self._ec_write(self.ec_bypass_charge_addr, write_value)
+        self._set_bypass_charge(value)
 
     class _MonitorThread(threading.Thread):
         def __init__(self, *args, **kwargs):
@@ -114,17 +118,21 @@ class AyaneoDevice(PowerDevice):
                 current_bypass = self.get_bypass_charge()
 
                 # Only log when status changes
-                current_status = (battery_percentage, is_charging, current_bypass)
+                current_status = (
+                    battery_percentage,
+                    is_charging,
+                    current_bypass,
+                    self._charge_limit,
+                )
                 if current_status != last_battery_status:
                     logger.info(
-                        f"Battery status: {battery_percentage}%, charging: {is_charging}, bypass: {current_bypass}"
+                        f"Battery status: {battery_percentage}%, charging: {is_charging}, bypass: {current_bypass}, limit: {self._charge_limit}%"
                     )
                     last_battery_status = current_status
 
                 if (
-                    battery_percentage >= self._charge_limit
-                    and not current_bypass
-                    and is_charging
+                    battery_percentage >= self._charge_limit and not current_bypass
+                    # and is_charging
                 ):
                     # if last_bypass is not True:
                     #     logger.info(
@@ -134,11 +142,10 @@ class AyaneoDevice(PowerDevice):
                     logger.info(
                         f"Battery level reached limit {self._charge_limit}%, enabling bypass charge"
                     )
-                    self.set_bypass_charge(True)
+                    self._set_bypass_charge(True)
                 elif (
-                    battery_percentage < self._charge_limit
-                    and current_bypass
-                    and not is_charging
+                    battery_percentage < self._charge_limit and current_bypass
+                    # and not is_charging
                 ):
                     # if last_bypass is not False:
                     #     logger.info(
@@ -148,7 +155,7 @@ class AyaneoDevice(PowerDevice):
                     logger.info(
                         f"Battery level below limit {self._charge_limit}%, disabling bypass charge"
                     )
-                    self.set_bypass_charge(False)
+                    self._set_bypass_charge(False)
             except Exception as e:
                 logger.error(f"Error monitoring battery status: {str(e)}")
                 logger.error(f"Error details: {str(sys.exc_info())}")
@@ -225,7 +232,7 @@ class AyaneoDevice(PowerDevice):
         current_bypass = self.get_bypass_charge()
         if current_bypass:
             logger.info("Manual bypass charge detected, disabling bypass charge first")
-            self.set_bypass_charge(False)
+            self._set_bypass_charge(False)
 
         self._charge_limit = value
         self._start_monitor()
@@ -236,5 +243,5 @@ class AyaneoDevice(PowerDevice):
         """
         logger.info("Starting device unload")
         self._stop_monitor()
-        self.set_bypass_charge(False)
+        self._set_bypass_charge(False)
         logger.info("Device unload complete")

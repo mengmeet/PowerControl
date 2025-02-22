@@ -26,7 +26,9 @@ class AyaneoDeviceII(AyaneoDevice):
 
     def _ec_ram_direct_write(self, address: int, data: int, offset=0xD1) -> None:
         address2 = address | (offset << 8)
-        logger.info(f"Directly writing to EC RAM: address={hex(address2)} data={hex(data)}")
+        logger.debug(
+            f"Directly writing to EC RAM: address={hex(address2)} data={hex(data)}"
+        )
         EC.RamWrite(self.ec_comm_port, self.ec_data_port, address2, data)
 
     def supports_bypass_charge(self) -> bool:
@@ -49,7 +51,7 @@ class AyaneoDeviceII(AyaneoDevice):
         logger.debug(f"Bypass charge status: {hex(value)}")
         return value == self.ec_bypass_charge_open
 
-    def set_bypass_charge(self, value: bool) -> None:
+    def _set_bypass_charge(self, value: bool) -> None:
         """
         Set the status of the bypass charge switch
         :param value:
@@ -60,7 +62,7 @@ class AyaneoDeviceII(AyaneoDevice):
             self.ec_bypass_charge_open if value else self.ec_bypass_charge_close
         )
         logger.info(
-            f"Setting bypass charge: {value}, current: {hex(current_value)}, write: {hex(write_value)}"
+            f">>>> Setting bypass charge: {value}, current: {hex(current_value)}, write: {hex(write_value)}"
         )
 
         if current_value != write_value:
