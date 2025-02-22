@@ -1,6 +1,7 @@
 import sys
 
 import decky
+from ec import EC
 
 try:
     import update
@@ -26,6 +27,8 @@ class Plugin:
 
     async def _migration(self):
         decky.logger.info("start _migration")
+        ec_version = EC.Read(0x01)
+        decky.logger.info(f"EC version: {hex(ec_version)}")
 
         self.fuseManager = FuseManager()
         # self.fuseManager.fuse_init()
@@ -369,7 +372,9 @@ class Plugin:
     async def supports_bypass_charge(self) -> bool:
         """判断设备是否支持旁路供电"""
         try:
-            return self.powerManager.supports_bypass_charge()
+            result = self.powerManager.supports_bypass_charge()
+            logger.info(f"当前设备支持旁路供电: {result}")
+            return result
         except Exception as e:
             logger.error(e, exc_info=True)
             return False

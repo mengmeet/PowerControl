@@ -140,7 +140,7 @@ export class BackendData {
         this.has_cpuVendor = false;
       });
 
-    await call<[], boolean>("get_supports_bypass_charge")
+    await call<[], boolean>("supports_bypass_charge")
       .then((res) => {
         this.supportsBypassCharge = res;
         this.has_supportsBypassCharge = true;
@@ -151,7 +151,7 @@ export class BackendData {
         this.has_supportsBypassCharge = false;
       });
 
-    await call<[], boolean>("get_supports_charge_limit")
+    await call<[], boolean>("supports_charge_limit")
       .then((res) => {
         this.supportsChargeLimit = res;
         this.has_supportsChargeLimit = true;

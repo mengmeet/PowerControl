@@ -2,7 +2,6 @@ import threading
 import sys
 
 from config import logger
-from ec import EC
 
 from .power_device import PowerDevice
 
@@ -24,16 +23,6 @@ class AyaneoDevice(PowerDevice):
         self.ec_bypass_charge_close = EC_BYPASS_CHARGE_CLOSE
         self._charge_limit: int | None = None
         self._monitor_thread = None
-
-    def _ec_read(self, address: int) -> int:
-        return EC.Read(address)
-
-    def _ec_read_longer(self, address: int, length: int) -> int:
-        return EC.ReadLonger(address, length)
-
-    def _ec_write(self, address: int, data: int) -> None:
-        logger.info(f"_ec_write address={hex(address)} data={hex(data)}")
-        EC.Write(address, data)
 
     def supports_bypass_charge(self) -> bool:
         return True
@@ -170,7 +159,8 @@ class AyaneoDevice(PowerDevice):
         """
         加载设备时的初始化工作
         """
-        logger.info(f"加载设备，当前充电限制: {self._charge_limit}")
+        # logger.info(f"加载设备，当前充电限制: {self._charge_limit}")
+        pass
         # 设置默认的充电限制
         # if self._charge_limit is None:
         #     self.set_charge_limit(50)

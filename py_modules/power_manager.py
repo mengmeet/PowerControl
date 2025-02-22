@@ -1,23 +1,13 @@
 from devices import IDevice
+from config import logger
 
 
 class PowerManager:
     def __init__(self):
-        self.device = None
-        self.device = IDevice.get_current()
-        self.device.load()
+        self._device = IDevice.get_current()
+        logger.info(f"当前使用的设备类型: {type(self._device)}")
+        self._device.load()
 
-    def get_bypass_charge(self) -> bool | None:
-        return self.device.get_bypass_charge()
-
-    def set_bypass_charge(self, value: bool) -> None:
-        self.device.set_bypass_charge(value)
-
-    def set_charge_limit(self, value: int) -> None:
-        self.device.set_charge_limit(value)
-
-    def load(self) -> None:
-        self.device.load()
-
-    def unload(self) -> None:
-        self.device.unload()
+    def __getattr__(self, name):
+        """动态委托到设备实例"""
+        return getattr(self._device, name)

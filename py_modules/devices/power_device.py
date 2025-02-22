@@ -1,4 +1,6 @@
 from config import logger
+from ec import EC
+
 from utils import (
     get_charge_behaviour,
     set_charge_behaviour,
@@ -19,6 +21,16 @@ class PowerDevice(IDevice):
 
     def unload(self) -> None:
         pass
+
+    def _ec_read(self, address: int) -> int:
+        return EC.Read(address)
+
+    def _ec_read_longer(self, address: int, length: int) -> int:
+        return EC.ReadLonger(address, length)
+
+    def _ec_write(self, address: int, data: int) -> None:
+        logger.info(f"_ec_write address={hex(address)} data={hex(data)}")
+        EC.Write(address, data)
 
     def supports_bypass_charge(self) -> bool:
         return support_charge_behaviour()

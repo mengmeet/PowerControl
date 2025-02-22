@@ -4,18 +4,19 @@ from config import PRODUCT_NAME, PRODUCT_VERSION, VENDOR_NAME
 
 
 class IDevice(ABC):
-    device = None
+    _instance: "IDevice" = None
     vendor_name = VENDOR_NAME
     product_name = PRODUCT_NAME
     product_version = PRODUCT_VERSION
 
-    @staticmethod
-    def get_current() -> "IDevice":
-        if IDevice.device is not None:
-            return IDevice.device
-        match IDevice.vendor_name:
+    @classmethod
+    def get_current(cls) -> "IDevice":
+        if cls._instance is not None:
+            return cls._instance
+
+        match VENDOR_NAME:
             case "AYADEVICE" | "AYANEO":
-                match IDevice.product_name:
+                match PRODUCT_NAME:
                     case (
                         "AIR"
                         | "AIR Pro"
@@ -30,21 +31,18 @@ class IDevice(ABC):
                         | "FLIP DS"
                     ):
                         from .ayaneo_device import AyaneoDevice
-
-                        IDevice.device = AyaneoDevice()
+                        cls._instance = AyaneoDevice()
                     case "AIR Plus" | "SLIDE":
-                        from .ayaneo_device_ii import AyaneoDeviceII
-
-                        IDevice.device = AyaneoDeviceII()
+                        from .ayaneo_air_plus import AyaneoAirPlus
+                        cls._instance = AyaneoAirPlus()
                     case _:
-                        from .default_device import DefaultDevice
-
-                        IDevice.device = DefaultDevice()
+                        from .power_device import PowerDevice
+                        cls._instance = PowerDevice()
             case _:
-                from .default_device import DefaultDevice
-                IDevice.device = DefaultDevice()
+                from .power_device import PowerDevice
+                cls._instance = PowerDevice()
 
-        return IDevice.device
+        return cls._instance
 
     @abstractmethod
     def get_bypass_charge(self) -> bool | None:

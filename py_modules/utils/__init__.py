@@ -6,6 +6,12 @@ from .battery import (
     get_battery_info,
     get_battery_percentage,
     is_battery_charging,
+    support_charge_control_end_threshold,
+    set_charge_control_end_threshold,
+    get_charge_control_end_threshold,
+    support_charge_behaviour,
+    set_charge_behaviour,
+    get_charge_behaviour,
 )
 
 __all__ = [
@@ -16,6 +22,12 @@ __all__ = [
     "get_battery_info",
     "get_battery_percentage",
     "is_battery_charging",
+    "support_charge_control_end_threshold",
+    "set_charge_control_end_threshold",
+    "support_charge_behaviour",
+    "set_charge_behaviour",
+    "get_charge_behaviour",
+    "get_charge_control_end_threshold",
 ]
 
 
