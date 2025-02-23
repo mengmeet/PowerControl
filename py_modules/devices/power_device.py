@@ -7,6 +7,9 @@ from utils import (
     set_charge_control_end_threshold,
     support_charge_behaviour,
     support_charge_control_end_threshold,
+    support_charge_type,
+    set_charge_type,
+    get_charge_type,
 )
 
 from .idevice import IDevice
@@ -33,16 +36,23 @@ class PowerDevice(IDevice):
         EC.Write(address, data)
 
     def supports_bypass_charge(self) -> bool:
-        return support_charge_behaviour()
+        return support_charge_behaviour() or support_charge_type()
 
     def supports_charge_limit(self) -> bool:
         return support_charge_control_end_threshold()
 
     def get_bypass_charge(self) -> bool:
-        return get_charge_behaviour() == "inhibit-charge"
+        if support_charge_behaviour():
+            return get_charge_behaviour() == "inhibit-charge"
+        if support_charge_type():
+            return get_charge_type() == "Bypass"
+        return False
 
     def set_bypass_charge(self, value: bool) -> None:
-        set_charge_behaviour("inhibit-charge" if value else "auto")
+        if support_charge_behaviour():
+            set_charge_behaviour("inhibit-charge" if value else "auto")
+        if support_charge_type():
+            set_charge_type("Bypass" if value else "Standard")
 
     def set_charge_limit(self, value: int) -> None:
         # check value

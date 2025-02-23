@@ -12,6 +12,9 @@ from .battery import (
     support_charge_behaviour,
     set_charge_behaviour,
     get_charge_behaviour,
+    support_charge_type,
+    set_charge_type,
+    get_charge_type,
 )
 
 __all__ = [
@@ -28,6 +31,9 @@ __all__ = [
     "set_charge_behaviour",
     "get_charge_behaviour",
     "get_charge_control_end_threshold",
+    "support_charge_type",
+    "set_charge_type",
+    "get_charge_type",
 ]
 
 

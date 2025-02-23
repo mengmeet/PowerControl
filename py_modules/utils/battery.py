@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 POWER_SUPPLY_PATH = "/sys/class/power_supply"
 CHARGE_CONTROL_END_THRESHOLD = "charge_control_end_threshold"
 CHARGE_BEHAVIOUR = "charge_behaviour"
+CHARGE_TYPE = "charge_type"
 
 
 def _find_battery_device() -> Optional[str]:
@@ -203,6 +204,49 @@ def set_charge_behaviour(behavior: str) -> bool:
     try:
         with open(charge_behaviour_path, "w") as f:
             f.write(str(behavior))
+            return True
+    except (FileNotFoundError, ValueError, IOError):
+        return False
+
+
+def support_charge_type() -> bool:
+    battery_device = _find_battery_device()
+    if not battery_device:
+        return False
+    charge_type_path = os.path.join(POWER_SUPPLY_PATH, battery_device, CHARGE_TYPE)
+    # exists and writable
+    if not os.path.exists(charge_type_path):
+        return False
+    if not os.access(charge_type_path, os.W_OK):
+        return False
+    return True
+
+
+def get_charge_type() -> str | None:
+    battery_device = _find_battery_device()
+    if not battery_device:
+        return None
+    charge_type_path = os.path.join(POWER_SUPPLY_PATH, battery_device, CHARGE_TYPE)
+    try:
+        with open(charge_type_path, "r") as f:
+            return f.read().strip()
+    except (FileNotFoundError, ValueError, IOError):
+        return None
+
+
+def set_charge_type(charge_type: str) -> bool:
+    battery_device = _find_battery_device()
+    if not battery_device:
+        return False
+    charge_type_path = os.path.join(POWER_SUPPLY_PATH, battery_device, CHARGE_TYPE)
+    # exists and writable
+    if not os.path.exists(charge_type_path):
+        return False
+    if not os.access(charge_type_path, os.W_OK):
+        return False
+    try:
+        with open(charge_type_path, "w") as f:
+            f.write(str(charge_type))
             return True
     except (FileNotFoundError, ValueError, IOError):
         return False
