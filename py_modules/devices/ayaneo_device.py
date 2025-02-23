@@ -94,13 +94,13 @@ class AyaneoDevice(PowerDevice):
 
         from utils import get_battery_percentage, is_battery_charging
         from config import logger
+        SLEEP_TIME = 10
 
         logger.info("Start monitoring battery status")
         logger.debug(
             f"Thread status: {self._monitor_thread and self._monitor_thread.is_alive()}"
         )
 
-        # last_bypass = None
         last_battery_status = None
 
         logger.info(f"Battery limit: {self._charge_limit}%")
@@ -134,26 +134,16 @@ class AyaneoDevice(PowerDevice):
                     battery_percentage >= self._charge_limit and not current_bypass
                     # and is_charging
                 ):
-                    # if last_bypass is not True:
-                    #     logger.info(
-                    #         f"Battery level reached limit {self._charge_limit}%, enabling bypass charge"
-                    #     )
-                    #     last_bypass = True
                     logger.info(
-                        f"Battery level reached limit {self._charge_limit}%, enabling bypass charge"
+                        f"Battery level >= limit {self._charge_limit}%, enabling bypass charge"
                     )
                     self._set_bypass_charge(True)
                 elif (
                     battery_percentage < self._charge_limit and current_bypass
                     # and not is_charging
                 ):
-                    # if last_bypass is not False:
-                    #     logger.info(
-                    #         f"Battery level below limit {self._charge_limit}%, disabling bypass charge"
-                    #     )
-                    #     last_bypass = False
                     logger.info(
-                        f"Battery level below limit {self._charge_limit}%, disabling bypass charge"
+                        f"Battery level < limit {self._charge_limit}%, disabling bypass charge"
                     )
                     self._set_bypass_charge(False)
             except Exception as e:
@@ -161,9 +151,7 @@ class AyaneoDevice(PowerDevice):
                 logger.error(f"Error details: {str(sys.exc_info())}")
                 raise  # 重新抛出异常，让外部能够捕获
 
-            time.sleep(10)
-
-        # logger.info(f"Battery monitoring thread stopped, thread ID: {id(self._monitor_thread)}")
+            time.sleep(SLEEP_TIME)
 
     def _start_monitor(self):
         """
