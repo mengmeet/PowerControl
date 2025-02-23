@@ -384,7 +384,9 @@ class Plugin:
     async def supports_charge_limit(self) -> bool:
         """判断设备是否支持充电限制"""
         try:
-            return self.powerManager.supports_charge_limit()
+            result = self.powerManager.supports_charge_limit()
+            logger.info(f"当前设备支持充电限制: {result}")
+            return result
         except Exception as e:
             logger.error(e, exc_info=True)
             return False

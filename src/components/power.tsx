@@ -166,7 +166,7 @@ export const PowerComponent: FC = () => {
 
   useEffect(() => {
     setShow(
-      Settings.ensureEnable() && supportChargeLimit && supportBypassCharge
+      Settings.ensureEnable() && (supportChargeLimit || supportBypassCharge)
     );
   }, [supportChargeLimit, supportBypassCharge]);
 
