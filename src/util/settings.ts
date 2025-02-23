@@ -191,6 +191,21 @@ export class SettingsData {
   @JsonProperty()
   public forceShowTDP: boolean = false;
 
+  @JsonProperty()
+  public showSettingMenu: boolean = true;
+
+  @JsonProperty()
+  public showFanMenu: boolean = true;
+
+  @JsonProperty()
+  public showCpuMenu: boolean = true;
+
+  @JsonProperty()
+  public showGpuMenu: boolean = true;
+
+  @JsonProperty()
+  public showPowerMenu: boolean = true;
+
   @JsonProperty({ type: AppSettingData, isDictionary: true })
   public perApp: { [appId: string]: AppSettingData } = {};
 
@@ -233,6 +248,12 @@ export class SettingsData {
     Object.entries(copyTarget.fanSettings).forEach(([key, value]) => {
       this.fanSettings[key] = value;
     });
+
+    this.showSettingMenu = copyTarget.showSettingMenu;
+    this.showFanMenu = copyTarget.showFanMenu;
+    this.showCpuMenu = copyTarget.showCpuMenu;
+    this.showGpuMenu = copyTarget.showGpuMenu;
+    this.showPowerMenu = copyTarget.showPowerMenu;
   }
 }
 
@@ -246,6 +267,53 @@ export class Settings {
   }
 
   private settingChangeEvent = new EventTarget();
+
+  // ui 菜单展开控制
+  public static set showSettingMenu(show: boolean) {
+    this._instance.data.showSettingMenu = show;
+    Settings.saveSettingsToLocalStorage();
+  }
+
+  public static get showSettingMenu(): boolean {
+    return this._instance.data.showSettingMenu;
+  }
+
+  public static set showFanMenu(show: boolean) {
+    this._instance.data.showFanMenu = show;
+    Settings.saveSettingsToLocalStorage();
+  }
+
+  public static get showFanMenu(): boolean {
+    return this._instance.data.showFanMenu;
+  }
+
+  public static set showCpuMenu(show: boolean) {
+    this._instance.data.showCpuMenu = show;
+    Settings.saveSettingsToLocalStorage();
+  }
+
+  public static get showCpuMenu(): boolean {
+    return this._instance.data.showCpuMenu;
+  }
+
+  public static set showGpuMenu(show: boolean) {
+    this._instance.data.showGpuMenu = show;
+    Settings.saveSettingsToLocalStorage();
+  }
+
+  public static get showGpuMenu(): boolean {
+    return this._instance.data.showGpuMenu;
+  }
+
+  public static set showPowerMenu(show: boolean) {
+    this._instance.data.showPowerMenu = show;
+    Settings.saveSettingsToLocalStorage();
+  }
+
+  public static get showPowerMenu(): boolean {
+    return this._instance.data.showPowerMenu;
+  }
+  // ui 菜单展开控制 end
 
   //插件是否开启
   public static ensureEnable(): boolean {

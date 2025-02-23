@@ -1,4 +1,5 @@
 import {
+  ButtonItem,
   NotchLabel,
   PanelSection,
   PanelSectionRow,
@@ -16,6 +17,7 @@ import {
 } from "../util";
 import { localizeStrEnum, localizationManager } from "../i18n";
 import { SlowSliderField } from "./SlowSliderField";
+import { RiArrowDownSFill, RiArrowUpSFill } from "react-icons/ri";
 
 //GPUFreq模块
 const GPUFreqComponent: FC = () => {
@@ -419,6 +421,13 @@ export function GPUComponent() {
   const hide = (ishide: boolean) => {
     setShow(!ishide);
   };
+
+  const [showGpuMenu, setShowGpuMenu] = useState<boolean>(Settings.showGpuMenu);
+  const updateShowGpuMenu = (show: boolean) => {
+    setShowGpuMenu(show);
+    Settings.showGpuMenu = show;
+  };
+
   //listen Settings
   useEffect(() => {
     PluginManager.listenUpdateComponent(
@@ -439,12 +448,31 @@ export function GPUComponent() {
     );
   }, []);
   return (
-    <div>
+    <>
       {show && (
         <PanelSection title="GPU">
-          <GPUModeComponent />
+          <PanelSectionRow>
+            <ButtonItem
+              layout="below"
+              // @ts-ignore
+              style={{
+                height: "20px",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              onClick={() => updateShowGpuMenu(!showGpuMenu)}
+            >
+              {showGpuMenu ? <RiArrowUpSFill /> : <RiArrowDownSFill />}
+            </ButtonItem>
+          </PanelSectionRow>
+          {showGpuMenu && (
+            <>
+              <GPUModeComponent />
+            </>
+          )}
         </PanelSection>
       )}
-    </div>
+    </>
   );
 }

@@ -9,9 +9,11 @@ import {
   ModalRoot,
   showModal,
   ScrollPanelGroup,
+  ButtonItem,
 } from "@decky/ui";
 import MarkDownIt from "markdown-it";
 import { useEffect, useState, FC } from "react";
+import { RiArrowDownSFill, RiArrowUpSFill } from "react-icons/ri";
 import {
   Settings,
   PluginManager,
@@ -255,16 +257,42 @@ const SettingsPerAcStateComponent: FC = () => {
 };
 
 export const SettingsComponent: FC = () => {
+  const [showSettings, setShowSettings] = useState<boolean>(
+    Settings.showSettingMenu
+  );
+  const updateShowSettings = (show: boolean) => {
+    setShowSettings(show);
+    Settings.showSettingMenu = show;
+  };
   return (
-    <div>
+    <>
       <PanelSection
         title={localizationManager.getString(localizeStrEnum.TITEL_SETTINGS)}
       >
-        <SettingsEnableComponent />
-        <SettingsPerAppComponent />
-        <SettingsPerAcStateComponent />
+        <PanelSectionRow>
+          <ButtonItem
+            layout="below"
+            // @ts-ignore
+            style={{
+              height: "20px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+            onClick={() => updateShowSettings(!showSettings)}
+          >
+            {showSettings ? <RiArrowUpSFill /> : <RiArrowDownSFill />}
+          </ButtonItem>
+        </PanelSectionRow>
+        {showSettings && (
+          <>
+            <SettingsEnableComponent />
+            <SettingsPerAppComponent />
+            <SettingsPerAcStateComponent />
+          </>
+        )}
       </PanelSection>
-    </div>
+    </>
   );
 };
 

@@ -1,4 +1,9 @@
-import { PanelSection, PanelSectionRow, ToggleField } from "@decky/ui";
+import {
+  ButtonItem,
+  PanelSection,
+  PanelSectionRow,
+  ToggleField,
+} from "@decky/ui";
 import { FC, useEffect, useState } from "react";
 import {
   Backend,
@@ -9,6 +14,7 @@ import {
 } from "../util";
 import { SlowSliderField } from "./SlowSliderField";
 import { localizationManager, localizeStrEnum } from "../i18n";
+import { RiArrowDownSFill, RiArrowUpSFill } from "react-icons/ri";
 
 const BypassChargeComponent: FC = () => {
   const [bypassCharge, setBypassCharge] = useState<boolean>(
@@ -141,6 +147,14 @@ export const PowerComponent: FC = () => {
     Backend.data.getIsSupportBypassCharge()
   );
 
+  const [showPowerMenu, setShowPowerMenu] = useState<boolean>(
+    Settings.showPowerMenu
+  );
+  const updateShowPowerMenu = (show: boolean) => {
+    setShowPowerMenu(show);
+    Settings.showPowerMenu = show;
+  };
+
   const hide = (ishide: boolean) => {
     setShow(!ishide);
   };
@@ -174,8 +188,27 @@ export const PowerComponent: FC = () => {
     <>
       {show && (
         <PanelSection title="Power">
-          {supportChargeLimit && <ChargeLimitComponent />}
-          {supportBypassCharge && <BypassChargeComponent />}
+          <PanelSectionRow>
+            <ButtonItem
+              layout="below"
+              // @ts-ignore
+              style={{
+                height: "20px",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              onClick={() => updateShowPowerMenu(!showPowerMenu)}
+            >
+              {showPowerMenu ? <RiArrowUpSFill /> : <RiArrowDownSFill />}
+            </ButtonItem>
+          </PanelSectionRow>
+          {showPowerMenu && (
+            <>
+              {supportChargeLimit && <ChargeLimitComponent />}
+              {supportBypassCharge && <BypassChargeComponent />}
+            </>
+          )}
         </PanelSection>
       )}
     </>

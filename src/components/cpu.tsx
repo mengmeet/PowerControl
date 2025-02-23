@@ -3,6 +3,7 @@ import {
   PanelSectionRow,
   ToggleField,
   DropdownItem,
+  ButtonItem,
 } from "@decky/ui";
 import { useEffect, useState, FC } from "react";
 import {
@@ -17,6 +18,7 @@ import {
 import { localizeStrEnum, localizationManager } from "../i18n";
 import { SlowSliderField } from "./SlowSliderField";
 import { CustomTDPComponent } from ".";
+import { RiArrowDownSFill, RiArrowUpSFill } from "react-icons/ri";
 
 const CPUBoostComponent: FC = () => {
   const [cpuboost, setCPUBoost] = useState<boolean>(Settings.appCpuboost());
@@ -455,6 +457,12 @@ export const CPUEPPComponent: FC = () => {
 };
 
 export const CPUComponent: FC = () => {
+  const [showCpuMenu, setShowCpuMenu] = useState<boolean>(Settings.showCpuMenu);
+  const updateShowCpuMenu = (show: boolean) => {
+    setShowCpuMenu(show);
+    Settings.showCpuMenu = show;
+  };
+  
   const [show, setShow] = useState<boolean>(Settings.ensureEnable());
 
   const [isSpportSMT, setIsSpportSMT] = useState<boolean>(
@@ -491,19 +499,38 @@ export const CPUComponent: FC = () => {
     );
   }, []);
   return (
-    <div>
+    <>
       {show && (
         <PanelSection title="CPU">
-          <CPUBoostComponent />
-          {isSpportSMT && <CPUSmtComponent />}
-          <CPUGovernorComponent />
-          {/* {Backend.data.hasEPPModes() && <CPUEPPComponent />} */}
-          <CPUNumComponent />
-          <CPUTDPComponent />
-          {cpuVendor != "GenuineIntel" && <CustomTDPComponent />}
-          <CPUPerformancePerfComponent />
+          <PanelSectionRow>
+            <ButtonItem
+              layout="below"
+              // @ts-ignore
+              style={{
+                height: "20px",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              onClick={() => updateShowCpuMenu(!showCpuMenu)}
+            >
+              {showCpuMenu ? <RiArrowUpSFill /> : <RiArrowDownSFill />}
+            </ButtonItem>
+          </PanelSectionRow>
+          {showCpuMenu && (
+            <>
+              <CPUBoostComponent />
+              {isSpportSMT && <CPUSmtComponent />}
+              <CPUGovernorComponent />
+              {/* {Backend.data.hasEPPModes() && <CPUEPPComponent />} */}
+              <CPUNumComponent />
+              <CPUTDPComponent />
+              {cpuVendor != "GenuineIntel" && <CustomTDPComponent />}
+              <CPUPerformancePerfComponent />
+            </>
+          )}
         </PanelSection>
       )}
-    </div>
+    </>
   );
 };

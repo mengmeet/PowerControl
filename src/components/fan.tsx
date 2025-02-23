@@ -10,6 +10,7 @@ import {
   DropdownOption,
   Focusable,
   DropdownItem,
+  ButtonItem,
 } from "@decky/ui";
 import { useEffect, useState, useRef, FC } from "react";
 import {
@@ -34,6 +35,7 @@ import {
 } from "../util";
 import { localizeStrEnum, localizationManager } from "../i18n";
 import { FanCanvas } from "./fanCanvas";
+import { RiArrowDownSFill, RiArrowUpSFill } from "react-icons/ri";
 const totalLines = 9;
 const pointBlockDis = 5;
 const pointColor = "#1A9FFF";
@@ -1274,6 +1276,13 @@ export function FANComponent() {
   const hide = (ishide: boolean) => {
     setShow(!ishide);
   };
+
+  const [showFanMenu, setShowFanMenu] = useState<boolean>(Settings.showFanMenu);
+  const updateShowFanMenu = (show: boolean) => {
+    setShowFanMenu(show);
+    Settings.showFanMenu = show;
+  };
+
   //listen Settings
   useEffect(() => {
     PluginManager.listenUpdateComponent(
@@ -1295,57 +1304,79 @@ export function FANComponent() {
   }, []);
   //<FANSelectProfileComponent/>
   return (
-    <div>
+    <>
       {show && fanEnable.current && fanCount.current >= 0 && (
         <PanelSection title="FAN">
-          {fanCount.current == 1 && (
-            <div>
-              <FANSelectProfileComponent fanIndex={0} />
-              <FANDisplayComponent fanIndex={0} />
-              <FANRPMComponent fanIndex={0} />
-            </div>
-          )}
-          {fanCount.current == 2 && (
-            <div>
-              <PanelSectionRow>
-                <SliderField
-                  value={index}
-                  min={0}
-                  max={fanCount.current - 1}
-                  step={1}
-                  notchCount={fanCount.current}
-                  notchLabels={Backend.data
-                    .getFanConfigs()
-                    .map((config, index) => {
-                      return {
-                        notchIndex: index,
-                        label: config.fan_name,
-                        value: index,
-                      };
-                    })}
-                  onChange={(value) => {
-                    setIndex(value);
-                  }}
-                ></SliderField>
-              </PanelSectionRow>
-              {Backend.data.getFanConfigs().map((_config, configIndex) => {
-                return (
-                  index == configIndex && (
-                    <div>
-                      <FANSelectProfileComponent
-                        key={configIndex}
-                        fanIndex={index}
-                      />
-                      <FANDisplayComponent key={configIndex} fanIndex={index} />
-                      <FANRPMComponent key={configIndex} fanIndex={index} />
-                    </div>
-                  )
-                );
-              })}
-            </div>
+          <PanelSectionRow>
+            <ButtonItem
+              layout="below"
+              // @ts-ignore
+              style={{
+                height: "20px",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              onClick={() => updateShowFanMenu(!showFanMenu)}
+            >
+              {showFanMenu ? <RiArrowUpSFill /> : <RiArrowDownSFill />}
+            </ButtonItem>
+          </PanelSectionRow>
+          {showFanMenu && (
+            <>
+              {fanCount.current == 1 && (
+                <>
+                  <FANSelectProfileComponent fanIndex={0} />
+                  <FANDisplayComponent fanIndex={0} />
+                  <FANRPMComponent fanIndex={0} />
+                </>
+              )}
+              {fanCount.current == 2 && (
+                <>
+                  <PanelSectionRow>
+                    <SliderField
+                      value={index}
+                      min={0}
+                      max={fanCount.current - 1}
+                      step={1}
+                      notchCount={fanCount.current}
+                      notchLabels={Backend.data
+                        .getFanConfigs()
+                        .map((config, index) => {
+                          return {
+                            notchIndex: index,
+                            label: config.fan_name,
+                            value: index,
+                          };
+                        })}
+                      onChange={(value) => {
+                        setIndex(value);
+                      }}
+                    ></SliderField>
+                  </PanelSectionRow>
+                  {Backend.data.getFanConfigs().map((_config, configIndex) => {
+                    return (
+                      index == configIndex && (
+                        <>
+                          <FANSelectProfileComponent
+                            key={configIndex}
+                            fanIndex={index}
+                          />
+                          <FANDisplayComponent
+                            key={configIndex}
+                            fanIndex={index}
+                          />
+                          <FANRPMComponent key={configIndex} fanIndex={index} />
+                        </>
+                      )
+                    );
+                  })}
+                </>
+              )}
+            </>
           )}
         </PanelSection>
       )}
-    </div>
+    </>
   );
 }
