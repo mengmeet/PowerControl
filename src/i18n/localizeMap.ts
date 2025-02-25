@@ -92,6 +92,7 @@ export enum localizeStrEnum {
   PROFILE = "PROFILE",
   CPU_BOOST = "CPU_BOOST",
   CPU_BOOST_DESC = "CPU_BOOST_DESC",
+  HT_DESC = "HT_DESC",
   SMT_DESC = "SMT_DESC",
   CPU_NUM = "CPU_NUM",
   CPU_NUM_DESC = "CPU_NUM_DESC",

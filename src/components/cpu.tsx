@@ -65,8 +65,12 @@ const CPUBoostComponent: FC = () => {
 
 const CPUSmtComponent: FC = () => {
   const [cpusmt, setCPUSmt] = useState<boolean>(Settings.appSmt());
+  const [cpuVendor, setCpuVendor] = useState<string>(
+    Backend.data.getCpuVendor()
+  );
   const refresh = () => {
     setCPUSmt(Settings.appSmt());
+    setCpuVendor(Backend.data.getCpuVendor());
   };
 
   useEffect(() => {
@@ -87,8 +91,12 @@ const CPUSmtComponent: FC = () => {
     <div>
       <PanelSectionRow>
         <ToggleField
-          label="SMT"
-          description={localizationManager.getString(localizeStrEnum.SMT_DESC)}
+          label={cpuVendor == "GenuineIntel" ? "Hyper-Threading" : "SMT"}
+          description={
+            cpuVendor == "GenuineIntel"
+              ? localizationManager.getString(localizeStrEnum.HT_DESC)
+              : localizationManager.getString(localizeStrEnum.SMT_DESC)
+          }
           checked={cpusmt}
           onChange={(smt) => {
             Settings.setSmt(smt);
@@ -462,7 +470,7 @@ export const CPUComponent: FC = () => {
     setShowCpuMenu(show);
     Settings.showCpuMenu = show;
   };
-  
+
   const [show, setShow] = useState<boolean>(Settings.ensureEnable());
 
   const [isSpportSMT, setIsSpportSMT] = useState<boolean>(
