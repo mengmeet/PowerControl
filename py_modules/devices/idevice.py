@@ -93,3 +93,15 @@ class IDevice(ABC):
     @abstractmethod
     def unload(self) -> None:
         pass
+
+    @abstractmethod
+    def supports_sched_ext(self) -> bool:
+        pass
+
+    @abstractmethod
+    def get_sched_ext_list(self) -> list[str]:
+        pass
+
+    @abstractmethod
+    def set_sched_ext(self, value: str, param: str) -> None:
+        pass
