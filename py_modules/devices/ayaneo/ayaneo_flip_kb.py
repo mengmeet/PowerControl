@@ -1,4 +1,4 @@
-from py_modules.devices.ayaneo_device import AyaneoDevice
+from .ayaneo_device import AyaneoDevice
 
 
 class AyaneoFlipKB(AyaneoDevice):

@@ -1,4 +1,4 @@
-from py_modules.devices.ayaneo_flip_kb import AyaneoFlipKB
+from .ayaneo_flip_kb import AyaneoFlipKB
 
 
 class AyaneoFlipDS(AyaneoFlipKB):

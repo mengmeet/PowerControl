@@ -1,6 +1,5 @@
 from config import logger
 from ec import EC
-from utils import version_compare
 
 from .ayaneo_device import AyaneoDevice
 
