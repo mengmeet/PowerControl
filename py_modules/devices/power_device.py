@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 from config import logger
 from ec import EC
@@ -422,8 +423,6 @@ class PowerDevice(IDevice):
         """
         try:
             import re
-            import shutil
-            import subprocess
             import tempfile
 
             # 尝试导入 toml 库，如果不存在则使用简单的文本替换
@@ -552,7 +551,7 @@ class PowerDevice(IDevice):
                                 rf"\[scheds\.{value}\]", re.MULTILINE
                             )
                             auto_mode_pattern = re.compile(
-                                rf"auto_mode\s*=\s*\[[^\]]*\]", re.MULTILINE
+                                r"auto_mode\s*=\s*\[[^\]]*\]", re.MULTILINE
                             )
 
                             if re.search(sched_section_pattern, config_content):
