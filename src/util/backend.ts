@@ -406,10 +406,8 @@ export class Backend {
     const cpuNum = Settings.appCpuNum();
     const smt = Settings.appSmt();
     if (cpuNum) {
-      await Backend.applyCpuNum(cpuNum);
-    }
-    if (smt) {
       await Backend.applySmt(smt);
+      await Backend.applyCpuNum(cpuNum);
     }
   }
 

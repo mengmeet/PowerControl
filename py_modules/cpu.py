@@ -623,7 +623,7 @@ class CPUManager:
             if not self.get_isSupportSMT():
                 logger.debug("Failed to set SMT: system does not support SMT")
                 return False
-            logger.debug("set_smt {}".format(value))
+            logger.debug(f"set_smt {value}")
             self.cpu_smt = value
             return True
         except Exception:
@@ -653,7 +653,7 @@ class CPUManager:
         no_turbo_path = "/sys/devices/system/cpu/intel_pstate/no_turbo"
 
         try:
-            logger.debug("set_cpuBoost {}".format(value))
+            logger.debug(f"set_cpuBoost {value}")
             self.cpu_boost = value
 
             # 如果不存在 pstate_boost_path
