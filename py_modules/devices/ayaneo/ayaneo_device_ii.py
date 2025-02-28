@@ -1,5 +1,6 @@
 from config import logger
 from ec import EC
+from utils import version_compare
 
 from .ayaneo_device import AyaneoDevice
 
@@ -30,14 +31,6 @@ class AyaneoDeviceII(AyaneoDevice):
             f"Directly writing to EC RAM: address={hex(address2)} data={hex(data)}"
         )
         EC.RamWrite(self.ec_comm_port, self.ec_data_port, address2, data)
-
-    def supports_bypass_charge(self) -> bool:
-        ec_version = EC.Read(0x01)
-        logger.info(f">>>>>>>>>>>>>> EC version: {hex(ec_version)}")
-        return (
-            self.ec_version_of_bypass_charge is not None
-            and ec_version >= self.ec_version_of_bypass_charge
-        )
 
     def supports_charge_limit(self) -> bool:
         return self.supports_bypass_charge()

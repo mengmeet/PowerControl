@@ -1,10 +1,11 @@
-import threading
 import sys
+import threading
 
 from config import logger
 from ec import EC
+from utils import version_compare
 
-from .power_device import PowerDevice
+from ..power_device import PowerDevice
 
 EC_BYPASS_CHARGE_ADDR = 0x1E
 EC_BYPASS_CHARGE_OPEN = 0x55
@@ -26,13 +27,29 @@ class AyaneoDevice(PowerDevice):
         self._monitor_thread = None
         self.ec_version_of_bypass_charge = None
 
+    def _get_ec_version(self) -> list[int]:
+        return [
+            EC.Read(0x00),
+            EC.Read(0x01),
+            EC.Read(0x02),
+            EC.Read(0x03),
+            EC.Read(0x04),
+        ]
+
     def supports_bypass_charge(self) -> bool:
-        ec_version = EC.Read(0x04)
-        logger.info(f">>>>>>>>>>>>>> EC version: {hex(ec_version)}")
-        return (
-            self.ec_version_of_bypass_charge is not None
-            and ec_version >= self.ec_version_of_bypass_charge
+        ec_version = self._get_ec_version()
+        # 格式化输出EC版本号
+        ec_version_hex = [hex(v) for v in ec_version]
+        logger.info(
+            f"EC version (decimal): {ec_version}, EC version (hex): {ec_version_hex}"
         )
+        compare_result = version_compare(ec_version, self.ec_version_of_bypass_charge)
+
+        if self.ec_version_of_bypass_charge is not None:
+            logger.info(f"Required EC version: {self.ec_version_of_bypass_charge}")
+            logger.info(f"Version comparison result: {compare_result}")
+
+        return self.ec_version_of_bypass_charge is not None and compare_result >= 0
 
     def supports_charge_limit(self) -> bool:
         return self.supports_bypass_charge()
@@ -89,11 +106,12 @@ class AyaneoDevice(PowerDevice):
         """
         监控电池状态的线程函数
         """
-        import time
         import sys
+        import time
 
-        from utils import get_battery_percentage, is_battery_charging
         from config import logger
+        from utils import get_battery_percentage, is_battery_charging
+
         SLEEP_TIME = 10
 
         logger.info("Start monitoring battery status")
@@ -131,7 +149,8 @@ class AyaneoDevice(PowerDevice):
                     last_battery_status = current_status
 
                 if (
-                    battery_percentage >= self._charge_limit and not current_bypass
+                    battery_percentage >= self._charge_limit
+                    and not current_bypass
                     # and is_charging
                 ):
                     logger.info(
@@ -139,7 +158,8 @@ class AyaneoDevice(PowerDevice):
                     )
                     self._set_bypass_charge(True)
                 elif (
-                    battery_percentage < self._charge_limit and current_bypass
+                    battery_percentage < self._charge_limit
+                    and current_bypass
                     # and not is_charging
                 ):
                     logger.info(

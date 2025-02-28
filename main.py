@@ -27,8 +27,17 @@ class Plugin:
 
     async def _migration(self):
         decky.logger.info("start _migration")
-        ec_version = EC.Read(0x01)
-        decky.logger.info(f"EC version: {hex(ec_version)}")
+        ec_version = [
+            EC.Read(0x00),
+            EC.Read(0x01),
+            EC.Read(0x02),
+            EC.Read(0x03),
+            EC.Read(0x04),
+        ]
+        ec_version_hex = [hex(v) for v in ec_version]
+        decky.logger.info(
+            f"EC version (decimal): {ec_version}, EC version (hex): {ec_version_hex}"
+        )
 
         self.fuseManager = FuseManager()
         # self.fuseManager.fuse_init()
