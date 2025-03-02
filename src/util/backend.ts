@@ -595,17 +595,22 @@ export class Backend {
     const chargeLimit = Settings.appChargeLimit();
     const bypassCharge = Settings.appBypassCharge();
     const supportsChargeLimit = Backend.data.getIsSupportChargeLimit();
+    const supportsBypassCharge = Backend.data.getIsSupportBypassCharge();
     // const currentBypassCharge = await Backend.getBypassCharge();
     console.log(`电池充电限制 = ${chargeLimit}, 旁路供电 = ${bypassCharge}`);
     if (bypassCharge) {
-      console.log(`手动开启旁路供电`);
-      await Backend.setBypassCharge(bypassCharge);
+      if (supportsBypassCharge) {
+        console.log(`手动开启旁路供电`);
+        await Backend.setBypassCharge(bypassCharge);
+      }
     } else if (supportsChargeLimit) {
       console.log(`关闭旁路供电, 但设置了电池充电限制 = ${chargeLimit}`);
       await Backend.setChargeLimit(chargeLimit);
     } else {
-      console.log(`关闭旁路供电`);
-      await Backend.setBypassCharge(false);
+      if (supportsBypassCharge) {
+        console.log(`手动关闭旁路供电`);
+        await Backend.setBypassCharge(false);
+      }
     }
   }
 
