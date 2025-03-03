@@ -111,6 +111,7 @@ try:
     VENDOR_NAME = open("/sys/devices/virtual/dmi/id/sys_vendor", "r").read().strip()
     PRODUCT_NAME = open("/sys/devices/virtual/dmi/id/product_name", "r").read().strip()
     BOARD_NAME = open("/sys/devices/virtual/dmi/id/board_name", "r").read().strip()
+    BOARD_VENDOR = open("/sys/devices/virtual/dmi/id/board_vendor", "r").read().strip()
     PRODUCT_VERSION = (
         open("/sys/devices/virtual/dmi/id/product_version", "r").read().strip()
     )

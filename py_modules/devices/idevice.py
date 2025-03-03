@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from config import BOARD_NAME, PRODUCT_NAME, PRODUCT_VERSION, VENDOR_NAME
+from config import BOARD_NAME, PRODUCT_NAME, PRODUCT_VERSION, VENDOR_NAME, BOARD_VENDOR
 
 
 class IDevice(ABC):
@@ -9,13 +9,14 @@ class IDevice(ABC):
     product_name = PRODUCT_NAME
     product_version = PRODUCT_VERSION
     board_name = BOARD_NAME
+    board_vendor = BOARD_VENDOR
 
     @classmethod
     def get_current(cls) -> "IDevice":
         if cls._instance is not None:
             return cls._instance
 
-        match VENDOR_NAME:
+        match BOARD_VENDOR:
             case "AYADEVICE" | "AYANEO":
                 match BOARD_NAME:
                     case "AYANEO 2" | "AYANEO 2S" | "GEEK" | "GEEK 1S":
@@ -59,7 +60,7 @@ class IDevice(ABC):
                         from . import PowerDevice
 
                         cls._instance = PowerDevice()
-            case "ASUSTEK COMPUTER INC.":
+            case "ASUSTeK COMPUTER INC.":
                 from . import AsusDevice
 
                 cls._instance = AsusDevice()

@@ -1,5 +1,7 @@
 import os
 from typing import List
+import signal
+from contextlib import contextmanager
 
 from .battery import (
     get_battery_info,
@@ -76,9 +78,30 @@ def version_compare(version1: List[int], version2: List[int]) -> int:
         return 0
 
 
-def get_bios_settings():
+class TimeoutException(Exception):
+    pass
+
+
+@contextmanager
+def time_limit(seconds):
+    def signal_handler(signum, frame):
+        raise TimeoutException("Timed out!")
+
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(seconds)
     try:
-        with file_timeout(2):
+        yield
+    finally:
+        signal.alarm(0)
+
+
+def get_bios_settings():
+    import json
+    import subprocess
+    from config import logger
+
+    try:
+        with time_limit(2):
             cmd = "fwupdmgr get-bios-setting --json"
             result = subprocess.run(
                 cmd,

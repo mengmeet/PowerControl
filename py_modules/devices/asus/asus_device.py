@@ -1,4 +1,9 @@
-from utils import get_bios_settings
+from utils import get_bios_settings, get_env
+from config import logger
+
+import subprocess
+import os
+from time import sleep
 
 from ..power_device import PowerDevice
 
@@ -26,10 +31,15 @@ class AsusDevice(PowerDevice):
         super().__init__()
 
     def set_tdp(self, tdp: int) -> None:
+        logger.info(f"Setting TDP to {tdp}")
+        if tdp < 5:
+            logger.info("TDP is too low, use default tdp method")
+            super().set_tdp(tdp)
+            return
         fast_val = tdp + 2
         slow_val = tdp
         stapm_val = tdp
-        if self._supports_wmi_tdp():
+        if self._supports_bios_wmi_tdp():
             tdp_values = {
                 "ppt_fppt": fast_val,
                 "ppt_pl2_sppt": slow_val,
@@ -49,7 +59,7 @@ class AsusDevice(PowerDevice):
                         env=get_env(),
                     )
                     sleep(0.1)
-                except Exception as e:
+                except Exception:
                     logger.error(
                         f"Error set_tdp by fwupdmgr {wmi_method} {target_tdp}",
                         exc_info=True,
