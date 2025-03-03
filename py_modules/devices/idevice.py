@@ -59,6 +59,10 @@ class IDevice(ABC):
                         from . import PowerDevice
 
                         cls._instance = PowerDevice()
+            case "ASUSTEK COMPUTER INC.":
+                from . import AsusDevice
+
+                cls._instance = AsusDevice()
             case _:
                 from . import PowerDevice
 
@@ -104,4 +108,8 @@ class IDevice(ABC):
 
     @abstractmethod
     def set_sched_ext(self, value: str, param: str) -> None:
+        pass
+
+    @abstractmethod
+    def set_tdp(self, tdp: int) -> bool:
         pass

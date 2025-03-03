@@ -197,7 +197,8 @@ class Plugin:
 
     async def set_cpuTDP(self, value: int):
         try:
-            return cpuManager.set_cpuTDP(value)
+            # return cpuManager.set_cpuTDP(value)
+            return self.powerManager.set_tdp(value)
         except Exception as e:
             logger.error(e, exc_info=True)
             return False

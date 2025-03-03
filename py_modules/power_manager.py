@@ -1,5 +1,5 @@
-from devices import IDevice
 from config import logger
+from devices import IDevice
 
 
 class PowerManager:
@@ -11,3 +11,6 @@ class PowerManager:
     def __getattr__(self, name):
         """动态委托到设备实例"""
         return getattr(self._device, name)
+
+    def __del__(self):
+        self._device.unload()

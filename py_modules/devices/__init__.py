@@ -1,3 +1,4 @@
+from .asus.asus_device import AsusDevice
 from .ayaneo.ayaneo_air import AyaneoAir
 from .ayaneo.ayaneo_air_1s import AyaneoAir1S
 from .ayaneo.ayaneo_air_plus import AyaneoAirPlus
@@ -24,4 +25,5 @@ __all__ = [
     "AyaneoKun",
     "IDevice",
     "PowerDevice",
+    "AsusDevice",
 ]

@@ -74,3 +74,24 @@ def version_compare(version1: List[int], version2: List[int]) -> int:
         return -1
     else:
         return 0
+
+
+def get_bios_settings():
+    try:
+        with file_timeout(2):
+            cmd = "fwupdmgr get-bios-setting --json"
+            result = subprocess.run(
+                cmd,
+                shell=True,
+                check=True,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=get_env(),
+            )
+
+            data = json.loads(result.stdout)
+            return data
+    except Exception as e:
+        logger.error(f"Error get_bios_setting {e}")
+        return {"BiosSettings": []}
