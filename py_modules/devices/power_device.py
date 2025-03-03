@@ -40,6 +40,14 @@ class PowerDevice(IDevice):
 
     def __init__(self):
         super().__init__()
+        self._cpuManager = None
+
+        try:
+            from cpu import cpuManager
+
+            self._cpuManager = cpuManager
+        except ImportError:
+            logger.warning("Failed to import cpu module")
 
     def load(self) -> None:
         pass
@@ -84,6 +92,12 @@ class PowerDevice(IDevice):
         if not support_charge_control_end_threshold():
             return
         set_charge_control_end_threshold(value)
+
+    def set_tdp(self, tdp: int) -> None:
+        if self._cpuManager is None:
+            logger.error("Failed to set TDP: cpuManager is None")
+            return
+        self._cpuManager.set_cpuTDP(tdp)
 
     def supports_sched_ext(self) -> bool:
         """
