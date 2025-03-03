@@ -122,71 +122,100 @@ class PowerDevice(IDevice):
         """
         获取可用的 sched_ext 调度器列表
 
+        优先使用 D-Bus 接口获取支持的调度器列表，如果失败则尝试其他方法
+
         Returns:
-            list[str]: 可用的调度器列表
+            list[str]: 可用的调度器列表，如果不支持 sched_ext 则返回空列表
         """
+        if not self.supports_sched_ext():
+            logger.warning("sched_ext is not supported")
+            return []
+
         try:
-            import shutil
-            import subprocess
+            # 首先尝试使用 busctl 命令通过 D-Bus 接口获取支持的调度器列表
+            cmd = [
+                "busctl",
+                "call",
+                "org.scx.Loader",
+                "/org/scx/Loader",
+                "org.freedesktop.DBus.Properties",
+                "Get",
+                "ss",
+                "org.scx.Loader",
+                "SupportedSchedulers",
+            ]
 
-            schedulers = []
+            result = subprocess.run(cmd, capture_output=True, text=True, env=get_env())
 
-            # 方法1: 检查 PATH 中的 scx_* 可执行文件
-            paths = os.environ.get("PATH", "").split(":")
-            for path in paths:
-                if os.path.exists(path):
-                    for file in os.listdir(path):
-                        if file.startswith("scx_") and os.access(
-                            os.path.join(path, file), os.X_OK
+            if result.returncode == 0:
+                # 解析 busctl 输出，格式类似于: v as 4 "scx_bpfland" "scx_rusty" "scx_lavd" "scx_flash"
+                output = result.stdout.strip()
+                if output:
+                    # 提取调度器名称
+                    schedulers = []
+                    parts = output.split('"')
+
+                    # 从第二个元素开始，每隔2个元素取一个（这是调度器名称）
+                    for i in range(1, len(parts), 2):
+                        if i < len(parts) and parts[i]:
+                            schedulers.append(parts[i])
+
+                    if schedulers:
+                        logger.info(f"通过 D-Bus 接口获取到的调度器列表: {schedulers}")
+                        return schedulers
+
+            logger.warning(f"通过 D-Bus 接口获取调度器列表失败: {result.stderr}")
+
+            # 如果 D-Bus 方法失败，尝试其他方法
+
+            # 常见的调度器列表
+            schedulers = self.COMMON_SCHEDULERS.copy()
+
+            # 检查系统 PATH 中的可执行文件
+            path_dirs = os.environ.get("PATH", "").split(":")
+            for path_dir in path_dirs:
+                if os.path.exists(path_dir):
+                    for file in os.listdir(path_dir):
+                        file_path = os.path.join(path_dir, file)
+                        if (
+                            os.path.isfile(file_path)
+                            and os.access(file_path, os.X_OK)
+                            and file.startswith("scx_")
                         ):
                             schedulers.append(file)
 
-            # 方法2: 使用 which 命令查找常见的调度器
-            for sched in self.COMMON_SCHEDULERS:
-                if shutil.which(sched) is not None and sched not in schedulers:
-                    schedulers.append(sched)
+            # 检查常见的安装位置
+            common_paths = [
+                "/usr/bin",
+                "/usr/local/bin",
+                "/opt/bin",
+                "/usr/lib/sched_ext",
+                "/usr/local/lib/sched_ext",
+            ]
 
-            # 如果上述方法都没找到调度器，尝试使用 find 命令在常见位置查找
-            if not schedulers:
-                try:
-                    # 在常见的二进制目录中查找 scx_ 开头的可执行文件
-                    cmd = [
-                        "find",
-                        "/usr/bin",
-                        "/usr/local/bin",
-                        "/opt/bin",
-                        "-name",
-                        "scx_*",
-                        "-type",
-                        "f",
-                        "-executable",
-                    ]
-                    result = subprocess.run(
-                        cmd, capture_output=True, text=True, env=get_env()
-                    )
-                    if result.returncode == 0:
-                        for line in result.stdout.splitlines():
-                            if line:
-                                sched_name = os.path.basename(line)
-                                if sched_name not in schedulers:
-                                    schedulers.append(sched_name)
-                except Exception:
-                    pass
+            for path_dir in common_paths:
+                if os.path.exists(path_dir):
+                    for file in os.listdir(path_dir):
+                        file_path = os.path.join(path_dir, file)
+                        if (
+                            os.path.isfile(file_path)
+                            and os.access(file_path, os.X_OK)
+                            and file.startswith("scx_")
+                        ):
+                            schedulers.append(file)
 
-            # 去重并排序
-            schedulers = sorted(list(set(schedulers)))
+            # 去重
+            schedulers = list(set(schedulers))
 
-            if not schedulers:
-                # 如果所有方法都失败，返回常见调度器列表作为备选
-                logger.warning(
-                    "Could not find any sched_ext schedulers, returning common list"
-                )
-                return self.COMMON_SCHEDULERS
+            # 确保 "none" 在列表中（用于禁用）
+            if "none" not in schedulers:
+                schedulers.append("none")
 
+            logger.info(f"通过文件系统搜索获取到的调度器列表: {schedulers}")
             return schedulers
 
         except Exception as e:
-            logger.error(f"Error getting sched_ext list: {e}")
+            logger.error(f"获取 sched_ext 列表时出错: {e}")
             # 出错时返回常见调度器列表
             return self.COMMON_SCHEDULERS
 
@@ -367,9 +396,11 @@ class PowerDevice(IDevice):
                     subprocess.run(cmd, check=True, env=get_env())
                     logger.info("成功停止 scx_loader 服务")
                     return
-                except subprocess.SubprocessError as e:
-                    logger.warning(f"停止 scx_loader 服务失败: {e}")
-                    # 继续尝试使用 PID 或 kill 命令
+                except subprocess.CalledProcessError as e:
+                    logger.error(f"停止 scx_loader 服务失败: {e}")
+                    logger.warning(
+                        "Could not restart scx_loader service, scheduler may not be applied"
+                    )
 
             # 首先尝试使用记录的 PID 停止直接启动的调度器
             if self._current_scheduler_pid is not None:
