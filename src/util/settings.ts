@@ -185,6 +185,9 @@ export class SettingsData {
   @JsonProperty()
   public chargeLimit?: number;
 
+  @JsonProperty()
+  public enableChargeLimit?: boolean;
+
   // @JsonProperty()
   // public customTDPRangeMin: number;
 
@@ -224,6 +227,7 @@ export class SettingsData {
     this.forceShowTDP = copyTarget.forceShowTDP;
     this.bypassCharge = copyTarget.bypassCharge;
     this.chargeLimit = copyTarget.chargeLimit;
+    this.enableChargeLimit = copyTarget.enableChargeLimit;
     // this.customTDPRangeMin = copyTarget.customTDPRangeMin;
     this.perApp = {};
     // formart copyTarget.perApp to json string
@@ -494,6 +498,20 @@ export class Settings {
   static setChargeLimit(chargeLimit: number) {
     if (Settings._instance.data.chargeLimit != chargeLimit) {
       Settings._instance.data.chargeLimit = chargeLimit;
+      Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_POWER_BATTERY);
+      PluginManager.updateComponent(ComponentName.POWER_ALL, UpdateType.UPDATE);
+    }
+  }
+
+  // appEnableChargeLimit
+  static appEnableChargeLimit(): boolean {
+    return Settings._instance.data.enableChargeLimit ?? true;
+  }
+
+  static setEnableChargeLimit(enableChargeLimit: boolean) {
+    if (Settings._instance.data.enableChargeLimit != enableChargeLimit) {
+      Settings._instance.data.enableChargeLimit = enableChargeLimit;
       Settings.saveSettingsToLocalStorage();
       Backend.applySettings(APPLYTYPE.SET_POWER_BATTERY);
       PluginManager.updateComponent(ComponentName.POWER_ALL, UpdateType.UPDATE);

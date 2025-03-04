@@ -46,6 +46,8 @@ export class BackendData {
   private has_supportsBypassCharge = false;
   private supportsChargeLimit = false;
   private has_supportsChargeLimit = false;
+  private supportsResetChargeLimit = false;
+  private has_supportsResetChargeLimit = false;
 
   public async init() {
     await call<[], number>("get_cpuMaxNum").then((res) => {
@@ -160,6 +162,17 @@ export class BackendData {
         console.error("检查 CHARGE_LIMIT 支持失败:", err);
         this.supportsChargeLimit = false;
         this.has_supportsChargeLimit = false;
+      });
+
+    await call<[], boolean>("supports_reset_charge_limit")
+      .then((res) => {
+        this.supportsResetChargeLimit = res;
+        this.has_supportsResetChargeLimit = true;
+      })
+      .catch((err) => {
+        console.error("检查 RESET_CHARGE_LIMIT 支持失败:", err);
+        this.supportsResetChargeLimit = false;
+        this.has_supportsResetChargeLimit = false;
       });
   }
 
@@ -345,6 +358,14 @@ export class BackendData {
 
   public hasIsSupportChargeLimit() {
     return this.has_supportsChargeLimit;
+  }
+
+  public isSupportResetChargeLimit() {
+    return this.supportsResetChargeLimit;
+  }
+
+  public hasIsSupportResetChargeLimit() {
+    return this.has_supportsResetChargeLimit;
   }
 }
 
@@ -596,7 +617,15 @@ export class Backend {
     const bypassCharge = Settings.appBypassCharge();
     const supportsChargeLimit = Backend.data.getIsSupportChargeLimit();
     const supportsBypassCharge = Backend.data.getIsSupportBypassCharge();
-    // const currentBypassCharge = await Backend.getBypassCharge();
+    const enableChargeLimit = Settings.appEnableChargeLimit();
+    const supportsResetChargeLimit = Backend.data.isSupportResetChargeLimit();
+
+    if (supportsResetChargeLimit && !enableChargeLimit) {
+      console.log(`重置电池充电限制`);
+      await Backend.resetChargeLimit();
+      return;
+    }
+
     console.log(`电池充电限制 = ${chargeLimit}, 旁路供电 = ${bypassCharge}`);
     if (bypassCharge) {
       if (supportsBypassCharge) {
@@ -773,6 +802,11 @@ export class Backend {
   // set_charge_limit
   public static async setChargeLimit(value: number) {
     return await call("set_charge_limit", value);
+  }
+
+  // reset_charge_limit
+  public static async resetChargeLimit() {
+    return await call("reset_charge_limit");
   }
 
   // 获取当前 CPU 调度器

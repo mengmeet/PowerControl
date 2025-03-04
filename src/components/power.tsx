@@ -84,9 +84,18 @@ const ChargeLimitComponent: FC = () => {
     Settings.appBypassCharge()
   );
 
+  const [supportsResetChargeLimit, __] = useState<boolean>(
+    Backend.data.isSupportResetChargeLimit()
+  );
+
+  const [enableChargeLimit, setEnableChargeLimit] = useState<boolean>(
+    Settings.appEnableChargeLimit()
+  );
+
   const refresh = () => {
     setChargeLimit(Settings.appChargeLimit());
     setBypassCharge(Settings.appBypassCharge());
+    setEnableChargeLimit(Settings.appEnableChargeLimit());
   };
 
   useEffect(() => {
@@ -110,29 +119,49 @@ const ChargeLimitComponent: FC = () => {
 
   return (
     <>
-      <PanelSectionRow>
-        <SlowSliderField
-          label={localizationManager.getString(localizeStrEnum.CHARGE_LIMIT)}
-          description={
-            bypassCharge
-              ? localizationManager.getString(
-                  localizeStrEnum.CHARGE_LIMIT_DESC_WITH_BYPASS
-                )
-              : localizationManager.getString(localizeStrEnum.CHARGE_LIMIT_DESC)
-          }
-          value={chargeLimit}
-          valueSuffix=" %"
-          step={5}
-          max={100}
-          min={70}
-          validValues="steps"
-          showValue={true}
-          disabled={bypassCharge}
-          onChangeEnd={(value: number) => {
-            Settings.setChargeLimit(value);
-          }}
-        />
-      </PanelSectionRow>
+      {supportsResetChargeLimit && (
+        <PanelSectionRow>
+          <ToggleField
+            label={localizationManager.getString(localizeStrEnum.CHARGE_LIMIT)}
+            checked={enableChargeLimit}
+            onChange={(enableChargeLimit) => {
+              Settings.setEnableChargeLimit(enableChargeLimit);
+            }}
+          />
+        </PanelSectionRow>
+      )}
+      {((supportsResetChargeLimit && enableChargeLimit) ||
+        !supportsResetChargeLimit) && (
+        <PanelSectionRow>
+          <SlowSliderField
+            label={
+              supportsResetChargeLimit
+                ? "Max"
+                : localizationManager.getString(localizeStrEnum.CHARGE_LIMIT)
+            }
+            description={
+              bypassCharge
+                ? localizationManager.getString(
+                    localizeStrEnum.CHARGE_LIMIT_DESC_WITH_BYPASS
+                  )
+                : localizationManager.getString(
+                    localizeStrEnum.CHARGE_LIMIT_DESC
+                  )
+            }
+            value={chargeLimit}
+            valueSuffix=" %"
+            step={5}
+            max={100}
+            min={70}
+            validValues="steps"
+            showValue={true}
+            disabled={bypassCharge}
+            onChangeEnd={(value: number) => {
+              Settings.setChargeLimit(value);
+            }}
+          />
+        </PanelSectionRow>
+      )}
     </>
   );
 };

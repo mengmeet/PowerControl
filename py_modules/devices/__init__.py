@@ -10,6 +10,7 @@ from .ayaneo.ayaneo_flip_ds import AyaneoFlipDS
 from .ayaneo.ayaneo_flip_kb import AyaneoFlipKB
 from .ayaneo.ayaneo_kun import AyaneoKun
 from .idevice import IDevice
+from .msi.msi_device import MsiDevice
 from .power_device import PowerDevice
 
 __all__ = [
@@ -24,6 +25,7 @@ __all__ = [
     "AyaneoFlipKB",
     "AyaneoKun",
     "IDevice",
+    "MsiDevice",
     "PowerDevice",
     "AsusDevice",
 ]

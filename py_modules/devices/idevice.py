@@ -64,6 +64,10 @@ class IDevice(ABC):
                 from . import AsusDevice
 
                 cls._instance = AsusDevice()
+            case "Micro-Star International Co., Ltd.":
+                from . import MsiDevice
+
+                cls._instance = MsiDevice()
             case _:
                 from . import PowerDevice
 
