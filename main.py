@@ -400,3 +400,23 @@ class Plugin:
         except Exception as e:
             logger.error(e, exc_info=True)
             return False
+
+    # supports_reset_charge_limit
+    async def supports_reset_charge_limit(self) -> bool:
+        """判断设备是否支持重置充电限制"""
+        try:
+            result = self.powerManager.supports_reset_charge_limit()
+            logger.info(f"当前设备支持重置充电限制: {result}")
+            return result
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
+    # reset_charge_limit
+    async def reset_charge_limit(self):
+        """重置充电限制"""
+        try:
+            return self.powerManager.reset_charge_limit()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False

@@ -65,6 +65,8 @@ class PowerDevice(IDevice):
         logger.info(f"_ec_write address={hex(address)} data={hex(data)}")
         EC.Write(address, data)
 
+    # ------ Charge ------ #
+
     def supports_bypass_charge(self) -> bool:
         return support_charge_behaviour() or support_charge_type()
 
@@ -93,11 +95,21 @@ class PowerDevice(IDevice):
             return
         set_charge_control_end_threshold(value)
 
+    def supports_reset_charge_limit(self) -> bool:
+        return False
+
+    def reset_charge_limit(self) -> None:
+        pass
+
+    # ------ TDP ------ #
+
     def set_tdp(self, tdp: int) -> None:
         if self._cpuManager is None:
             logger.error("Failed to set TDP: cpuManager is None")
             return
         self._cpuManager.set_cpuTDP(tdp)
+
+    # ------ sched_ext ------ #
 
     def supports_sched_ext(self) -> bool:
         """

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from config import BOARD_NAME, PRODUCT_NAME, PRODUCT_VERSION, VENDOR_NAME, BOARD_VENDOR
+from config import BOARD_NAME, BOARD_VENDOR, PRODUCT_NAME, PRODUCT_VERSION, VENDOR_NAME
 
 
 class IDevice(ABC):
@@ -89,6 +89,14 @@ class IDevice(ABC):
 
     @abstractmethod
     def supports_charge_limit(self) -> bool:
+        pass
+
+    @abstractmethod
+    def reset_charge_limit(self) -> None:
+        pass
+
+    @abstractmethod
+    def supports_reset_charge_limit(self) -> bool:
         pass
 
     @abstractmethod

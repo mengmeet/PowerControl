@@ -1,9 +1,9 @@
-from utils import get_bios_settings, get_env
-from config import logger
-
-import subprocess
 import os
+import subprocess
 from time import sleep
+
+from config import logger
+from utils import get_bios_settings, get_env
 
 from ..power_device import PowerDevice
 
