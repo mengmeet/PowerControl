@@ -14,6 +14,9 @@ class MsiDevice(PowerDevice):
     def supports_reset_charge_limit(self) -> bool:
         return True
 
+    def supports_charge_limit(self) -> bool:
+        return True
+
     def reset_charge_limit(self) -> None:
         self._ec_write(EC_CHARGE_LIMIT_ADDR, EC_CHARGE_LIMIT_DISABLE)
 
