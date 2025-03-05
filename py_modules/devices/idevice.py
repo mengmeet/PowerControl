@@ -65,9 +65,16 @@ class IDevice(ABC):
 
                 cls._instance = AsusDevice()
             case "Micro-Star International Co., Ltd.":
-                from . import MsiDevice
+                match BOARD_NAME:
+                    # Claw 8
+                    case "MS-1T52":
+                        from . import MsiClaw8
 
-                cls._instance = MsiDevice()
+                        cls._instance = MsiClaw8()
+                    case _:
+                        from . import MsiDevice
+
+                        cls._instance = MsiDevice()
             case _:
                 from . import PowerDevice
 
