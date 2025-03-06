@@ -54,6 +54,9 @@ class AyaneoDevice(PowerDevice):
     def supports_charge_limit(self) -> bool:
         return self.supports_bypass_charge()
 
+    def software_charge_limit(self) -> bool:
+        return self.supports_bypass_charge()
+
     def get_bypass_charge(self) -> bool | None:
         """
         获取旁路供电开关状态

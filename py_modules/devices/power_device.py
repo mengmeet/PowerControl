@@ -73,6 +73,9 @@ class PowerDevice(IDevice):
     def supports_charge_limit(self) -> bool:
         return support_charge_control_end_threshold()
 
+    def software_charge_limit(self) -> bool:
+        return False
+
     def get_bypass_charge(self) -> bool:
         if support_charge_behaviour():
             return get_charge_behaviour() == "inhibit-charge"
@@ -96,10 +99,16 @@ class PowerDevice(IDevice):
         set_charge_control_end_threshold(value)
 
     def supports_reset_charge_limit(self) -> bool:
-        return False
+        return (
+            support_charge_control_end_threshold()
+            or support_charge_behaviour()
+            or support_charge_type()
+        )
 
     def reset_charge_limit(self) -> None:
-        pass
+        if support_charge_control_end_threshold():
+            set_charge_control_end_threshold(100)
+        self.set_bypass_charge(False)
 
     # ------ TDP ------ #
 

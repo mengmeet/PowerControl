@@ -48,6 +48,8 @@ export class BackendData {
   private has_supportsChargeLimit = false;
   private supportsResetChargeLimit = false;
   private has_supportsResetChargeLimit = false;
+  private supportsSoftwareChargeLimit = false;
+  private has_supportsSoftwareChargeLimit = false;
 
   public async init() {
     await call<[], number>("get_cpuMaxNum").then((res) => {
@@ -367,6 +369,15 @@ export class BackendData {
   public hasIsSupportResetChargeLimit() {
     return this.has_supportsResetChargeLimit;
   }
+
+  // isSupportSoftwareChargeLimit
+  public isSupportSoftwareChargeLimit() {
+    return this.supportsSoftwareChargeLimit;
+  }
+
+  public hasIsSupportSoftwareChargeLimit() {
+    return this.has_supportsSoftwareChargeLimit;
+  }
 }
 
 export class Backend {
@@ -619,6 +630,7 @@ export class Backend {
     const supportsBypassCharge = Backend.data.getIsSupportBypassCharge();
     const enableChargeLimit = Settings.appEnableChargeLimit();
     const supportsResetChargeLimit = Backend.data.isSupportResetChargeLimit();
+    // const softwareChargeLimit = Backend.data.isSupportSoftwareChargeLimit();
 
     if (supportsResetChargeLimit && !enableChargeLimit) {
       console.log(`重置电池充电限制`);

@@ -172,8 +172,9 @@ export const PowerComponent: FC = () => {
   const [supportChargeLimit, _] = useState<boolean>(
     Backend.data.getIsSupportChargeLimit()
   );
-  const [supportBypassCharge, __] = useState<boolean>(
-    Backend.data.getIsSupportBypassCharge()
+
+  const [isSupportSoftwareChargeLimit, __] = useState<boolean>(
+    Backend.data.isSupportSoftwareChargeLimit()
   );
 
   const [showPowerMenu, setShowPowerMenu] = useState<boolean>(
@@ -209,9 +210,10 @@ export const PowerComponent: FC = () => {
 
   useEffect(() => {
     setShow(
-      Settings.ensureEnable() && (supportChargeLimit || supportBypassCharge)
+      Settings.ensureEnable() &&
+        (supportChargeLimit || isSupportSoftwareChargeLimit)
     );
-  }, [supportChargeLimit, supportBypassCharge]);
+  }, [supportChargeLimit, isSupportSoftwareChargeLimit]);
 
   return (
     <>
@@ -235,7 +237,7 @@ export const PowerComponent: FC = () => {
           {showPowerMenu && (
             <>
               {supportChargeLimit && <ChargeLimitComponent />}
-              {supportBypassCharge && <BypassChargeComponent />}
+              {isSupportSoftwareChargeLimit && <BypassChargeComponent />}
             </>
           )}
         </PanelSection>

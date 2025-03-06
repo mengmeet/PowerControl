@@ -106,6 +106,11 @@ class IDevice(ABC):
     def reset_charge_limit(self) -> None:
         pass
 
+    # software_charge_limit
+    @abstractmethod
+    def software_charge_limit(self) -> bool:
+        pass
+
     @abstractmethod
     def supports_reset_charge_limit(self) -> bool:
         pass
