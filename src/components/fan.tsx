@@ -99,6 +99,9 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
       return item.label == Settings.appFanSettingNameList()?.[fanIndex];
     })
   );
+
+  const hwmonMode = Backend.data.getFanHwmonMode(fanIndex);
+
   return (
     <div>
       <PanelSectionRow>
@@ -146,6 +149,7 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
                   fanProfileName={item.data.profileName}
                   fanSetting={Settings.getFanSetting(item.data.profileName)}
                   closeModal={() => {}}
+                  fixedCountModel={hwmonMode == 2}
                 />
               );
               return;
@@ -161,6 +165,7 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
                   fanProfileName={item.data.profileName}
                   fanSetting={Settings.getFanSetting(item.data.profileName)}
                   closeModal={() => {}}
+                  fixedCountModel={hwmonMode == 2}
                 />
               );
             } else if (item.data.type == FANPROFILEACTION.CANCEL) {
@@ -504,14 +509,17 @@ const FANRPMComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   );
 };
 
+//创建配置文件组件
 function FANCretateProfileModelComponent({
   fanProfileName,
   fanSetting,
   closeModal,
+  fixedCountModel: fixedCountMode,
 }: {
   fanProfileName: string;
   fanSetting: FanSetting;
   closeModal: () => void;
+  fixedCountModel: boolean;
 }) {
   const canvasRef: any = useRef(null);
   const curvePoints: any = useRef(fanSetting?.curvePoints ?? []);
@@ -984,13 +992,13 @@ function FANCretateProfileModelComponent({
       <DialogButton
         style={{
           height: "32px",
-          width: "42px",
+          flex: "1",
           minWidth: 0,
           padding: "10px 12px",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          marginRight: "8px",
+          margin: "0 4px",
         }}
         disabled={disabled}
         onOKActionDescription={onOKActionDescription}
@@ -999,6 +1007,36 @@ function FANCretateProfileModelComponent({
         {children}
       </DialogButton>
     );
+  };
+
+  const notchList = [
+    {
+      label: `${localizationManager.getString(localizeStrEnum.NOT_CONTROLLED)}`,
+      value: FANMODE.NOCONTROL,
+    },
+    // if fixedCountMode is true, hide fixed mode
+    ...(fixedCountMode
+      ? []
+      : [
+          {
+            label: `${localizationManager.getString(localizeStrEnum.FIXED)}`,
+            value: FANMODE.FIX,
+          },
+        ]),
+    {
+      label: `${localizationManager.getString(localizeStrEnum.CURVE)}`,
+      value: FANMODE.CURVE,
+    },
+  ];
+
+  // notchList to {notchIndex, label, value}
+  const notchListWithIndex = notchList.map((item, index) => ({
+    ...item,
+    notchIndex: index,
+  }));
+
+  const getModeFromNotchIndex = (notchIndex: number) => {
+    return notchListWithIndex[notchIndex].value;
   };
 
   return (
@@ -1103,34 +1141,12 @@ function FANCretateProfileModelComponent({
                 label={localizationManager.getString(localizeStrEnum.FAN_MODE)}
                 value={fanMode}
                 step={1}
-                max={2}
+                max={notchList.length - 1}
                 min={0}
-                notchCount={3}
-                notchLabels={[
-                  {
-                    notchIndex: FANMODE.NOCONTROL,
-                    label: `${localizationManager.getString(
-                      localizeStrEnum.NOT_CONTROLLED
-                    )}`,
-                    value: FANMODE.NOCONTROL,
-                  },
-                  {
-                    notchIndex: FANMODE.FIX,
-                    label: `${localizationManager.getString(
-                      localizeStrEnum.FIXED
-                    )}`,
-                    value: FANMODE.FIX,
-                  },
-                  {
-                    notchIndex: FANMODE.CURVE,
-                    label: `${localizationManager.getString(
-                      localizeStrEnum.CURVE
-                    )}`,
-                    value: FANMODE.CURVE,
-                  },
-                ]}
+                notchCount={notchList.length}
+                notchLabels={notchListWithIndex}
                 onChange={(value: number) => {
-                  setFanMode(value);
+                  setFanMode(getModeFromNotchIndex(value));
                 }}
               />
               {fanMode == FANMODE.FIX && (
@@ -1153,17 +1169,21 @@ function FANCretateProfileModelComponent({
                     style={{
                       width: "100%",
                       display: "flex",
-                      justifyContent: "space-between",
+                      justifyContent: "space-evenly",
+                      padding: "0 4px",
                     }}
                   >
-                    <CurveControlButton
-                      onOKActionDescription={"ADD"}
-                      onClick={() => {
-                        addCurvePoint();
-                      }}
-                    >
-                      <FiPlus />
-                    </CurveControlButton>
+                    {/* 固定节点数量模式下，不显示添加按钮 */}
+                    {!fixedCountMode && (
+                      <CurveControlButton
+                        onOKActionDescription={"ADD"}
+                        onClick={() => {
+                          addCurvePoint();
+                        }}
+                      >
+                        <FiPlus />
+                      </CurveControlButton>
+                    )}
                     <CurveControlButton
                       onOKActionDescription={"PREV"}
                       onClick={() => {
@@ -1180,15 +1200,18 @@ function FANCretateProfileModelComponent({
                     >
                       <FiArrowRight />
                     </CurveControlButton>
-                    <CurveControlButton
-                      onOKActionDescription={"DELETE"}
-                      disabled={!selectedPoint.current}
-                      onClick={() => {
-                        deleteCurvePoint();
-                      }}
-                    >
-                      <FiTrash2 />
-                    </CurveControlButton>
+                    {/* 固定节点数量模式下，不显示删除按钮 */}
+                    {!fixedCountMode && (
+                      <CurveControlButton
+                        onOKActionDescription={"DELETE"}
+                        disabled={!selectedPoint.current}
+                        onClick={() => {
+                          deleteCurvePoint();
+                        }}
+                      >
+                        <FiTrash2 />
+                      </CurveControlButton>
+                    )}
                   </Focusable>
                 </Field>
               )}
