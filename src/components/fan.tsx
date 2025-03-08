@@ -19,6 +19,7 @@ import {
   FiPlus,
   FiPlusCircle,
   FiTrash2,
+  FiRotateCcw,
 } from "react-icons/fi";
 import {
   Settings,
@@ -101,6 +102,7 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   );
 
   const hwmonMode = Backend.data.getFanHwmonMode(fanIndex);
+  const hwmonAutoSetting = Backend.data.getHwmonAutoFanSetting(fanIndex);
 
   return (
     <div>
@@ -147,9 +149,14 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
               showModal(
                 <FANCretateProfileModelComponent
                   fanProfileName={item.data.profileName}
-                  fanSetting={Settings.getFanSetting(item.data.profileName)}
+                  fanSetting={
+                    hwmonMode == 2 && hwmonAutoSetting
+                      ? hwmonAutoSetting
+                      : Settings.getFanSetting(item.data.profileName)
+                  }
                   closeModal={() => {}}
-                  fixedCountModel={hwmonMode == 2}
+                  fixedCountMode={hwmonMode == 2}
+                  defaultSetting={hwmonMode == 2 ? hwmonAutoSetting : undefined}
                 />
               );
               return;
@@ -165,7 +172,8 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
                   fanProfileName={item.data.profileName}
                   fanSetting={Settings.getFanSetting(item.data.profileName)}
                   closeModal={() => {}}
-                  fixedCountModel={hwmonMode == 2}
+                  fixedCountMode={hwmonMode == 2}
+                  defaultSetting={hwmonMode == 2 ? hwmonAutoSetting : undefined}
                 />
               );
             } else if (item.data.type == FANPROFILEACTION.CANCEL) {
@@ -514,12 +522,14 @@ function FANCretateProfileModelComponent({
   fanProfileName,
   fanSetting,
   closeModal,
-  fixedCountModel: fixedCountMode,
+  fixedCountMode,
+  defaultSetting,
 }: {
   fanProfileName: string;
   fanSetting: FanSetting;
   closeModal: () => void;
-  fixedCountModel: boolean;
+  fixedCountMode: boolean;
+  defaultSetting?: FanSetting;
 }) {
   const canvasRef: any = useRef(null);
   const curvePoints: any = useRef(fanSetting?.curvePoints ?? []);
@@ -1210,6 +1220,16 @@ function FANCretateProfileModelComponent({
                         }}
                       >
                         <FiTrash2 />
+                      </CurveControlButton>
+                    )}
+                    {fixedCountMode && (
+                      <CurveControlButton
+                        onOKActionDescription={"RESET"}
+                        onClick={() => {
+                          // resetCurvePoint();
+                        }}
+                      >
+                        <FiRotateCcw />
                       </CurveControlButton>
                     )}
                   </Focusable>
