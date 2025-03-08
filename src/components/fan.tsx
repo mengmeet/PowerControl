@@ -985,6 +985,26 @@ function FANCretateProfileModelComponent({
     refreshCanvas();
   };
 
+  const resetCurvePoint = () => {
+    if (defaultSetting === undefined) {
+      return;
+    }
+    curvePoints.current = (defaultSetting?.curvePoints ?? [])
+      .filter(
+        (point) =>
+          point.temperature !== undefined && point.fanRPMpercent !== undefined
+      )
+      .map(
+        (point) => new FanPosition(point.temperature!, point.fanRPMpercent!)
+      );
+    if (curvePoints.current.length > 0) {
+      selectedPoint.current = curvePoints.current[0];
+      setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
+      setSelPointSpeed(Math.trunc(selectedPoint.current.fanRPMpercent));
+    }
+    refreshCanvas();
+  };
+
   interface CurveControlButtonProps {
     onOKActionDescription: string;
     onClick?: () => void;
@@ -1226,7 +1246,7 @@ function FANCretateProfileModelComponent({
                       <CurveControlButton
                         onOKActionDescription={"RESET"}
                         onClick={() => {
-                          // resetCurvePoint();
+                          resetCurvePoint();
                         }}
                       >
                         <FiRotateCcw />
