@@ -1,0 +1,102 @@
+hwmon_name: msi_ec
+
+fans:
+  - fan_name: Fan1
+    pwm_mode: 2 # 写入的模式 0.普通模式(单文件写入) 1.对多个文件写入同样的数值 2.对多个文件写入不同的数值
+
+    pwm_enable:
+      manual_value: 1
+      auto_value: 2
+      pwm_enable_path: pwm1_enable
+
+    pwm_write:
+      pwm_write_max:
+        default: 255
+      pwm_mode1_write_path: # 写入转速和温度的文件名 多组
+        - pwm_write: pwm1_auto_point1_pwm
+          temp_write: pwm1_auto_point1_temp
+        - pwm_write: pwm1_auto_point2_pwm
+          temp_write: pwm1_auto_point2_temp
+        - pwm_write: pwm1_auto_point3_pwm
+          temp_write: pwm1_auto_point3_temp
+        - pwm_write: pwm1_auto_point4_pwm
+          temp_write: pwm1_auto_point4_temp
+        - pwm_write: pwm1_auto_point5_pwm
+          temp_write: pwm1_auto_point5_temp
+        - pwm_write: pwm1_auto_point6_pwm
+          temp_write: pwm1_auto_point6_temp
+        - pwm_write: pwm1_auto_point7_pwm
+          # not pwm1_auto_point7_temp
+          temp_write: pwm1_auto_point6_temp
+      pwm_mode1_auto_value:
+        - pwm_write_value: 0
+          temp_write_value: 50
+        - pwm_write_value: 68
+          temp_write_value: 60
+        - pwm_write_value: 83
+          temp_write_value: 70
+        - pwm_write_value: 98
+          temp_write_value: 80
+        - pwm_write_value: 113
+          temp_write_value: 88
+        - pwm_write_value: 127
+          temp_write_value: 88
+        - pwm_write_value: 127
+          temp_write_value: 88
+
+    pwm_input:
+      hwmon_label: msi_ec
+      pwm_read_path: fan1_input
+      pwm_read_max: 8000
+
+    temp_mode: 0
+
+  - fan_name: Fan2
+    pwm_mode: 2
+
+    pwm_enable:
+      manual_value: 1
+      auto_value: 2
+      pwm_enable_path: pwm2_enable
+
+    pwm_write:
+      pwm_write_max:
+        default: 255
+      pwm_mode1_write_path:
+        - pwm_write: pwm2_auto_point1_pwm
+          temp_write: pwm2_auto_point1_temp
+        - pwm_write: pwm2_auto_point2_pwm
+          temp_write: pwm2_auto_point2_temp
+        - pwm_write: pwm2_auto_point3_pwm
+          temp_write: pwm2_auto_point3_temp
+        - pwm_write: pwm2_auto_point4_pwm
+          temp_write: pwm2_auto_point4_temp
+        - pwm_write: pwm2_auto_point5_pwm
+          temp_write: pwm2_auto_point5_temp
+        - pwm_write: pwm2_auto_point6_pwm
+          temp_write: pwm2_auto_point6_temp
+        - pwm_write: pwm2_auto_point7_pwm
+          # not pwm2_auto_point7_temp
+          temp_write: pwm2_auto_point6_temp
+      pwm_mode1_auto_value:
+        - pwm_write_value: 0
+          temp_write_value: 50
+        - pwm_write_value: 68
+          temp_write_value: 60
+        - pwm_write_value: 83
+          temp_write_value: 70
+        - pwm_write_value: 98
+          temp_write_value: 80
+        - pwm_write_value: 113
+          temp_write_value: 88
+        - pwm_write_value: 127
+          temp_write_value: 88
+        - pwm_write_value: 127
+          temp_write_value: 88
+
+    pwm_input:
+      hwmon_label: msi_ec
+      pwm_read_path: fan2_input
+      pwm_read_max: 8000
+
+    temp_mode: 0
