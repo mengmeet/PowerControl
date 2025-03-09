@@ -593,40 +593,39 @@ class FanManager:
             mode1_auto_value = fc.hwmon_mode1_auto_val
             mode1_pwm_paths = fc.hwmon_mode1_pwm_path
 
-            if hwmon_mode == 0:
-                if (
-                    not os.path.exists(pwm_enable_path)
-                    and pwm_enable_second_path is not None
-                    and os.path.exists(pwm_enable_second_path)
-                ):
-                    pwm_enable_path = pwm_enable_second_path
+            if (
+                not os.path.exists(pwm_enable_path)
+                and pwm_enable_second_path is not None
+                and os.path.exists(pwm_enable_second_path)
+            ):
+                pwm_enable_path = pwm_enable_second_path
 
-                if value:
-                    fanIsManual = auto_value if value else manual_value
-                elif (
-                    not value and pwm_path == pwm_enable_path
-                ):  # 手动模式且控制位地址和写风扇转速的地址一样，跳过控制位写入，防止覆盖风扇转速
-                    logger.debug(
-                        f"写入hwmon_eanble地址:{pwm_enable_path} 写入hwmon_pwm地址:{pwm_enable_path} 地址相同跳过写入控制位"
-                    )
-                    return False
-                else:
-                    fanIsManual = manual_value
-
-                # GPD 设备没有实际的单独的控制位。但是在oxpec中有控制位，写入手动控制时会将转速设置为 70%。所以添加判断，只在需要时写入控制位
-                currentFanIsManual = int(open(pwm_enable_path).read().strip())
-                if currentFanIsManual == fanIsManual:
-                    logger.debug(
-                        f"currentFanIsManual:{currentFanIsManual} fanIsManual:{fanIsManual} 无需写入"
-                    )
-                    return True
-
-                open(pwm_enable_path, "w").write(str(fanIsManual))
+            if value:
+                fanIsManual = auto_value if value else manual_value
+            elif (
+                not value and pwm_path == pwm_enable_path
+            ):  # 手动模式且控制位地址和写风扇转速的地址一样，跳过控制位写入，防止覆盖风扇转速
                 logger.debug(
-                    f"写入hwmon数据 写入hwmon地址:{pwm_enable_path} 写入风扇是否控制:{fanIsManual}"
+                    f"写入hwmon_eanble地址:{pwm_enable_path} 写入hwmon_pwm地址:{pwm_enable_path} 地址相同跳过写入控制位"
+                )
+                return False
+            else:
+                fanIsManual = manual_value
+
+            # GPD 设备没有实际的单独的控制位。但是在oxpec中有控制位，写入手动控制时会将转速设置为 70%。所以添加判断，只在需要时写入控制位
+            currentFanIsManual = int(open(pwm_enable_path).read().strip())
+            if currentFanIsManual == fanIsManual:
+                logger.debug(
+                    f"currentFanIsManual:{currentFanIsManual} fanIsManual:{fanIsManual} 无需写入"
                 )
                 return True
-            elif hwmon_mode == 1 and value:
+
+            open(pwm_enable_path, "w").write(str(fanIsManual))
+            logger.debug(
+                f"写入hwmon数据 写入hwmon地址:{pwm_enable_path} 写入风扇是否控制:{fanIsManual}"
+            )
+
+            if (hwmon_mode == 1 or hwmon_mode == 2) and value:
                 fanIsManual = manual_value
                 for index, mode1_pwm_path in enumerate(mode1_pwm_paths):
                     if index >= len(mode1_auto_value):
