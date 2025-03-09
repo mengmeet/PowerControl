@@ -955,10 +955,12 @@ class CPUManager:
         """
         try:
             if governor not in self.get_available_governors():
+                logger.error(f"governor {governor} not available")
                 return False
 
             success = False
             for cpu_id in self.get_online_cpus():
+                logger.debug(f"set_cpu_governor {cpu_id} {governor}")
                 governor_path = (
                     f"/sys/devices/system/cpu/cpu{cpu_id}/cpufreq/scaling_governor"
                 )

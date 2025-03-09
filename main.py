@@ -27,17 +27,6 @@ class Plugin:
 
     async def _migration(self):
         decky.logger.info("start _migration")
-        ec_version = [
-            EC.Read(0x00),
-            EC.Read(0x01),
-            EC.Read(0x02),
-            EC.Read(0x03),
-            EC.Read(0x04),
-        ]
-        ec_version_hex = [hex(v) for v in ec_version]
-        decky.logger.info(
-            f"EC version (decimal): {ec_version}, EC version (hex): {ec_version_hex}"
-        )
 
         self.fuseManager = FuseManager()
         # self.fuseManager.fuse_init()
@@ -317,6 +306,7 @@ class Plugin:
         Args:
             governor (str): 调度器名称
         """
+        logger.debug(f"Main 设置 CPU 调度器为 {governor}")
         try:
             return cpuManager.set_cpu_governor(governor)
         except Exception as e:
