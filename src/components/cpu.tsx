@@ -403,6 +403,8 @@ const CPUGovernorComponent: FC = () => {
           }}
         />
       </PanelSectionRow>
+      {governor != "performance" && <CPUEPPComponent />}
+      {/* <CPUEPPComponent /> */}
     </div>
   );
 };
@@ -437,9 +439,9 @@ export const CPUEPPComponent: FC = () => {
     );
   }, []);
 
-  if (!Backend.data.hasEPPModes() || eppModes.length === 0) {
-    return null;
-  }
+  // if (!Backend.data.hasEPPModes() || eppModes.length === 0) {
+  //   return null;
+  // }
 
   return (
     <div>
@@ -530,7 +532,6 @@ export const CPUComponent: FC = () => {
               <CPUBoostComponent />
               {isSpportSMT && <CPUSmtComponent />}
               <CPUGovernorComponent />
-              {/* {Backend.data.hasEPPModes() && <CPUEPPComponent />} */}
               <CPUNumComponent />
               <CPUTDPComponent />
               {cpuVendor != "GenuineIntel" && <CustomTDPComponent />}

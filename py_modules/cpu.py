@@ -1089,9 +1089,15 @@ class CPUManager:
             if mode not in self.get_epp_modes():
                 logger.error(f"Failed to set EPP mode: unsupported mode {mode}")
                 return False
+            
+            current_governor = self.get_cpu_governor()
+            if current_governor == "performance" and mode != "performance":
+                logger.error(f"Current governor is performance, cannot set EPP mode to {mode}")
+                return False
 
             success = False
             for cpu_id in self.get_online_cpus():
+                logger.debug(f"set_epp {cpu_id} {mode}")
                 epp_path = f"/sys/devices/system/cpu/cpu{cpu_id}/cpufreq/energy_performance_preference"
                 if os.path.exists(epp_path):
                     with open(epp_path, "w") as f:

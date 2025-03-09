@@ -451,10 +451,7 @@ export class Backend {
   }
 
   private static async handleCPUGovernor(): Promise<void> {
-    const cpuGovernor = Settings.appCPUGovernor();
-    if (cpuGovernor) {
-      await Backend.setCpuGovernor(cpuGovernor);
-    }
+    await Backend.handleGovernorAndEPP();
   }
 
   private static async handleCpuMaxPerfPct(): Promise<void> {
@@ -467,7 +464,15 @@ export class Backend {
   }
 
   private static async handleEPP(): Promise<void> {
+    await Backend.handleGovernorAndEPP();
+  }
+
+  private static async handleGovernorAndEPP(): Promise<void> {
     const eppMode = Settings.appEPPMode();
+    const cpuGovernor = Settings.appCPUGovernor();
+    if (cpuGovernor) {
+      await Backend.setCpuGovernor(cpuGovernor);
+    }
     if (eppMode) {
       await Backend.setEPP(eppMode);
     }
@@ -868,8 +873,8 @@ export class Backend {
 
   // 设置 EPP 模式
   public static setEPP(mode: string): Promise<boolean> {
-    // return call("set_epp", mode);
     console.log(`设置 EPP 模式为: ${mode}`);
-    return Promise.resolve(true);
+    return call("set_epp", mode);
+    // return Promise.resolve(true);
   }
 }
