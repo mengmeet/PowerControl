@@ -130,7 +130,7 @@ class FanManager:
                             and fan_pwm_write["pwm_write_path"] != ""
                             else None
                         )
-                    elif fc.hwmon_mode == 1:
+                    elif fc.hwmon_mode == 1 or fc.hwmon_mode == 2:
                         pwm_mode1_write_path = (
                             fan_pwm_write["pwm_mode1_write_path"]
                             if "pwm_mode1_write_path" in fan_pwm_write
@@ -873,11 +873,25 @@ class FanManager:
                     fan_name = config.fan_name
                     fan_max_rpm = config.pwm_value_max
                     fan_hwmon_mode = config.hwmon_mode
+                    hwmon_mode1_auto_val = config.hwmon_mode1_auto_val
+                    pwm_write_max = config.pwm_write_max
+                    logger.info(
+                        f"""
+获取机型适配fan,
+    fan_name:{fan_name}, 
+    fan_max_rpm:{fan_max_rpm}, 
+    fan_hwmon_mode:{fan_hwmon_mode}, 
+    pwm_write_max:{pwm_write_max}, 
+    hwmon_mode1_auto_val:{hwmon_mode1_auto_val}
+"""
+                    )
                     config_list.append(
                         {
                             "fan_name": fan_name,
                             "fan_max_rpm": fan_max_rpm,
                             "fan_hwmon_mode": fan_hwmon_mode,
+                            "hwmon_mode1_auto_val": hwmon_mode1_auto_val,
+                            "pwm_write_max": pwm_write_max,
                         }
                     )
                 return config_list

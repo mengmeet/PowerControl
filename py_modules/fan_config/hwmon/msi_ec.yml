@@ -25,29 +25,29 @@ fans:
           temp_write: pwm1_auto_point5_temp
         - pwm_write: pwm1_auto_point6_pwm
           temp_write: pwm1_auto_point6_temp
-        - pwm_write: pwm1_auto_point7_pwm
-          # not pwm1_auto_point7_temp
-          temp_write: pwm1_auto_point6_temp
+        # - pwm_write: pwm1_auto_point7_pwm
+        #   # not pwm1_auto_point7_temp
+        #   temp_write: pwm1_auto_point6_temp
       pwm_mode1_auto_value:
         - pwm_write_value: 0
           temp_write_value: 50
-        - pwm_write_value: 68
+        - pwm_write_value: 102
           temp_write_value: 60
-        - pwm_write_value: 83
+        - pwm_write_value: 124
           temp_write_value: 70
-        - pwm_write_value: 98
+        - pwm_write_value: 147
           temp_write_value: 80
-        - pwm_write_value: 113
+        - pwm_write_value: 170
           temp_write_value: 88
-        - pwm_write_value: 127
+        - pwm_write_value: 191
           temp_write_value: 88
-        - pwm_write_value: 127
-          temp_write_value: 88
+        # - pwm_write_value: 191
+        #   temp_write_value: 88
 
     pwm_input:
       hwmon_label: msi_ec
       pwm_read_path: fan1_input
-      pwm_read_max: 8000
+      pwm_read_max: 5800
 
     temp_mode: 0
 
@@ -75,28 +75,28 @@ fans:
           temp_write: pwm2_auto_point5_temp
         - pwm_write: pwm2_auto_point6_pwm
           temp_write: pwm2_auto_point6_temp
-        - pwm_write: pwm2_auto_point7_pwm
-          # not pwm2_auto_point7_temp
-          temp_write: pwm2_auto_point6_temp
+        # - pwm_write: pwm2_auto_point7_pwm
+        #   # not pwm2_auto_point7_temp
+        #   temp_write: pwm2_auto_point6_temp
       pwm_mode1_auto_value:
         - pwm_write_value: 0
           temp_write_value: 50
-        - pwm_write_value: 68
+        - pwm_write_value: 102
           temp_write_value: 60
-        - pwm_write_value: 83
+        - pwm_write_value: 124
           temp_write_value: 70
-        - pwm_write_value: 98
+        - pwm_write_value: 147
           temp_write_value: 80
-        - pwm_write_value: 113
+        - pwm_write_value: 170
           temp_write_value: 88
-        - pwm_write_value: 127
+        - pwm_write_value: 191
           temp_write_value: 88
-        - pwm_write_value: 127
-          temp_write_value: 88
+        # - pwm_write_value: 191
+        #   temp_write_value: 88
 
     pwm_input:
       hwmon_label: msi_ec
       pwm_read_path: fan2_input
-      pwm_read_max: 8000
+      pwm_read_max: 5800
 
     temp_mode: 0
