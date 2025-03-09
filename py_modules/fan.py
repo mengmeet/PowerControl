@@ -19,9 +19,10 @@ class FanConfig:
         self.hwmon_manual_val = 1  # 手动模式写到自动控制hwmon地址的数值
         self.hwmon_auto_val = 0  # 自动模式写到自动控制hwmon地址的数值
         self.hwmon_pwm_path = None  # 风扇写入转速hwmon地址
-        self.hwmon_mode1_pwm_path = []  # 风扇写入转速和对应温度hwmon地址列表(模式1)
-        self.hwmon_mode1_auto_val = []  # 风扇写入转速和对应温度hwmon地址列表(模式1)
         self.hwmon_input_path = None  # 风扇读取转速hwmon地址
+
+        self.hwmon_default_curve = []  # 风扇默认曲线
+        self.hwmon_curve_paths = []  # 风扇曲线写入路径
 
         self.hwmon_black_list = []  # 风扇hwmon黑名单
 
@@ -121,6 +122,34 @@ class FanManager:
                         fc.pwm_write_max = pwm_write_max[PRODUCT_NAME]
                     else:
                         fc.pwm_write_max = pwm_write_max["default"]
+
+                    # 默认曲线
+                    pwm_default_curve = (
+                        fan_pwm_write["default_curve"]
+                        if "default_curve" in fan_pwm_write
+                        else None
+                    )
+                    pwm_default_curve_temp = (
+                        pwm_default_curve["temp"]
+                        if pwm_default_curve is not None and "temp" in pwm_default_curve
+                        else []
+                    )
+                    pwm_default_curve_pwm = (
+                        pwm_default_curve["pwm"]
+                        if pwm_default_curve is not None and "pwm" in pwm_default_curve
+                        else []
+                    )
+                    if pwm_default_curve is not None:
+                        for i in range(
+                            min(len(pwm_default_curve_temp), len(pwm_default_curve_pwm))
+                        ):
+                            fc.hwmon_default_curve.append(
+                                {
+                                    "temp_value": pwm_default_curve_temp[i],
+                                    "pwm_value": pwm_default_curve_pwm[i],
+                                }
+                            )
+
                     if fc.hwmon_mode == 0:
                         fc.hwmon_pwm_path = (
                             name_path_map[hwmon_name]
@@ -131,36 +160,36 @@ class FanManager:
                             else None
                         )
                     elif fc.hwmon_mode == 1 or fc.hwmon_mode == 2:
-                        pwm_mode1_write_path = (
-                            fan_pwm_write["pwm_mode1_write_path"]
-                            if "pwm_mode1_write_path" in fan_pwm_write
+                        curve_path = (
+                            fan_pwm_write["curve_path"]
+                            if "curve_path" in fan_pwm_write
+                            else None
+                        )
+                        curve_temp_path = (
+                            curve_path["temp_write"]
+                            if curve_path is not None and "temp_write" in curve_path
                             else []
                         )
-                        for point in pwm_mode1_write_path:
+                        curve_pwm_path = (
+                            curve_path["pwm_write"]
+                            if curve_path is not None and "pwm_write" in curve_path
+                            else []
+                        )
+                        for i in range(min(len(curve_temp_path), len(curve_pwm_path))):
                             point_info = {
                                 "pwm_write": name_path_map[hwmon_name]
                                 + "/"
-                                + point["pwm_write"],
+                                + curve_pwm_path[i],
                                 "temp_write": name_path_map[hwmon_name]
                                 + "/"
-                                + point["temp_write"],
+                                + curve_temp_path[i],
                             }
                             if os.path.exists(
                                 point_info["pwm_write"]
                             ) and os.path.exists(point_info["temp_write"]):
-                                fc.hwmon_mode1_pwm_path.append(point_info)
-                        pwm_mode1_auto_value = (
-                            fan_pwm_write["pwm_mode1_auto_value"]
-                            if "pwm_mode1_auto_value" in fan_pwm_write
-                            else []
-                        )
-                        for value in pwm_mode1_auto_value:
-                            value_info = {
-                                "pwm_write_value": value["pwm_write_value"],
-                                "temp_write_value": value["temp_write_value"],
-                            }
-                            fc.hwmon_mode1_auto_val.append(value_info)
+                                fc.hwmon_curve_paths.append(point_info)
 
+                    # 读取风扇转速的路径
                     fan_pwm_input = hwmon_config["pwm_input"]
                     fan_hwmon_label_input = (
                         fan_pwm_input["hwmon_label"]
@@ -556,6 +585,7 @@ class FanManager:
             return False
 
     def set_fanAuto(self, index: int, value: bool):
+        logger.debug(f"设置风扇自动模式 index:{index} value:{value}")
         try:
             if index > len(self.fan_config_list) - 1:
                 logger.error(
@@ -590,8 +620,8 @@ class FanManager:
             manual_value = fc.hwmon_manual_val
             hwmon_mode = fc.hwmon_mode
             pwm_path = fc.hwmon_pwm_path
-            mode1_auto_value = fc.hwmon_mode1_auto_val
-            mode1_pwm_paths = fc.hwmon_mode1_pwm_path
+            hwmon_default_curve = fc.hwmon_default_curve
+            hwmon_curve_paths = fc.hwmon_curve_paths
 
             if (
                 not os.path.exists(pwm_enable_path)
@@ -626,17 +656,16 @@ class FanManager:
             )
 
             if (hwmon_mode == 1 or hwmon_mode == 2) and value:
-                fanIsManual = manual_value
-                for index, mode1_pwm_path in enumerate(mode1_pwm_paths):
-                    if index >= len(mode1_auto_value):
+                for index, point in enumerate(hwmon_curve_paths):
+                    if index >= len(hwmon_default_curve):
                         break
                     # 写入转速
-                    fanWriteValue = mode1_auto_value[index]["pwm_write_value"]
-                    pwm_path = mode1_pwm_path["pwm_write"]
+                    fanWriteValue = hwmon_default_curve[index]["pwm_value"]
+                    pwm_path = point["pwm_write"]
                     open(pwm_path, "w").write(str(fanWriteValue))
                     # 写入温度
-                    temp = mode1_auto_value[index]["temp_write_value"]
-                    temp_path = mode1_pwm_path["temp_write"]
+                    temp = hwmon_default_curve[index]["temp_value"]
+                    temp_path = point["temp_write"]
                     open(temp_path, "w").write(str(temp))
                     logger.debug(
                         f"写入hwmon数据 写入hwmon转速地址:{pwm_path} 风扇转速写入值:{fanWriteValue} 温度地址:{temp_path} 温度大小:{temp}"
@@ -722,7 +751,7 @@ class FanManager:
             pwm_path = fc.hwmon_pwm_path
             rpm_write_max = fc.pwm_write_max
             mode = fc.hwmon_mode
-            mode1_paths = fc.hwmon_mode1_pwm_path
+            hwmon_curve_paths = fc.hwmon_curve_paths
             manual_val = fc.hwmon_manual_val
             enable_path = fc.hwmon_enable_path
 
@@ -750,15 +779,15 @@ class FanManager:
                     min(int(value / 100 * rpm_write_max), rpm_write_max), 0
                 )
                 temp = 10
-                addTemp = int(100 / len(mode1_paths))
-                if mode1_paths:
-                    for mode1_pwm_path in mode1_paths:
+                addTemp = int(100 / len(hwmon_curve_paths))
+                if hwmon_curve_paths:
+                    for point in hwmon_curve_paths:
                         # 写入转速
-                        pwm_path = mode1_pwm_path["pwm_write"]
+                        pwm_path = point["pwm_write"]
                         open(pwm_path, "w").write(str(fanWriteValue))
                         # 写入温度
                         temp = temp + addTemp
-                        temp_path = mode1_pwm_path["temp_write"]
+                        temp_path = point["temp_write"]
                         open(temp_path, "w").write(str(temp))
                         logger.debug(
                             f"写入hwmon数据 写入hwmon转速地址:{pwm_path} 风扇转速百分比{value} 风扇最大值{rpm_write_max} 风扇转速写入值:{fanWriteValue} 温度地址:{temp_path} 温度大小:{temp}"
@@ -872,7 +901,7 @@ class FanManager:
                     fan_name = config.fan_name
                     fan_max_rpm = config.pwm_value_max
                     fan_hwmon_mode = config.hwmon_mode
-                    hwmon_mode1_auto_val = config.hwmon_mode1_auto_val
+                    hwmon_default_curve = config.hwmon_default_curve
                     pwm_write_max = config.pwm_write_max
                     logger.info(
                         f"""
@@ -881,7 +910,7 @@ class FanManager:
     fan_max_rpm:{fan_max_rpm}, 
     fan_hwmon_mode:{fan_hwmon_mode}, 
     pwm_write_max:{pwm_write_max}, 
-    hwmon_mode1_auto_val:{hwmon_mode1_auto_val}
+    hwmon_default_curve:{hwmon_default_curve}
 """
                     )
                     config_list.append(
@@ -889,7 +918,7 @@ class FanManager:
                             "fan_name": fan_name,
                             "fan_max_rpm": fan_max_rpm,
                             "fan_hwmon_mode": fan_hwmon_mode,
-                            "hwmon_mode1_auto_val": hwmon_mode1_auto_val,
+                            "hwmon_default_curve": hwmon_default_curve,
                             "pwm_write_max": pwm_write_max,
                         }
                     )

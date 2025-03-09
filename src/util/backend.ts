@@ -259,19 +259,19 @@ export class BackendData {
     return 0;
   }
 
-  public getHwmonMode1AutoVal(
+  public getHwmonDefaultCurve(
     index: number
   ): { speed_value: number; temp_value: number }[] {
     const result: { speed_value: number; temp_value: number }[] = [];
     if (this.has_fanConfigs) {
-      const autoVals = this.fanConfigs?.[index]?.hwmon_mode1_auto_val ?? [];
+      const defaultCurve = this.fanConfigs?.[index]?.hwmon_default_curve ?? [];
       const pwmWriteMax: number =
         this.fanConfigs?.[index]?.pwm_write_max ?? 255;
-      console.log(">>>>>>>>>>> getHwmonMode1AutoVal", autoVals);
-      if (autoVals instanceof Array && autoVals.length > 0) {
-        for (let i = 0; i < autoVals.length; i++) {
-          const pwm_value = autoVals[i]?.pwm_write_value;
-          const temp_value = autoVals[i]?.temp_write_value;
+      console.log(">>>>>>>>>>> getHwmonDefaultCurve", defaultCurve);
+      if (defaultCurve instanceof Array && defaultCurve.length > 0) {
+        for (let i = 0; i < defaultCurve.length; i++) {
+          const pwm_value = defaultCurve[i]?.pwm_value;
+          const temp_value = defaultCurve[i]?.temp_value;
           if (pwm_value !== undefined && temp_value !== undefined) {
             result.push({
               speed_value: (pwm_value / pwmWriteMax) * 100, // pwm_value 转为百分比
@@ -285,7 +285,7 @@ export class BackendData {
   }
 
   public getHwmonAutoFanSetting(index: number): FanSetting | undefined {
-    const defaultPoints = this.getHwmonMode1AutoVal(index);
+    const defaultPoints = this.getHwmonDefaultCurve(index);
     if (defaultPoints.length > 0) {
       const curvePoints: FanPosition[] = defaultPoints.map(
         (point) => new FanPosition(point.temp_value, point.speed_value)

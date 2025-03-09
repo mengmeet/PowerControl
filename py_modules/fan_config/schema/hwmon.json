@@ -124,54 +124,67 @@
           "type": "string",
           "description": "写入数值文件路径"
         },
-        "pwm_mode1_write_path": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/PWMWriteMode1Path"
-          },
-          "description": "写入转速和温度的文件路径 多组"
+        "default_curve": {
+          "$ref": "#/definitions/PWMWriteDefaultCurve",
+          "description": "默认曲线"
         },
-        "pwm_mode1_auto_value": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/PWMWriteMode1Value"
-          },
-          "description": "写入转速和温度的数值 多组"
+        "curve_path": {
+          "$ref": "#/definitions/PWMWriteCurvePath",
+          "description": "曲线路径"
         }
       },
       "required": []
     },
-    "PWMWriteMode1Path": {
-      "title": "PWMWriteMode1Path",
+    "PWMWriteDefaultCurve": {
+      "title": "PWMWriteDefaultCurve",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "pwm_write": {
-          "type": "string",
-          "description": "写入转速路径"
+        "temp": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "温度数组"
         },
-        "temp_write": {
-          "type": "string",
-          "description": "写入温度路径"
+        "speed": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "转速数组"
+        },
+        "pwm": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "PWM数组"
         }
       },
-      "required": ["pwm_write", "temp_write"]
+      "required": ["temp", "pwm"]
     },
-    "PWMWriteMode1Value": {
-      "title": "PWMWriteMode1Value",
+    "PWMWriteCurvePath": {
+      "title": "PWMWriteCurvePath",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "pwm_write_value": {
-          "type": "number",
-          "description": "写入转速值"
+        "temp_write": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "温度路径数组"
         },
-        "temp_write_value": {
-          "type": "number",
-          "description": "写入温度值"
+        "pwm_write": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "PWM路径数组"
         }
       },
-      "required": ["pwm_write_value", "temp_write_value"]
+      "required": ["temp_write", "pwm_write"]
     }
   }
 }
