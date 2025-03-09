@@ -12,37 +12,36 @@ fans:
     pwm_write:
       pwm_write_max:
         default: 255
-      pwm_mode1_write_path: # 写入转速和温度的文件名 多组
-        - pwm_write: pwm1_auto_point1_pwm
-          temp_write: pwm1_auto_point1_temp
-        - pwm_write: pwm1_auto_point2_pwm
-          temp_write: pwm1_auto_point2_temp
-        - pwm_write: pwm1_auto_point3_pwm
-          temp_write: pwm1_auto_point3_temp
-        - pwm_write: pwm1_auto_point4_pwm
-          temp_write: pwm1_auto_point4_temp
-        - pwm_write: pwm1_auto_point5_pwm
-          temp_write: pwm1_auto_point5_temp
-        - pwm_write: pwm1_auto_point6_pwm
-          temp_write: pwm1_auto_point6_temp
-        # - pwm_write: pwm1_auto_point7_pwm
-        #   # not pwm1_auto_point7_temp
-        #   temp_write: pwm1_auto_point6_temp
-      pwm_mode1_auto_value:
-        - pwm_write_value: 0
-          temp_write_value: 50
-        - pwm_write_value: 102
-          temp_write_value: 60
-        - pwm_write_value: 124
-          temp_write_value: 70
-        - pwm_write_value: 147
-          temp_write_value: 80
-        - pwm_write_value: 170
-          temp_write_value: 88
-        - pwm_write_value: 191
-          temp_write_value: 88
-        # - pwm_write_value: 191
-        #   temp_write_value: 88
+      curve_path: # 曲线写入路径
+        temp_write:
+          - pwm1_auto_point1_temp
+          - pwm1_auto_point2_temp
+          - pwm1_auto_point3_temp
+          - pwm1_auto_point4_temp
+          - pwm1_auto_point5_temp
+          - pwm1_auto_point6_temp
+        pwm_write:
+          - pwm1_auto_point1_pwm
+          - pwm1_auto_point2_pwm
+          - pwm1_auto_point3_pwm
+          - pwm1_auto_point4_pwm
+          - pwm1_auto_point5_pwm
+          - pwm1_auto_point6_pwm
+      default_curve:
+        temp:
+          - 50
+          - 60
+          - 70
+          - 80
+          - 88
+          - 88
+        pwm:
+          - 0
+          - 102
+          - 124
+          - 147
+          - 170
+          - 191
 
     pwm_input:
       hwmon_label: msi_ec
@@ -62,37 +61,36 @@ fans:
     pwm_write:
       pwm_write_max:
         default: 255
-      pwm_mode1_write_path:
-        - pwm_write: pwm2_auto_point1_pwm
-          temp_write: pwm2_auto_point1_temp
-        - pwm_write: pwm2_auto_point2_pwm
-          temp_write: pwm2_auto_point2_temp
-        - pwm_write: pwm2_auto_point3_pwm
-          temp_write: pwm2_auto_point3_temp
-        - pwm_write: pwm2_auto_point4_pwm
-          temp_write: pwm2_auto_point4_temp
-        - pwm_write: pwm2_auto_point5_pwm
-          temp_write: pwm2_auto_point5_temp
-        - pwm_write: pwm2_auto_point6_pwm
-          temp_write: pwm2_auto_point6_temp
-        # - pwm_write: pwm2_auto_point7_pwm
-        #   # not pwm2_auto_point7_temp
-        #   temp_write: pwm2_auto_point6_temp
-      pwm_mode1_auto_value:
-        - pwm_write_value: 0
-          temp_write_value: 50
-        - pwm_write_value: 102
-          temp_write_value: 60
-        - pwm_write_value: 124
-          temp_write_value: 70
-        - pwm_write_value: 147
-          temp_write_value: 80
-        - pwm_write_value: 170
-          temp_write_value: 88
-        - pwm_write_value: 191
-          temp_write_value: 88
-        # - pwm_write_value: 191
-        #   temp_write_value: 88
+      curve_path: # 曲线写入路径
+        temp_write:
+          - pwm2_auto_point1_temp
+          - pwm2_auto_point2_temp
+          - pwm2_auto_point3_temp
+          - pwm2_auto_point4_temp
+          - pwm2_auto_point5_temp
+          - pwm2_auto_point6_temp
+        pwm_write:
+          - pwm2_auto_point1_pwm
+          - pwm2_auto_point2_pwm
+          - pwm2_auto_point3_pwm
+          - pwm2_auto_point4_pwm
+          - pwm2_auto_point5_pwm
+          - pwm2_auto_point6_pwm
+      default_curve:
+        temp:
+          - 50
+          - 60
+          - 70
+          - 80
+          - 88
+          - 88
+        pwm:
+          - 0
+          - 102
+          - 124
+          - 147
+          - 170
+          - 191
 
     pwm_input:
       hwmon_label: msi_ec

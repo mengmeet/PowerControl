@@ -31,7 +31,7 @@ class AsusDevice(PowerDevice):
         super().__init__()
 
     def set_tdp(self, tdp: int) -> None:
-        logger.info(f"Setting TDP to {tdp}")
+        logger.debug(f"Setting TDP to {tdp}")
         if tdp < 5:
             logger.info("TDP is too low, use default tdp method")
             super().set_tdp(tdp)
@@ -70,6 +70,7 @@ class AsusDevice(PowerDevice):
             and os.path.exists(ASUS_ARMORY_SLOW_WMI_PATH)
             and os.path.exists(ASUS_ARMORY_STAPM_WMI_PATH)
         ):
+            logger.debug(f"Setting TDP to {tdp} by ASUS Armoury")
             with open(ASUS_ARMORY_FAST_WMI_PATH, "w") as f:
                 f.write(str(fast_val))
             sleep(0.1)
@@ -85,6 +86,7 @@ class AsusDevice(PowerDevice):
             and os.path.exists(SLOW_WMI_PATH)
             and os.path.exists(STAPM_WMI_PATH)
         ):
+            logger.debug(f"Setting TDP to {tdp} by ASUS WMI")
             with open(FAST_WMI_PATH, "w") as f:
                 f.write(str(fast_val))
             sleep(0.1)
