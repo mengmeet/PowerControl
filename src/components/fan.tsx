@@ -48,10 +48,21 @@ const setPointColor = "#00BFFF";
 
 //选择配置文件下拉框
 const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
+  const fanWriteMode = Backend.data.getFanPwmMode(fanIndex);
+  const defaultFanSetting = Backend.data.getDefaultFanSetting(fanIndex);
+
   //@ts-ignore
   const [items, setItems] = useState<DropdownOption[]>(
-    Object.entries(Settings.getFanSettings()).map(
-      ([profileName, fanSetting]) => {
+    Object.entries(Settings.getFanSettings())
+      .filter(([_, fanSetting]) => {
+        // 多文件不同值写入模式下，不显示固定转速配置
+        if (fanWriteMode == FAN_PWM_MODE.MULTI_DIFF) {
+          return fanSetting.fanMode != FANMODE.FIX;
+        } else {
+          return true;
+        }
+      })
+      .map(([profileName, fanSetting]) => {
         var useOption = {
           label: localizationManager.getString(localizeStrEnum.USE),
           data: {
@@ -92,8 +103,7 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
             },
           ],
         };
-      }
-    )
+      })
   );
   //@ts-ignore
   const [selectedItem, setSelectedItem] = useState<DropdownOption | undefined>(
@@ -101,9 +111,6 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
       return item.label == Settings.appFanSettingNameList()?.[fanIndex];
     })
   );
-
-  const fanWriteMode = Backend.data.getFanPwmMode(fanIndex);
-  const defaultFanSetting = Backend.data.getDefaultFanSetting(fanIndex);
 
   return (
     <div>
@@ -168,6 +175,7 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
             }
             //setSelectedItem(item);
             if (item.data.type == FANPROFILEACTION.USE) {
+              // 应用风扇配置
               Settings.setAppFanSettingName(item.data.profileName, fanIndex);
             } else if (item.data.type == FANPROFILEACTION.DELETE) {
               Settings.removeFanSetting(item.data.profileName);
@@ -176,7 +184,16 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
                 <FANCretateProfileModelComponent
                   fanProfileName={item.data.profileName}
                   fanSetting={Settings.getFanSetting(item.data.profileName)}
-                  closeModal={() => {}}
+                  closeModal={() => {
+                    // 关闭时重新应用风扇配置
+                    if (fanWriteMode == FAN_PWM_MODE.MULTI_DIFF) {
+                      Settings.setAppFanSettingName(
+                        item.data.profileName,
+                        fanIndex,
+                        true
+                      );
+                    }
+                  }}
                   fixedCountMode={fanWriteMode == FAN_PWM_MODE.MULTI_DIFF}
                   defaultSetting={
                     fanWriteMode == FAN_PWM_MODE.MULTI_DIFF
@@ -399,17 +416,17 @@ const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
       pointIndex++
     ) {
       var curvePoint = curvePoints.current[pointIndex];
-      console.log(
-        `curvePoint:${curvePoint.temperature},${curvePoint.fanRPMpercent}`
-      );
+      // console.log(
+      //   `curvePoint:${curvePoint.temperature},${curvePoint.fanRPMpercent}`
+      // );
       // log curvePoint runtime type
-      console.log(`curvePoint runtime type: ${curvePoint.constructor.name}`);
+      // console.log(`curvePoint runtime type: ${curvePoint.constructor.name}`);
 
       var pointCanvasPos = (curvePoint as FanPosition).getCanvasPos(
         width,
         height
       );
-      console.log(`pointCanvasPos:${pointCanvasPos}`);
+      // console.log(`pointCanvasPos:${pointCanvasPos}`);
       ctx.lineTo(pointCanvasPos[0], pointCanvasPos[1]);
       ctx.moveTo(pointCanvasPos[0], pointCanvasPos[1]);
     }
@@ -691,7 +708,7 @@ function FANCretateProfileModelComponent({
 
   const onCreateProfile = (isEdit: boolean) => {
     if (isEdit) {
-      Settings.editFanSetting(
+      return Settings.editFanSetting(
         fanProfileName,
         profileName,
         new FanSetting(snapToGrid, fanMode, fixSpeed, curvePoints.current)
@@ -1403,7 +1420,7 @@ export function FANComponent() {
                   <FANRPMComponent fanIndex={0} />
                 </>
               )}
-              {fanCount.current == 2 && (
+              {fanCount.current > 1 && (
                 <>
                   <PanelSectionRow>
                     <SliderField

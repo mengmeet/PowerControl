@@ -2,6 +2,7 @@ import { Router } from "@decky/ui";
 import {
   APPLYTYPE,
   ComponentName,
+  FAN_PWM_MODE,
   FANMODE,
   Patch,
   PluginState,
@@ -71,10 +72,17 @@ export class ACStateManager {
   static register() {
     this.acStateListeners = SteamClient.System.RegisterForBatteryStateChanges(
       (batteryStateChange: BatteryStateChange) => {
+        if (this.acState == batteryStateChange.eACState) {
+          return;
+        }
+
         // 监听电源状态变化, 更新所有组件，应用全部设置一次
         this.acState = batteryStateChange.eACState;
         PluginManager.updateAllComponent(UpdateType.UPDATE);
         if (Settings.ensureEnable()) {
+          console.log(
+            `>>>>>>>>>>>> applySettings with Listrning batteryStateChange ${batteryStateChange.eACState}`
+          );
           Backend.applySettings(APPLYTYPE.SET_ALL);
         }
       }
@@ -253,6 +261,10 @@ export class FanControl {
     });
     const fanSettings = Settings.appFanSettings();
     for (var index = 0; index < fanSettings.length; index++) {
+      const fanPwmMode = Backend.data.getFanPwmMode(index);
+      if (fanPwmMode == FAN_PWM_MODE.MULTI_DIFF) {
+        continue;
+      }
       if (!fanSettings?.[index]) {
         FanControl.fanInfo[index].setPoint.temperature = 0;
         FanControl.fanInfo[index].setPoint.fanRPMpercent = -10;

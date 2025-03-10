@@ -1,4 +1,4 @@
-import { APPLYTYPE, FANMODE, GPUMODE, Patch } from "./enum";
+import { APPLYTYPE, FAN_PWM_MODE, FANMODE, GPUMODE, Patch } from "./enum";
 import { FanControl, PluginManager } from "./pluginMain";
 import { FanSetting, Settings, SettingsData } from "./settings";
 import {
@@ -267,14 +267,14 @@ export class BackendData {
       const defaultCurve = this.fanConfigs?.[index]?.fan_default_curve ?? [];
       const pwmWriteMax: number =
         this.fanConfigs?.[index]?.fan_pwm_write_max ?? 255;
-      console.log(">>>>>>>>>>> getHwmonDefaultCurve", defaultCurve);
+      // console.log(">>>>>>>>>>> getHwmonDefaultCurve", defaultCurve);
       if (defaultCurve instanceof Array && defaultCurve.length > 0) {
         for (let i = 0; i < defaultCurve.length; i++) {
           const pwmValue = defaultCurve[i]?.pwm_value;
           const tempValue = defaultCurve[i]?.temp_value;
           if (pwmValue !== undefined && tempValue !== undefined) {
             result.push({
-              speedValue: (pwmValue / pwmWriteMax) * 100, // pwmValue 转为百分比
+              speedValue: Math.round((pwmValue / pwmWriteMax) * 100), // pwmValue 转为百分比整数
               tempValue,
             });
           }
@@ -290,7 +290,7 @@ export class BackendData {
       const curvePoints: FanPosition[] = defaultFanPoints.map(
         (point) => new FanPosition(point.tempValue, point.speedValue)
       );
-      console.log(">>>>>>>>>> getHwmonAutoFanSetting", curvePoints);
+      // console.log(">>>>>>>>>> getHwmonAutoFanSetting", curvePoints);
       return new FanSetting(false, FANMODE.CURVE, 50, curvePoints);
     }
     return undefined;
@@ -431,6 +431,7 @@ export class Backend {
         Backend.resetSettings();
         return;
       }
+      console.log(`>>>>>>>>>>>> applySettings ${applyTarget}`);
 
       if (applyTarget === APPLYTYPE.SET_ALL) {
         // 同步 OverWrite 到 QAM
@@ -641,11 +642,7 @@ export class Backend {
 
       const fanMode = fanSetting.fanMode;
       const fanRPMPercent = FanControl.fanInfo[index].setPoint.fanRPMpercent;
-
-      if (!fanRPMPercent) {
-        console.error(`风扇转速百分比未设置: index=${index}`);
-        continue;
-      }
+      const fanWriteMode = Backend.data.getFanPwmMode(index);
 
       //写入转速后再写入控制位
       switch (fanMode) {
@@ -656,8 +653,17 @@ export class Backend {
         case FANMODE.FIX:
         case FANMODE.CURVE:
           // console.log(`${fanMode == FANMODE.FIX ? '直线' : '曲线'} index= ${index}`);
-          await Backend.applyFanPercent(index, fanRPMPercent);
-          await Backend.applyFanAuto(index, false);
+          if (fanWriteMode != FAN_PWM_MODE.MULTI_DIFF) {
+            if (!fanRPMPercent) {
+              console.error(`风扇转速百分比未设置: index=${index}`);
+              continue;
+            }
+            await Backend.applyFanPercent(index, fanRPMPercent);
+            await Backend.applyFanAuto(index, false);
+          } else {
+            console.log(`直接写入曲线数据`);
+            await Backend.applyFanCurve(index, fanSetting);
+          }
           break;
         default:
           console.error(`出现意外的FanMode = ${fanMode}`);
@@ -710,6 +716,8 @@ export class Backend {
       [APPLYTYPE.SET_TDP, Backend.handleTDP],
       [APPLYTYPE.SET_FANRPM, Backend.handleFanControl],
       [APPLYTYPE.SET_POWER_BATTERY, Backend.handleChargeLimit],
+      [APPLYTYPE.SET_FAN_ALL, Backend.handleFanControl],
+      [APPLYTYPE.SET_FANMODE, Backend.handleFanControl],
     ]);
 
   public static resetFanSettings = () => {
@@ -781,6 +789,16 @@ export class Backend {
       percent
     );
   }
+
+  private static applyFanCurve(index: number, fanSetting: FanSetting) {
+    call<[index: number, temp_list: number[], pwm_list: number[]], void>(
+      "set_fanCurve",
+      index,
+      fanSetting?.curvePoints?.map((point) => point?.temperature ?? 0) ?? [],
+      fanSetting?.curvePoints?.map((point) => point?.fanRPMpercent ?? 0) ?? []
+    );
+  }
+
   public static throwSuspendEvt() {
     console.log("throwSuspendEvt");
     call("receive_suspendEvent");

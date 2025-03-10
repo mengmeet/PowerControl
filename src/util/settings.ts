@@ -848,12 +848,14 @@ export class Settings {
   //设置使用的风扇配置文件名称
   static setAppFanSettingName(
     fanProfileName: string | undefined,
-    index: number
+    index: number,
+    force: boolean = false
   ) {
-    if (Settings.appFanSettingNameList()[index] != fanProfileName) {
+    if (force || Settings.appFanSettingNameList()[index] != fanProfileName) {
       Settings.appFanSettingNameList()[index] = fanProfileName;
       Settings.saveSettingsToLocalStorage();
-      //Backend.applySettings(APPLYTYPE.SET_FAN);
+      Backend.applySettings(APPLYTYPE.SET_FAN_ALL);
+      PluginManager.updateComponent(ComponentName.FAN_ALL, UpdateType.UPDATE);
     }
   }
 

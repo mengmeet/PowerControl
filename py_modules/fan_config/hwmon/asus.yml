@@ -2,7 +2,7 @@ hwmon_name: asus_custom_fan_curve
 
 fans:
   - fan_name: Fan1
-    pwm_mode: 1
+    pwm_mode: 2
 
     pwm_enable:
       manual_value: 1

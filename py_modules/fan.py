@@ -1,5 +1,6 @@
 import json
 import os
+from typing import List
 
 from conf_manager import confManager
 from config import FAN_EC_CONFIG, FAN_HWMON_LIST, PRODUCT_NAME, PRODUCT_VERSION, logger
@@ -833,6 +834,62 @@ class FanManager:
             return True
         except Exception:
             logger.error("使用ECIO写入风扇转速异常:", exc_info=True)
+            return False
+
+    def set_fanCurve(self, index: int, temp_list: List[int], pwm_list: List[int]):
+        try:
+            logger.debug(
+                f"set_fanCurve {index}, temp_list:{temp_list}, pwm_list:{pwm_list}"
+            )
+            if index > len(self.fan_config_list) - 1:
+                logger.error(
+                    f"风扇下标越界 index:{index} len:{len(self.fan_config_list)}"
+                )
+                return False
+
+            fc = self.fan_config_list[index]
+            hwmon_mode = fc.hwmon_mode
+
+            if hwmon_mode == 2 and fc.is_found_hwmon:
+                return self.__set_fanCurve_HWMON(fc, temp_list, pwm_list)
+
+            return False
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
+    def __set_fanCurve_HWMON(
+        self, fc: FanConfig, temp_list: List[int], pwm_list: List[int]
+    ):
+        try:
+            rpm_write_max = fc.pwm_write_max
+            mode = fc.hwmon_mode
+            hwmon_curve_paths = fc.hwmon_curve_paths
+            manual_val = fc.hwmon_manual_val
+            enable_path = fc.hwmon_enable_path
+
+            if mode == 2:
+                for i in range(min(len(temp_list), len(pwm_list))):
+                    pwm_path = hwmon_curve_paths[i]["pwm_write"]
+                    temp_path = hwmon_curve_paths[i]["temp_write"]
+                    fanWritePwmValue = max(
+                        min(int(pwm_list[i] / 100 * rpm_write_max), rpm_write_max), 0
+                    )
+                    fanWriteTempValue = max(min(int(temp_list[i]), rpm_write_max), 0)
+                    open(pwm_path, "w").write(str(fanWritePwmValue))
+                    open(temp_path, "w").write(str(fanWriteTempValue))
+                    logger.debug(
+                        f"hwmon写入数据, pwm_path:{pwm_path}, pwm_value:{fanWritePwmValue}; temp_path:{temp_path}, temp_value:{fanWriteTempValue}"
+                    )
+                currentEnable = open(enable_path, "r").read().strip()
+                if currentEnable != str(manual_val):
+                    open(enable_path, "w").write(str(manual_val))
+                    logger.debug(
+                        f"写入hwmon数据 写入hwmon地址:{enable_path} 写入风扇是否控制:{manual_val}"
+                    )
+                return True
+        except Exception:
+            logger.error("使用hwmon写入风扇曲线异常:", exc_info=True)
             return False
 
     def get_fanTemp(self, index: int):
