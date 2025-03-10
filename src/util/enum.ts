@@ -11,6 +11,12 @@ export enum FANMODE {
   CURVE = 2, //曲线
 }
 
+export enum FAN_PWM_MODE {
+  SINGLE = 0, // 单文件
+  MULTI_SAME = 1, // 多文件相同值
+  MULTI_DIFF = 2, // 多文件不同值
+}
+
 export enum FANPROFILEACTION {
   DELETE = "DELETE", //删除风扇配置
   USE = "USE", //使用风扇配置
