@@ -252,30 +252,30 @@ export class BackendData {
     return [];
   }
 
-  public getFanHwmonMode(index: number) {
+  public getFanPwmMode(index: number) {
     if (this.has_fanConfigs) {
       return this.fanConfigs?.[index]?.fan_hwmon_mode ?? 0;
     }
     return 0;
   }
 
-  public getHwmonDefaultCurve(
+  public getFanHwmonDefaultCurve(
     index: number
-  ): { speed_value: number; temp_value: number }[] {
-    const result: { speed_value: number; temp_value: number }[] = [];
+  ): { speedValue: number; tempValue: number }[] {
+    const result: { speedValue: number; tempValue: number }[] = [];
     if (this.has_fanConfigs) {
-      const defaultCurve = this.fanConfigs?.[index]?.hwmon_default_curve ?? [];
+      const defaultCurve = this.fanConfigs?.[index]?.fan_default_curve ?? [];
       const pwmWriteMax: number =
-        this.fanConfigs?.[index]?.pwm_write_max ?? 255;
+        this.fanConfigs?.[index]?.fan_pwm_write_max ?? 255;
       console.log(">>>>>>>>>>> getHwmonDefaultCurve", defaultCurve);
       if (defaultCurve instanceof Array && defaultCurve.length > 0) {
         for (let i = 0; i < defaultCurve.length; i++) {
-          const pwm_value = defaultCurve[i]?.pwm_value;
-          const temp_value = defaultCurve[i]?.temp_value;
-          if (pwm_value !== undefined && temp_value !== undefined) {
+          const pwmValue = defaultCurve[i]?.pwm_value;
+          const tempValue = defaultCurve[i]?.temp_value;
+          if (pwmValue !== undefined && tempValue !== undefined) {
             result.push({
-              speed_value: (pwm_value / pwmWriteMax) * 100, // pwm_value 转为百分比
-              temp_value,
+              speedValue: (pwmValue / pwmWriteMax) * 100, // pwmValue 转为百分比
+              tempValue,
             });
           }
         }
@@ -284,11 +284,11 @@ export class BackendData {
     return result;
   }
 
-  public getHwmonAutoFanSetting(index: number): FanSetting | undefined {
-    const defaultPoints = this.getHwmonDefaultCurve(index);
-    if (defaultPoints.length > 0) {
-      const curvePoints: FanPosition[] = defaultPoints.map(
-        (point) => new FanPosition(point.temp_value, point.speed_value)
+  public getDefaultFanSetting(index: number): FanSetting | undefined {
+    const defaultFanPoints = this.getFanHwmonDefaultCurve(index);
+    if (defaultFanPoints.length > 0) {
+      const curvePoints: FanPosition[] = defaultFanPoints.map(
+        (point) => new FanPosition(point.tempValue, point.speedValue)
       );
       console.log(">>>>>>>>>> getHwmonAutoFanSetting", curvePoints);
       return new FanSetting(false, FANMODE.CURVE, 50, curvePoints);

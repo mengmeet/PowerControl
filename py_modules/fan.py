@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 from conf_manager import confManager
 from config import FAN_EC_CONFIG, FAN_HWMON_LIST, PRODUCT_NAME, PRODUCT_VERSION, logger
@@ -901,16 +901,16 @@ class FanManager:
                     fan_name = config.fan_name
                     fan_max_rpm = config.pwm_value_max
                     fan_hwmon_mode = config.hwmon_mode
-                    hwmon_default_curve = config.hwmon_default_curve
-                    pwm_write_max = config.pwm_write_max
+                    fan_default_curve = config.hwmon_default_curve
+                    fan_pwm_write_max = config.pwm_write_max
                     logger.info(
                         f"""
 获取机型适配fan,
     fan_name:{fan_name}, 
     fan_max_rpm:{fan_max_rpm}, 
     fan_hwmon_mode:{fan_hwmon_mode}, 
-    pwm_write_max:{pwm_write_max}, 
-    hwmon_default_curve:{hwmon_default_curve}
+    fan_pwm_write_max:{fan_pwm_write_max}, 
+    fan_default_curve:{fan_default_curve}
 """
                     )
                     config_list.append(
@@ -918,8 +918,8 @@ class FanManager:
                             "fan_name": fan_name,
                             "fan_max_rpm": fan_max_rpm,
                             "fan_hwmon_mode": fan_hwmon_mode,
-                            "hwmon_default_curve": hwmon_default_curve,
-                            "pwm_write_max": pwm_write_max,
+                            "fan_default_curve": fan_default_curve,
+                            "fan_pwm_write_max": fan_pwm_write_max,
                         }
                     )
                 return config_list

@@ -33,6 +33,7 @@ import {
   FANPROFILEACTION,
   FanControl,
   Backend,
+  FAN_PWM_MODE,
 } from "../util";
 import { localizeStrEnum, localizationManager } from "../i18n";
 import { FanCanvas } from "./fanCanvas";
@@ -101,8 +102,8 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
     })
   );
 
-  const hwmonMode = Backend.data.getFanHwmonMode(fanIndex);
-  const hwmonAutoSetting = Backend.data.getHwmonAutoFanSetting(fanIndex);
+  const fanWriteMode = Backend.data.getFanPwmMode(fanIndex);
+  const defaultFanSetting = Backend.data.getDefaultFanSetting(fanIndex);
 
   return (
     <div>
@@ -150,13 +151,17 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
                 <FANCretateProfileModelComponent
                   fanProfileName={item.data.profileName}
                   fanSetting={
-                    hwmonMode == 2 && hwmonAutoSetting
-                      ? hwmonAutoSetting
+                    fanWriteMode == FAN_PWM_MODE.MULTI_DIFF && defaultFanSetting
+                      ? defaultFanSetting
                       : Settings.getFanSetting(item.data.profileName)
                   }
                   closeModal={() => {}}
-                  fixedCountMode={hwmonMode == 2}
-                  defaultSetting={hwmonMode == 2 ? hwmonAutoSetting : undefined}
+                  fixedCountMode={fanWriteMode == FAN_PWM_MODE.MULTI_DIFF}
+                  defaultSetting={
+                    fanWriteMode == FAN_PWM_MODE.MULTI_DIFF
+                      ? defaultFanSetting
+                      : undefined
+                  }
                 />
               );
               return;
@@ -172,8 +177,12 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
                   fanProfileName={item.data.profileName}
                   fanSetting={Settings.getFanSetting(item.data.profileName)}
                   closeModal={() => {}}
-                  fixedCountMode={hwmonMode == 2}
-                  defaultSetting={hwmonMode == 2 ? hwmonAutoSetting : undefined}
+                  fixedCountMode={fanWriteMode == FAN_PWM_MODE.MULTI_DIFF}
+                  defaultSetting={
+                    fanWriteMode == FAN_PWM_MODE.MULTI_DIFF
+                      ? defaultFanSetting
+                      : undefined
+                  }
                 />
               );
             } else if (item.data.type == FANPROFILEACTION.CANCEL) {
