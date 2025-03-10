@@ -1092,7 +1092,7 @@ class CPUManager:
             
             current_governor = self.get_cpu_governor()
             if current_governor == "performance" and mode != "performance":
-                logger.error(f"Current governor is performance, cannot set EPP mode to {mode}")
+                logger.debug(f"Current governor is performance, cannot set EPP mode to {mode}")
                 return False
 
             success = False

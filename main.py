@@ -1,7 +1,7 @@
 import sys
 
 import decky
-from ec import EC
+from typing import List
 
 try:
     import update
@@ -152,6 +152,13 @@ class Plugin:
     async def set_fanPercent(self, index: int, value: int):
         try:
             return fanManager.set_fanPercent(index, value)
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
+    async def set_fanCurve(self, index: int, temp_list: List[int], pwm_list: List[int]):
+        try:
+            return fanManager.set_fanCurve(index, temp_list, pwm_list)
         except Exception as e:
             logger.error(e, exc_info=True)
             return False
