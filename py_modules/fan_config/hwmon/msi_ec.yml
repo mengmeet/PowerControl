@@ -11,7 +11,8 @@ fans:
 
     pwm_write:
       pwm_write_max:
-        default: 255
+        default: 170 # 100%
+        # Claw 8 AI+ A2VM: 255 # 150%
       curve_path: # 曲线写入路径
         temp_write:
           - pwm1_auto_point1_temp
@@ -37,11 +38,11 @@ fans:
           - 88
         pwm:
           - 0
-          - 102
-          - 124
-          - 147
-          - 170
-          - 191
+          - 68
+          - 83
+          - 98
+          - 113
+          - 127
 
     pwm_input:
       hwmon_label: msi_ec
@@ -60,7 +61,8 @@ fans:
 
     pwm_write:
       pwm_write_max:
-        default: 255
+        default: 170 # 100%
+        # Claw 8 AI+ A2VM: 255 # 150%
       curve_path: # 曲线写入路径
         temp_write:
           - pwm2_auto_point1_temp
@@ -86,11 +88,11 @@ fans:
           - 88
         pwm:
           - 0
-          - 102
-          - 124
-          - 147
-          - 170
-          - 191
+          - 68
+          - 83
+          - 98
+          - 113
+          - 127
 
     pwm_input:
       hwmon_label: msi_ec
