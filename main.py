@@ -1,7 +1,7 @@
 import sys
+from typing import List
 
 import decky
-from typing import List
 
 try:
     import update

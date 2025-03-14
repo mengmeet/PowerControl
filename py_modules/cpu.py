@@ -3,8 +3,8 @@ import os
 import re
 import subprocess
 import threading
-import traceback
 import time
+import traceback
 from typing import Dict, List, Optional, Tuple
 
 import sysInfo
@@ -325,10 +325,10 @@ class CPUManager:
         Returns:
             bool: True如果设置成功，否则False
         """
-        if CPU_VENDOR == "GenuineIntel":
+        if self.is_intel():
             return self.set_cpuTDP_Intel(value)
-        elif CPU_VENDOR == "AuthenticAMD":
-            self.set_cpuTDP_AMD(value)
+        elif self.is_amd():
+            return self.set_cpuTDP_AMD(value)
         else:
             logger.error("set_cpuTDP error: unknown CPU_VENDOR")
             return False
@@ -422,7 +422,8 @@ class CPUManager:
             # 遍历 /sys/class/powercap/intel-rapl/*/ 如果 name 是 package-0 则是cpu
             logger.debug("set_cpuTDP_Intel {}".format(value))
             tdp = value * 1000000
-            tdp_short = (value + 5) * 1000000
+            # tdp_short = (value + 5) * 1000000
+            tdp_short = tdp
             rapl_long, rapl_short, _ = self.__get_intel_rapl_path()
             legacy_rapl_long, legacy_rapl_short, _ = self.__get_legacy_intel_rapl_path()
             if (rapl_long == "" or rapl_short == "") and (
@@ -1089,10 +1090,12 @@ class CPUManager:
             if mode not in self.get_epp_modes():
                 logger.error(f"Failed to set EPP mode: unsupported mode {mode}")
                 return False
-            
+
             current_governor = self.get_cpu_governor()
             if current_governor == "performance" and mode != "performance":
-                logger.debug(f"Current governor is performance, cannot set EPP mode to {mode}")
+                logger.debug(
+                    f"Current governor is performance, cannot set EPP mode to {mode}"
+                )
                 return False
 
             success = False
