@@ -760,7 +760,9 @@ function FANCretateProfileModelComponent({
               setSelPointTemp(0);
               setSelPointSpeed(0);
             }
-            curvePoints.current.splice(i, 1);
+            if (!fixedCountMode) {
+              curvePoints.current.splice(i, 1);
+            }
             isPressPoint = true;
             break;
           }
@@ -770,34 +772,14 @@ function FANCretateProfileModelComponent({
           console.log(
             `shortPressPos:${shortPressPos.temperature},${shortPressPos.fanRPMpercent}`
           );
-          curvePoints.current.push(shortPressPos);
-        }
-        /*
-        //选中点时再点击则取消该点,点击其他位置则取消当前选中
-        if(selectedPoint.current){
-          for(let i=0;i<curvePoints.current.length;i++){
-            if(shortPressPos.isCloseToOther(selectedPoint.current,pointBlockDis)&&curvePoints.current[i]==selectedPoint.current){
-              curvePoints.current.splice(i,1);
-              break;
-            }
-          }
-          selectedPoint.current = null;
-          setSelPointTemp(0);
-          setSelPointSpeed(0);
-        }else{
-          //没有选中点时，获取选中的点
-          for(let i=0;i<curvePoints.current.length;i++){
-            if(curvePoints.current[i].isCloseToOther(shortPressPos,pointBlockDis)){
-              selectedPoint.current = curvePoints.current[i];
-              setSelPointTemp(selectedPoint.current.temperature);
-              setSelPointSpeed(selectedPoint.current.fanRPMpercent);
-              break;
-            }
-          }
-          if(!selectedPoint.current){
+          if (fixedCountMode) {
+            selectedPoint.current = null;
+            setSelPointTemp(0);
+            setSelPointSpeed(0);
+          } else {
             curvePoints.current.push(shortPressPos);
           }
-        }*/
+        }
         refreshCanvas();
         break;
       }
