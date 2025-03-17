@@ -154,15 +154,14 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
           bottomSeparator={"none"}
           onChange={(item: DropdownOption) => {
             if (item.data == FANPROFILEACTION.ADD) {
+              console.log("add fan profile>>>>>>>>.");
               showModal(
                 <FANCretateProfileModelComponent
                   fanProfileName={item.data.profileName}
-                  fanSetting={
-                    fanWriteMode == FAN_PWM_MODE.MULTI_DIFF && defaultFanSetting
-                      ? defaultFanSetting
-                      : Settings.getFanSetting(item.data.profileName)
-                  }
-                  closeModal={() => {}}
+                  fanSetting={Settings.getFanSetting(item.data.profileName)}
+                  closeModal={() => {
+                    console.log("close modal>>>>>>>>.");
+                  }}
                   fixedCountMode={fanWriteMode == FAN_PWM_MODE.MULTI_DIFF}
                   defaultSetting={
                     fanWriteMode == FAN_PWM_MODE.MULTI_DIFF
@@ -186,6 +185,7 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
                   fanSetting={Settings.getFanSetting(item.data.profileName)}
                   closeModal={() => {
                     // 关闭时重新应用风扇配置
+                    console.log("close modal>>>>>>>>.");
                     if (fanWriteMode == FAN_PWM_MODE.MULTI_DIFF) {
                       Settings.setAppFanSettingName(
                         item.data.profileName,
@@ -558,7 +558,7 @@ function FANCretateProfileModelComponent({
   defaultSetting?: FanSetting;
 }) {
   const canvasRef: any = useRef(null);
-  const curvePoints: any = useRef(fanSetting?.curvePoints ?? []);
+  const curvePoints: any = useRef(fanSetting?.curvePoints ?? defaultSetting?.curvePoints ?? []);
   //drag
   const dragPoint: any = useRef(null);
   //select
@@ -570,9 +570,9 @@ function FANCretateProfileModelComponent({
   //@ts-ignore
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [fanMode, setFanMode] = useState(
-    fanSetting?.fanMode ?? FANMODE.NOCONTROL
+    fanSetting?.fanMode ?? defaultSetting?.fanMode ?? FANMODE.NOCONTROL
   );
-  const [fixSpeed, setFixSpeed] = useState(fanSetting?.fixSpeed ?? 50);
+  const [fixSpeed, setFixSpeed] = useState(fanSetting?.fixSpeed ?? defaultSetting?.fixSpeed ?? 50);
   const [selPointTemp, setSelPointTemp] = useState(0);
   const [selPointSpeed, setSelPointSpeed] = useState(0);
   const initDraw = (ref: any) => {
@@ -708,12 +708,14 @@ function FANCretateProfileModelComponent({
 
   const onCreateProfile = (isEdit: boolean) => {
     if (isEdit) {
+      console.log("edit fan profile>>>>>>>>.");
       return Settings.editFanSetting(
         fanProfileName,
         profileName,
         new FanSetting(snapToGrid, fanMode, fixSpeed, curvePoints.current)
       );
     }
+    console.log("add fan profile>>>>>>>>.");
     return Settings.addFanSetting(
       profileName,
       new FanSetting(snapToGrid, fanMode, fixSpeed, curvePoints.current)
@@ -1333,6 +1335,7 @@ function FANCretateProfileModelComponent({
         >
           <DialogButton
             onClick={() => {
+              console.log(">>>>>>>>>>.create fan profile>>>>>>>>.");
               if (onCreateProfile(fanSetting != undefined)) {
                 closeModal();
               }
