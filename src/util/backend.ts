@@ -177,6 +177,17 @@ export class BackendData {
         this.supportsResetChargeLimit = false;
         this.has_supportsResetChargeLimit = false;
       });
+
+    await call<[], boolean>("software_charge_limit")
+      .then((res) => {
+        this.supportsSoftwareChargeLimit = res;
+        this.has_supportsSoftwareChargeLimit = true;
+      })
+      .catch((err) => {
+        console.error("检查 SOFTWARE_CHARGE_LIMIT 支持失败:", err);
+        this.supportsSoftwareChargeLimit = false;
+        this.has_supportsSoftwareChargeLimit = false;
+      });
   }
 
   public getForceShowTDP() {
