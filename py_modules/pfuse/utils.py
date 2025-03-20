@@ -10,6 +10,10 @@ from config import logger
 TDP_MOUNT = "/run/powercontrol/hwmon"
 FUSE_MOUNT_SOCKET = "/run/powercontrol/socket"
 
+def _get_env():
+    env = os.environ.copy()
+    env["LD_LIBRARY_PATH"] = ""
+    return env
 
 def find_igpu():
     for hw in os.listdir("/sys/class/hwmon"):
@@ -107,6 +111,7 @@ def prepare_tdp_mount(debug: bool = False, passhtrough: bool = False):
                     capture_output=True,
                     text=True,
                     check=True,
+                    env=_get_env(),
                 )
             except subprocess.CalledProcessError as e:
                 error_msg = f"Failed to create bind mount:\nCommand: {cmd}\nReturn code: {e.returncode}\nError: {e.stderr}"
@@ -117,7 +122,7 @@ def prepare_tdp_mount(debug: bool = False, passhtrough: bool = False):
             cmd = f"mount --make-private '{TDP_MOUNT}'"
             try:
                 result = subprocess.run(
-                    cmd, shell=True, capture_output=True, text=True, check=True
+                    cmd, shell=True, capture_output=True, text=True, check=True, env=_get_env(),
                 )
             except subprocess.CalledProcessError as e:
                 error_msg = f"Failed to make mount private:\nCommand: {cmd}\nReturn code: {e.returncode}\nError: {e.stderr}"
@@ -151,7 +156,7 @@ def prepare_tdp_mount(debug: bool = False, passhtrough: bool = False):
         logger.info(f"Executing:\n'{cmd}'")
         try:
             result = subprocess.run(
-                cmd, shell=True, capture_output=True, text=True, check=True
+                cmd, shell=True, capture_output=True, text=True, check=True, env=_get_env(),
             )
             logger.debug(f"Command output:\n{result.stdout}")
         except subprocess.CalledProcessError as e:

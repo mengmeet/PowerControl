@@ -7,7 +7,7 @@ from config import (
 )
 
 
-def getMaxTDP() -> int:
+def getMaxTDP(default: int = 15) -> int:
     """获取最大TDP值。
 
     Returns:
@@ -23,9 +23,9 @@ def getMaxTDP() -> int:
                     cpu_tdpMax = TDP_LIMIT_CONFIG_CPU[model]
                     break
                 else:
-                    cpu_tdpMax = 15
+                    cpu_tdpMax = default
         logger.info("getMaxTDP {}".format(cpu_tdpMax))
         return cpu_tdpMax
-    except Exception as e:
+    except Exception:
         logger.error("Failed to get max TDP value", exc_info=True)
-        return 0
+        return default

@@ -226,7 +226,7 @@ class CPUManager:
         Returns:
             int: 最大TDP值（瓦特）
         """
-        self.cpu_tdpMax = getMaxTDP()
+        self.cpu_tdpMax = getMaxTDP(0)
         if self.cpu_tdpMax == 0:
             if self.is_intel():
                 self.cpu_tdpMax = self.get_cpuTDP_Intel()
@@ -267,6 +267,7 @@ class CPUManager:
                 text=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                env=get_env(),
             )
             stdout, stderr = process.stdout, process.stderr
             if stderr:
@@ -599,6 +600,7 @@ class CPUManager:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
+                env=get_env(),
             )
             stdout, stderr = process.stdout, process.stderr
             if stderr:
@@ -855,6 +857,7 @@ class CPUManager:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
+                env=get_env(),
             )
             stdout, stderr = process.stdout, process.stderr
             if stderr:
