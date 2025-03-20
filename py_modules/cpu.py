@@ -159,21 +159,25 @@ class CPUManager:
         self.cpu_topology: Dict[int, int] = {}
         self.is_support_smt: Optional[bool] = None
 
-        # 初始化CPU信息
-        self.set_enable_All()  # 先开启所有cpu, 否则拓扑信息不全
-        self.get_isSupportSMT()  # 获取 is_support_smt
-        # self.get_cpuMaxNum()  # 获取 cpu_maxNum
-        self.__get_tdpMax()  # 获取 cpu_tdpMax
-
-        # 获取并存储CPU拓扑信息
-        self.cpu_topology = self.get_cpu_topology()
-        self.cps_ids: List[int] = sorted(list(set(self.cpu_topology.values())))
-
         # CPU自动优化线程
         self._cpuAutoMaxFreqManager = None
 
+        # 初始化CPU信息
+        self.__init_cpu_info()
+
+    def __init_cpu_info(self) -> None:
+        """初始化CPU信息。"""
+        self.set_enable_All()  # 先开启所有cpu, 否则拓扑信息不全
+        self.get_isSupportSMT()  # 获取 is_support_smt
+        self.__get_tdpMax()  # 获取 cpu_tdpMax
+        # 获取并存储CPU拓扑信息
+        self.cpu_topology = self.get_cpu_topology()
+        self.cps_ids: List[int] = sorted(list(set(self.cpu_topology.values())))
+        self.cpu_maxNum = len(self.cps_ids)
+
         logger.info(f"self.cpu_topology {self.cpu_topology}")
         logger.info(f"cpu_ids {self.cps_ids}")
+        logger.info(f"cpu_maxNum {self.cpu_maxNum}")
 
     def get_hasRyzenadj(self) -> bool:
         """检查系统是否安装了ryzenadj工具。
@@ -193,7 +197,7 @@ class CPUManager:
             logger.error("Failed to check ryzenadj tool", exc_info=True)
             return False
 
-    def get_cpuMaxNum(self) -> int:
+    def get_cpuMaxNum_old(self) -> int:
         """获取最大CPU核心数。
 
         Returns:
@@ -219,6 +223,9 @@ class CPUManager:
         except Exception:
             logger.error("Failed to get max CPU cores", exc_info=True)
             return 0
+
+    def get_cpuMaxNum(self) -> int:
+        return self.cpu_maxNum
 
     def __get_tdpMax(self) -> int:
         """获取最大TDP值。
@@ -777,7 +784,7 @@ class CPUManager:
         """获取CPU拓扑信息。
 
         Returns:
-            Dict[int, int]: CPU拓扑信息，键为处理器ID，值为核心ID
+            Dict[int, int]: CPU拓扑信息，键为逻辑处理器ID，值为物理核心ID
         """
         cpu_topology = {}
 
@@ -798,9 +805,6 @@ class CPUManager:
                     core_id = file.read().strip()
 
                 cpu_topology[int(cpu_number)] = int(core_id)
-
-        # 获取 CPU 最大核心数, 统计 core_id 的数量
-        self.cpu_maxNum = len(set(cpu_topology.values()))
 
         return cpu_topology
 
