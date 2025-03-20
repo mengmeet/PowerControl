@@ -162,7 +162,7 @@ class CPUManager:
         # 初始化CPU信息
         self.set_enable_All()  # 先开启所有cpu, 否则拓扑信息不全
         self.get_isSupportSMT()  # 获取 is_support_smt
-        self.get_cpuMaxNum()  # 获取 cpu_maxNum
+        # self.get_cpuMaxNum()  # 获取 cpu_maxNum
         self.__get_tdpMax()  # 获取 cpu_tdpMax
 
         # 获取并存储CPU拓扑信息
@@ -209,7 +209,7 @@ class CPUManager:
                     cpu_index = cpu_index + 1
                 else:
                     break
-            if self.get_isSupportSMT():
+            if self.is_support_smt:
                 # 去掉超线程部分，物理核心只有cpu文件夹数量的一半
                 self.cpu_maxNum = int(cpu_index / 2)
             else:
@@ -796,6 +796,9 @@ class CPUManager:
                     core_id = file.read().strip()
 
                 cpu_topology[int(cpu_number)] = int(core_id)
+
+        # 获取 CPU 最大核心数, 统计 core_id 的数量
+        self.cpu_maxNum = len(set(cpu_topology.values()))
 
         return cpu_topology
 
