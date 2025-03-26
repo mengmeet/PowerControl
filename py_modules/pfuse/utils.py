@@ -306,19 +306,19 @@ def _tdp_client(should_exit: Event, set_tdp, min_tdp, default_tdp, max_tdp):
                             set_tdp(None)
                     except Exception as e:
                         logger.error(f"Failed to process TDP value: {e}", exc_info=True)
-                    send_cmd(b"ack\n")
+                    send_cmd(b"ack")
 
                 elif b"get" in data:
                     if b"min" in data:
-                        send_cmd(b"ack:" + str(min_tdp).encode() + b"000000\n")
+                        send_cmd(b"ack:" + str(min_tdp).encode() + b"000000")
                     elif b"max" in data:
-                        send_cmd(b"ack:" + str(max_tdp).encode() + b"000000\n")
+                        send_cmd(b"ack:" + str(max_tdp).encode() + b"000000")
                     elif b"default" in data:
-                        send_cmd(b"ack:" + str(default_tdp).encode() + b"000000\n")
+                        send_cmd(b"ack:" + str(default_tdp).encode() + b"000000")
                     else:
-                        send_cmd(b"ack:" + str(tdp).encode() + b"000000\n")
+                        send_cmd(b"ack:" + str(tdp).encode() + b"000000")
                 else:
-                    send_cmd(b"ack\n")
+                    send_cmd(b"ack")
 
             except Exception as e:
                 logger.error(f"Error processing command: {e}", exc_info=True)
