@@ -439,8 +439,31 @@ class XmpFile:
 
 
 def main():
-    sock = None
     try:
+        # 配置详细的日志
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="%(asctime)s [%(filename)s:%(lineno)d:%(funcName)s] %(levelname)s: %(message)s",
+            handlers=[
+                logging.StreamHandler(),
+                logging.FileHandler("/tmp/fuse_driver_debug.log"),
+            ],
+        )
+        logger.info("FUSE driver starting with detailed logging")
+
+        # 确保挂载目录存在
+        if not os.path.exists(FUSE_MOUNT_DIR):
+            os.makedirs(FUSE_MOUNT_DIR, exist_ok=True)
+            logger.info(f"Created FUSE mount directory: {FUSE_MOUNT_DIR}")
+
+        # 提前删除可能存在的旧socket文件
+        if os.path.exists(FUSE_MOUNT_SOCKET):
+            try:
+                os.unlink(FUSE_MOUNT_SOCKET)
+                logger.info(f"Removed existing socket file: {FUSE_MOUNT_SOCKET}")
+            except Exception as e:
+                logger.error(f"Failed to remove existing socket file: {e}")
+
         server = Xmp(
             version="%prog " + fuse.__version__, usage="", dash_s_do="setsingle"
         )
@@ -458,22 +481,37 @@ def main():
             help="Allow tdp write passthrough, e.g., for the Steam Deck.",
         )
 
+        logger.info("Parsing command line arguments")
         server.parse(values=server, errex=1)
+        logger.info(
+            f"Command line parsing complete. Root: {server.root}, Passthrough: {getattr(server, 'passthrough', False)}"
+        )
 
         try:
             if server.fuse_args.mount_expected():
+                logger.info(f"Changing working directory to: {server.root}")
                 os.chdir(server.root)
-        except OSError:
+        except OSError as e:
+            logger.error(f"Can't enter root of underlying filesystem: {e}")
             print("can't enter root of underlying filesystem ", file=sys.stderr)
             sys.exit(1)
 
+        logger.info("Starting FUSE main loop")
         server.main(passthrough=getattr(server, "passthrough", False))
 
     except KeyboardInterrupt:
-        pass
+        logger.info("Received keyboard interrupt. Shutting down.")
+    except Exception as e:
+        logger.error(f"Unhandled exception in main: {e}", exc_info=True)
     finally:
-        if sock:
-            sock.close()
+        logger.info("FUSE driver shutting down")
+        # 清理socket文件
+        if os.path.exists(FUSE_MOUNT_SOCKET):
+            try:
+                os.unlink(FUSE_MOUNT_SOCKET)
+                logger.info("Cleaned up socket file")
+            except Exception as e:
+                logger.error(f"Failed to clean up socket file: {e}")
 
 
 if __name__ == "__main__":
