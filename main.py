@@ -28,7 +28,7 @@ class Plugin:
     async def _migration(self):
         decky.logger.info("start _migration")
 
-        self.fuseManager = FuseManager()
+        self.fuseManager = FuseManager(power_manager=self.powerManager)
         # self.fuseManager.fuse_init()
 
     async def _main(self):
