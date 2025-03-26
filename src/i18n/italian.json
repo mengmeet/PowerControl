@@ -67,6 +67,8 @@
     "RANGE_FREQ_DESC": "Imposta intervallo di frequenza GPU",
     "AUTO_FREQ_DESC": "Frequenza GPU adattiva, limite TDP disabilitato forzatamente, Boost disabilitato",
     "AUTO_FREQ_TDP_NOTIF": "Modalità GPU {{mode}}, limite TDP disabilitato",
+    "NATIVE_TDP_SLIDER": "Slider TDP nativo",
+    "NATIVE_TDP_SLIDER_DESC": "Abilita il cursore TDP nativo, richiede il riavvio del sistema per rendere effettiva l'attivazione/disattivazione. La modifica del valore massimo dell'intervallo TDP richiede il riavvio di Steam per avere effetto. Dopo l'attivazione, le impostazioni TDP vengono salvate da Steam e le impostazioni dello stato di alimentazione nel plugin non gestiranno la configurazione TDP",
     "FORCE_SHOW_TDP": "Forza visualizzazione controllo TDP",
     "FORCE_SHOW_TDP_DESC": "Per impostazione predefinita, il plugin elabora lo slider TDP nativo. Se lo slider nativo presenta problemi, abilita questa opzione per utilizzare il controllo TDP interno del plugin",
     "MANUAL_BYPASS_CHARGE": "Carica bypass manuale",

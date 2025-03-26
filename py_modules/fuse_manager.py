@@ -55,6 +55,9 @@ class FuseManager:
         直接应用TDP
         """
         logger.info(f"Apply TDP: {tdp}")
+        if tdp == self.default_tdp:
+            logger.info(f"Apply TDP: default, set to max {self.max_tdp}")
+            tdp = self.max_tdp
         if self.power_manager:
             self.power_manager.set_tdp(tdp)
         else:

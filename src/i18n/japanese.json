@@ -67,6 +67,8 @@
     "RANGE_FREQ_DESC": "GPU 周波数範囲を設定",
     "AUTO_FREQ_DESC": "GPU 周波数を自動調整、TDP 制限を強制的に無効化、ブーストを無効化",
     "AUTO_FREQ_TDP_NOTIF": "GPU モード {{mode}}、TDP 制限無効",
+    "NATIVE_TDP_SLIDER": "ネイティブ TDP スライダー",
+    "NATIVE_TDP_SLIDER_DESC": "ネイティブTDPスライダーを有効化、有効/無効の切り替えにはシステムの再起動が必要です。TDP範囲の最大値を変更するにはSteamの再起動が必要です。有効化後、TDP設定はSteamによって保存され、プラグイン設定の電源状態設定ではTDP設定を処理しません",
     "FORCE_SHOW_TDP": "TDP 制御を強制表示",
     "FORCE_SHOW_TDP_DESC": "デフォルトでは、プラグインはネイティブ TDP スライダーを処理します。ネイティブスライダーに問題がある場合、このオプションを有効にしてプラグイン内部の TDP 制御を使用してください",
     "MANUAL_BYPASS_CHARGE": "手動バイパス充電",

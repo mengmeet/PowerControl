@@ -49,7 +49,7 @@ export const CustomTDPComponent: FC = () => {
   });
 
   const _sliderMin = DEFAULT_TDP_MIN;
-  const _sliderMax = 65;
+  const _sliderMax = 100;
 
   return (
     <div>

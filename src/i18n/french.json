@@ -67,6 +67,8 @@
     "RANGE_FREQ_DESC": "Définir la plage de fréquence GPU",
     "AUTO_FREQ_DESC": "Fréquence GPU adaptative, limite TDP désactivée de force, Boost désactivé",
     "AUTO_FREQ_TDP_NOTIF": "Mode GPU {{mode}}, limite TDP désactivée",
+    "NATIVE_TDP_SLIDER": "Curseur TDP natif",
+    "NATIVE_TDP_SLIDER_DESC": "Activer le curseur TDP natif, nécessite un redémarrage du système pour que l'activation/désactivation prenne effet. La modification de la valeur maximale de la plage TDP nécessite un redémarrage de Steam pour prendre effet. Après activation, les paramètres TDP sont sauvegardés par Steam, et les paramètres d'état d'alimentation dans le plugin ne géreront pas la configuration TDP",
     "FORCE_SHOW_TDP": "Forcer l'affichage du contrôle TDP",
     "FORCE_SHOW_TDP_DESC": "Par défaut, le plugin traite le curseur TDP natif. Si le curseur natif pose problème, activez cette option pour utiliser le contrôle TDP interne du plugin",
     "MANUAL_BYPASS_CHARGE": "Charge en dérivation manuelle",

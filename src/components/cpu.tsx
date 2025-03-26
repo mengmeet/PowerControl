@@ -13,7 +13,6 @@ import {
   ComponentName,
   UpdateType,
   GPUMODE,
-  Patch,
 } from "../util";
 import { localizeStrEnum, localizationManager } from "../i18n";
 import { SlowSliderField } from "./SlowSliderField";
@@ -223,9 +222,9 @@ const CPUTDPComponent: FC = () => {
   const [disabled, setDisable] = useState<boolean>(
     Settings.appGPUMode() == GPUMODE.AUTO
   );
-  const [forceShow, setForceShow] = useState<boolean>(
-    Settings.appForceShowTDP()
-  );
+  // const [forceShow, setForceShow] = useState<boolean>(
+  //   Settings.appForceShowTDP()
+  // );
   const [enableCustomTDPRange, setEnableCustomTDPRange] = useState<boolean>(
     Settings.appEnableCustomTDPRange()
   );
@@ -235,15 +234,13 @@ const CPUTDPComponent: FC = () => {
   const [customTDPRangeMin, setCustomTDPRangeMin] = useState<number>(
     Settings.appCustomTDPRangeMin()
   );
+  const [enableNativeTDPSlider, setEnableNativeTDPSlider] = useState<boolean>(
+    Settings.appEnableNativeTDPSlider()
+  );
 
-  // 隐藏强制显示TDP开关, 并默认显示 TDP 控制组件。新版 Steam 客户端临时方案
-  // const [hideForceShowSwitch, _] = useState<boolean>(
-  //   Backend.data.getForceShowTDP()
-  // );
-
-  const hideForceShowSwitch = true;
-
-  // const minSteamVersion = 1714854927;
+  const [cpuVendor, _] = useState<string>(
+    Backend.data.getCpuVendor()
+  );
 
   const refresh = () => {
     setTDPEnable(Settings.appTDPEnable());
@@ -251,7 +248,8 @@ const CPUTDPComponent: FC = () => {
     setEnableCustomTDPRange(Settings.appEnableCustomTDPRange());
     setCustomTDPRangeMax(Settings.appCustomTDPRangeMax());
     setCustomTDPRangeMin(Settings.appCustomTDPRangeMin());
-    setForceShow(Settings.appForceShowTDP());
+    // setForceShow(Settings.appForceShowTDP());
+    setEnableNativeTDPSlider(Settings.appEnableNativeTDPSlider());
 
     if (enableCustomTDPRange) {
       setTDP(Math.min(Settings.appTDP(), customTDPRangeMax));
@@ -278,33 +276,32 @@ const CPUTDPComponent: FC = () => {
     );
   }, []);
 
-  const _showTdp =
-    !PluginManager.isPatchSuccess(Patch.TDPPatch) ||
-    forceShow ||
-    hideForceShowSwitch;
-  console.log(
-    `>>>>>>>> Hide Force Show Switch: ${hideForceShowSwitch}, Show TDP: ${_showTdp}`
-  );
+  // const _showTdp =
+  //   !PluginManager.isPatchSuccess(Patch.TDPPatch) ||
+  //   forceShow
+  // console.log(
+  //   `>>>>>>>> Show TDP: ${_showTdp}`
+  // );
 
   return (
     <>
-      {!hideForceShowSwitch && (
+      {cpuVendor == "AuthenticAMD" && (
         <PanelSectionRow>
           <ToggleField
             label={localizationManager.getString(
-              localizeStrEnum.FORCE_SHOW_TDP
+              localizeStrEnum.NATIVE_TDP_SLIDER
             )}
             description={localizationManager.getString(
-              localizeStrEnum.FORCE_SHOW_TDP_DESC
+              localizeStrEnum.NATIVE_TDP_SLIDER_DESC
             )}
-            checked={forceShow || !PluginManager.isPatchSuccess(Patch.TDPPatch)}
+            checked={enableNativeTDPSlider}
             onChange={(value) => {
-              Settings.setForceShowTDP(value);
+              Settings.setEnableNativeTDPSlider(value);
             }}
           />
         </PanelSectionRow>
       )}
-      {_showTdp && (
+      {!enableNativeTDPSlider && (
         <>
           <PanelSectionRow>
             <ToggleField
@@ -319,7 +316,7 @@ const CPUTDPComponent: FC = () => {
               }}
             />
           </PanelSectionRow>
-          {tdpEnable && (
+          {(tdpEnable || enableNativeTDPSlider) && (
             <PanelSectionRow>
               <SlowSliderField
                 label="TDP"

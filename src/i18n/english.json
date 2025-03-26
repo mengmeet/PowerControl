@@ -69,6 +69,8 @@
     "RANGE_FREQ_DESC": "Set GPU frequency range",
     "AUTO_FREQ_DESC": "Adaptive GPU frequency, forcibly disabled TDP limit, disabled Boost",
     "AUTO_FREQ_TDP_NOTIF": "GPU mode {{mode}}, TDP limit disabled",
+    "NATIVE_TDP_SLIDER": "Native TDP Slider",
+    "NATIVE_TDP_SLIDER_DESC": "Enable native TDP slider, requires system restart to take effect when enabling/disabling. Modifying TDP range maximum requires Steam restart to take effect. After enabling, TDP settings are saved by Steam, and power state settings in plugin will not handle TDP configuration",
     "FORCE_SHOW_TDP": "Force Show TDP Control",
     "FORCE_SHOW_TDP_DESC": "By default, the plugin will process the native TDP slider. If there is an issue with the native slider, enable this option to use the plugin's internal TDP control",
     "MANUAL_BYPASS_CHARGE": "Manual Bypass Charging",

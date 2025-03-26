@@ -67,6 +67,8 @@
     "RANGE_FREQ_DESC": "設定 GPU 頻率範圍",
     "AUTO_FREQ_DESC": "GPU 頻率自動調整，強制關閉 TDP 限制，關閉超頻",
     "AUTO_FREQ_TDP_NOTIF": "GPU 模式 {{mode}}，TDP 限制已關閉",
+    "NATIVE_TDP_SLIDER": "原生 TDP 滑桿",
+    "NATIVE_TDP_SLIDER_DESC": "啟用原生 TDP 滑桿, 啟用和關閉需要重啟系統生效。修改 TDP 範圍最大值需要重啟 Steam 生效。開啟後 TDP 設定由 Steam 儲存, 外掛程式設定中的電源狀態設定將不會處理 TDP 設定",
     "FORCE_SHOW_TDP": "強制顯示 TDP 控制",
     "FORCE_SHOW_TDP_DESC": "預設情況下外掛程式會處理原生 TDP 滑桿。如果原生滑桿有問題，請開啟此選項以使用外掛程式內建的 TDP 控制",
     "MANUAL_BYPASS_CHARGE": "手動旁路供電",

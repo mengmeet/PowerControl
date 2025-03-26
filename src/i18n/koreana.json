@@ -67,6 +67,8 @@
     "RANGE_FREQ_DESC": "GPU 주파수 범위 설정",
     "AUTO_FREQ_DESC": "GPU 주파수 자동 조정, TDP 제한 강제 비활성화, 부스트 비활성화",
     "AUTO_FREQ_TDP_NOTIF": "GPU 모드 {{mode}}, TDP 제한 비활성화",
+    "NATIVE_TDP_SLIDER": "기본 TDP 슬라이더",
+    "NATIVE_TDP_SLIDER_DESC": "기본 TDP 슬라이더 활성화, 활성화/비활성화에는 시스템 재시작이 필요합니다. TDP 범위 최대값 수정에는 Steam 재시작이 필요합니다. 활성화 후 TDP 설정은 Steam에서 저장되며, 플러그인 설정의 전원 상태 설정에서는 TDP 설정을 처리하지 않습니다",
     "FORCE_SHOW_TDP": "TDP 제어 강제 표시",
     "FORCE_SHOW_TDP_DESC": "기본적으로 플러그인은 기본 TDP 슬라이더를 처리합니다. 기본 슬라이더에 문제가 있는 경우 이 옵션을 활성화하여 플러그인 내부 TDP 제어 사용",
     "MANUAL_BYPASS_CHARGE": "우회 충전 수동 제어",

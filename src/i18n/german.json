@@ -67,6 +67,8 @@
     "RANGE_FREQ_DESC": "GPU-Frequenzbereich festlegen",
     "AUTO_FREQ_DESC": "Adaptive GPU-Frequenz, TDP-Limit deaktiviert, Boost deaktiviert",
     "AUTO_FREQ_TDP_NOTIF": "GPU-Modus {{mode}}, TDP-Limit deaktiviert",
+    "NATIVE_TDP_SLIDER": "Nativer TDP-Schieberegler",
+    "NATIVE_TDP_SLIDER_DESC": "Aktivieren Sie den nativen TDP-Schieberegler, ein Neustart des Systems ist erforderlich, um das Aktivieren/Deaktivieren wirksam zu machen. Die Änderung des TDP-Bereichsmaximums erfordert einen Steam-Neustart, um wirksam zu werden. Nach der Aktivierung werden die TDP-Einstellungen von Steam gespeichert, und die Stromzustandseinstellungen im Plugin werden die TDP-Konfiguration nicht verarbeiten",
     "FORCE_SHOW_TDP": "TDP-Steuerung erzwingen",
     "FORCE_SHOW_TDP_DESC": "Standardmäßig verarbeitet das Plugin den nativen TDP-Schieberegler. Bei Problemen mit dem nativen Schieberegler aktivieren Sie diese Option, um die interne TDP-Steuerung des Plugins zu verwenden",
     "MANUAL_BYPASS_CHARGE": "Manuelle Bypass-Ladung",

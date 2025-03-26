@@ -29,7 +29,11 @@ class Plugin:
         decky.logger.info("start _migration")
 
         self.fuseManager = FuseManager(power_manager=self.powerManager)
-        # self.fuseManager.fuse_init()
+        enableNativeTDPSlider = self.confManager.getSettings().get(
+            "enableNativeTDPSlider", False
+        )
+        if enableNativeTDPSlider:
+            self.fuseManager.fuse_init()
 
     async def _main(self):
         decky.logger.info("start _main")

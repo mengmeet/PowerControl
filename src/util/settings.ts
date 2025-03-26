@@ -195,6 +195,9 @@ export class SettingsData {
   public forceShowTDP: boolean = false;
 
   @JsonProperty()
+  public enableNativeTDPSlider: boolean = false;
+
+  @JsonProperty()
   public showSettingMenu: boolean = true;
 
   @JsonProperty()
@@ -225,6 +228,7 @@ export class SettingsData {
     this.enableCustomTDPRange = copyTarget.enableCustomTDPRange;
     this.customTDPRangeMax = copyTarget.customTDPRangeMax;
     this.forceShowTDP = copyTarget.forceShowTDP;
+    this.enableNativeTDPSlider = copyTarget.enableNativeTDPSlider;
     this.bypassCharge = copyTarget.bypassCharge;
     this.chargeLimit = copyTarget.chargeLimit;
     this.enableChargeLimit = copyTarget.enableChargeLimit;
@@ -437,6 +441,19 @@ export class Settings {
     if (this._instance.data.forceShowTDP != forceShowTDP) {
       this._instance.data.forceShowTDP = forceShowTDP;
       Settings.saveSettingsToLocalStorage();
+      PluginManager.updateComponent(ComponentName.CPU_TDP, UpdateType.UPDATE);
+    }
+  }
+
+  static appEnableNativeTDPSlider(): boolean {
+    return this._instance.data.enableNativeTDPSlider;
+  }
+
+  static setEnableNativeTDPSlider(enableNativeTDPSlider: boolean) {
+    if (this._instance.data.enableNativeTDPSlider != enableNativeTDPSlider) {
+      this._instance.data.enableNativeTDPSlider = enableNativeTDPSlider;
+      Settings.saveSettingsToLocalStorage();
+      Backend.applySettings(APPLYTYPE.SET_TDP);
       PluginManager.updateComponent(ComponentName.CPU_TDP, UpdateType.UPDATE);
     }
   }

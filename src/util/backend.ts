@@ -603,6 +603,12 @@ export class Backend {
       ? Math.min(customTDPRangeMax, Math.max(customTDPRangeMin, tdp))
       : tdp;
 
+    const enableNativeTDPSlider = Settings.appEnableNativeTDPSlider();
+    if (enableNativeTDPSlider) {
+      console.log(`启用原生 TDP 滑块, 跳过 TDP 设置`);
+      return;
+    }
+
     // 处理非插件模式或强制显示 TDP 的情况
     if (
       !PluginManager.isPatchSuccess(Patch.TDPPatch) ||
