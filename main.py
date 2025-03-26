@@ -21,19 +21,21 @@ except Exception as e:
 
 class Plugin:
     def __init__(self):
-        self.fuseManager = None
         self.confManager = confManager
         self.powerManager = PowerManager()
+        # 使用单例模式，不再存储 fuseManager 实例
+        # 而是每次通过 FuseManager.get_instance() 获取
 
     async def _migration(self):
         decky.logger.info("start _migration")
 
-        self.fuseManager = FuseManager(power_manager=self.powerManager)
+        # 使用单例模式获取 FuseManager 实例
+        fuseManager = FuseManager.get_instance(power_manager=self.powerManager)
         enableNativeTDPSlider = self.confManager.getSettings().get(
             "enableNativeTDPSlider", False
         )
         if enableNativeTDPSlider:
-            self.fuseManager.fuse_init()
+            fuseManager.fuse_init()
 
     async def _main(self):
         decky.logger.info("start _main")
@@ -43,7 +45,8 @@ class Plugin:
     async def _unload(self):
         decky.logger.info("start _unload")
         gpuManager.unload()
-        self.fuseManager.unload()
+        # 使用单例模式获取实例并卸载
+        FuseManager.get_instance().unload()
         self.powerManager.unload()
         logger.info("End PowerControl")
 
@@ -430,4 +433,35 @@ class Plugin:
             return self.powerManager.reset_charge_limit()
         except Exception as e:
             logger.error(e, exc_info=True)
+            return False
+
+    # 创建一个新的方法来控制 FUSE 挂载
+    async def toggle_native_tdp_slider(self, enabled: bool):
+        """
+        启用或禁用原生 TDP 滑块
+
+        Args:
+            enabled: 是否启用
+
+        Returns:
+            操作是否成功
+        """
+        try:
+            settings = self.confManager.getSettings()
+            settings["enableNativeTDPSlider"] = enabled
+            self.confManager.setSettings(settings)
+
+            fuseManager = FuseManager.get_instance(power_manager=self.powerManager)
+            if enabled:
+                # 启用 FUSE
+                if not fuseManager.fuse_init():
+                    logger.error("Failed to initialize FUSE")
+                    return False
+            else:
+                # 禁用 FUSE
+                fuseManager.unload()
+
+            return True
+        except Exception as e:
+            logger.error(f"Error toggling native TDP slider: {e}", exc_info=True)
             return False

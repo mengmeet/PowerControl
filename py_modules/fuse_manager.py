@@ -1,5 +1,6 @@
 import asyncio
 import os
+import threading
 from threading import Event
 
 import decky
@@ -9,11 +10,61 @@ from power_manager import PowerManager
 
 
 class FuseManager:
+    """
+    FUSE 管理器单例类
+    确保整个应用程序中只有一个 FUSE 管理器实例，避免资源冲突
+    """
+
+    _instance = None
+    _lock = threading.Lock()  # 确保线程安全的锁
+
+    @classmethod
+    def get_instance(cls, max_tdp=30, power_manager=None):
+        """
+        获取 FuseManager 单例实例
+        如果实例不存在，则创建一个新实例
+
+        Args:
+            max_tdp: 最大 TDP 值
+            power_manager: 电源管理器实例
+
+        Returns:
+            FuseManager 单例实例
+        """
+        with cls._lock:
+            if cls._instance is None:
+                logger.info("Creating new FuseManager instance")
+                cls._instance = cls(max_tdp, power_manager)
+            else:
+                # 更新现有实例的属性
+                if power_manager and not cls._instance.power_manager:
+                    logger.info("Updating FuseManager power_manager")
+                    cls._instance.power_manager = power_manager
+
+                if max_tdp != cls._instance.max_tdp:
+                    logger.info(
+                        f"Updating FuseManager max_tdp from {cls._instance.max_tdp} to {max_tdp}"
+                    )
+                    cls._instance.max_tdp = max_tdp
+
+            return cls._instance
+
     def __init__(
         self,
         max_tdp=30,
         power_manager: PowerManager = None,
     ):
+        """
+        初始化 FuseManager
+        注意：不应直接调用此构造函数，而是使用 get_instance 方法
+        """
+        # 如果已经有实例，则直接返回
+        if FuseManager._instance is not None:
+            logger.warning(
+                "FuseManager singleton already exists - use get_instance() instead"
+            )
+            return
+
         self.t = None
         self.t_sys = None
         self.should_exit = None
@@ -23,8 +74,13 @@ class FuseManager:
         self.max_tdp = max_tdp
         self.power_manager = power_manager
         self.igpu_path = None
+        self._initialized = False
+        logger.info(f"FuseManager initialized with max_tdp={max_tdp}")
 
     def __del__(self):
+        """
+        在对象被销毁时执行清理操作
+        """
         self.unload()
 
     def unload(self):
@@ -35,6 +91,10 @@ class FuseManager:
         3. 卸载 FUSE 挂载点
         4. 清理 socket 文件
         """
+        # 如果没有初始化，则无需执行清理
+        if not self._initialized:
+            return
+
         try:
             # 1. 设置退出标志
             if self.should_exit:
@@ -77,6 +137,7 @@ class FuseManager:
             self.t_sys = None
             self.should_exit = None
             self.igpu_path = None
+            self._initialized = False
 
     def emit_tdp_frontend(self, tdp):
         """
@@ -113,13 +174,19 @@ class FuseManager:
 
         简而言之 就是侧边栏的调整能同步到插件中，但是插件中的调整不能同步到侧边栏
         """
+        # 如果已经初始化，则返回
+        if self._initialized:
+            logger.info("FuseManager already initialized")
+            return True
+
         from pfuse import find_igpu, prepare_tdp_mount, start_tdp_client
         from utils.tdp import getMaxTDP
 
-        # umount igpu
-        # umount_fuse_igpu()
         # find igpu
         self.igpu_path = find_igpu()
+        if not self.igpu_path:
+            logger.error("No iGPU found, cannot initialize FUSE")
+            return False
 
         settings = confManager.getSettings()
         tdpMax = getMaxTDP()
@@ -134,7 +201,8 @@ class FuseManager:
         self.max_tdp = realTDPMax
 
         if self.should_exit:
-            return
+            return False
+
         self.should_exit = Event()
         try:
             stat = prepare_tdp_mount()
@@ -146,5 +214,12 @@ class FuseManager:
                     self.default_tdp,
                     self.max_tdp,
                 )
-        except Exception:
-            logger.error("Failed to start", exc_info=True)
+                self._initialized = True
+                logger.info("FuseManager successfully initialized")
+                return True
+            else:
+                logger.error("Failed to prepare TDP mount")
+                return False
+        except Exception as e:
+            logger.error(f"Failed to start FUSE: {str(e)}", exc_info=True)
+            return False
