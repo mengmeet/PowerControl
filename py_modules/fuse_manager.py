@@ -179,8 +179,15 @@ class FuseManager:
             logger.info("FuseManager already initialized")
             return True
 
-        from pfuse import find_igpu, prepare_tdp_mount, start_tdp_client
+        from pfuse import (
+            find_igpu,
+            prepare_tdp_mount,
+            start_tdp_client,
+            umount_fuse_igpu,
+        )
         from utils.tdp import getMaxTDP
+
+        umount_fuse_igpu()
 
         # find igpu
         self.igpu_path = find_igpu()
