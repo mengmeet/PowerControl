@@ -148,6 +148,9 @@ def prepare_tdp_mount(debug: bool = False, passhtrough: bool = False):
             logger.warning(f"GPU FUSE mount is already mounted at:\n'{gpu}'")
             return True
 
+        # 先确保资源被清理，避免残留
+        umount_fuse_igpu()
+
         if not os.path.exists(TDP_MOUNT):
             os.makedirs(TDP_MOUNT)
 

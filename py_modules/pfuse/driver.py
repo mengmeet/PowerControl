@@ -27,12 +27,13 @@ import fcntl
 import io
 import logging
 import os
+import signal
 import socket
 import sys
 import time
 from errno import *  # type: ignore
 from stat import *  # type: ignore
-from threading import Lock
+from threading import Lock, Thread
 
 import fuse
 from fuse import Fuse
@@ -46,6 +47,84 @@ PACK_SIZE = 1024
 SOCKET_ACCEPT_TIMEOUT = 0.5  # 增加到 500ms
 SOCKET_OPERATION_TIMEOUT = 1.0  # socket 操作超时时间
 fuse.fuse_python_api = (0, 2)
+
+# 全局变量
+parent_pid = None  # 父进程PID
+parent_check_interval = 5  # 检查父进程的间隔（秒）
+unmount_on_parent_exit = True  # 父进程退出时是否卸载
+cleanup_exit = False  # 是否正在执行清理退出
+
+
+# 添加清理功能
+def cleanup_resources():
+    global cleanup_exit
+    if cleanup_exit:
+        return  # 避免重复清理
+
+    cleanup_exit = True
+    logger.info("开始清理FUSE资源...")
+
+    # 关闭并删除socket文件
+    try:
+        if os.path.exists(FUSE_MOUNT_SOCKET):
+            logger.info(f"删除socket文件: {FUSE_MOUNT_SOCKET}")
+            os.unlink(FUSE_MOUNT_SOCKET)
+    except Exception as e:
+        logger.error(f"删除socket文件失败: {e}")
+
+    # 执行自我卸载
+    try:
+        # 尝试获取挂载点
+        mount_point = None
+        with open("/proc/mounts", "r") as f:
+            for line in f:
+                if "fuse.driver.py" in line:
+                    mount_point = line.split()[1]
+                    break
+
+        if mount_point:
+            logger.info(f"尝试卸载挂载点: {mount_point}")
+            os.system(f"fusermount -uz '{mount_point}' || umount -f -l '{mount_point}'")
+    except Exception as e:
+        logger.error(f"卸载失败: {e}")
+
+    logger.info("资源清理完成，退出进程")
+
+    # 强制退出，确保进程终止
+    os._exit(0)
+
+
+# 检查父进程是否存在
+def check_parent_process():
+    global parent_pid, unmount_on_parent_exit
+
+    if not parent_pid or not unmount_on_parent_exit:
+        return
+
+    try:
+        while True:
+            try:
+                # 检查父进程是否存在
+                os.kill(parent_pid, 0)  # 不发送信号，只检查进程存在
+                time.sleep(parent_check_interval)
+            except OSError:
+                # 父进程不存在
+                logger.warning(f"父进程 {parent_pid} 已终止，开始清理")
+                cleanup_resources()
+                break
+    except Exception as e:
+        logger.error(f"检查父进程出错: {e}")
+
+
+# 信号处理
+def setup_signal_handlers():
+    def signal_handler(signum, frame):
+        logger.info(f"收到信号 {signum}，开始清理")
+        cleanup_resources()
+
+    # 注册信号处理器
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
 
 
 class VirtualStat(fuse.Stat):
@@ -445,11 +524,23 @@ def main():
             level=logging.DEBUG,
             format="%(asctime)s [%(filename)s:%(lineno)d:%(funcName)s] %(levelname)s: %(message)s",
             handlers=[
-                logging.StreamHandler(),
+                logging.StreamHandler(sys.stdout),  # 输出到标准输出而不是标准错误
                 logging.FileHandler("/tmp/fuse_driver_debug.log"),
             ],
         )
-        logger.info("FUSE driver starting with detailed logging")
+
+        # 获取父进程ID（即启动当前进程的进程）
+        global parent_pid
+        parent_pid = os.getppid()
+        logger.info(f"启动FUSE驱动，当前PID: {os.getpid()}，父进程PID: {parent_pid}")
+
+        # 设置信号处理
+        setup_signal_handlers()
+
+        # 启动父进程监控线程
+        parent_monitor = Thread(target=check_parent_process, daemon=True)
+        parent_monitor.start()
+        logger.info("父进程监控已启动")
 
         # 确保挂载目录存在
         if not os.path.exists(FUSE_MOUNT_DIR):
@@ -505,13 +596,8 @@ def main():
         logger.error(f"Unhandled exception in main: {e}", exc_info=True)
     finally:
         logger.info("FUSE driver shutting down")
-        # 清理socket文件
-        if os.path.exists(FUSE_MOUNT_SOCKET):
-            try:
-                os.unlink(FUSE_MOUNT_SOCKET)
-                logger.info("Cleaned up socket file")
-            except Exception as e:
-                logger.error(f"Failed to clean up socket file: {e}")
+        # 执行清理
+        cleanup_resources()
 
 
 if __name__ == "__main__":
