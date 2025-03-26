@@ -1,6 +1,8 @@
 import logging
 import os
+import signal
 import subprocess
+import sys
 import time
 from threading import Event, Thread
 
@@ -9,6 +11,26 @@ from config import logger
 
 TDP_MOUNT = "/run/powercontrol/hwmon"
 FUSE_MOUNT_SOCKET = "/run/powercontrol/socket"
+
+
+# 添加信号处理函数，确保在进程终止时清理资源
+def setup_signal_handlers():
+    def signal_handler(signum, frame):
+        logger.info(f"接收到信号 {signum}，开始清理资源")
+        umount_fuse_igpu()
+        # 如果是终止信号，退出进程
+        if signum in (signal.SIGTERM, signal.SIGINT):
+            logger.info("进程正在退出...")
+            sys.exit(0)
+
+    # 注册SIGTERM和SIGINT信号处理器
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    logger.info("信号处理器已设置")
+
+
+# 在模块导入时设置信号处理器
+setup_signal_handlers()
 
 
 def _get_env():
@@ -200,31 +222,58 @@ def prepare_tdp_mount(debug: bool = False, passhtrough: bool = False):
         custom_python_path = os.environ.get("PYTHONPATH", "")
         custom_python_path += f":{decky.DECKY_PLUGIN_DIR}/py_modules/site-packages"
         os.environ["PYTHONPATH"] = custom_python_path
-        cmd = (
-            f"{exe_python} {thisdir}/driver.py '{gpu}'"
-            + f" -o root={TDP_MOUNT} -o nonempty -o allow_other"
-        )
+
+        # 构建命令，添加后台运行标志 &
+        cmd = f"{exe_python} {thisdir}/driver.py '{gpu}' -o root={TDP_MOUNT} -o nonempty -o allow_other"
         if passhtrough:
             cmd += " -o passthrough"
         if debug:
             cmd += " -f"
+
+        # 添加 & 以后台运行
+        cmd += " &"
+
         logger.info(f"Executing:\n'{cmd}'")
         try:
+            # 使用普通的run，命令本身已经包含后台运行标志
             result = subprocess.run(
                 cmd,
                 shell=True,
                 capture_output=True,
                 text=True,
-                check=True,
+                check=False,
                 env=_get_env(),
             )
-            logger.debug(f"Command output:\n{result.stdout}")
-        except subprocess.CalledProcessError as e:
-            error_msg = f"Failed to launch FUSE mount:\nCommand: {cmd}\nReturn code: {e.returncode}\nError: {e.stderr}"
-            logger.error(error_msg)
-            raise RuntimeError(error_msg)
-    except Exception:
-        logger.error("Error preparing fuse mount.", exc_info=True)
+
+            if result.stderr:
+                logger.info(f"Command stderr: {result.stderr}")
+            if result.stdout:
+                logger.info(f"Command stdout: {result.stdout}")
+
+            # 等待socket文件创建，表示FUSE进程已成功启动
+            wait_time = 0
+            max_wait = 5  # 等待最多5秒
+            while not os.path.exists(FUSE_MOUNT_SOCKET) and wait_time < max_wait:
+                logger.info(f"Waiting for socket file... {wait_time+1}s")
+                time.sleep(1)
+                wait_time += 1
+
+            if os.path.exists(FUSE_MOUNT_SOCKET):
+                os.chmod(FUSE_MOUNT_SOCKET, 0o666)  # 确保其他进程可以访问
+                logger.info("FUSE mount socket file created successfully")
+                return True
+            else:
+                logger.error(
+                    "Socket file not created after waiting. FUSE mount likely failed."
+                )
+                return False
+
+        except Exception as e:
+            error_msg = f"Failed to launch FUSE mount: {str(e)}"
+            logger.error(error_msg, exc_info=True)
+            return False
+    except Exception as e:
+        logger.error(f"Error preparing fuse mount: {str(e)}", exc_info=True)
         return False
 
     return True
@@ -344,7 +393,25 @@ def start_tdp_client(
     t = Thread(
         target=_tdp_client, args=(should_exit, set_tdp, min_tdp, default_tdp, max_tdp)
     )
+    # 设置为守护线程，确保主线程退出时它也会退出
+    t.daemon = True
     t.start()
+
+    # 注册atexit处理器，确保在进程退出时执行清理
+    import atexit
+
+    def cleanup():
+        logger.info("进程退出，清理TDP客户端资源")
+        should_exit.set()
+        if t.is_alive():
+            logger.info("等待TDP客户端线程完成...")
+            t.join(timeout=2)
+        logger.info("TDP客户端清理完成")
+        # 确保挂载点已卸载
+        umount_fuse_igpu()
+
+    atexit.register(cleanup)
+
     return t
 
 
