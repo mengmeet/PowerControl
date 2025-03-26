@@ -10,10 +10,12 @@ from config import logger
 TDP_MOUNT = "/run/powercontrol/hwmon"
 FUSE_MOUNT_SOCKET = "/run/powercontrol/socket"
 
+
 def _get_env():
     env = os.environ.copy()
     env["LD_LIBRARY_PATH"] = ""
     return env
+
 
 def find_igpu():
     for hw in os.listdir("/sys/class/hwmon"):
@@ -56,6 +58,7 @@ def umount_fuse_igpu():
 
         hwmon_pattern = re.compile(r"hwmon\d+$")
 
+        # First unmount FUSE mount points
         for mount in mounts:
             try:
                 device, mount_point, fs_type, *_ = mount.split()
@@ -64,21 +67,68 @@ def umount_fuse_igpu():
                 if fs_type == "fuse.driver.py" and hwmon_pattern.search(mount_point):
                     logger.info(f"Found FUSE mount point: {mount_point}")
 
-                    # Try to unmount
-                    cmd = f"umount -f '{mount_point}'"
+                    # Try to unmount with force option
+                    cmd = f"umount -f -l '{mount_point}'"
                     logger.info(f"Executing unmount command: {cmd}")
-                    r = os.system(cmd)
-
-                    if r == 0:
+                    process = subprocess.run(
+                        cmd,
+                        shell=True,
+                        text=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        env=_get_env(),
+                    )
+                    stdout, stderr, returncode = (
+                        process.stdout,
+                        process.stderr,
+                        process.returncode,
+                    )
+                    if returncode == 0:
                         logger.info(f"Successfully unmounted: {mount_point}")
                     else:
                         logger.error(
-                            f"Failed to unmount: {mount_point}, error code: {r}"
+                            f"Failed to unmount: {mount_point}, error code: {returncode}"
                         )
+                        logger.error(f"Error: {stderr}")
 
             except Exception as e:
                 logger.error(f"Error processing mount point: {str(e)}", exc_info=True)
                 continue
+
+        # Then handle TDP_MOUNT
+        if os.path.ismount(TDP_MOUNT):
+            logger.info(f"Found TDP_MOUNT at: {TDP_MOUNT}")
+            try:
+                # Try to unmount with force and lazy options
+                cmd = f"umount -f -l '{TDP_MOUNT}'"
+                logger.info(f"Executing unmount command for TDP_MOUNT: {cmd}")
+                process = subprocess.run(
+                    cmd,
+                    shell=True,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    env=_get_env(),
+                )
+                if process.returncode == 0:
+                    logger.info(f"Successfully unmounted TDP_MOUNT: {TDP_MOUNT}")
+                else:
+                    logger.error(
+                        f"Failed to unmount TDP_MOUNT: {TDP_MOUNT}, error code: {process.returncode}"
+                    )
+                    logger.error(f"Error: {process.stderr}")
+            except Exception as e:
+                logger.error(f"Error unmounting TDP_MOUNT: {str(e)}", exc_info=True)
+
+        # Clean up TDP_MOUNT directory if it exists
+        if os.path.exists(TDP_MOUNT):
+            try:
+                os.rmdir(TDP_MOUNT)
+                logger.info(f"Successfully removed TDP_MOUNT directory: {TDP_MOUNT}")
+            except Exception as e:
+                logger.error(
+                    f"Failed to remove TDP_MOUNT directory: {str(e)}", exc_info=True
+                )
 
     except Exception as e:
         logger.error(f"Error unmounting FUSE mount points: {str(e)}", exc_info=True)
@@ -122,7 +172,12 @@ def prepare_tdp_mount(debug: bool = False, passhtrough: bool = False):
             cmd = f"mount --make-private '{TDP_MOUNT}'"
             try:
                 result = subprocess.run(
-                    cmd, shell=True, capture_output=True, text=True, check=True, env=_get_env(),
+                    cmd,
+                    shell=True,
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                    env=_get_env(),
                 )
             except subprocess.CalledProcessError as e:
                 error_msg = f"Failed to make mount private:\nCommand: {cmd}\nReturn code: {e.returncode}\nError: {e.stderr}"
@@ -156,7 +211,12 @@ def prepare_tdp_mount(debug: bool = False, passhtrough: bool = False):
         logger.info(f"Executing:\n'{cmd}'")
         try:
             result = subprocess.run(
-                cmd, shell=True, capture_output=True, text=True, check=True, env=_get_env(),
+                cmd,
+                shell=True,
+                capture_output=True,
+                text=True,
+                check=True,
+                env=_get_env(),
             )
             logger.debug(f"Command output:\n{result.stdout}")
         except subprocess.CalledProcessError as e:

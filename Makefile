@@ -103,6 +103,10 @@ deploy: ## Deploy code to steamdeck and restart Decky
 	@$(MAKE) deploy-steamdeck
 	@$(MAKE) restart-decky
 
+deploy-only: ## Deploy code to steamdeck
+	@$(MAKE) deploy-steamdeck
+	@$(MAKE) set-loglevel
+
 deploy-release: ## Deploy release to steamdeck and restart Decky
 	@$(MAKE) deploy-steamdeck
 	@$(MAKE) set-loglevel

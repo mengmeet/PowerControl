@@ -1,11 +1,11 @@
 import asyncio
+import os
 from threading import Event
 
 import decky
 from conf_manager import confManager
 from config import logger
 from power_manager import PowerManager
-from utils import get_env
 
 
 class FuseManager:
@@ -28,17 +28,55 @@ class FuseManager:
         self.unload()
 
     def unload(self):
-        if self.t_sys:
-            self.t_sys.join()
-        self.should_exit.set()
-        if self.igpu_path:
-            # umount igpu
-            try:
-                import subprocess
+        """
+        清理 FUSE 相关资源
+        1. 设置退出标志
+        2. 等待线程结束
+        3. 卸载 FUSE 挂载点
+        4. 清理 socket 文件
+        """
+        try:
+            # 1. 设置退出标志
+            if self.should_exit:
+                self.should_exit.set()
+                logger.info("Set exit flag for TDP client")
 
-                subprocess.run(["umount", "-f", self.igpu_path], env=get_env())
-            except Exception:
-                pass
+            # 2. 等待线程结束
+            if self.t_sys and self.t_sys.is_alive():
+                logger.info("Waiting for TDP client thread to exit")
+                self.t_sys.join(timeout=5)  # 设置超时时间，避免永久等待
+                if self.t_sys.is_alive():
+                    logger.warning("TDP client thread did not exit within timeout")
+
+            # 3. 卸载 FUSE 挂载点
+            if self.igpu_path:
+                try:
+                    from pfuse import umount_fuse_igpu
+
+                    logger.info("Attempting to unmount FUSE mount points")
+                    if not umount_fuse_igpu():
+                        logger.error("Failed to unmount FUSE mount points")
+                except Exception as e:
+                    logger.error(f"Error during FUSE unmount: {str(e)}", exc_info=True)
+
+            # 4. 清理 socket 文件
+            socket_path = "/run/powercontrol/socket"
+            if os.path.exists(socket_path):
+                try:
+                    os.remove(socket_path)
+                    logger.info("Cleaned up socket file")
+                except Exception as e:
+                    logger.error(
+                        f"Failed to remove socket file: {str(e)}", exc_info=True
+                    )
+
+        except Exception as e:
+            logger.error(f"Error during FUSE cleanup: {str(e)}", exc_info=True)
+        finally:
+            # 确保所有引用都被清理
+            self.t_sys = None
+            self.should_exit = None
+            self.igpu_path = None
 
     def emit_tdp_frontend(self, tdp):
         """
@@ -75,17 +113,11 @@ class FuseManager:
 
         简而言之 就是侧边栏的调整能同步到插件中，但是插件中的调整不能同步到侧边栏
         """
-        from pfuse import (
-            find_igpu,
-            prepare_tdp_mount,
-            start_tdp_client,
-            umount_fuse_igpu,
-        )
+        from pfuse import find_igpu, prepare_tdp_mount, start_tdp_client
         from utils.tdp import getMaxTDP
 
         # umount igpu
-        umount_fuse_igpu()
-
+        # umount_fuse_igpu()
         # find igpu
         self.igpu_path = find_igpu()
 
