@@ -8,6 +8,7 @@ import urllib.request
 
 import decky
 from config import API_URL, logger
+from fuse_manager import FuseManager
 from utils import get_env
 
 
@@ -52,6 +53,7 @@ def update_latest():
         logger.info("restarting plugin_loader")
         # cmd = "systemctl restart plugin_loader.service"
         cmd = "pkill -HUP PluginLoader"
+        FuseManager.get_instance().unload()
         result = subprocess.run(
             cmd,
             shell=True,
