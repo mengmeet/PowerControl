@@ -29,7 +29,7 @@ export const MoreComponent: FC = () => {
 
   let uptButtonText = localizationManager.getString(
     localizeStrEnum.REINSTALL_PLUGIN
-  );
+  ) || "Reinstall Plugin";
 
   if (currentVersion !== latestVersion && Boolean(latestVersion)) {
     const versionCompare = compareVersions(latestVersion, currentVersion);
@@ -45,7 +45,7 @@ export const MoreComponent: FC = () => {
   }
 
   return (
-    <PanelSection title={localizationManager.getString(localizeStrEnum.MORE)}>
+    <PanelSection title={localizationManager.getString(localizeStrEnum.MORE) || "More"}>
       <PanelSectionRow>
         <ActionButtonItem
           layout="below"
@@ -71,7 +71,7 @@ export const MoreComponent: FC = () => {
           disabled
           label={localizationManager.getString(
             localizeStrEnum.INSTALLED_VERSION
-          )}
+          ) || "Installed Version"}
         >
           {currentVersion}
         </Field>
@@ -82,7 +82,7 @@ export const MoreComponent: FC = () => {
             disabled
             label={localizationManager.getString(
               localizeStrEnum.LATEST_VERSION
-            )}
+            ) || "Latest Version"}
           >
             {latestVersion}
           </Field>
