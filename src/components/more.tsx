@@ -5,11 +5,11 @@ import { Backend, Settings, compareVersions } from "../util";
 import { ActionButtonItem } from ".";
 
 export const MoreComponent: FC = () => {
-  const [currentVersion, _] = useState<string>(
-    Backend.data.getCurrentVersion()
+  const [currentVersion, setCurrentVersion] = useState<string>(
+    Backend.data?.getCurrentVersion() || ""
   );
   const [latestVersion, setLatestVersion] = useState<string>(
-    Backend.data.getLatestVersion()
+    Backend.data?.getLatestVersion() || ""
   );
 
   useEffect(() => {
@@ -18,6 +18,9 @@ export const MoreComponent: FC = () => {
         setLatestVersion(latestVersion);
         Backend.getLatestVersion().then((latestVersion) => {
           setLatestVersion(latestVersion);
+        });
+        Backend.getCurrentVersion().then((currentVersion) => {
+          setCurrentVersion(currentVersion);
         });
       }, 3000);
     };
@@ -33,11 +36,11 @@ export const MoreComponent: FC = () => {
     if (versionCompare > 0) {
       uptButtonText = `${localizationManager.getString(
         localizeStrEnum.UPDATE_PLUGIN
-      )} ${latestVersion}`;
+      ) || "Update"} ${latestVersion}`;
     } else if (versionCompare < 0) {
       uptButtonText = `${localizationManager.getString(
         localizeStrEnum.ROLLBACK_PLUGIN
-      )} ${latestVersion}`;
+      ) || "Rollback"} ${latestVersion}`;
     }
   }
 
@@ -60,7 +63,7 @@ export const MoreComponent: FC = () => {
             Settings.resetToLocalStorage();
           }}
         >
-          {localizationManager.getString(localizeStrEnum.RESET_ALL)}
+          {localizationManager.getString(localizeStrEnum.RESET_ALL) || "Reset All"}
         </ButtonItem>
       </PanelSectionRow>
       <PanelSectionRow>

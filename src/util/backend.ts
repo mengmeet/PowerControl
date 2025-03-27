@@ -57,37 +57,62 @@ export class BackendData {
       // console.info("cpuMaxNum = " + res.result);
       this.cpuMaxNum = res;
       this.has_cpuMaxNum = true;
+    }).catch((err) => {
+      console.error("获取 CPU 最大核心数失败:", err);
+      Backend.logError(`获取 CPU 最大核心数失败: ${err}`);
+      this.cpuMaxNum = 0;
+      this.has_cpuMaxNum = false;
     });
     await call<[], number>("get_tdpMax").then((res) => {
       this.tdpMax = res;
       this.has_tdpMax = true;
+    }).catch((err) => {
+      console.error("获取 TDP 最大值失败:", err);
+      Backend.logError(`获取 TDP 最大值失败: ${err}`);
     });
     await call<[], number[]>("get_gpuFreqRange").then((res) => {
       this.gpuMin = res[0];
       this.gpuMax = res[1];
       this.has_gpuMin = true;
       this.has_gpuMax = true;
+    }).catch((err) => {
+      console.error("获取 GPU 频率范围失败:", err);
+      Backend.logError(`获取 GPU 频率范围失败: ${err}`);
     });
     await call<[], []>("get_fanConfigList").then((res) => {
       this.fanConfigs = res;
       this.has_fanConfigs = res.length > 0;
+    }).catch((err) => {
+      console.error("获取风扇配置列表失败:", err);
     });
 
     await call<[], boolean>("get_isSupportSMT").then((res) => {
       this.isSupportSMT = res;
       this.has_isSupportSMT = true;
+    }).catch((err) => {
+      console.error("获取 SMT 支持失败:", err);
+      Backend.logError(`获取 SMT 支持失败: ${err}`);
     });
 
     Backend.getMaxPerfPct().then((value) => {
       this.supportCPUMaxPct = value > 0;
+    }).catch((err) => {
+      console.error("获取 CPU 最大性能百分比支持失败:", err);
+      Backend.logError(`获取 CPU 最大性能百分比支持失败: ${err}`);
     });
 
     await call<[], string>("get_version").then((res) => {
       this.current_version = res;
+    }).catch((err) => {
+      console.error("获取当前版本失败:", err);
+      Backend.logError(`获取当前版本失败: ${err}`);
     });
 
     SteamUtils.getSystemInfo().then((systemInfo) => {
       this.systemInfo = systemInfo;
+    }).catch((err) => {
+      console.error("获取系统信息失败:", err);
+      Backend.logError(`获取系统信息失败: ${err}`);
     });
 
     await call<[], string[]>("get_available_governors")
@@ -97,6 +122,7 @@ export class BackendData {
       })
       .catch((err) => {
         console.error("获取可用 CPU 调度器失败:", err);
+        Backend.logError(`获取可用 CPU 调度器失败: ${err}`);
         this.availableGovernors = [];
         this.has_availableGovernors = false;
       });
@@ -108,6 +134,7 @@ export class BackendData {
       })
       .catch((err) => {
         console.error("检查 EPP 支持失败:", err);
+        Backend.logError(`检查 EPP 支持失败: ${err}`);
         this.isEppSupported = false;
         this.has_isEppSupported = false;
       });
@@ -119,6 +146,7 @@ export class BackendData {
       })
       .catch((err) => {
         console.error("获取可用 EPP 模式失败:", err);
+        Backend.logError(`获取可用 EPP 模式失败: ${err}`);
         this.eppModes = [];
         this.has_eppModes = false;
       });
@@ -130,6 +158,7 @@ export class BackendData {
       })
       .catch((err) => {
         console.error("获取当前 EPP 模式失败:", err);
+        Backend.logError(`获取当前 EPP 模式失败: ${err}`);
         this.currentEpp = null;
         this.has_currentEpp = false;
       });
@@ -141,6 +170,7 @@ export class BackendData {
       })
       .catch((err) => {
         console.error("获取 CPU 厂商失败:", err);
+        Backend.logError(`获取 CPU 厂商失败: ${err}`);
         this.cpuVendor = "";
         this.has_cpuVendor = false;
       });
@@ -152,6 +182,7 @@ export class BackendData {
       })
       .catch((err) => {
         console.error("检查 BYPASS_CHARGE 支持失败:", err);
+        Backend.logError(`检查 BYPASS_CHARGE 支持失败: ${err}`);
         this.supportsBypassCharge = false;
         this.has_supportsBypassCharge = false;
       });
@@ -163,6 +194,7 @@ export class BackendData {
       })
       .catch((err) => {
         console.error("检查 CHARGE_LIMIT 支持失败:", err);
+        Backend.logError(`检查 CHARGE_LIMIT 支持失败: ${err}`);
         this.supportsChargeLimit = false;
         this.has_supportsChargeLimit = false;
       });
@@ -174,6 +206,7 @@ export class BackendData {
       })
       .catch((err) => {
         console.error("检查 RESET_CHARGE_LIMIT 支持失败:", err);
+        Backend.logError(`检查 RESET_CHARGE_LIMIT 支持失败: ${err}`);
         this.supportsResetChargeLimit = false;
         this.has_supportsResetChargeLimit = false;
       });
@@ -185,6 +218,7 @@ export class BackendData {
       })
       .catch((err) => {
         console.error("检查 SOFTWARE_CHARGE_LIMIT 支持失败:", err);
+        Backend.logError(`检查 SOFTWARE_CHARGE_LIMIT 支持失败: ${err}`);
         this.supportsSoftwareChargeLimit = false;
         this.has_supportsSoftwareChargeLimit = false;
       });
@@ -825,6 +859,10 @@ export class Backend {
     return (await call("get_latest_version")) as string;
   }
 
+  public static async getCurrentVersion(): Promise<string> {
+    return (await call("get_version")) as string;
+  }
+
   // updateLatest
   public static async updateLatest() {
     return await call("update_latest");
@@ -949,5 +987,25 @@ export class Backend {
     console.log(`设置 EPP 模式为: ${mode}`);
     return call("set_epp", mode);
     // return Promise.resolve(true);
+  }
+
+  // log_info
+  public static logInfo(message: string) {
+    return call("log_info", message);
+  }
+
+  // log_error
+  public static logError(message: string) {
+    return call("log_error", message);
+  }
+
+  // log_warn
+  public static logWarn(message: string) {
+    return call("log_warn", message);
+  }
+
+  // log_debug
+  public static logDebug(message: string) {
+    return call("log_debug", message);
   }
 }

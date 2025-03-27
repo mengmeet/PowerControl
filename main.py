@@ -435,6 +435,34 @@ class Plugin:
             logger.error(e, exc_info=True)
             return False
 
+    async def log_info(self, message: str):
+        try:
+            return logger.info(f"Frontend: {message}")
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
+    async def log_error(self, message: str):
+        try:
+            return logger.error(f"Frontend: {message}")
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
+    async def log_warn(self, message: str):
+        try:
+            return logger.warn(f"Frontend: {message}")
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
+    async def log_debug(self, message: str):
+        try:
+            return logger.debug(f"Frontend: {message}")
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
     # 创建一个新的方法来控制 FUSE 挂载
     async def toggle_native_tdp_slider(self, enabled: bool):
         """

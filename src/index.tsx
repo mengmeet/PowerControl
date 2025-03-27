@@ -34,7 +34,7 @@ import {
   PowerComponent,
 } from "./components";
 
-const Content: FC<{}> = ({}) => {
+const Content: FC<{}> = ({ }) => {
   return (
     <>
       {PluginManager.isIniting() && (
@@ -53,7 +53,14 @@ const Content: FC<{}> = ({}) => {
         </>
       )}
       {PluginManager.isError() && (
-        <PanelSectionRow>Loading error</PanelSectionRow>
+        <>
+          <PanelSectionRow>
+            <div style={{ color: "red" }}>
+              {`Error: ${PluginManager.getErrorMessage()}`}
+            </div>
+          </PanelSectionRow>
+          <MoreComponent />
+        </>
       )}
     </>
   );

@@ -15,6 +15,7 @@ import { ACState, AppOverviewExt, BatteryStateChange } from "./steamClient";
 import { calPointInLine, FanPosition } from "./position";
 import { QAMPatch } from "./patch";
 import { addEventListener } from "@decky/api";
+import { Logger } from "./logger";
 
 type ActiveAppChangedHandler = (newAppId: string, oldAppId: string) => void;
 type ComponentUpdateHandler = (
@@ -304,16 +305,23 @@ export class FanControl {
 
 export class PluginManager {
   private static state: PluginState;
+  private static errorMessage: string = "";
   private static listeners: Map<
     ComponentName,
     Map<ComponentName, ComponentUpdateHandler>
   > = new Map();
   private static suspendEndHook: any;
+
+  public static getErrorMessage(): string {
+    return this.errorMessage;
+  }
+
   public static register = async () => {
     const INIT_TIMEOUT = 20000;
 
     try {
       PluginManager.state = PluginState.INIT;
+      PluginManager.errorMessage = "";
 
       // 创建一个超时 Promise
       const timeoutPromise = new Promise((_, reject) => {
@@ -326,33 +334,68 @@ export class PluginManager {
       // 初始化主要流程
       const initPromise = (async () => {
         try {
-          console.log("Plugin initialization start");
+          Logger.info("Plugin initialization start");
 
-          await Backend.init();
-          await localizationManager.init();
+          try {
+            await localizationManager.init();
+            Logger.info("Localization initialization complete");
+          } catch (e: any) {
+            Logger.error(`Localization initialization failed: ${e.message}`);
+            throw new Error(`Localization initialization failed: ${e.message}`);
+          }
 
-          RunningApps.register();
-          FanControl.register();
+          try {
+            await Backend.init();
+            Logger.info("Backend initialization complete");
+          } catch (e: any) {
+            Logger.error(`Backend initialization failed: ${e.message}`);
+            throw new Error(`Backend initialization failed: ${e.message}`);
+          }
+
+          try {
+            RunningApps.register();
+            FanControl.register();
+            Logger.info("Component registration complete");
+          } catch (e: any) {
+            Logger.error(`Component registration failed: ${e.message}`);
+            throw new Error(`Component registration failed: ${e.message}`);
+          }
 
           // 注册应用切换监听
           RunningApps.listenActiveChange((newAppId, oldAppId) => {
-            console.log(`newAppId=${newAppId} oldAppId=${oldAppId}`);
+            Logger.debug(`App changed: newAppId=${newAppId} oldAppId=${oldAppId}`);
             if (Settings.ensureEnable()) {
               Backend.applySettings(APPLYTYPE.SET_ALL).catch((e) => {
-                console.error("Error while applying settings on app change", e);
+                Logger.error(`Error while applying settings on app change: ${e.message}`);
               });
             }
           });
+          Logger.info("App change listener registered");
 
-          await Settings.loadSettings();
-          ACStateManager.register();
-          await QAMPatch.init();
+          try {
+            await Settings.loadSettings();
+            Logger.info("Settings loaded");
+          } catch (e: any) {
+            Logger.error(`Settings loading failed: ${e.message}`);
+            throw new Error(`Settings loading failed: ${e.message}`);
+          }
+
+          try {
+            ACStateManager.register();
+            await QAMPatch.init();
+            Logger.info("System state initialization complete");
+          } catch (e: any) {
+            Logger.error(`System state initialization failed: ${e.message}`);
+            throw new Error(`System state initialization failed: ${e.message}`);
+          }
 
           try {
             await Backend.applySettings(APPLYTYPE.SET_ALL);
-          } catch (e) {
-            console.error("Error while applying settings", e);
+            Logger.info("Initial settings application complete");
+          } catch (e: any) {
+            Logger.error(`Initial settings application failed: ${e.message}`);
             Settings.resetToLocalStorage(false);
+            throw new Error(`Initial settings application failed: ${e.message}`);
           }
 
           // 注册休眠恢复监听
@@ -365,14 +408,15 @@ export class PluginManager {
                 }
                 await Backend.applySettings(APPLYTYPE.SET_ALL);
               } catch (e) {
-                console.error("Error in suspend resume handler", e);
+                Logger.error(`Error in suspend resume handler: ${e}`);
               }
             });
+          Logger.info("Suspend resume handler registered");
 
           // 监听后端事件
           addEventListener("QAM_setTDP", (tdp: number) => {
             try {
-              console.log(">>>>> Received TDP value:", tdp);
+              Logger.debug(`Received TDP value: ${tdp}`);
               if (tdp == 500) {
                 Settings.setTDPEnable(false);
               } else {
@@ -380,33 +424,32 @@ export class PluginManager {
                 Settings.setTDP(tdp);
               }
             } catch (e) {
-              console.error("Error in QAM_setTDP event handler", e);
+              Logger.error(`Error in QAM_setTDP event handler: ${e}`);
             }
           });
+          Logger.info("QAM_setTDP event handler registered");
 
-          console.log("Plugin initialization complete 6");
-
+          Logger.info("Plugin initialization complete");
           PluginManager.state = PluginState.RUN;
-        } catch (e) {
-          console.error("Error during plugin initialization", e);
+        } catch (e: any) {
+          Logger.error(`Error during plugin initialization: ${e.message}`);
           PluginManager.state = PluginState.ERROR;
+          PluginManager.errorMessage = e.message;
           throw e;
         }
       })();
 
       // 使用 Promise.race 实现超时机制
       await Promise.race([initPromise, timeoutPromise]);
-    } catch (e) {
-      console.error("Plugin initialization failed", e);
+    } catch (e: any) {
+      Logger.error(`Plugin initialization failed: ${e.message}`);
       PluginManager.state = PluginState.ERROR;
+      PluginManager.errorMessage = e.message;
       // 清理已注册的资源
       try {
         await PluginManager.unregister();
       } catch (cleanupError) {
-        console.error(
-          "Error during cleanup after initialization failure",
-          cleanupError
-        );
+        Logger.error(`Error during cleanup after initialization failure: ${cleanupError}`);
       }
       throw e;
     }
