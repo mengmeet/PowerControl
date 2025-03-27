@@ -14,14 +14,14 @@ class ConfManager:
         )
 
     def getSettings(self):
-        return self.sysSettings.getSetting(CONFIG_KEY)
+        return self.sysSettings.getSetting(CONFIG_KEY) or {}
 
     def setSettings(self, settings):
         self.sysSettings.setSetting(CONFIG_KEY, settings)
         return True
 
     def getFanSettings(self):
-        return self.fansSettings.getSetting(CONFIG_KEY)
+        return self.fansSettings.getSetting(CONFIG_KEY) or {}
 
     def setFanSettingsByKey(self, key, value):
         self.fansSettings.setSetting(key, value)

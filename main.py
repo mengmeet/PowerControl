@@ -31,8 +31,9 @@ class Plugin:
 
         # 使用单例模式获取 FuseManager 实例
         fuseManager = FuseManager.get_instance(power_manager=self.powerManager)
-        enableNativeTDPSlider = self.confManager.getSettings().get(
-            "enableNativeTDPSlider", False
+        settings = self.confManager.getSettings()
+        enableNativeTDPSlider = (
+            settings.get("enableNativeTDPSlider", False) if settings else False
         )
         if enableNativeTDPSlider:
             fuseManager.fuse_init()
