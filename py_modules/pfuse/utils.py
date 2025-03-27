@@ -17,25 +17,39 @@ def _get_env():
     return env
 
 
+def _get_cpu_vendor():
+    with open("/proc/cpuinfo", "r") as f:
+        for line in f:
+            if line.startswith("vendor_id"):
+                return line.split(":")[1].strip()
+    return None
+
+
 def find_igpu():
     for hw in os.listdir("/sys/class/hwmon"):
         if not hw.startswith("hwmon"):
             continue
         if not os.path.exists(f"/sys/class/hwmon/{hw}/name"):
             continue
-        with open(f"/sys/class/hwmon/{hw}/name", "r") as f:
-            if "amdgpu" not in f.read():
+        if _get_cpu_vendor() == "AuthenticAMD":
+            with open(f"/sys/class/hwmon/{hw}/name", "r") as f:
+                if "amdgpu" not in f.read():
+                    continue
+
+            if not os.path.exists(f"/sys/class/hwmon/{hw}/device"):
+                logger.error(f'No device symlink found for "{hw}"')
                 continue
 
-        if not os.path.exists(f"/sys/class/hwmon/{hw}/device"):
-            logger.error(f'No device symlink found for "{hw}"')
-            continue
-
-        if not os.path.exists(f"/sys/class/hwmon/{hw}/device/local_cpulist"):
-            logger.warning(
-                f'No local_cpulist found for "{hw}". Assuming it is a dedicated unit.'
-            )
-            continue
+            if not os.path.exists(f"/sys/class/hwmon/{hw}/device/local_cpulist"):
+                logger.warning(
+                    f'No local_cpulist found for "{hw}". Assuming it is a dedicated unit.'
+                )
+                continue
+        else:
+            if _get_cpu_vendor() == "GenuineIntel":
+                with open(f"/sys/class/hwmon/{hw}/name", "r") as f:
+                    if "coretemp" not in f.read():
+                        continue
 
         pth = os.path.realpath(os.path.join("/sys/class/hwmon", hw))
         return pth

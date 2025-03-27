@@ -285,7 +285,7 @@ const CPUTDPComponent: FC = () => {
 
   return (
     <>
-      {cpuVendor == "AuthenticAMD" && (
+      {(cpuVendor == "AuthenticAMD" || cpuVendor == "GenuineIntel") && (
         <PanelSectionRow>
           <ToggleField
             label={localizationManager.getString(
