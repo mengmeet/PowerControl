@@ -226,12 +226,17 @@ class GPUManager:
         self._gpuAutoFreqManager = None
         self.gpu_nowFreq = [0, 0]  # 当前设置的gpu频率
         self.gpu_freqRange = [0, 0]  # 系统gpu频率调整的区间
+        self.gpu_autoFreqRange = [0, 0]  # 自动gpu频率调整的区间
+        self.__init_gpu_info()  # 初始化gpu信息
+        self._gpu_notifier = GPUFreqNotifier(self)  # 监视gpu频率文件
+        self._gpu_notifier.run()
+
+    def __init_gpu_info(self):
+        self.get_gpuFreqRange()  # 获取gpu频率范围
         self.gpu_autoFreqRange = [
             self.gpu_freqRange[0],
             self.gpu_freqRange[1],
         ]  # 自动gpu频率调整的区间
-        self._gpu_notifier = GPUFreqNotifier(self)  # 监视gpu频率文件
-        self._gpu_notifier.run()
 
     def unload(self):
         self.set_gpuAuto(False)
@@ -340,6 +345,9 @@ class GPUManager:
                 elif os.path.exists(INTEL_GPU_MAX_FREQ) and os.path.exists(
                     INTEL_GPU_MIN_FREQ
                 ):
+                    logger.debug(
+                        f"set_gpuFreq: intel gpu, INTEL_GPU_MAX_FREQ={INTEL_GPU_MAX_FREQ}, INTEL_GPU_MIN_FREQ={INTEL_GPU_MIN_FREQ}"
+                    )
                     # intel gpu
                     if minValue == 0 and maxValue == 0:
                         minValue = self.gpu_freqRange[0]
@@ -352,11 +360,17 @@ class GPUManager:
                         currentMax = int(file.read().strip())
                     # 如果要设置 min 大于当前 max，要先设置 max
                     if minValue > currentMax:
+                        logger.debug(
+                            f"set_gpuFreq: intel gpu, set maxValue={maxValue} before minValue={minValue}"
+                        )
                         with open(INTEL_GPU_MAX_FREQ, "w") as file:
                             file.write(str(maxValue))
                         with open(INTEL_GPU_MIN_FREQ, "w") as file:
                             file.write(str(minValue))
                     else:
+                        logger.debug(
+                            f"set_gpuFreq: intel gpu, set minValue={minValue} before maxValue={maxValue}"
+                        )
                         with open(INTEL_GPU_MIN_FREQ, "w") as file:
                             file.write(str(minValue))
                         with open(INTEL_GPU_MAX_FREQ, "w") as file:
