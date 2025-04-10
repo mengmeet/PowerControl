@@ -76,5 +76,7 @@
     "MANUAL_BYPASS_CHARGE_DESC_WITH_LIMIT": "Bei Aktivierung wird die Ladelimitierung vorübergehend deaktiviert",
     "CHARGE_LIMIT": "Ladelimitierung",
     "CHARGE_LIMIT_DESC": "Ladelimitierung zum Schutz der Akkulebensdauer einstellen",
-    "CHARGE_LIMIT_DESC_WITH_BYPASS": "Bypass-Ladung ist aktiv, Ladelimitierung vorübergehend deaktiviert"
+    "CHARGE_LIMIT_DESC_WITH_BYPASS": "Bypass-Ladung ist aktiv, Ladelimitierung vorübergehend deaktiviert",
+    "USE_OLD_UI": "Alte Benutzeroberfläche verwenden",
+    "USE_OLD_UI_DESC": "Alte Listenansicht anstelle der neuen Tab-Ansicht verwenden"
 }
