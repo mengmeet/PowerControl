@@ -171,6 +171,8 @@ const I18N_KEYS = [
   "CHARGE_LIMIT",
   "CHARGE_LIMIT_DESC",
   "CHARGE_LIMIT_DESC_WITH_BYPASS",
+  "USE_OLD_UI",
+  "USE_OLD_UI_DESC",
 ] as const;
 
 // 创建常量对象并导出

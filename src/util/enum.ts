@@ -69,6 +69,7 @@ export enum ComponentName {
   POWER_ALL = "POWER_ALL",
   POWER_BYPASS_CHARGE = "POWER_BYPASS_CHARGE",
   POWER_CHARGE_LIMIT = "POWER_CHARGE_LIMIT",
+  TAB_ALL = "TAB_ALL",
 }
 
 export enum UpdateType {

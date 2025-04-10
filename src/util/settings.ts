@@ -215,6 +215,9 @@ export class SettingsData {
   @JsonProperty()
   public currentTabRoute: string = "cpu";
 
+  @JsonProperty()
+  public useOldUI: boolean = false; // 是否使用旧的 UI
+
   @JsonProperty({ type: AppSettingData, isDictionary: true })
   public perApp: { [appId: string]: AppSettingData } = {};
 
@@ -266,6 +269,7 @@ export class SettingsData {
     this.showGpuMenu = copyTarget.showGpuMenu;
     this.showPowerMenu = copyTarget.showPowerMenu;
     this.currentTabRoute = copyTarget.currentTabRoute;
+    this.useOldUI = copyTarget.useOldUI;
   }
 }
 
@@ -336,7 +340,16 @@ export class Settings {
     return this._instance.data.currentTabRoute;
   }
 
-  
+  public static set useOldUI(useOldUI: boolean) {
+    this._instance.data.useOldUI = useOldUI;
+    Settings.saveSettingsToLocalStorage();
+    PluginManager.updateAllComponent(UpdateType.UPDATE);
+  }
+
+  public static get useOldUI(): boolean {
+    return this._instance.data.useOldUI;
+  }
+
   //插件是否开启
   public static ensureEnable(): boolean {
     return this._instance.data.enabled;

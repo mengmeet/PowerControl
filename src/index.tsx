@@ -22,9 +22,15 @@ import {
   SteamSpinner,
   Tabs,
 } from "@decky/ui";
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { FaFan, FaLayerGroup, FaSuperpowers } from "react-icons/fa";
-import { Backend, PluginManager, Settings } from "./util";
+import {
+  Backend,
+  ComponentName,
+  PluginManager,
+  Settings,
+  UpdateType,
+} from "./util";
 import {
   GPUComponent,
   CPUComponent,
@@ -51,7 +57,7 @@ const ListView: FC<{}> = ({}) => {
   );
 };
 
-const TabView: FC<{}> = ({}) => {
+const TabView: FC<{ show?: boolean }> = ({ show = true }) => {
   const [currentTabRoute, setCurrentTabRoute] = useState<string>(
     Settings.currentTabRoute
   );
@@ -85,62 +91,103 @@ const TabView: FC<{}> = ({}) => {
 `}
       </style>
       <SettingsComponent />
-      <div
-        className="main-tabs"
-        style={{
-          height: "95%",
-          width: "300px",
-          marginTop: "-12px",
-          position: "absolute",
-          overflow: "visible",
-        }}
-      >
-        <Tabs
-          activeTab={currentTabRoute}
-          onShowTab={(tabID: string) => {
-            updateCurrentTabRoute(tabID);
+      {show && (
+        <div
+          className="main-tabs"
+          style={{
+            height: "95%",
+            width: "300px",
+            marginTop: "-12px",
+            position: "absolute",
+            overflow: "visible",
           }}
-          tabs={[
-            {
-              title: <BsCpuFill size={20} style={{ display: "block" }} />,
-              content: <TabCpu />,
-              id: "cpu",
-            },
-            {
-              title: (
-                <PiGraphicsCardFill size={21} style={{ display: "block" }} />
-              ),
-              content: <TabGpu />,
-              id: "gpu",
-            },
-            {
-              title: <FaFan size={20} style={{ display: "block" }} />,
-              content: <TabFans />,
-              id: "fans",
-            },
-            ...(showPowerTab
-              ? [
-                  {
-                    title: (
-                      <PiLightningFill size={20} style={{ display: "block" }} />
-                    ),
-                    content: <TabPower />,
-                    id: "power",
-                  },
-                ]
-              : []),
-            {
-              title: <FaLayerGroup size={20} style={{ display: "block" }} />,
-              content: <TabMore />,
-              id: "more",
-            },
-          ]}
-        />
-      </div>
+        >
+          <Tabs
+            activeTab={currentTabRoute}
+            onShowTab={(tabID: string) => {
+              updateCurrentTabRoute(tabID);
+            }}
+            tabs={[
+              {
+                title: <BsCpuFill size={20} style={{ display: "block" }} />,
+                content: <TabCpu />,
+                id: "cpu",
+              },
+              {
+                title: (
+                  <PiGraphicsCardFill size={21} style={{ display: "block" }} />
+                ),
+                content: <TabGpu />,
+                id: "gpu",
+              },
+              {
+                title: <FaFan size={20} style={{ display: "block" }} />,
+                content: <TabFans />,
+                id: "fans",
+              },
+              ...(showPowerTab
+                ? [
+                    {
+                      title: (
+                        <PiLightningFill
+                          size={20}
+                          style={{ display: "block" }}
+                        />
+                      ),
+                      content: <TabPower />,
+                      id: "power",
+                    },
+                  ]
+                : []),
+              {
+                title: <FaLayerGroup size={20} style={{ display: "block" }} />,
+                content: <TabMore />,
+                id: "more",
+              },
+            ]}
+          />
+        </div>
+      )}
+      {!show && <MoreComponent />}
     </>
   );
 };
 const Content: FC<{}> = ({}) => {
+  const [useOldUI, setUseOldUI] = useState<boolean>(Settings.useOldUI);
+  const [show, setShow] = useState<boolean>(Settings.ensureEnable());
+
+  const hide = (ishide: boolean) => {
+    setShow(!ishide);
+  };
+
+  const refresh = () => {
+    setUseOldUI(Settings.useOldUI);
+  };
+
+  //listen Settings
+  useEffect(() => {
+    PluginManager.listenUpdateComponent(
+      ComponentName.TAB_ALL,
+      [ComponentName.TAB_ALL],
+      (_ComponentName, updateType) => {
+        switch (updateType) {
+          case UpdateType.HIDE: {
+            hide(true);
+            break;
+          }
+          case UpdateType.SHOW: {
+            hide(false);
+            break;
+          }
+          case UpdateType.UPDATE: {
+            refresh();
+            break;
+          }
+        }
+      }
+    );
+  }, []);
+
   return (
     <>
       {PluginManager.isIniting() && (
@@ -148,7 +195,8 @@ const Content: FC<{}> = ({}) => {
           <SteamSpinner />
         </PanelSectionRow>
       )}
-      {PluginManager.isRunning() && <TabView />}
+      {PluginManager.isRunning() &&
+        (useOldUI ? <ListView /> : <TabView show={show} />)}
       {PluginManager.isError() && (
         <>
           <PanelSectionRow>

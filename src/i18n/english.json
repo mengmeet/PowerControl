@@ -78,5 +78,7 @@
     "MANUAL_BYPASS_CHARGE_DESC_WITH_LIMIT": "Enabling this will temporarily disable charge limit",
     "CHARGE_LIMIT": "Charge Limit",
     "CHARGE_LIMIT_DESC": "Set battery charge limit to extend battery life",
-    "CHARGE_LIMIT_DESC_WITH_BYPASS": "Manual bypass charging is enabled, charge limit is temporarily disabled"
+    "CHARGE_LIMIT_DESC_WITH_BYPASS": "Manual bypass charging is enabled, charge limit is temporarily disabled",
+    "USE_OLD_UI": "Use Old UI",
+    "USE_OLD_UI_DESC": "Use the old List View instead of the new Tab View"
 }
