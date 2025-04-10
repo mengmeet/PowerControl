@@ -78,5 +78,7 @@
     "MANUAL_BYPASS_CHARGE_DESC_WITH_LIMIT": "开启后将暂时禁用充电限制功能",
     "CHARGE_LIMIT": "充电限制",
     "CHARGE_LIMIT_DESC": "设置电池充电限制，延长电池寿命",
-    "CHARGE_LIMIT_DESC_WITH_BYPASS": "手动旁路供电已开启，充电限制暂时无效"
+    "CHARGE_LIMIT_DESC_WITH_BYPASS": "手动旁路供电已开启，充电限制暂时无效",
+    "USE_OLD_UI": "使用旧版 UI",
+    "USE_OLD_UI_DESC": "使用旧的列表视图而不是新的标签视图"
 }

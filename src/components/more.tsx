@@ -1,4 +1,10 @@
-import { ButtonItem, Field, PanelSection, PanelSectionRow } from "@decky/ui";
+import {
+  ButtonItem,
+  Field,
+  PanelSection,
+  PanelSectionRow,
+  ToggleField,
+} from "@decky/ui";
 import { FC, useEffect, useState } from "react";
 import { localizationManager, localizeStrEnum } from "../i18n";
 import { Backend, Settings, compareVersions } from "../util";
@@ -11,6 +17,15 @@ export const MoreComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
   const [latestVersion, setLatestVersion] = useState<string>(
     Backend.data?.getLatestVersion() || ""
   );
+
+  const [useOldUI, setUseOldUI] = useState<boolean>(
+    Settings.useOldUI
+  );
+
+  const updateUseOldUI = (value: boolean) => {
+    Settings.useOldUI = value;
+    setUseOldUI(value);
+  };
 
   useEffect(() => {
     const getData = async () => {
@@ -50,6 +65,18 @@ export const MoreComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
       <PanelSection
         title={localizationManager.getString(localizeStrEnum.MORE) || "More"}
       >
+        <PanelSectionRow>
+          <ToggleField
+            label={localizationManager.getString(localizeStrEnum.USE_OLD_UI)}
+            description={localizationManager.getString(
+              localizeStrEnum.USE_OLD_UI_DESC
+            )}
+            checked={useOldUI}
+            onChange={(value) => {
+              updateUseOldUI(value);
+            }}
+          />
+        </PanelSectionRow>
         <PanelSectionRow>
           <ActionButtonItem
             layout="below"
