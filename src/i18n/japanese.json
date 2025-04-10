@@ -76,5 +76,7 @@
     "MANUAL_BYPASS_CHARGE_DESC_WITH_LIMIT": "有効にすると充電制限が一時的に無効になります",
     "CHARGE_LIMIT": "充電制限",
     "CHARGE_LIMIT_DESC": "バッテリー寿命を延ばすために充電制限を設定",
-    "CHARGE_LIMIT_DESC_WITH_BYPASS": "手動バイパス充電が有効、充電制限は一時的に無効"
+    "CHARGE_LIMIT_DESC_WITH_BYPASS": "手動バイパス充電が有効、充電制限は一時的に無効",
+    "USE_OLD_UI": "旧UIを使用",
+    "USE_OLD_UI_DESC": "新しいタブビューの代わりに旧リストビューを使用する"
 }

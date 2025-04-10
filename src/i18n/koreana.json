@@ -76,5 +76,7 @@
     "MANUAL_BYPASS_CHARGE_DESC_WITH_LIMIT": "활성화하면 충전 제한이 일시적으로 비활성화됩니다",
     "CHARGE_LIMIT": "충전 제한",
     "CHARGE_LIMIT_DESC": "배터리 수명을 연장하기 위한 충전 제한 설정",
-    "CHARGE_LIMIT_DESC_WITH_BYPASS": "우회 충전이 활성화되어 충전 제한이 일시적으로 비활성화됨"
+    "CHARGE_LIMIT_DESC_WITH_BYPASS": "우회 충전이 활성화되어 충전 제한이 일시적으로 비활성화됨",
+    "USE_OLD_UI": "이전 UI 사용",
+    "USE_OLD_UI_DESC": "새로운 탭 보기 대신 이전 목록 보기 사용"
 }

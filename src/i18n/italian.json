@@ -76,5 +76,7 @@
     "MANUAL_BYPASS_CHARGE_DESC_WITH_LIMIT": "L'attivazione disabiliterà temporaneamente il limite di carica",
     "CHARGE_LIMIT": "Limite di carica",
     "CHARGE_LIMIT_DESC": "Imposta un limite di carica per prolungare la durata della batteria",
-    "CHARGE_LIMIT_DESC_WITH_BYPASS": "Carica bypass attiva, limite di carica temporaneamente disabilitato"
+    "CHARGE_LIMIT_DESC_WITH_BYPASS": "Carica bypass attiva, limite di carica temporaneamente disabilitato",
+    "USE_OLD_UI": "Usa la vecchia interfaccia",
+    "USE_OLD_UI_DESC": "Usa la vecchia visualizzazione a lista invece della nuova visualizzazione a schede"
 }

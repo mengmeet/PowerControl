@@ -76,5 +76,7 @@
     "MANUAL_BYPASS_CHARGE_DESC_WITH_LIMIT": "L'activation désactivera temporairement la limite de charge",
     "CHARGE_LIMIT": "Limite de charge",
     "CHARGE_LIMIT_DESC": "Définir une limite de charge pour prolonger la durée de vie de la batterie",
-    "CHARGE_LIMIT_DESC_WITH_BYPASS": "Charge en dérivation activée, limite de charge temporairement désactivée"
+    "CHARGE_LIMIT_DESC_WITH_BYPASS": "Charge en dérivation activée, limite de charge temporairement désactivée",
+    "USE_OLD_UI": "Utiliser l'ancienne interface",
+    "USE_OLD_UI_DESC": "Utiliser l'ancienne vue en liste au lieu de la nouvelle vue par onglets"
 }
