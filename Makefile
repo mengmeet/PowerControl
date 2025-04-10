@@ -34,7 +34,7 @@ update-frontend-lib: ## Update decky-frontend-lib
 
 update-ui: ## Update @decky/api and @decky/ui
 	@echo "+ $@"
-	@pnpm update @decky/api @decky/ui --latest
+	@pnpm update @decky/api @decky/ui react-icons --latest
 
 
 update-decky-ui: ## Update @decky/ui @decky/api

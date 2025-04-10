@@ -212,6 +212,9 @@ export class SettingsData {
   @JsonProperty()
   public showPowerMenu: boolean = true;
 
+  @JsonProperty()
+  public currentTabRoute: string = "cpu";
+
   @JsonProperty({ type: AppSettingData, isDictionary: true })
   public perApp: { [appId: string]: AppSettingData } = {};
 
@@ -262,6 +265,7 @@ export class SettingsData {
     this.showCpuMenu = copyTarget.showCpuMenu;
     this.showGpuMenu = copyTarget.showGpuMenu;
     this.showPowerMenu = copyTarget.showPowerMenu;
+    this.currentTabRoute = copyTarget.currentTabRoute;
   }
 }
 
@@ -323,6 +327,16 @@ export class Settings {
   }
   // ui 菜单展开控制 end
 
+  public static set currentTabRoute(route: string) {
+    this._instance.data.currentTabRoute = route;
+    Settings.saveSettingsToLocalStorage();
+  }
+
+  public static get currentTabRoute(): string {
+    return this._instance.data.currentTabRoute;
+  }
+
+  
   //插件是否开启
   public static ensureEnable(): boolean {
     return this._instance.data.enabled;

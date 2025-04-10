@@ -238,9 +238,7 @@ const CPUTDPComponent: FC = () => {
     Settings.appEnableNativeTDPSlider()
   );
 
-  const [cpuVendor, _] = useState<string>(
-    Backend.data.getCpuVendor()
-  );
+  const [cpuVendor, _] = useState<string>(Backend.data.getCpuVendor());
 
   const refresh = () => {
     setTDPEnable(Settings.appTDPEnable());
@@ -285,37 +283,8 @@ const CPUTDPComponent: FC = () => {
 
   return (
     <>
-      {cpuVendor == "AuthenticAMD" && (
-        <PanelSectionRow>
-          <ToggleField
-            label={localizationManager.getString(
-              localizeStrEnum.NATIVE_TDP_SLIDER
-            )}
-            description={localizationManager.getString(
-              localizeStrEnum.NATIVE_TDP_SLIDER_DESC
-            )}
-            checked={enableNativeTDPSlider}
-            onChange={(value) => {
-              Settings.setEnableNativeTDPSlider(value);
-            }}
-          />
-        </PanelSectionRow>
-      )}
       {!enableNativeTDPSlider && (
         <>
-          <PanelSectionRow>
-            <ToggleField
-              label={localizationManager.getString(localizeStrEnum.TDP)}
-              description={localizationManager.getString(
-                localizeStrEnum.TDP_DESC
-              )}
-              checked={tdpEnable}
-              disabled={disabled}
-              onChange={(value) => {
-                Settings.setTDPEnable(value);
-              }}
-            />
-          </PanelSectionRow>
           {(tdpEnable || enableNativeTDPSlider) && (
             <PanelSectionRow>
               <SlowSliderField
@@ -337,7 +306,36 @@ const CPUTDPComponent: FC = () => {
               />
             </PanelSectionRow>
           )}
+          <PanelSectionRow>
+            <ToggleField
+              label={localizationManager.getString(localizeStrEnum.TDP)}
+              description={localizationManager.getString(
+                localizeStrEnum.TDP_DESC
+              )}
+              checked={tdpEnable}
+              disabled={disabled}
+              onChange={(value) => {
+                Settings.setTDPEnable(value);
+              }}
+            />
+          </PanelSectionRow>
         </>
+      )}
+      {cpuVendor == "AuthenticAMD" && (
+        <PanelSectionRow>
+          <ToggleField
+            label={localizationManager.getString(
+              localizeStrEnum.NATIVE_TDP_SLIDER
+            )}
+            description={localizationManager.getString(
+              localizeStrEnum.NATIVE_TDP_SLIDER_DESC
+            )}
+            checked={enableNativeTDPSlider}
+            onChange={(value) => {
+              Settings.setEnableNativeTDPSlider(value);
+            }}
+          />
+        </PanelSectionRow>
       )}
     </>
   );
@@ -463,7 +461,9 @@ export const CPUEPPComponent: FC = () => {
   );
 };
 
-export const CPUComponent: FC = () => {
+export const CPUComponent: FC<{
+  isTab?: boolean;
+}> = ({ isTab = false }) => {
   const [showCpuMenu, setShowCpuMenu] = useState<boolean>(Settings.showCpuMenu);
   const updateShowCpuMenu = (show: boolean) => {
     setShowCpuMenu(show);
@@ -506,37 +506,39 @@ export const CPUComponent: FC = () => {
     );
   }, []);
   return (
-    <>
+    <div style={!isTab ? {} : { marginLeft: "-10px", marginRight: "-10px" }}>
       {show && (
         <PanelSection title="CPU">
-          <PanelSectionRow>
-            <ButtonItem
-              layout="below"
-              // @ts-ignore
-              style={{
-                height: "20px",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-              onClick={() => updateShowCpuMenu(!showCpuMenu)}
-            >
-              {showCpuMenu ? <RiArrowUpSFill /> : <RiArrowDownSFill />}
-            </ButtonItem>
-          </PanelSectionRow>
-          {showCpuMenu && (
+          {!isTab && (
+            <PanelSectionRow>
+              <ButtonItem
+                layout="below"
+                // @ts-ignore
+                style={{
+                  height: "20px",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+                onClick={() => updateShowCpuMenu(!showCpuMenu)}
+              >
+                {showCpuMenu ? <RiArrowUpSFill /> : <RiArrowDownSFill />}
+              </ButtonItem>
+            </PanelSectionRow>
+          )}
+          {(isTab || showCpuMenu) && (
             <>
+              <CPUTDPComponent />
+              {cpuVendor != "GenuineIntel" && <CustomTDPComponent />}
               <CPUBoostComponent />
               {isSpportSMT && <CPUSmtComponent />}
               <CPUGovernorComponent />
               <CPUNumComponent />
-              <CPUTDPComponent />
-              {cpuVendor != "GenuineIntel" && <CustomTDPComponent />}
               <CPUPerformancePerfComponent />
             </>
           )}
         </PanelSection>
       )}
-    </>
+    </div>
   );
 };

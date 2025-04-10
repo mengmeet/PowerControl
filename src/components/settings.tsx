@@ -256,7 +256,9 @@ const SettingsPerAcStateComponent: FC = () => {
   );
 };
 
-export const SettingsComponent: FC = () => {
+export const SettingsComponent: FC<{
+  isTab?: boolean;
+}> = ({ isTab = false }) => {
   const [showSettings, setShowSettings] = useState<boolean>(
     Settings.showSettingMenu
   );
@@ -269,22 +271,24 @@ export const SettingsComponent: FC = () => {
       <PanelSection
         title={localizationManager.getString(localizeStrEnum.TITEL_SETTINGS)}
       >
-        <PanelSectionRow>
-          <ButtonItem
-            layout="below"
-            // @ts-ignore
-            style={{
-              height: "20px",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-            onClick={() => updateShowSettings(!showSettings)}
-          >
-            {showSettings ? <RiArrowUpSFill /> : <RiArrowDownSFill />}
-          </ButtonItem>
-        </PanelSectionRow>
-        {showSettings && (
+        {!isTab && (
+          <PanelSectionRow>
+            <ButtonItem
+              layout="below"
+              // @ts-ignore
+              style={{
+                height: "20px",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              onClick={() => updateShowSettings(!showSettings)}
+            >
+              {showSettings ? <RiArrowUpSFill /> : <RiArrowDownSFill />}
+            </ButtonItem>
+          </PanelSectionRow>
+        )}
+        {(showSettings || isTab) && (
           <>
             <SettingsEnableComponent />
             <SettingsPerAppComponent />

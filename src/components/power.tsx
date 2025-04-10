@@ -166,7 +166,7 @@ const ChargeLimitComponent: FC = () => {
   );
 };
 
-export const PowerComponent: FC = () => {
+export const PowerComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
   const [show, setShow] = useState<boolean>(Settings.ensureEnable());
 
   const [supportChargeLimit, _] = useState<boolean>(
@@ -216,25 +216,27 @@ export const PowerComponent: FC = () => {
   }, [supportChargeLimit, isSupportSoftwareChargeLimit]);
 
   return (
-    <>
+    <div style={!isTab ? {} : { marginLeft: "-10px", marginRight: "-10px" }}>
       {show && (
         <PanelSection title="Power">
-          <PanelSectionRow>
-            <ButtonItem
-              layout="below"
-              // @ts-ignore
-              style={{
-                height: "20px",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-              onClick={() => updateShowPowerMenu(!showPowerMenu)}
-            >
-              {showPowerMenu ? <RiArrowUpSFill /> : <RiArrowDownSFill />}
-            </ButtonItem>
-          </PanelSectionRow>
-          {showPowerMenu && (
+          {!isTab && (
+            <PanelSectionRow>
+              <ButtonItem
+                layout="below"
+                // @ts-ignore
+                style={{
+                  height: "20px",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+                onClick={() => updateShowPowerMenu(!showPowerMenu)}
+              >
+                {showPowerMenu ? <RiArrowUpSFill /> : <RiArrowDownSFill />}
+              </ButtonItem>
+            </PanelSectionRow>
+          )}
+          {(showPowerMenu || isTab) && (
             <>
               {supportChargeLimit && <ChargeLimitComponent />}
               {isSupportSoftwareChargeLimit && <BypassChargeComponent />}
@@ -242,6 +244,6 @@ export const PowerComponent: FC = () => {
           )}
         </PanelSection>
       )}
-    </>
+    </div>
   );
 };

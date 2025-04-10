@@ -1,6 +1,6 @@
 import { defaultLocale, localizeMap, LocalizeStrKey } from "./localizeMap";
 
-import i18n, { Resource } from "i18next";
+import i18n, { Resource} from "i18next";
 
 export class localizationManager {
   private static language = "english";
