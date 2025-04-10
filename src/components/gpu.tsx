@@ -416,7 +416,7 @@ const GPUModeComponent: FC = () => {
   );
 };
 
-export function GPUComponent() {
+export const GPUComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
   const [show, setShow] = useState<boolean>(Settings.ensureEnable());
   const hide = (ishide: boolean) => {
     setShow(!ishide);
@@ -448,31 +448,33 @@ export function GPUComponent() {
     );
   }, []);
   return (
-    <>
+    <div style={!isTab ? {} : { marginLeft: "-10px", marginRight: "-10px" }}>
       {show && (
         <PanelSection title="GPU">
-          <PanelSectionRow>
-            <ButtonItem
-              layout="below"
-              // @ts-ignore
-              style={{
-                height: "20px",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-              onClick={() => updateShowGpuMenu(!showGpuMenu)}
-            >
-              {showGpuMenu ? <RiArrowUpSFill /> : <RiArrowDownSFill />}
-            </ButtonItem>
-          </PanelSectionRow>
-          {showGpuMenu && (
+          {!isTab && (
+            <PanelSectionRow>
+              <ButtonItem
+                layout="below"
+                // @ts-ignore
+                style={{
+                  height: "20px",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+                onClick={() => updateShowGpuMenu(!showGpuMenu)}
+              >
+                {showGpuMenu ? <RiArrowUpSFill /> : <RiArrowDownSFill />}
+              </ButtonItem>
+            </PanelSectionRow>
+          )}
+          {(showGpuMenu || isTab) && (
             <>
               <GPUModeComponent />
             </>
           )}
         </PanelSection>
       )}
-    </>
+    </div>
   );
-}
+};

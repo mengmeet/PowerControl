@@ -558,7 +558,9 @@ function FANCretateProfileModelComponent({
   defaultSetting?: FanSetting;
 }) {
   const canvasRef: any = useRef(null);
-  const curvePoints: any = useRef(fanSetting?.curvePoints ?? defaultSetting?.curvePoints ?? []);
+  const curvePoints: any = useRef(
+    fanSetting?.curvePoints ?? defaultSetting?.curvePoints ?? []
+  );
   //drag
   const dragPoint: any = useRef(null);
   //select
@@ -572,7 +574,9 @@ function FANCretateProfileModelComponent({
   const [fanMode, setFanMode] = useState(
     fanSetting?.fanMode ?? defaultSetting?.fanMode ?? FANMODE.NOCONTROL
   );
-  const [fixSpeed, setFixSpeed] = useState(fanSetting?.fixSpeed ?? defaultSetting?.fixSpeed ?? 50);
+  const [fixSpeed, setFixSpeed] = useState(
+    fanSetting?.fixSpeed ?? defaultSetting?.fixSpeed ?? 50
+  );
   const [selPointTemp, setSelPointTemp] = useState(0);
   const [selPointSpeed, setSelPointSpeed] = useState(0);
   const initDraw = (ref: any) => {
@@ -1342,7 +1346,7 @@ function FANCretateProfileModelComponent({
   );
 }
 
-export function FANComponent() {
+export const FANComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
   const [show, setShow] = useState<boolean>(Settings.ensureEnable());
   const [index, setIndex] = useState<number>(0);
   const fanEnable = useRef<boolean>(FanControl.fanIsEnable);
@@ -1378,25 +1382,27 @@ export function FANComponent() {
   }, []);
   //<FANSelectProfileComponent/>
   return (
-    <>
+    <div style={!isTab ? {} : { marginLeft: "-10px", marginRight: "-10px" }}>
       {show && fanEnable.current && fanCount.current >= 0 && (
         <PanelSection title="FAN">
-          <PanelSectionRow>
-            <ButtonItem
-              layout="below"
-              // @ts-ignore
-              style={{
-                height: "20px",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-              onClick={() => updateShowFanMenu(!showFanMenu)}
-            >
-              {showFanMenu ? <RiArrowUpSFill /> : <RiArrowDownSFill />}
-            </ButtonItem>
-          </PanelSectionRow>
-          {showFanMenu && (
+          {!isTab && (
+            <PanelSectionRow>
+              <ButtonItem
+                layout="below"
+                // @ts-ignore
+                style={{
+                  height: "20px",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+                onClick={() => updateShowFanMenu(!showFanMenu)}
+              >
+                {showFanMenu ? <RiArrowUpSFill /> : <RiArrowDownSFill />}
+              </ButtonItem>
+            </PanelSectionRow>
+          )}
+          {(showFanMenu || isTab) && (
             <>
               {fanCount.current == 1 && (
                 <>
@@ -1451,6 +1457,6 @@ export function FANComponent() {
           )}
         </PanelSection>
       )}
-    </>
+    </div>
   );
-}
+};

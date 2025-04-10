@@ -4,7 +4,7 @@ import { localizationManager, localizeStrEnum } from "../i18n";
 import { Backend, Settings, compareVersions } from "../util";
 import { ActionButtonItem } from ".";
 
-export const MoreComponent: FC = () => {
+export const MoreComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
   const [currentVersion, setCurrentVersion] = useState<string>(
     Backend.data?.getCurrentVersion() || ""
   );
@@ -27,67 +27,78 @@ export const MoreComponent: FC = () => {
     getData();
   });
 
-  let uptButtonText = localizationManager.getString(
-    localizeStrEnum.REINSTALL_PLUGIN
-  ) || "Reinstall Plugin";
+  let uptButtonText =
+    localizationManager.getString(localizeStrEnum.REINSTALL_PLUGIN) ||
+    "Reinstall Plugin";
 
   if (currentVersion !== latestVersion && Boolean(latestVersion)) {
     const versionCompare = compareVersions(latestVersion, currentVersion);
     if (versionCompare > 0) {
-      uptButtonText = `${localizationManager.getString(
-        localizeStrEnum.UPDATE_PLUGIN
-      ) || "Update"} ${latestVersion}`;
+      uptButtonText = `${
+        localizationManager.getString(localizeStrEnum.UPDATE_PLUGIN) || "Update"
+      } ${latestVersion}`;
     } else if (versionCompare < 0) {
-      uptButtonText = `${localizationManager.getString(
-        localizeStrEnum.ROLLBACK_PLUGIN
-      ) || "Rollback"} ${latestVersion}`;
+      uptButtonText = `${
+        localizationManager.getString(localizeStrEnum.ROLLBACK_PLUGIN) ||
+        "Rollback"
+      } ${latestVersion}`;
     }
   }
 
   return (
-    <PanelSection title={localizationManager.getString(localizeStrEnum.MORE) || "More"}>
-      <PanelSectionRow>
-        <ActionButtonItem
-          layout="below"
-          onClick={async () => {
-            await Backend.updateLatest();
-          }}
-        >
-          {uptButtonText}
-        </ActionButtonItem>
-      </PanelSectionRow>
-      <PanelSectionRow>
-        <ButtonItem
-          layout="below"
-          onClick={() => {
-            Settings.resetToLocalStorage();
-          }}
-        >
-          {localizationManager.getString(localizeStrEnum.RESET_ALL) || "Reset All"}
-        </ButtonItem>
-      </PanelSectionRow>
-      <PanelSectionRow>
-        <Field
-          disabled
-          label={localizationManager.getString(
-            localizeStrEnum.INSTALLED_VERSION
-          ) || "Installed Version"}
-        >
-          {currentVersion}
-        </Field>
-      </PanelSectionRow>
-      {Boolean(latestVersion) && (
+    <div style={!isTab ? {} : { marginLeft: "-10px", marginRight: "-10px" }}>
+      <PanelSection
+        title={localizationManager.getString(localizeStrEnum.MORE) || "More"}
+      >
+        <PanelSectionRow>
+          <ActionButtonItem
+            layout="below"
+            onClick={async () => {
+              await Backend.updateLatest();
+            }}
+          >
+            {uptButtonText}
+          </ActionButtonItem>
+        </PanelSectionRow>
+        <PanelSectionRow>
+          <ButtonItem
+            layout="below"
+            onClick={() => {
+              Settings.resetToLocalStorage();
+            }}
+          >
+            {localizationManager.getString(localizeStrEnum.RESET_ALL) ||
+              "Reset All"}
+          </ButtonItem>
+        </PanelSectionRow>
         <PanelSectionRow>
           <Field
+            focusable
             disabled
-            label={localizationManager.getString(
-              localizeStrEnum.LATEST_VERSION
-            ) || "Latest Version"}
+            label={
+              localizationManager.getString(
+                localizeStrEnum.INSTALLED_VERSION
+              ) || "Installed Version"
+            }
           >
-            {latestVersion}
+            {currentVersion}
           </Field>
         </PanelSectionRow>
-      )}
-    </PanelSection>
+        {Boolean(latestVersion) && (
+          <PanelSectionRow>
+            <Field
+              focusable
+              disabled
+              label={
+                localizationManager.getString(localizeStrEnum.LATEST_VERSION) ||
+                "Latest Version"
+              }
+            >
+              {latestVersion}
+            </Field>
+          </PanelSectionRow>
+        )}
+      </PanelSection>
+    </div>
   );
 };
