@@ -84,9 +84,9 @@ const TabView: FC<{ show?: boolean }> = ({ show = true }) => {
       <style>
         {`
 .main-tabs > div > div:first-child::before {
-  background: #0D141C;
+  background: transparent;
   box-shadow: none;
-  backdrop-filter: none;
+  backdrop-filter: blur(50px);
 }
 `}
       </style>
