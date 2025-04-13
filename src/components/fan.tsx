@@ -47,7 +47,10 @@ const lineColor = "#1E90FF";
 const setPointColor = "#00BFFF";
 
 //选择配置文件下拉框
-const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
+const FANSelectProfileComponent: FC<{ fanIndex: number; key?: number }> = ({
+  fanIndex,
+  key = 0,
+}) => {
   const fanWriteMode = Backend.data.getFanPwmMode(fanIndex);
   const defaultFanSetting = Backend.data.getDefaultFanSetting(fanIndex);
 
@@ -213,7 +216,10 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
 };
 
 //显示当前风扇配置和温度转速信息
-const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
+const FANDisplayComponent: FC<{ fanIndex: number; key?: number }> = ({
+  fanIndex,
+  key = 0,
+}) => {
   const canvasRef: any = useRef(null);
   const curvePoints = useRef<FanPosition[]>([]);
 
@@ -500,7 +506,10 @@ const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
 };
 
 //FANRPM模块
-const FANRPMComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
+const FANRPMComponent: FC<{ fanIndex: number; key?: number }> = ({
+  fanIndex,
+  key = 0,
+}) => {
   const [fanrpm, setFanRPM] = useState<number>(0);
   const [temperature, setTemperature] = useState<number | undefined>(undefined);
   const refresh = async () => {

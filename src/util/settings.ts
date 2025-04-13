@@ -118,7 +118,7 @@ export class FanSetting {
   fanMode?: number = FANMODE.NOCONTROL;
   @JsonProperty()
   fixSpeed?: number = 50;
-  @JsonProperty({ type: FanPosition })
+  @JsonProperty({ type: FanPosition, dataStructure: "array" })
   curvePoints?: FanPosition[] = [];
   constructor(
     snapToGrid: boolean,
@@ -218,10 +218,10 @@ export class SettingsData {
   @JsonProperty()
   public useOldUI: boolean = false; // 是否使用旧的 UI
 
-  @JsonProperty({ type: AppSettingData, isDictionary: true })
+  @JsonProperty({ type: AppSettingData, dataStructure: "dictionary" })
   public perApp: { [appId: string]: AppSettingData } = {};
 
-  @JsonProperty({ type: FanSetting, isDictionary: true })
+  @JsonProperty({ type: FanSetting, dataStructure: "dictionary" })
   public fanSettings: { [fanProfile: string]: FanSetting } = {};
 
   constructor() {
