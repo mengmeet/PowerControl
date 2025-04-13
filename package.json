@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Gawah/PowerControl.git"
+    "url": "git+https://github.com/mengmeet/PowerControl.git"
   },
   "keywords": [
     "decky",
@@ -22,9 +22,9 @@
   "author": "yxx",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/Gawah/PowerControl/issues"
+    "url": "https://github.com/mengmeet/PowerControl/issues"
   },
-  "homepage": "https://github.com/Gawah/PowerControl#readme",
+  "homepage": "https://github.com/mengmeet/PowerControl#readme",
   "devDependencies": {
     "@decky/rollup": "^1.0.1",
     "@decky/ui": "^4.9.2",
