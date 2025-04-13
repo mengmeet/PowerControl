@@ -145,6 +145,7 @@ const SettingsPerAppComponent: FC = () => {
                   {localizationManager.getString(localizeStrEnum.USING) +
                     (override && overrideable ? "『" : "")}
                 </div>
+                {/* @ts-ignore */}
                 <Marquee
                   play={true}
                   fadeLength={10}
@@ -312,6 +313,7 @@ const buttonStyle = {
 
 export const QuickAccessTitleView: FC<{ title: string }> = ({ title }) => {
   return (
+    // @ts-ignore
     <Focusable
       style={{
         display: "flex",
@@ -391,14 +393,15 @@ export const RyzenadjInfoModel: FC = ({
             //@ts-ignore
             focusable={false}
           >
-            <Focusable>
-              <div style={fontStyle}>
-                {info.split("\n").map((line, index) => (
-                  <p key={index}>{line}</p>
-                ))}
-              </div>
-              {/* <div dangerouslySetInnerHTML={{ __html: mdIt.render(info) }} /> */}
-            </Focusable>
+            <Focusable
+              children={
+                <div style={fontStyle}>
+                  {info.split("\n").map((line, index) => (
+                    <p key={index}>{line}</p>
+                  ))}
+                </div>
+              }
+            ></Focusable>
           </ScrollPanelGroup>
         </PanelSection>
       </div>
