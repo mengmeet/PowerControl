@@ -75,6 +75,10 @@ class IDevice(ABC):
                         from . import MsiDevice
 
                         cls._instance = MsiDevice()
+            case "LENOVO":
+                from . import LenovoDevice
+
+                cls._instance = LenovoDevice()
             case _:
                 from . import PowerDevice
 
