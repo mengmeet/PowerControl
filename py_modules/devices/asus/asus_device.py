@@ -9,20 +9,20 @@ from ..power_device import PowerDevice
 
 PLATFORM_PROFILE_PATH = "/sys/firmware/acpi/platform_profile"
 
-FAST_WMI_PATH = "/sys/devices/platform/asus-nb-wmi/ppt_fppt"
-SLOW_WMI_PATH = "/sys/devices/platform/asus-nb-wmi/ppt_pl2_sppt"
-STAPM_WMI_PATH = "/sys/devices/platform/asus-nb-wmi/ppt_pl1_spl"
+LEGACY_WMI_PATH = "/sys/devices/platform/asus-nb-wmi"
 
-ASUS_ARMORY_FAST_WMI_PATH = (
-    "cat /sys/class/firmware-attributes/asus-armoury/attributes/ppt_fppt/current_value"
-)
-ASUS_ARMORY_SLOW_WMI_PATH = "cat /sys/class/firmware-attributes/asus-armoury/attributes/ppt_pl2_sppt/current_value"
-ASUS_ARMORY_STAPM_WMI_PATH = "cat /sys/class/firmware-attributes/asus-armoury/attributes/ppt_pl1_spl/current_value"
+FAST_WMI_PATH = f"{LEGACY_WMI_PATH}/ppt_fppt"
+SLOW_WMI_PATH = f"{LEGACY_WMI_PATH}/ppt_pl2_sppt"
+STAPM_WMI_PATH = f"{LEGACY_WMI_PATH}/ppt_pl1_spl"
 
-LEGACY_MCU_POWERSAVE_PATH = "/sys/devices/platform/asus-nb-wmi/mcu_powersave"
-ASUS_ARMORY_MCU_POWERSAVE_PATH = (
-    "/sys/class/firmware-attributes/asus-armoury/attributes/mcu_powersave"
-)
+ASUS_ARMORY_PATH = "/sys/class/firmware-attributes/asus-armoury"
+
+ASUS_ARMORY_FAST_WMI_PATH = f"{ASUS_ARMORY_PATH}/attributes/ppt_fppt/current_value"
+ASUS_ARMORY_SLOW_WMI_PATH = f"{ASUS_ARMORY_PATH}/attributes/ppt_pl2_sppt/current_value"
+ASUS_ARMORY_STAPM_WMI_PATH = f"{ASUS_ARMORY_PATH}/attributes/ppt_pl1_spl/current_value"
+
+LEGACY_MCU_POWERSAVE_PATH = f"{LEGACY_WMI_PATH}/mcu_powersave"
+ASUS_ARMORY_MCU_POWERSAVE_PATH = f"{ASUS_ARMORY_PATH}/attributes/mcu_powersave"
 
 
 # from https://github.com/aarron-lee/SimpleDeckyTDP/blob/main/py_modules/devices/rog_ally.py
