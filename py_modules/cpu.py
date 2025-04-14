@@ -430,8 +430,8 @@ class CPUManager:
             # 遍历 /sys/class/powercap/intel-rapl/*/ 如果 name 是 package-0 则是cpu
             logger.debug("set_cpuTDP_Intel {}".format(value))
             tdp = value * 1000000
-            # tdp_short = (value + 5) * 1000000
-            tdp_short = tdp
+            tdp_short = (value + 2) * 1000000
+            # tdp_short = tdp
             rapl_long, rapl_short, _ = self.__get_intel_rapl_path()
             legacy_rapl_long, legacy_rapl_short, _ = self.__get_legacy_intel_rapl_path()
             if (rapl_long == "" or rapl_short == "") and (
