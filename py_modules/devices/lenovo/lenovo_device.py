@@ -60,13 +60,17 @@ class LenovoDevice(PowerDevice):
             logger.error(f"Failed to set platform profile {name}: {e}")
 
     def set_tdp(self, tdp: int) -> None:
-        logger.debug(f"Setting TDP to {tdp}")
+        logger.info(f"Setting TDP to {tdp}")
         if tdp < 5:
             logger.info("TDP is too low, use default tdp method")
             super().set_tdp(tdp)
             return
 
-        self.set_platform_profile(PLATFORM_PROFILE_NAME, SUGGESTED_DEFAULT)
+        current_profile = self.get_platform_profile(PLATFORM_PROFILE_NAME)
+        if current_profile != SUGGESTED_DEFAULT:
+            logger.info(f"Setting platform profile to {SUGGESTED_DEFAULT}")
+            self.set_platform_profile(PLATFORM_PROFILE_NAME, SUGGESTED_DEFAULT)
+            sleep(1)
 
         fast_val = tdp + 2
         slow_val = tdp
@@ -76,7 +80,7 @@ class LenovoDevice(PowerDevice):
             and os.path.exists(LENOVO_WIM_SLOW_PATH)
             and os.path.exists(LENOVO_WIM_STAPM_PATH)
         ):
-            logger.debug(f"Setting TDP to {tdp} by Lenovo WMI")
+            logger.info(f"Setting TDP to {tdp} by Lenovo WMI")
             with open(LENOVO_WIM_FAST_PATH, "w") as f:
                 f.write(str(fast_val))
             sleep(0.1)
