@@ -91,13 +91,13 @@ class TDPPatch {
   }
   private applyTDP = () => {
     if (this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled) {
-      console.log(
-        `qam applyTDP: ${this.perfStore?.msgSettingsPerApp?.tdp_limit}`
-      );
+      // console.log(
+      //   `qam applyTDP: ${this.perfStore?.msgSettingsPerApp?.tdp_limit}`
+      // );
       Backend.applyTDP(this.perfStore?.msgSettingsPerApp?.tdp_limit);
     } else {
-      console.log(`qam applyTDP: ${Settings.getTDPMax()}`);
-      Backend.applyTDP(Settings.getTDPMax());
+      // console.log(`qam applyTDP: ${Settings.getTDPMax()}`);
+      // Backend.applyTDP(Settings.getTDPMax());
     }
   };
 
