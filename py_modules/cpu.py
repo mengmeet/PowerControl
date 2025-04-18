@@ -344,6 +344,7 @@ class CPUManager:
     def set_cpuTDP_to_Max(self) -> bool:
         """设置CPU TDP 为最大值。
         """
+        logger.info(f"set_cpuTDP_to_Max {self.cpu_tdpMax}")
         return self.set_cpuTDP(self.cpu_tdpMax)
 
     def is_intel(self):

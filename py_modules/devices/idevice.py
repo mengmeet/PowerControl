@@ -142,3 +142,7 @@ class IDevice(ABC):
     @abstractmethod
     def set_tdp(self, tdp: int) -> bool:
         pass
+
+    @abstractmethod
+    def set_tdp_to_max(self) -> bool:
+        pass
