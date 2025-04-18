@@ -153,6 +153,7 @@ try:
         "Jupiter": 20,
         "V3": 45,
         "Claw 8 AI+ A2VM": 30,
+        "83L3": 33, # Legion GO S
     }
     TDP_LIMIT_CONFIG_CPU = {
         "7735HS": 65,
@@ -167,6 +168,7 @@ try:
         "4500U": 25,
         "3050e": 12,
         "Z1 Extreme": 30,
+        "Z GO": 30,
         "7840HS": 65,
         "7840U": 30,
         "7640U": 30,

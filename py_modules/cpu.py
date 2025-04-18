@@ -340,6 +340,11 @@ class CPUManager:
         else:
             logger.error("set_cpuTDP error: unknown CPU_VENDOR")
             return False
+        
+    def set_cpuTDP_to_Max(self) -> bool:
+        """设置CPU TDP 为最大值。
+        """
+        return self.set_cpuTDP(self.cpu_tdpMax)
 
     def is_intel(self):
         return CPU_VENDOR == "GenuineIntel"

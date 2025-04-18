@@ -206,6 +206,13 @@ class Plugin:
         except Exception as e:
             logger.error(e, exc_info=True)
             return False
+        
+    async def set_cpuTDP_to_Max(self):
+        try:
+            return self.powerManager.set_tdp_to_max()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
 
     async def is_intel(self):
         try:

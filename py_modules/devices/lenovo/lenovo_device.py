@@ -11,6 +11,14 @@ LENOVO_WIM_FAST_PATH = f"{LENOVO_WIM_PATH}/ppt_pl3_fppt/current_value"
 LENOVO_WIM_SLOW_PATH = f"{LENOVO_WIM_PATH}/ppt_pl2_sppt/current_value"
 LENOVO_WIM_STAPM_PATH = f"{LENOVO_WIM_PATH}/ppt_pl1_spl/current_value"
 
+LENOVO_WIM_FAST_MAX_PATH = f"{LENOVO_WIM_PATH}/ppt_pl3_fppt/max_value"
+LENOVO_WIM_SLOW_MAX_PATH = f"{LENOVO_WIM_PATH}/ppt_pl2_sppt/max_value"
+LENOVO_WIM_STAPM_MAX_PATH = f"{LENOVO_WIM_PATH}/ppt_pl1_spl/max_value"
+
+LENOVO_WIM_FAST_MIN_PATH = f"{LENOVO_WIM_PATH}/ppt_pl3_fppt/min_value"
+LENOVO_WIM_SLOW_MIN_PATH = f"{LENOVO_WIM_PATH}/ppt_pl2_sppt/min_value"
+LENOVO_WIM_STAPM_MIN_PATH = f"{LENOVO_WIM_PATH}/ppt_pl1_spl/min_value"
+
 PLATFORM_PROFILE_PREFIX = "/sys/class/platform-profile"
 HWMON_PREFIX = "/sys/class/hwmon"
 
@@ -58,6 +66,37 @@ class LenovoDevice(PowerDevice):
             logger.error(f"Platform profile {name} not found")
         except Exception as e:
             logger.error(f"Failed to set platform profile {name}: {e}")
+
+    def set_tdp_to_max(self) -> None:
+        logger.info("Setting TDP to max")
+        try:
+            if self._supports_wmi_tdp():
+                fast_max = 0
+                slow_max = 0
+                stapm_max = 0
+                with open(LENOVO_WIM_FAST_MAX_PATH, "r") as f:
+                    fast_max = f.read().strip()
+                with open(LENOVO_WIM_SLOW_MAX_PATH, "r") as f:
+                    slow_max = f.read().strip()
+                with open(LENOVO_WIM_STAPM_MAX_PATH, "r") as f:
+                    stapm_max = f.read().strip()
+
+                if fast_max > 0:
+                    logger.info(f"Setting TDP max to {fast_max} for fast")
+                    with open(LENOVO_WIM_FAST_PATH, "w") as f:
+                        f.write(fast_max)
+                if slow_max > 0:
+                    logger.info(f"Setting TDP max to {slow_max} for slow")
+                    with open(LENOVO_WIM_SLOW_PATH, "w") as f:
+                        f.write(slow_max)
+                if stapm_max > 0:
+                    logger.info(f"Setting TDP max to {stapm_max} for stapm")
+                    with open(LENOVO_WIM_STAPM_PATH, "w") as f:
+                        f.write(stapm_max)
+            else:
+                super().set_tdp_max()
+        except Exception as e:
+            logger.error(f"Failed to set TDP max: {e}")
 
     def set_tdp(self, tdp: int) -> None:
         logger.info(f"Setting TDP to {tdp}")
