@@ -652,7 +652,7 @@ export class Backend {
         await Backend.applyTDP(_tdp);
       } else {
         // await Backend.applyTDP(Backend.data.getTDPMax());
-        await Backend.applyTDPToMax();
+        await Backend.applyTDPUnlimited();
       }
 
       try {
@@ -673,7 +673,7 @@ export class Backend {
         await Backend.applyTDP(_tdp);
       } else {
         // await Backend.applyTDP(Backend.data.getTDPMax());
-        await Backend.applyTDPToMax();
+        await Backend.applyTDPUnlimited();
       }
     }
   }
@@ -785,7 +785,7 @@ export class Backend {
     Backend.applyCpuNum(Backend.data.getCpuMaxNum());
     Backend.applyCpuBoost(true);
     // Backend.applyTDP(Backend.data.getTDPMax());
-    Backend.applyTDPToMax();
+    Backend.applyTDPUnlimited();
     Backend.applyGPUFreq(0);
     FanControl.fanInfo.forEach((_value, index) => {
       Backend.applyFanAuto(index, true);
@@ -808,8 +808,8 @@ export class Backend {
     call("set_cpuTDP", tdp);
   };
 
-  public static applyTDPToMax = () => {
-    call("set_cpuTDP_to_max");
+  public static applyTDPUnlimited = () => {
+    call("set_cpuTDP_unlimited");
   };
 
   public static applyGPUFreq(freq: number) {

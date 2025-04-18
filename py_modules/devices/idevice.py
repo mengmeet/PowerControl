@@ -144,5 +144,5 @@ class IDevice(ABC):
         pass
 
     @abstractmethod
-    def set_tdp_to_max(self) -> bool:
+    def set_tdp_unlimited(self) -> bool:
         pass

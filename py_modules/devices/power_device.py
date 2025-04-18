@@ -118,11 +118,11 @@ class PowerDevice(IDevice):
             return
         self._cpuManager.set_cpuTDP(tdp)
 
-    def set_tdp_to_max(self) -> None:
+    def set_tdp_unlimited(self) -> None:
         if self._cpuManager is None:
             logger.error("Failed to set TDP: cpuManager is None")
             return
-        self._cpuManager.set_cpuTDP_to_Max()
+        self._cpuManager.set_cpuTDP_unlimited()
 
     # ------ sched_ext ------ #
 

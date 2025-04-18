@@ -67,8 +67,8 @@ class LenovoDevice(PowerDevice):
         except Exception as e:
             logger.error(f"Failed to set platform profile {name}: {e}")
 
-    def set_tdp_to_max(self) -> None:
-        logger.info("Setting TDP to max")
+    def set_tdp_unlimited(self) -> None:
+        logger.info("Setting TDP unlimited")
         try:
             if self._supports_wmi_tdp():
                 fast_max = 0
@@ -81,22 +81,22 @@ class LenovoDevice(PowerDevice):
                 with open(LENOVO_WIM_STAPM_MAX_PATH, "r") as f:
                     stapm_max = f.read().strip()
 
-                if fast_max > 0:
+                if int(fast_max) > 0:
                     logger.info(f"Setting TDP max to {fast_max} for fast")
                     with open(LENOVO_WIM_FAST_PATH, "w") as f:
                         f.write(fast_max)
-                if slow_max > 0:
+                if int(slow_max) > 0:
                     logger.info(f"Setting TDP max to {slow_max} for slow")
                     with open(LENOVO_WIM_SLOW_PATH, "w") as f:
                         f.write(slow_max)
-                if stapm_max > 0:
+                if int(stapm_max) > 0:
                     logger.info(f"Setting TDP max to {stapm_max} for stapm")
                     with open(LENOVO_WIM_STAPM_PATH, "w") as f:
                         f.write(stapm_max)
             else:
-                super().set_tdp_max()
+                super().set_tdp_unlimited()
         except Exception as e:
-            logger.error(f"Failed to set TDP max: {e}")
+            logger.error(f"Failed to set TDP unlimited: {e}")
 
     def set_tdp(self, tdp: int) -> None:
         logger.info(f"Setting TDP to {tdp}")
