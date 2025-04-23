@@ -11,7 +11,7 @@ import {
 } from ".";
 import { JsonSerializer } from "typescript-json-serializer";
 import { call } from "@decky/api";
-
+import { Logger } from "./logger";
 const serializer = new JsonSerializer();
 
 const minSteamVersion = 1714854927;
@@ -470,13 +470,18 @@ export class Backend {
     await this.data.init();
   }
 
+  private static lastEnable: boolean = false;
+
   public static async applySettings(applyTarget: APPLYTYPE) {
     try {
-      if (!Settings.ensureEnable()) {
+      const currentEnable = Settings.ensureEnable();
+      if (!currentEnable && currentEnable !== this.lastEnable) {
+        Logger.info(`applySettings: currentEnable = ${currentEnable}, lastEnable = ${this.lastEnable}`);
         Backend.resetSettings();
+        this.lastEnable = currentEnable;
         return;
       }
-      console.log(`>>>>>>>>>>>> applySettings ${applyTarget}`);
+      Logger.info(`>>>>>>>>>>>> applySettings ${applyTarget}`);
 
       if (applyTarget === APPLYTYPE.SET_ALL) {
         // 同步 OverWrite 到 QAM
@@ -652,6 +657,7 @@ export class Backend {
         await Backend.applyTDP(_tdp);
       } else {
         // await Backend.applyTDP(Backend.data.getTDPMax());
+        Logger.info("not isPatchSuccess or appForceShowTDP: not tdpEnable, applyTDPUnlimited");
         await Backend.applyTDPUnlimited();
       }
 
@@ -673,6 +679,7 @@ export class Backend {
         await Backend.applyTDP(_tdp);
       } else {
         // await Backend.applyTDP(Backend.data.getTDPMax());
+        Logger.info("isPatchSuccess: not tdpEnable, applyTDPUnlimited");
         await Backend.applyTDPUnlimited();
       }
     }
@@ -785,6 +792,7 @@ export class Backend {
     Backend.applyCpuNum(Backend.data.getCpuMaxNum());
     Backend.applyCpuBoost(true);
     // Backend.applyTDP(Backend.data.getTDPMax());
+    Logger.info("resetSettings: applyTDPUnlimited");
     Backend.applyTDPUnlimited();
     Backend.applyGPUFreq(0);
     FanControl.fanInfo.forEach((_value, index) => {

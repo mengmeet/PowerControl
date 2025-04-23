@@ -22,7 +22,7 @@ class GPUAutoFreqManager(threading.Thread):
     def __init__(self, gpuManager):
         self._gpu_enableAutoFreq = False  # 标记是否开启GPU频率优化
         self._gpu_autoFreqCheckInterval = 0.005  # gpu占用率数据检测间隔
-        self._gpu_adjustFreqInterval = 0.5  # gpu调整间隔
+        self._gpu_adjustFreqInterval = 0.2  # gpu调整间隔
         self._gpu_addFreqBase = 50  # 自动优化频率的基准大小
         self._gpu_minBusyPercent = 75  # 优化占用率的区间最小值
         self._gpu_maxBusyPercent = 90  # 优化占用率的区间最大值
