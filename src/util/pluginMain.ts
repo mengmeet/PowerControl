@@ -340,6 +340,18 @@ export class PluginManager {
 
       try {
         await Timeout.withTimeout(
+          () => Settings.loadSettings(),
+          3000,
+          "Settings loading timeout"
+        );
+        Logger.info("Settings loaded");
+      } catch (e: any) {
+        Logger.error(`Settings loading failed: ${e.message}`);
+        throw new Error(`Settings loading failed: ${e.message}`);
+      }
+
+      try {
+        await Timeout.withTimeout(
           () => Backend.init(),
           3000,
           "Backend initialization timeout"
@@ -369,18 +381,6 @@ export class PluginManager {
         }
       });
       Logger.info("App change listener registered");
-
-      try {
-        await Timeout.withTimeout(
-          () => Settings.loadSettings(),
-          3000,
-          "Settings loading timeout"
-        );
-        Logger.info("Settings loaded");
-      } catch (e: any) {
-        Logger.error(`Settings loading failed: ${e.message}`);
-        throw new Error(`Settings loading failed: ${e.message}`);
-      }
 
       try {
         ACStateManager.register();

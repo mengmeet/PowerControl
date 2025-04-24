@@ -465,22 +465,34 @@ export class BackendData {
 
 export class Backend {
   public static data: BackendData;
+  private static lastEnable: boolean = false;
+  private static lastTDPEnable: boolean = false;
+
   public static async init() {
     this.data = new BackendData();
     await this.data.init();
+    Backend.lastEnable = Settings.ensureEnable();
+    Backend.lastTDPEnable = Settings.appTDPEnable();
   }
 
-  private static lastEnable: boolean = false;
+  static {
+    this.lastEnable = Settings.ensureEnable();
+    this.lastTDPEnable = Settings.appTDPEnable();
+  }
 
   public static async applySettings(applyTarget: APPLYTYPE) {
     try {
       const currentEnable = Settings.ensureEnable();
-      if (!currentEnable && currentEnable !== this.lastEnable) {
-        Logger.info(`applySettings: currentEnable = ${currentEnable}, lastEnable = ${this.lastEnable}`);
-        Backend.resetSettings();
-        this.lastEnable = currentEnable;
+      Logger.info(`applySettings: currentEnable = ${currentEnable}, lastEnable = ${Backend.lastEnable}`);
+      if (!currentEnable) {
+        if (currentEnable !== Backend.lastEnable) {
+          Backend.resetSettings();
+          Backend.lastEnable = currentEnable;
+        }
+        Logger.info(`Settings is disabled, skip applySettings`);
         return;
       }
+      Backend.lastEnable = currentEnable;
       Logger.info(`>>>>>>>>>>>> applySettings ${applyTarget}`);
 
       if (applyTarget === APPLYTYPE.SET_ALL) {
@@ -642,47 +654,60 @@ export class Backend {
       ? Math.min(customTDPRangeMax, Math.max(customTDPRangeMin, tdp))
       : tdp;
 
+    Logger.info(`handleTDP: ${Settings.appTDPEnable()}`);
+    Logger.info(`tdpEnable = ${tdpEnable}, lastTDPEnable = ${Backend.lastTDPEnable}`);
+
     const enableNativeTDPSlider = Settings.appEnableNativeTDPSlider();
     if (enableNativeTDPSlider) {
-      console.log(`启用原生 TDP 滑块, 跳过 TDP 设置`);
+      Logger.info(`启用原生 TDP 滑块, 跳过 TDP 设置`);
       return;
     }
 
-    // 处理非插件模式或强制显示 TDP 的情况
-    if (
-      !PluginManager.isPatchSuccess(Patch.TDPPatch) ||
-      Settings.appForceShowTDP()
-    ) {
-      if (tdpEnable) {
-        await Backend.applyTDP(_tdp);
-      } else {
-        // await Backend.applyTDP(Backend.data.getTDPMax());
-        Logger.info("not isPatchSuccess or appForceShowTDP: not tdpEnable, applyTDPUnlimited");
+    if (!tdpEnable) {
+      if (tdpEnable !== Backend.lastTDPEnable) {
+        Logger.info(`tdpEnable is false, applyTDPUnlimited`);
         await Backend.applyTDPUnlimited();
       }
-
-      try {
-        await QAMPatch.setTDPEanble(tdpEnable);
-        if (tdpEnable) {
-          await QAMPatch.setTDP(_tdp);
-        }
-      } catch (error) {
-        console.error(`强制显示 TDP 时设置QAM失败`, error);
-      }
+      Backend.lastTDPEnable = tdpEnable;
+      return;
     }
+
+    Logger.info(`applyTDP: ${_tdp}`);
+    await Backend.applyTDP(_tdp);
+    Backend.lastTDPEnable = tdpEnable;
+
+    // 处理非插件模式或强制显示 TDP 的情况
+    // if (
+    //   !PluginManager.isPatchSuccess(Patch.TDPPatch)
+    // ) {
+    //   if (tdpEnable) {
+    //     await Backend.applyTDP(_tdp);
+    //   } else {
+    //     Logger.info("not isPatchSuccess: not tdpEnable, applyTDPUnlimited");
+    //     await Backend.applyTDPUnlimited();
+    //   }
+
+    //   try {
+    //     await QAMPatch.setTDPEanble(tdpEnable);
+    //     if (tdpEnable) {
+    //       await QAMPatch.setTDP(_tdp);
+    //     }
+    //   } catch (error) {
+    //     console.error(`强制显示 TDP 时设置QAM失败`, error);
+    //   }
+    // }
 
     // 处理插件模式的情况
-    if (PluginManager.isPatchSuccess(Patch.TDPPatch)) {
-      await QAMPatch.setTDPEanble(tdpEnable);
-      await QAMPatch.setTDP(_tdp);
-      if (tdpEnable) {
-        await Backend.applyTDP(_tdp);
-      } else {
-        // await Backend.applyTDP(Backend.data.getTDPMax());
-        Logger.info("isPatchSuccess: not tdpEnable, applyTDPUnlimited");
-        await Backend.applyTDPUnlimited();
-      }
-    }
+    // if (PluginManager.isPatchSuccess(Patch.TDPPatch)) {
+    //   await QAMPatch.setTDPEanble(tdpEnable);
+    //   await QAMPatch.setTDP(_tdp);
+    //   if (tdpEnable) {
+    //     await Backend.applyTDP(_tdp);
+    //   } else {
+    //     Logger.info("isPatchSuccess: not tdpEnable, applyTDPUnlimited");
+    //     await Backend.applyTDPUnlimited();
+    //   }
+    // }
   }
 
   private static async handleFanControl(): Promise<void> {

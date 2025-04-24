@@ -191,8 +191,8 @@ export class SettingsData {
   // @JsonProperty()
   // public customTDPRangeMin: number;
 
-  @JsonProperty()
-  public forceShowTDP: boolean = false;
+  // @JsonProperty()
+  // public forceShowTDP: boolean = false;
 
   @JsonProperty()
   public enableNativeTDPSlider: boolean = false;
@@ -233,7 +233,7 @@ export class SettingsData {
     this.enabled = copyTarget.enabled;
     this.enableCustomTDPRange = copyTarget.enableCustomTDPRange;
     this.customTDPRangeMax = copyTarget.customTDPRangeMax;
-    this.forceShowTDP = copyTarget.forceShowTDP;
+    // this.forceShowTDP = copyTarget.forceShowTDP;
     this.enableNativeTDPSlider = copyTarget.enableNativeTDPSlider;
     this.bypassCharge = copyTarget.bypassCharge;
     this.chargeLimit = copyTarget.chargeLimit;
@@ -460,17 +460,17 @@ export class Settings {
     }
   }
 
-  static appForceShowTDP(): boolean {
-    return this._instance.data.forceShowTDP;
-  }
+  // static appForceShowTDP(): boolean {
+  //   return this._instance.data.forceShowTDP;
+  // }
 
-  static setForceShowTDP(forceShowTDP: boolean) {
-    if (this._instance.data.forceShowTDP != forceShowTDP) {
-      this._instance.data.forceShowTDP = forceShowTDP;
-      Settings.saveSettingsToLocalStorage();
-      PluginManager.updateComponent(ComponentName.CPU_TDP, UpdateType.UPDATE);
-    }
-  }
+  // static setForceShowTDP(forceShowTDP: boolean) {
+  //   if (this._instance.data.forceShowTDP != forceShowTDP) {
+  //     this._instance.data.forceShowTDP = forceShowTDP;
+  //     Settings.saveSettingsToLocalStorage();
+  //     PluginManager.updateComponent(ComponentName.CPU_TDP, UpdateType.UPDATE);
+  //   }
+  // }
 
   static appEnableNativeTDPSlider(): boolean {
     return this._instance.data.enableNativeTDPSlider;
