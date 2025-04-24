@@ -264,6 +264,20 @@ class Plugin:
             logger.error(e, exc_info=True)
             return False
 
+    async def start_gpu_notify(self):
+        try:
+            return gpuManager.start_gpu_notify()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
+    async def stop_gpu_notify(self):
+        try:
+            return gpuManager.stop_gpu_notify()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
     async def update_latest(self):
         logger.info("Updating latest")
         # return update.update_latest()

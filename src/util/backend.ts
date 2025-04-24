@@ -467,17 +467,20 @@ export class Backend {
   public static data: BackendData;
   private static lastEnable: boolean = false;
   private static lastTDPEnable: boolean = false;
+  private static lastGPUMode: GPUMODE = GPUMODE.NOLIMIT;
 
   public static async init() {
     this.data = new BackendData();
     await this.data.init();
     Backend.lastEnable = Settings.ensureEnable();
     Backend.lastTDPEnable = Settings.appTDPEnable();
+    Backend.lastGPUMode = Settings.appGPUMode() as GPUMODE;
   }
 
   static {
     this.lastEnable = Settings.ensureEnable();
     this.lastTDPEnable = Settings.appTDPEnable();
+    this.lastGPUMode = Settings.appGPUMode() as GPUMODE;
   }
 
   public static async applySettings(applyTarget: APPLYTYPE) {
@@ -580,6 +583,7 @@ export class Backend {
   }
 
   private static async handleGPUMode(): Promise<void> {
+    Logger.info(`handleGPUMode: lastGPUMode = ${Backend.lastGPUMode}`);
     const gpuMode = Settings.appGPUMode();
     const gpuFreq = Settings.appGPUFreq();
     const gpuSliderFix = Settings.appGPUSliderFix();
@@ -587,6 +591,18 @@ export class Backend {
     const gpuAutoMinFreq = Settings.appGPUAutoMinFreq();
     const gpuRangeMaxFreq = Settings.appGPURangeMaxFreq();
     const gpuRangeMinFreq = Settings.appGPURangeMinFreq();
+
+    if (gpuMode !== Backend.lastGPUMode) {
+      if (Backend.lastGPUMode === GPUMODE.NOLIMIT) {
+        await Backend.startGpuNotify();
+      }
+
+      if (gpuMode === GPUMODE.NOLIMIT) {
+        await Backend.stopGpuNotify();
+      }
+
+      Backend.lastGPUMode = gpuMode as GPUMODE;
+    }
 
     switch (gpuMode) {
       case GPUMODE.NOLIMIT:
@@ -1047,5 +1063,15 @@ export class Backend {
   // log_debug
   public static logDebug(message: string) {
     return call("log_debug", message);
+  }
+
+  // start_gpu_notify
+  public static async startGpuNotify() {
+    return await call("start_gpu_notify");
+  }
+
+  // stop_gpu_notify
+  public static async stopGpuNotify() {
+    return await call("stop_gpu_notify");
   }
 }

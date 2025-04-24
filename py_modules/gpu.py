@@ -134,22 +134,24 @@ class GPUAutoFreqManager(threading.Thread):
 
 
 class GPUFreqNotifier:
-    def __init__(self, manager):
-        self._gpuManager = manager
+    def __init__(self, manager: "GPUManager"):
+        self._gpuManager: "GPUManager" = manager
+        self._isRunning = False
 
     def gpuFreq_IN_MODIFY(self, path, mask):
-        logger.debug(f"gpuFreq_IN_MODIFY path:{path} mask:{mask}")
+        logger.info(f"gpuFreq_IN_MODIFY path:{path} mask:{mask}")
         # gpu频率文件发生修改时，检查与插件目标是否相同，不同则设置回来
         if self.checkGPUNeedSet(
             self._gpuManager.gpu_nowFreq[0], self._gpuManager.gpu_nowFreq[1]
         ):
+            logger.info(f"set_gpuFreq: gpu_nowFreq={self._gpuManager.gpu_nowFreq}")
             self._gpuManager.set_gpuFreq(
                 self._gpuManager.gpu_nowFreq[0], self._gpuManager.gpu_nowFreq[1]
             )
 
     def gpuLevel_IN_MODIFY(self, path, mask):
         level_string = open(AMD_GPULEVEL_PATH, "r").read().strip()
-        logger.debug(
+        logger.info(
             f"gpuLevel_IN_MODIFY path:{path} mask:{mask} minFreq:{self._gpuManager.gpu_nowFreq[0]} maxFreq:{self._gpuManager.gpu_nowFreq[1]} level:{level_string}"
         )
         # 目标频率非[0,0]时，如果power_dpm_force_performance_level被改成auto，则设置回来
@@ -158,6 +160,9 @@ class GPUFreqNotifier:
             and self._gpuManager.gpu_nowFreq[1] != 0
             and level_string == "auto"
         ):
+            logger.info(
+                f"set_gpuFreq: gpu_nowFreq={self._gpuManager.gpu_nowFreq} level: manual"
+            )
             open(AMD_GPULEVEL_PATH, "w").write("manual")
             self._gpuManager.set_gpuFreq(
                 self._gpuManager.gpu_nowFreq[0], self._gpuManager.gpu_nowFreq[1]
@@ -198,7 +203,7 @@ class GPUFreqNotifier:
                     and freqMax == 0
                     and (qfreqMin != gpu_freqMin or qfreqMax != gpu_freqMax)
                 ):
-                    logger.debug(
+                    logger.info(
                         f"检测到当前设置与系统不同 当前检查的频率 freqMin={freqMin} freqMax={freqMax} 当前系统频率 qfreqMin={qfreqMin} qfreqMax={qfreqMax}"
                     )
                     return True
@@ -213,10 +218,18 @@ class GPUFreqNotifier:
             return False
 
     def run(self):
+        if self._isRunning:
+            return
+        logger.info("开始监听 gpu sysfs 文件")
+        self._isRunning = True
         notify.add_watch(AMD_GPUFREQ_PATH, IN_MODIFY, self.gpuFreq_IN_MODIFY)
         notify.add_watch(AMD_GPULEVEL_PATH, IN_MODIFY, self.gpuLevel_IN_MODIFY)
 
     def stop(self):
+        if not self._isRunning:
+            return
+        logger.info("停止监听 gpu sysfs 文件")
+        self._isRunning = False
         notify.remove_watch(AMD_GPUFREQ_PATH)
         notify.remove_watch(AMD_GPULEVEL_PATH)
 
@@ -229,7 +242,7 @@ class GPUManager:
         self.gpu_autoFreqRange = [0, 0]  # 自动gpu频率调整的区间
         self.__init_gpu_info()  # 初始化gpu信息
         self._gpu_notifier = GPUFreqNotifier(self)  # 监视gpu频率文件
-        self._gpu_notifier.run()
+        # self._gpu_notifier.run()
 
     def __init_gpu_info(self):
         self.get_gpuFreqRange()  # 获取gpu频率范围
@@ -240,6 +253,12 @@ class GPUManager:
 
     def unload(self):
         self.set_gpuAuto(False)
+        self._gpu_notifier.stop()
+
+    def start_gpu_notify(self):
+        self._gpu_notifier.run()
+
+    def stop_gpu_notify(self):
         self._gpu_notifier.stop()
 
     def get_gpuFreqRange(self):
