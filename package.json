@@ -1,6 +1,6 @@
 {
   "name": "power_control",
-  "version": "2.15.1",
+  "version": "2.15.2",
   "description": "PowerControl plugin.",
   "type": "module",
   "scripts": {
