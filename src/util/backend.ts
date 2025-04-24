@@ -602,6 +602,9 @@ export class Backend {
       }
 
       Backend.lastGPUMode = gpuMode as GPUMODE;
+    } else if (Backend.lastGPUMode === GPUMODE.NOLIMIT) {
+      Logger.info(`gpuMode 未变化, 且为 NOLIMIT, 跳过`);
+      return;
     }
 
     switch (gpuMode) {
