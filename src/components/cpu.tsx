@@ -5,7 +5,7 @@ import {
   DropdownItem,
   ButtonItem,
 } from "@decky/ui";
-import { useEffect, useState, FC } from "react";
+import { useEffect, useState, FC, useRef, useMemo } from "react";
 import {
   Settings,
   Backend,
@@ -238,7 +238,14 @@ const CPUTDPComponent: FC = () => {
     Settings.appEnableNativeTDPSlider()
   );
 
-  const [cpuVendor, _] = useState<string>(Backend.data.getCpuVendor());
+  // const [cpuVendor, _] = useState<string>(Backend.data.getCpuVendor());
+  const cpuVendor = useMemo(() => {
+    return Backend.data.getCpuVendor();
+  }, []);
+
+  const supportsSteamosManager = useMemo(() => {
+    return Backend.data.getSupportsSteamosManager();
+  }, []);
 
   const refresh = () => {
     setTDPEnable(Settings.appTDPEnable());
@@ -283,7 +290,7 @@ const CPUTDPComponent: FC = () => {
 
   return (
     <>
-      {!enableNativeTDPSlider && (
+      {(!enableNativeTDPSlider || !supportsSteamosManager) && (
         <>
           {(tdpEnable || enableNativeTDPSlider) && (
             <PanelSectionRow>
@@ -321,7 +328,7 @@ const CPUTDPComponent: FC = () => {
           </PanelSectionRow>
         </>
       )}
-      {cpuVendor == "AuthenticAMD" && (
+      {cpuVendor == "AuthenticAMD" && !supportsSteamosManager && (
         <PanelSectionRow>
           <ToggleField
             label={localizationManager.getString(

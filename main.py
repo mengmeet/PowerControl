@@ -1,3 +1,4 @@
+import os
 import sys
 from typing import List
 
@@ -515,4 +516,11 @@ class Plugin:
             return True
         except Exception as e:
             logger.error(f"Error toggling native TDP slider: {e}", exc_info=True)
+            return False
+
+    async def check_file_exist(self, file_path: str) -> bool:
+        try:
+            return os.path.exists(file_path)
+        except Exception as e:
+            logger.error(f"Error checking file exist: {e}", exc_info=True)
             return False

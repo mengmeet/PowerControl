@@ -51,6 +51,8 @@ export class BackendData {
   private has_supportsResetChargeLimit = false;
   private supportsSoftwareChargeLimit = false;
   private has_supportsSoftwareChargeLimit = false;
+  private supportsSteamosManager = false;
+  private has_supportsSteamosManager = false;
 
   public async init() {
     await call<[], number>("get_cpuMaxNum").then((res) => {
@@ -222,6 +224,16 @@ export class BackendData {
         this.supportsSoftwareChargeLimit = false;
         this.has_supportsSoftwareChargeLimit = false;
       });
+
+    await Backend.checkFileExist("/usr/bin/steamosctl").then((res) => {
+      this.supportsSteamosManager = res;
+      this.has_supportsSteamosManager = true;
+    }).catch((err) => {
+      console.error("检查 steamos-manager 支持失败:", err);
+      Backend.logError(`检查 steamos-manager 支持失败: ${err}`);
+      this.supportsSteamosManager = false;
+      this.has_supportsSteamosManager = false;
+    });
   }
 
   public getForceShowTDP() {
@@ -460,6 +472,14 @@ export class BackendData {
 
   public hasIsSupportSoftwareChargeLimit() {
     return this.has_supportsSoftwareChargeLimit;
+  }
+
+  public getSupportsSteamosManager() {
+    return this.supportsSteamosManager;
+  }
+
+  public hasSupportsSteamosManager() {
+    return this.has_supportsSteamosManager;
   }
 }
 
@@ -1076,5 +1096,10 @@ export class Backend {
   // stop_gpu_notify
   public static async stopGpuNotify() {
     return await call("stop_gpu_notify");
+  }
+
+  // check_file_exist
+  public static async checkFileExist(filePath: string): Promise<boolean> {
+    return await call("check_file_exist", filePath);
   }
 }
