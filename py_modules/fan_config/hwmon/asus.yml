@@ -7,7 +7,7 @@ fans:
 
     pwm_enable:
       manual_value: 1
-      auto_value: 2
+      auto_value: 2 # 设置自动模式会使用内置的曲线，会受到platform_profile影响，如果要在设置为自动的时候使用下面的曲线，需要设置为1
       pwm_enable_path: pwm1_enable
 
     pwm_write:
