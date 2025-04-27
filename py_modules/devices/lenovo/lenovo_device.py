@@ -19,9 +19,6 @@ LENOVO_WIM_FAST_MIN_PATH = f"{LENOVO_WIM_PATH}/ppt_pl3_fppt/min_value"
 LENOVO_WIM_SLOW_MIN_PATH = f"{LENOVO_WIM_PATH}/ppt_pl2_sppt/min_value"
 LENOVO_WIM_STAPM_MIN_PATH = f"{LENOVO_WIM_PATH}/ppt_pl1_spl/min_value"
 
-PLATFORM_PROFILE_PREFIX = "/sys/class/platform-profile"
-HWMON_PREFIX = "/sys/class/hwmon"
-
 PLATFORM_PROFILE_NAME = "lenovo-wmi-gamezone"
 SUGGESTED_DEFAULT = "custom"
 
@@ -29,43 +26,6 @@ SUGGESTED_DEFAULT = "custom"
 class LenovoDevice(PowerDevice):
     def __init__(self) -> None:
         super().__init__()
-
-    def find_sysdir(self, prefix: str, name: str) -> str:
-        for dir in os.listdir(prefix):
-            base_path = os.path.join(prefix, dir)
-            if os.path.exists(os.path.join(base_path, "name")):
-                with open(os.path.join(base_path, "name"), "r") as f:
-                    if f.read().strip() == name:
-                        return base_path
-        return None
-
-    def find_hwmon(self, name: str) -> str:
-        return self.find_sysdir(HWMON_PREFIX, name)
-
-    def find_platform_profile(self, name: str) -> str:
-        return self.find_sysdir(PLATFORM_PROFILE_PREFIX, name)
-
-    def get_platform_profile(self, name: str) -> str:
-        base_path = self.find_platform_profile(name)
-        try:
-            with open(os.path.join(base_path, "profile"), "r") as f:
-                return f.read().strip()
-        except FileNotFoundError:
-            logger.error(f"Platform profile {name} not found")
-            return None
-        except Exception as e:
-            logger.error(f"Failed to get platform profile {name}: {e}")
-            return None
-
-    def set_platform_profile(self, name: str, profile: str) -> None:
-        base_path = self.find_platform_profile(name)
-        try:
-            with open(os.path.join(base_path, "profile"), "w") as f:
-                f.write(profile)
-        except FileNotFoundError:
-            logger.error(f"Platform profile {name} not found")
-        except Exception as e:
-            logger.error(f"Failed to set platform profile {name}: {e}")
 
     def set_tdp_unlimited(self) -> None:
         logger.info("Setting TDP unlimited")

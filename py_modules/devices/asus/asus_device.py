@@ -24,14 +24,33 @@ ASUS_ARMORY_STAPM_WMI_PATH = f"{ASUS_ARMORY_PATH}/attributes/ppt_pl1_spl/current
 LEGACY_MCU_POWERSAVE_PATH = f"{LEGACY_WMI_PATH}/mcu_powersave"
 ASUS_ARMORY_MCU_POWERSAVE_PATH = f"{ASUS_ARMORY_PATH}/attributes/mcu_powersave"
 
+PLATFORM_PROFILE_NAME = "asus-wmi"
+PLATFORM_PROFILE_PERFORMANCE = "performance"
+PLATFORM_PROFILE_BALANCED = "balanced"
+PLATFORM_PROFILE_QUIET = "quiet"
 
-# from https://github.com/aarron-lee/SimpleDeckyTDP/blob/main/py_modules/devices/rog_ally.py
+
+# some from https://github.com/aarron-lee/SimpleDeckyTDP/blob/main/py_modules/devices/rog_ally.py
 class AsusDevice(PowerDevice):
     def __init__(self) -> None:
         super().__init__()
 
     def set_tdp(self, tdp: int) -> None:
         logger.debug(f"Setting TDP to {tdp}")
+
+        current_profile = self.get_platform_profile(PLATFORM_PROFILE_NAME)
+        if tdp < 8:
+            profile = PLATFORM_PROFILE_QUIET
+        elif tdp < 15:
+            profile = PLATFORM_PROFILE_BALANCED
+        else:
+            profile = PLATFORM_PROFILE_PERFORMANCE
+
+        if current_profile != profile:
+            logger.info(f"Setting platform profile to {profile}")
+            self.set_platform_profile(PLATFORM_PROFILE_NAME, profile)
+            sleep(1)
+
         if tdp < 5:
             logger.info("TDP is too low, use default tdp method")
             super().set_tdp(tdp)

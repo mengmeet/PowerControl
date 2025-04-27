@@ -17,6 +17,9 @@ from utils import (
 
 from .idevice import IDevice
 
+PLATFORM_PROFILE_PREFIX = "/sys/class/platform-profile"
+HWMON_PREFIX = "/sys/class/hwmon"
+
 
 class PowerDevice(IDevice):
     # 常见的 sched_ext 调度器列表
@@ -64,6 +67,43 @@ class PowerDevice(IDevice):
     def _ec_write(self, address: int, data: int) -> None:
         logger.info(f"_ec_write address={hex(address)} data={hex(data)}")
         EC.Write(address, data)
+
+    def find_sysdir(self, prefix: str, name: str) -> str:
+        for dir in os.listdir(prefix):
+            base_path = os.path.join(prefix, dir)
+            if os.path.exists(os.path.join(base_path, "name")):
+                with open(os.path.join(base_path, "name"), "r") as f:
+                    if f.read().strip() == name:
+                        return base_path
+        return None
+
+    def find_hwmon(self, name: str) -> str:
+        return self.find_sysdir(HWMON_PREFIX, name)
+
+    def find_platform_profile(self, name: str) -> str:
+        return self.find_sysdir(PLATFORM_PROFILE_PREFIX, name)
+
+    def get_platform_profile(self, name: str) -> str:
+        base_path = self.find_platform_profile(name)
+        try:
+            with open(os.path.join(base_path, "profile"), "r") as f:
+                return f.read().strip()
+        except FileNotFoundError:
+            logger.error(f"Platform profile {name} not found")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to get platform profile {name}: {e}")
+            return None
+
+    def set_platform_profile(self, name: str, profile: str) -> None:
+        base_path = self.find_platform_profile(name)
+        try:
+            with open(os.path.join(base_path, "profile"), "w") as f:
+                f.write(profile)
+        except FileNotFoundError:
+            logger.error(f"Platform profile {name} not found")
+        except Exception as e:
+            logger.error(f"Failed to set platform profile {name}: {e}")
 
     # ------ Charge ------ #
 
