@@ -21,8 +21,12 @@ ASUS_ARMORY_FAST_WMI_PATH = f"{ASUS_ARMORY_PATH}/attributes/ppt_fppt/current_val
 ASUS_ARMORY_SLOW_WMI_PATH = f"{ASUS_ARMORY_PATH}/attributes/ppt_pl2_sppt/current_value"
 ASUS_ARMORY_STAPM_WMI_PATH = f"{ASUS_ARMORY_PATH}/attributes/ppt_pl1_spl/current_value"
 
-LEGACY_MCU_POWERSAVE_PATH = f"{LEGACY_WMI_PATH}/mcu_powersave"
-ASUS_ARMORY_MCU_POWERSAVE_PATH = f"{ASUS_ARMORY_PATH}/attributes/mcu_powersave"
+ASUS_ARMORY_FAST_2_WMI_PATH = (
+    f"{ASUS_ARMORY_PATH}/attributes/ppt_pl3_fppt/current_value"
+)
+
+# LEGACY_MCU_POWERSAVE_PATH = f"{LEGACY_WMI_PATH}/mcu_powersave"
+# ASUS_ARMORY_MCU_POWERSAVE_PATH = f"{ASUS_ARMORY_PATH}/attributes/mcu_powersave"
 
 PLATFORM_PROFILE_NAME = "asus-wmi"
 PLATFORM_PROFILE_PERFORMANCE = "performance"
@@ -30,7 +34,7 @@ PLATFORM_PROFILE_BALANCED = "balanced"
 PLATFORM_PROFILE_QUIET = "quiet"
 
 
-# some from https://github.com/aarron-lee/SimpleDeckyTDP/blob/main/py_modules/devices/rog_ally.py
+# credit:  https://github.com/aarron-lee/SimpleDeckyTDP/blob/main/py_modules/devices/rog_ally.py
 class AsusDevice(PowerDevice):
     def __init__(self) -> None:
         super().__init__()
@@ -55,14 +59,61 @@ class AsusDevice(PowerDevice):
             logger.info("TDP is too low, use default tdp method")
             super().set_tdp(tdp)
             return
-        fast_val = tdp + 2
+        fast_val = tdp
         slow_val = tdp
         stapm_val = tdp
+        if self._supports_wmi_tdp():
+            logger.debug(f"Setting TDP to {tdp} by ASUS WMI")
+            self._set_stapm(stapm_val)
+            self._set_slow(slow_val)
+            self._set_fast(fast_val)
+        else:
+            super().set_tdp(tdp)
+
+    def _set_stapm(self, stapm: int) -> None:
+        logger.debug(f"Setting STAPM to {stapm}")
+        if os.path.exists(ASUS_ARMORY_STAPM_WMI_PATH):
+            with open(ASUS_ARMORY_STAPM_WMI_PATH, "w") as f:
+                f.write(str(stapm))
+            sleep(0.1)
+        if os.path.exists(STAPM_WMI_PATH):
+            with open(STAPM_WMI_PATH, "w") as f:
+                f.write(str(stapm))
+            sleep(0.1)
+
+    def _set_slow(self, slow: int) -> None:
+        logger.debug(f"Setting SLOW to {slow}")
+        if os.path.exists(ASUS_ARMORY_SLOW_WMI_PATH):
+            with open(ASUS_ARMORY_SLOW_WMI_PATH, "w") as f:
+                f.write(str(slow))
+            sleep(0.1)
+        if os.path.exists(SLOW_WMI_PATH):
+            with open(SLOW_WMI_PATH, "w") as f:
+                f.write(str(slow))
+            sleep(0.1)
+
+    def _set_fast(self, fast: int) -> None:
+        logger.debug(f"Setting FAST to {fast}")
+        if os.path.exists(ASUS_ARMORY_FAST_WMI_PATH):
+            with open(ASUS_ARMORY_FAST_WMI_PATH, "w") as f:
+                f.write(str(fast))
+            sleep(0.1)
+        if os.path.exists(FAST_WMI_PATH):
+            with open(FAST_WMI_PATH, "w") as f:
+                f.write(str(fast))
+            sleep(0.1)
+        if os.path.exists(ASUS_ARMORY_FAST_2_WMI_PATH):
+            with open(ASUS_ARMORY_FAST_2_WMI_PATH, "w") as f:
+                f.write(str(fast))
+            sleep(0.1)
+
+    def _set_tdp_with_bios(self, stapm: int, slow: int, fast: int) -> None:
+        logger.debug(f"Setting TDP with BIOS to {stapm}, {slow}, {fast}")
         if self._supports_bios_wmi_tdp():
             tdp_values = {
-                "ppt_fppt": fast_val,
-                "ppt_pl2_sppt": slow_val,
-                "ppt_pl1_spl": stapm_val,
+                "ppt_fppt": fast,
+                "ppt_pl2_sppt": slow,
+                "ppt_pl1_spl": stapm,
             }
             for wmi_method, target_tdp in tdp_values.items():
                 try:
@@ -84,42 +135,9 @@ class AsusDevice(PowerDevice):
                         exc_info=True,
                     )
                     return
-        elif (
-            os.path.exists(ASUS_ARMORY_FAST_WMI_PATH)
-            and os.path.exists(ASUS_ARMORY_SLOW_WMI_PATH)
-            and os.path.exists(ASUS_ARMORY_STAPM_WMI_PATH)
-        ):
-            logger.debug(f"Setting TDP to {tdp} by ASUS Armoury")
-            with open(ASUS_ARMORY_FAST_WMI_PATH, "w") as f:
-                f.write(str(fast_val))
-            sleep(0.1)
-            with open(ASUS_ARMORY_SLOW_WMI_PATH, "w") as f:
-                f.write(str(slow_val))
-            sleep(0.1)
-            with open(ASUS_ARMORY_STAPM_WMI_PATH, "w") as f:
-                f.write(str(stapm_val))
-            sleep(0.1)
-
-        elif (
-            os.path.exists(FAST_WMI_PATH)
-            and os.path.exists(SLOW_WMI_PATH)
-            and os.path.exists(STAPM_WMI_PATH)
-        ):
-            logger.debug(f"Setting TDP to {tdp} by ASUS WMI")
-            with open(FAST_WMI_PATH, "w") as f:
-                f.write(str(fast_val))
-            sleep(0.1)
-            with open(SLOW_WMI_PATH, "w") as f:
-                f.write(str(slow_val))
-            sleep(0.1)
-            with open(STAPM_WMI_PATH, "w") as f:
-                f.write(str(stapm_val))
-            sleep(0.1)
-        else:
-            super().set_tdp(tdp)
 
     def _supports_bios_wmi_tdp(self):
-        tdp_methods = {"ppt_fppt", "ppt_pl2_sppt", "ppt_pl1_spl"}
+        tdp_methods = {"ppt_fppt", "ppt_pl2_sppt", "ppt_pl1_spl", "ppt_pl3_fppt"}
 
         settings = get_bios_settings()
         filtered_data = [
@@ -144,7 +162,10 @@ class AsusDevice(PowerDevice):
         ):
             return True
         elif (
-            os.path.exists(ASUS_ARMORY_FAST_WMI_PATH)
+            (
+                os.path.exists(ASUS_ARMORY_FAST_WMI_PATH)
+                or os.path.exists(ASUS_ARMORY_FAST_2_WMI_PATH)
+            )
             and os.path.exists(ASUS_ARMORY_SLOW_WMI_PATH)
             and os.path.exists(ASUS_ARMORY_STAPM_WMI_PATH)
         ):
