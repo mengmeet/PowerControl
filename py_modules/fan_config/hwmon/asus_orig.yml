@@ -1,5 +1,5 @@
-# 略微修改的曲线 提高了高温点的转速
-hwmon_name: asus_custom_fan_curve
+# 原生曲线? 暂时不用 修改 hwmon_name 避免匹配
+hwmon_name: asus_custom_fan_curve_orig
 
 fans:
   - fan_name: Fan1
@@ -49,18 +49,18 @@ fans:
           - 8
           - 48
           - 74
-          - 90
-          - 95
-          - 100
+          - 74
+          - 74
+          - 74
         pwm:
           - 3
           - 10
           - 20
           - 122
           - 189
-          - 255
-          - 255
-          - 255
+          - 189
+          - 189
+          - 189
 
     pwm_input:
       hwmon_label: asus
@@ -115,19 +115,19 @@ fans:
           - 1
           - 1
           - 45
-          - 55
-          - 65
-          - 74
-          - 90
+          - 45
+          - 45
+          - 45
+          - 45
         pwm:
           - 3
           - 3
           - 3
           - 115
-          - 140
-          - 165
-          - 190
-          - 229
+          - 115
+          - 115
+          - 115
+          - 115
 
     pwm_input:
       hwmon_label: asus
