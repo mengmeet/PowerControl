@@ -27,7 +27,7 @@
   "homepage": "https://github.com/mengmeet/PowerControl#readme",
   "devDependencies": {
     "@decky/rollup": "^1.0.1",
-    "@decky/ui": "^4.9.2",
+    "@decky/ui": "^4.10.0",
     "@types/markdown-it": "^14.1.2",
     "@types/react": "19.1.1",
     "@types/react-dom": "19.1.2",

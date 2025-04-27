@@ -403,21 +403,21 @@ export interface AppOverviewExt extends AppOverview {
 
 export interface BatteryStateChange {
     bHasBattery: boolean;
-    eACState: ACState;
-    eBatteryState: BatteryState;
+    eACState: EACState;
+    eBatteryState: EBatteryState;
     flLevel: number; // Battery Percentage in floating point 0-1
     nSecondsRemaining: number; // Appears to be charge time remaining or time remaining on battery
     bShutdownRequested: boolean;
 }
 
-export enum ACState {
+export enum EACState {
     Unknown = 0,
     Disconnected = 1,
     Connected = 2,
     ConnectedSlow = 3,
 }
 
-export enum BatteryState {
+export enum EBatteryState {
     Unknown = 0,
     Discharging = 1,
     Charging = 2,

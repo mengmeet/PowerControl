@@ -12,7 +12,7 @@ import {
   PluginManager,
   RunningApps,
 } from "./pluginMain";
-import { ACState } from "./steamClient";
+import { EACState } from "./steamClient";
 
 export const DEFAULT_TDP_MAX = 25;
 export const DEFAULT_TDP_MIN = 3;
@@ -403,7 +403,7 @@ export class Settings {
     }
 
     // 根据电源模式返回 id 对应的配置
-    if (ACStateManager.getACState() === ACState.Connected) {
+    if (ACStateManager.getACState() === EACState.Connected) {
       return this._instance.data.perApp[this.ensureAppID()].acStting;
     } else {
       return this._instance.data.perApp[this.ensureAppID()].batSetting;

@@ -11,7 +11,7 @@ import {
 import { Backend } from "./backend";
 import { localizationManager } from "../i18n";
 import { Settings } from "./settings";
-import { ACState, AppOverviewExt, BatteryStateChange } from "./steamClient";
+import { EACState, AppOverviewExt, BatteryStateChange } from "./steamClient";
 import { calPointInLine, FanPosition } from "./position";
 import { QAMPatch } from "./patch";
 import { addEventListener } from "@decky/api";
@@ -67,7 +67,7 @@ export class RunningApps {
 
 export class ACStateManager {
   // 电源状态
-  private static acState: ACState = ACState.Unknown;
+  private static acState: EACState = EACState.Unknown;
 
   private static acStateListeners: any;
 

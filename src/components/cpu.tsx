@@ -5,7 +5,7 @@ import {
   DropdownItem,
   ButtonItem,
 } from "@decky/ui";
-import { useEffect, useState, FC, useRef, useMemo } from "react";
+import { useEffect, useState, FC, useMemo } from "react";
 import {
   Settings,
   Backend,

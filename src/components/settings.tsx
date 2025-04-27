@@ -22,7 +22,7 @@ import {
   ComponentName,
   UpdateType,
   ACStateManager,
-  ACState,
+  EACState,
   Backend,
 } from "../util";
 import { localizeStrEnum, localizationManager } from "../i18n";
@@ -184,7 +184,9 @@ const SettingsPerAcStateComponent: FC = () => {
   const [appACStateOverWrite, setAppACStateOverWrite] = useState<boolean>(
     Settings.appACStateOverWrite()
   );
-  const [acstate, setACState] = useState<ACState>(ACStateManager.getACState());
+  const [acstate, setACState] = useState<EACState>(
+    ACStateManager.getACState()
+  );
   const [show, setShow] = useState<boolean>(Settings.ensureEnable());
 
   const hide = (ishide: boolean) => {
@@ -216,16 +218,16 @@ const SettingsPerAcStateComponent: FC = () => {
     );
   });
 
-  const getAcSteteName = (acstate: ACState) => {
-    if (acstate === ACState.Connected) {
+  const getAcSteteName = (acstate: EACState) => {
+    if (acstate === EACState.Connected) {
       return localizationManager.getString(localizeStrEnum.AC_MODE);
-    } else if (acstate === ACState.Disconnected) {
+    } else if (acstate === EACState.Disconnected) {
       return localizationManager.getString(localizeStrEnum.BAT_MODE);
     }
     return acstate;
   };
 
-  const getDescription = (acstate: ACState) => {
+  const getDescription = (acstate: EACState) => {
     return (
       localizationManager.getString(localizeStrEnum.USING) +
       (appACStateOverWrite ? "『" : "") +
