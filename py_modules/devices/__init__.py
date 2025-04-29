@@ -12,6 +12,7 @@ from .ayaneo.ayaneo_kun import AyaneoKun
 from .idevice import IDevice
 from .lenovo.lenovo_device import LenovoDevice
 from .msi.msi_claw8 import MsiClaw8
+from .msi.msi_claw_a1m import MsiClawA1M
 from .msi.msi_device import MsiDevice
 from .power_device import PowerDevice
 
@@ -28,6 +29,7 @@ __all__ = [
     "AyaneoKun",
     "IDevice",
     "MsiClaw8",
+    "MsiClawA1M",
     "MsiDevice",
     "PowerDevice",
     "AsusDevice",

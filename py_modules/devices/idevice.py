@@ -71,6 +71,10 @@ class IDevice(ABC):
                         from . import MsiClaw8
 
                         cls._instance = MsiClaw8()
+                    case "MS-1T41":
+                        from . import MsiClawA1M
+
+                        cls._instance = MsiClawA1M()
                     case _:
                         from . import MsiDevice
 
