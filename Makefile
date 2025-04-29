@@ -107,6 +107,9 @@ deploy-only: ## Deploy code to steamdeck
 	@$(MAKE) deploy-steamdeck
 	@$(MAKE) set-loglevel
 
+deploy-only-debug: ## Deploy code to steamdeck
+	@$(MAKE) deploy-steamdeck
+
 deploy-release: ## Deploy release to steamdeck and restart Decky
 	@$(MAKE) deploy-steamdeck
 	@$(MAKE) set-loglevel
