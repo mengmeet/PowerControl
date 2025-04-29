@@ -345,7 +345,7 @@ class CPUManager:
         """设置CPU TDP 为最大值。
         """
         logger.info(f"set_cpuTDP_unlimited {self.cpu_tdpMax}")
-        return self.set_cpuTDP(self.cpu_tdpMax)
+        return self.set_cpuTDP(int(self.cpu_tdpMax))
 
     def is_intel(self):
         return CPU_VENDOR == "GenuineIntel"
@@ -435,8 +435,8 @@ class CPUManager:
         try:
             # 遍历 /sys/class/powercap/intel-rapl/*/ 如果 name 是 package-0 则是cpu
             logger.debug("set_cpuTDP_Intel {}".format(value))
-            tdp = value * 1000000
-            tdp_short = (value + 2) * 1000000
+            tdp = int(value * 1000000)
+            tdp_short = int((value + 2) * 1000000)
             # tdp_short = tdp
             rapl_long, rapl_short, _ = self.__get_intel_rapl_path()
             legacy_rapl_long, legacy_rapl_short, _ = self.__get_legacy_intel_rapl_path()
@@ -446,12 +446,16 @@ class CPUManager:
                 logger.error("Failed to set Intel CPU TDP: RAPL path not found")
                 return False
             with open(rapl_long, "w") as file:
+                logger.debug(f"set_cpuTDP_Intel {rapl_long} {tdp}")
                 file.write(str(tdp))
             with open(rapl_short, "w") as file:
+                logger.debug(f"set_cpuTDP_Intel {rapl_short} {tdp_short}")
                 file.write(str(tdp_short))
             with open(legacy_rapl_long, "w") as file:
+                logger.debug(f"set_cpuTDP_Intel {legacy_rapl_long} {tdp}")
                 file.write(str(tdp))
             with open(legacy_rapl_short, "w") as file:
+                logger.debug(f"set_cpuTDP_Intel {legacy_rapl_short} {tdp_short}")
                 file.write(str(tdp_short))
             return True
 

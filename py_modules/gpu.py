@@ -377,23 +377,45 @@ class GPUManager:
                         currentMin = int(file.read().strip())
                     with open(INTEL_GPU_MAX_FREQ, "r") as file:
                         currentMax = int(file.read().strip())
+                    logger.debug(
+                        f"set_gpuFreq: intel gpu, currentMin={currentMin} currentMax={currentMax}"
+                    )
                     # 如果要设置 min 大于当前 max，要先设置 max
-                    if minValue > currentMax:
+                    if minValue > currentMax or maxValue < currentMin:
                         logger.debug(
                             f"set_gpuFreq: intel gpu, set maxValue={maxValue} before minValue={minValue}"
                         )
-                        with open(INTEL_GPU_MAX_FREQ, "w") as file:
-                            file.write(str(maxValue))
-                        with open(INTEL_GPU_MIN_FREQ, "w") as file:
-                            file.write(str(minValue))
+                        try:
+                            if maxValue != currentMax:
+                                with open(INTEL_GPU_MAX_FREQ, "w") as file:
+                                    file.write(str(maxValue))
+                                time.sleep(0.1)
+                        except Exception as e:
+                            logger.error(e, exc_info=True)
+                        try:
+                            if minValue != currentMin:
+                                with open(INTEL_GPU_MIN_FREQ, "w") as file:
+                                    file.write(str(minValue))
+                        except Exception as e:
+                            logger.error(e, exc_info=True)
                     else:
                         logger.debug(
                             f"set_gpuFreq: intel gpu, set minValue={minValue} before maxValue={maxValue}"
                         )
-                        with open(INTEL_GPU_MIN_FREQ, "w") as file:
-                            file.write(str(minValue))
-                        with open(INTEL_GPU_MAX_FREQ, "w") as file:
-                            file.write(str(maxValue))
+                        try:
+                            if minValue != currentMin:
+                                with open(INTEL_GPU_MIN_FREQ, "w") as file:
+                                    file.write(str(minValue))
+                            time.sleep(0.1)
+                        except Exception as e:
+                            logger.error(e, exc_info=True)
+                        try:
+                            if maxValue != currentMax:
+                                with open(INTEL_GPU_MAX_FREQ, "w") as file:
+                                    file.write(str(maxValue))
+                            time.sleep(0.1)
+                        except Exception as e:
+                            logger.error(e, exc_info=True)
                     return True
             else:
                 return False
