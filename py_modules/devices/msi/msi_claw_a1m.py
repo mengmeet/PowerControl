@@ -11,7 +11,3 @@ class MsiClawA1M(MsiDevice):
     def __init__(self):
         super().__init__()
         self.shift_mode_dict = SHIFT_MODES_DICT
-
-    def set_tdp(self, tdp: int) -> None:
-        self.shift_mode_write(SM_SPORT_NAME)
-        super().set_tdp(tdp)
