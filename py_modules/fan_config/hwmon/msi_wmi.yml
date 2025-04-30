@@ -1,0 +1,101 @@
+hwmon_name: msi_wmi_platform
+
+fans:
+  - fan_name: Fan1
+    pwm_mode: 2 # 写入的模式 0.普通模式(单文件写入) 1.对多个文件写入同样的数值 2.对多个文件写入不同的数值
+
+    pwm_enable:
+      manual_value: 1
+      auto_value: 2
+      pwm_enable_path: pwm1_enable
+
+    pwm_write:
+      pwm_write_max:
+        default: 255 # 100%
+      curve_path: # 曲线写入路径
+        temp_write:
+          - pwm1_auto_point1_temp
+          - pwm1_auto_point2_temp
+          - pwm1_auto_point3_temp
+          - pwm1_auto_point4_temp
+          - pwm1_auto_point5_temp
+          - pwm1_auto_point6_temp
+        pwm_write:
+          - pwm1_auto_point1_pwm
+          - pwm1_auto_point2_pwm
+          - pwm1_auto_point3_pwm
+          - pwm1_auto_point4_pwm
+          - pwm1_auto_point5_pwm
+          - pwm1_auto_point6_pwm
+      default_curve:
+        temp:
+          - 0
+          - 50
+          - 60
+          - 70
+          - 80
+          - 90
+        pwm:
+          - 0
+          - 102
+          - 124
+          - 147
+          - 170
+          - 191
+
+    pwm_input:
+      hwmon_label: msi_wmi_platform
+      pwm_read_path: fan1_input
+      pwm_read_max: 5800
+
+    temp_mode: 0
+
+  - fan_name: Fan2
+    pwm_mode: 2
+
+    pwm_enable:
+      manual_value: 1
+      auto_value: 2
+      pwm_enable_path: pwm2_enable
+
+    pwm_write:
+      pwm_write_max:
+        default: 170 # 100%
+        # Claw 8 AI+ A2VM: 255 # 150%
+      curve_path: # 曲线写入路径
+        temp_write:
+          - pwm2_auto_point1_temp
+          - pwm2_auto_point2_temp
+          - pwm2_auto_point3_temp
+          - pwm2_auto_point4_temp
+          - pwm2_auto_point5_temp
+          - pwm2_auto_point6_temp
+        pwm_write:
+          - pwm2_auto_point1_pwm
+          - pwm2_auto_point2_pwm
+          - pwm2_auto_point3_pwm
+          - pwm2_auto_point4_pwm
+          - pwm2_auto_point5_pwm
+          - pwm2_auto_point6_pwm
+      default_curve:
+        temp:
+          - 0
+          - 50
+          - 60
+          - 70
+          - 80
+          - 90
+        pwm:
+          - 0
+          - 102
+          - 124
+          - 147
+          - 170
+          - 191
+
+    pwm_input:
+      hwmon_label: msi_wmi_platform
+      pwm_read_path: fan2_input
+      pwm_read_max: 5800
+
+    temp_mode: 0
