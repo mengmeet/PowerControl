@@ -63,7 +63,7 @@ export class AppSetting {
       ? Backend.data?.getCpuMaxNum()
       : 4;
     this.cpuboost = true;
-    this.tdpEnable = true;
+    this.tdpEnable = false;
     this.tdp = Backend.data?.HasTDPMax()
       ? Math.trunc(Backend.data?.getTDPMax() / 2)
       : 15;

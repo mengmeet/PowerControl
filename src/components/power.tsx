@@ -4,7 +4,7 @@ import {
   PanelSectionRow,
   ToggleField,
 } from "@decky/ui";
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import {
   Backend,
   ComponentName,
@@ -169,13 +169,13 @@ const ChargeLimitComponent: FC = () => {
 export const PowerComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
   const [show, setShow] = useState<boolean>(Settings.ensureEnable());
 
-  const [supportChargeLimit, _] = useState<boolean>(
-    Backend.data.getIsSupportChargeLimit()
-  );
+  const supportChargeLimit = useMemo(() => {
+    return Backend.data.getIsSupportChargeLimit();
+  }, []);
 
-  const [isSupportSoftwareChargeLimit, __] = useState<boolean>(
-    Backend.data.isSupportSoftwareChargeLimit()
-  );
+  const isSupportSoftwareChargeLimit = useMemo(() => {
+    return Backend.data.isSupportSoftwareChargeLimit();
+  }, []);
 
   const [showPowerMenu, setShowPowerMenu] = useState<boolean>(
     Settings.showPowerMenu
