@@ -153,6 +153,7 @@ try:
         "Jupiter": 20,
         "V3": 45,
         "Claw 8 AI+ A2VM": 30,
+        "Claw A1M": 43,
         "83L3": 33, # Legion GO S
     }
     TDP_LIMIT_CONFIG_CPU = {
