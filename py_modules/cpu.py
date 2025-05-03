@@ -342,8 +342,7 @@ class CPUManager:
             return False
 
     def set_cpuTDP_unlimited(self) -> bool:
-        """设置CPU TDP 为最大值。
-        """
+        """设置CPU TDP 为最大值。"""
         logger.info(f"set_cpuTDP_unlimited {self.cpu_tdpMax}")
         return self.set_cpuTDP(int(self.cpu_tdpMax))
 
@@ -524,42 +523,50 @@ class CPUManager:
             logger.debug("set_cpuOnline {} {}".format(value, self.cpu_maxNum))
             self.enable_cpu_num = value
 
-            cpu_topology = self.cpu_topology
-            enabled_cores = list(set(int(core) for core in cpu_topology.values()))
+            # 依照逻辑处理器ID排序
+            cpu_topology_sorted = sorted(self.cpu_topology.items(), key=lambda x: x[0])
+            cpu_topology = {k: v for k, v in cpu_topology_sorted}
+
+            # 依照物理核心ID分组
+            cpu_topology_by_core = {}
+            for k, v in cpu_topology.items():
+                if v not in cpu_topology_by_core:
+                    cpu_topology_by_core[v] = []
+                cpu_topology_by_core[v].append(k)
+
+            logger.info(f"cpu_topology_by_core {cpu_topology_by_core}")
+            logger.info(f"cpu_topology {cpu_topology}")
 
             # 初始化关闭 Set
             to_offline = set()
 
-            # cpuid 可能存在不连续的情况
-            # 如 4500u 为 [0, 1, 2, 4, 5, 6] {0: 0, 1: 1, 2: 2, 3: 4, 4: 5, 5: 6}
-            # 所以不能直接关掉 大于 enable_cpu_num 的线程
-            #
-            # cpu_num 作为索引, 取出对应的核心, 作为开启的最大 cpuid, 关闭大于最大 cpuid 的线程
-            max_enable_cpuid = self.cps_ids[self.enable_cpu_num - 1]
-            logger.debug(
-                f"enable_cpu_num {self.enable_cpu_num}, max_enable_cpuid {max_enable_cpuid}"
-            )
-            if self.enable_cpu_num is not None and self.enable_cpu_num < len(
-                enabled_cores
-            ):
-                for processor_id, core_id in cpu_topology.items():
-                    if int(core_id) > max_enable_cpuid:
-                        logger.info(
-                            f"add offline - processor_id:{processor_id}, core_id:{core_id}"
-                        )
-                        to_offline.add(int(processor_id))
+            # 核心数逻辑
+            # 先得到所有核心ID列表
+            core_ids = list(cpu_topology_by_core.keys())
+            # 区分要保留和要关闭的核心
+            cores_to_keep = core_ids[: self.enable_cpu_num]
+            cores_to_offline = core_ids[self.enable_cpu_num :]
 
-            # 如果关闭SMT，关闭每个核心中数字更大的线程
+            # 添加要关闭的处理器
+            for core_id in cores_to_offline:
+                logger.info(
+                    f"add offline - cpu_topology_by_core[{core_id}]:{cpu_topology_by_core[core_id]}"
+                )
+                to_offline.update(set(cpu_topology_by_core[core_id]))
+
+            # SMT 逻辑
+            # 在保留的核心中，关闭每个核心中数字更大的线程
             if not self.cpu_smt:
-                for core_id in enabled_cores[: self.enable_cpu_num]:
-                    core_threads = [
-                        cpu
-                        for cpu, core in cpu_topology.items()
-                        if int(core) == core_id
-                    ]
-                    core_threads = sorted(core_threads, key=lambda x: int(x))
-                    core_to_keep = core_threads[0]
-                    to_offline.update(set(core_threads[1:]))
+                for core_id in cores_to_keep:
+                    core_threads = sorted(
+                        cpu_topology_by_core[core_id], key=lambda x: int(x)
+                    )
+                    offline_threads = core_threads[1:]
+                    if len(offline_threads) > 0:
+                        logger.info(
+                            f"smt offline - core_id:{core_id}, offline_threads:{offline_threads}"
+                        )
+                        to_offline.update(set(offline_threads))
 
             logger.debug(f"to_offline {sorted(to_offline)}")
 
