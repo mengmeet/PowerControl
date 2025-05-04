@@ -4,18 +4,18 @@ permissions:
   contents: write
 
 on:
-    workflow_dispatch:
-    push:
-        branches:
-            - 'main'
-        tags:
-            - 'v*.*.*'
+  workflow_dispatch:
+  push:
+    branches:
+      - "main"
+    tags:
+      - "v*.*.*"
 
 jobs:
   build_plugin:
     runs-on: ubuntu-latest
     container:
-        image: archlinux:latest
+      image: archlinux:latest
     steps:
       - name: set git global safe directory
         run: |
@@ -47,7 +47,7 @@ jobs:
       #       python3 setup.py install --prefix=${PWD} --install-lib=install
       #     cd -
       #     rsync -av --progress --exclude=*.pyc --exclude=__pycache__ ./submodule/python-fuse/install/fuse*/fuse* ./py_modules/site-packages/
-          
+
       - name: change log level
         run: |
           sed -i 's/logging.DEBUG/logging.INFO/' py_modules/config.py
@@ -59,16 +59,23 @@ jobs:
           pnpm update
           pnpm run build
           tar -czvf PowerControl.tar.gz --transform 's,^,PowerControl/,' dist backend py_modules bin *.py *.json *.md *.js LICENSE
-      
+          # zip
+          mkdir -p PowerControl
+          cp -r dist backend py_modules bin *.py *.json *.md *.js LICENSE PowerControl
+          zip -r PowerControl.zip PowerControl
+          rm -rf PowerControl
+
       - name: show files
         run: |
           tar -tzvf PowerControl.tar.gz
-      
+          zip -l PowerControl.zip
       - name: Publish Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: PowerControl
-          path: PowerControl.tar.gz
+          path: |
+            PowerControl.tar.gz
+            PowerControl.zip
 
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -87,7 +94,9 @@ jobs:
       - name: publish to github release
         uses: softprops/action-gh-release@v2
         with:
-          files: /tmp/artifacts/PowerControl/PowerControl.tar.gz
+          files: |
+            /tmp/artifacts/PowerControl/PowerControl.tar.gz
+            /tmp/artifacts/PowerControl/PowerControl.zip
           tag_name: ${{ github.ref_name }}
           draft: false
           generate_release_notes: true
