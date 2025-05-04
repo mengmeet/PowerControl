@@ -364,7 +364,7 @@ export const PowerInfoModel: FC = ({
 
   const getPowerInfo = () => {
     // if amd
-    if (Backend.data.getCpuVendor() === "AMD") {
+    if (Backend.data.getCpuVendor() === "AuthenticAMD") {
       Logger.info(`fn:invoke getRyzenadjInfo`);
       Backend.getRyzenadjInfo().then((info) => {
         setInfo(info);
