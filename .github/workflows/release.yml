@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: set git global safe directory
         run: |
-          pacman -Syu git npm tree zip --noconfirm
+          pacman -Syu git npm tree zip unzip --noconfirm
           git config --global --add safe.directory $(realpath .)
 
       - uses: actions/checkout@v4
@@ -68,7 +68,7 @@ jobs:
       - name: show files
         run: |
           tar -tzvf PowerControl.tar.gz
-          zip -l PowerControl.zip
+          unzip -l PowerControl.zip
       - name: Publish Artifacts
         uses: actions/upload-artifact@v4
         with:
