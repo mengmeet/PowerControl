@@ -957,6 +957,11 @@ export class Backend {
     return (await call("get_ryzenadj_info")) as string;
   }
 
+  // get_rapl_info
+  public static async getRAPLInfo(): Promise<string> {
+    return (await call("get_rapl_info")) as string;
+  }
+
   // set_settings
   public static async setSettings(settingsData: SettingsData) {
     const obj = serializer.serializeObject(settingsData);

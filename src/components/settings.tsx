@@ -24,6 +24,7 @@ import {
   ACStateManager,
   EACState,
   Backend,
+  Logger,
 } from "../util";
 import { localizeStrEnum, localizationManager } from "../i18n";
 import { FaExclamationCircle } from "react-icons/fa";
@@ -184,9 +185,7 @@ const SettingsPerAcStateComponent: FC = () => {
   const [appACStateOverWrite, setAppACStateOverWrite] = useState<boolean>(
     Settings.appACStateOverWrite()
   );
-  const [acstate, setACState] = useState<EACState>(
-    ACStateManager.getACState()
-  );
+  const [acstate, setACState] = useState<EACState>(ACStateManager.getACState());
   const [show, setShow] = useState<boolean>(Settings.ensureEnable());
 
   const hide = (ishide: boolean) => {
@@ -327,10 +326,10 @@ export const QuickAccessTitleView: FC<{ title: string }> = ({ title }) => {
     >
       <div style={{ marginRight: "auto" }}>{title}</div>
       <DialogButton
-        onOKActionDescription="RyzenAdj Info"
+        onOKActionDescription="Power Info"
         style={buttonStyle}
         onClick={() => {
-          showModal(<RyzenadjInfoModel />);
+          showModal(<PowerInfoModel />);
         }}
       >
         <FaExclamationCircle size="0.9em" />
@@ -339,13 +338,14 @@ export const QuickAccessTitleView: FC<{ title: string }> = ({ title }) => {
   );
 };
 
-export const RyzenadjInfoModel: FC = ({
+export const PowerInfoModel: FC = ({
   closeModal,
 }: {
   closeModal?: () => void;
 }) => {
   const fontStyle: React.CSSProperties = {
-    fontFamily: "'DejaVu Sans Mono', Hack, 'Source Code Pro', 'Courier New', monospace, Consolas",
+    fontFamily:
+      "'DejaVu Sans Mono', Hack, 'Source Code Pro', 'Courier New', monospace, Consolas",
     fontSize: "12px",
     lineHeight: "0.2", // 调整行距
     maxHeight: "300px", // 设置最大高度
@@ -360,18 +360,29 @@ export const RyzenadjInfoModel: FC = ({
   });
 
   const [info, setInfo] = useState<string>("");
-  console.log(`fn:invoke RyzenadjInfoModel: ${info}`);
+  Logger.info(`fn:invoke PowerInfoModel: ${info}`);
 
-  useEffect(() => {
-    Backend.getRyzenadjInfo().then((info) => {
-      setInfo(info);
-    });
-
-    // 每5秒刷新一次
-    const interval = setInterval(() => {
+  const getPowerInfo = () => {
+    // if amd
+    if (Backend.data.getCpuVendor() === "AMD") {
+      Logger.info(`fn:invoke getRyzenadjInfo`);
       Backend.getRyzenadjInfo().then((info) => {
         setInfo(info);
       });
+    } else {
+      Logger.info(`fn:invoke getRAPLInfo`);
+      Backend.getRAPLInfo().then((info) => {
+        setInfo(info);
+      });
+    }
+  };
+
+  useEffect(() => {
+    getPowerInfo();
+
+    // 每5秒刷新一次
+    const interval = setInterval(() => {
+      getPowerInfo();
     }, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -379,13 +390,11 @@ export const RyzenadjInfoModel: FC = ({
   return (
     <ModalRoot closeModal={closeModal}>
       <div>
-        <PanelSection title={"Ryzenadj Info"}>
+        <PanelSection title={"Power Info"}>
           <PanelSectionRow>
             <DialogButton
               onClick={() => {
-                Backend.getRyzenadjInfo().then((info) => {
-                  setInfo(info);
-                });
+                getPowerInfo();
               }}
             >
               Reload

@@ -300,6 +300,10 @@ class Plugin:
 
     async def get_ryzenadj_info(self):
         return cpuManager.get_ryzenadj_info()
+    
+    async def get_rapl_info(self):
+        logger.info("Main get_rapl_info")
+        return cpuManager.get_rapl_info()
 
     async def get_max_perf_pct(self):
         try:

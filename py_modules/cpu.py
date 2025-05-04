@@ -398,9 +398,7 @@ class CPUManager:
         rapl_max = ""
         try:
             # 遍历 /sys/class/powercap/intel-rapl-mmio/intel-rapl-mmio:*/ 如果 name 是 package-0 则是cpu
-            for r_path in glob.glob(
-                "/sys/class/powercap/intel-rapl-mmio/intel-rapl-mmio:?"
-            ):
+            for r_path in glob.glob("/sys/class/powercap/intel-rapl/intel-rapl:?"):
                 if os.path.isdir(r_path):
                     name_path = os.path.join(r_path, "name")
                     with open(name_path, "r") as file:
@@ -889,6 +887,41 @@ class CPUManager:
         except Exception as e:
             logger.error(e)
             return f"get_ryzenadj_info error:\n{e}"
+
+    def get_rapl_info(self) -> str:
+        """获取RAPL信息。
+
+        Returns:
+            str: RAPL信息
+        """
+        rapl_base_path = "/sys/class/powercap/intel-rapl:0"
+        # if os.path.exists("/sys/class/powercap/intel-rapl/intel-rapl-mmio:0"):
+        #     rapl_base_path = "/sys/class/powercap/intel-rapl-mmio/intel-rapl-mmio:0"
+
+        rapl_info = {}
+
+        for file in os.listdir(rapl_base_path):
+            # 是文件并且可读
+            if os.path.isfile(os.path.join(rapl_base_path, file)) and os.access(
+                os.path.join(rapl_base_path, file), os.R_OK
+            ):
+                try:
+                    with open(os.path.join(rapl_base_path, file), "r") as file:
+                        rapl_info[file.name] = file.read().strip()
+                except Exception as e:
+                    logger.debug(f"get_rapl_info error: {e}")
+
+        # sort by key
+        rapl_info = dict(sorted(rapl_info.items(), key=lambda x: x[0]))
+
+        logger.info(f"rapl_info: {rapl_info}")
+
+        rapl_info_str = ""
+        for key, value in rapl_info.items():
+            rapl_info_str += f"{key}: {value}\n"
+
+        logger.info(f"rapl_info_str: {rapl_info_str}")
+        return rapl_info_str
 
     def get_max_perf_pct(self) -> int:
         """获取最大性能百分比。
