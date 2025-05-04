@@ -22,7 +22,7 @@ import {
   SteamSpinner,
   Tabs,
 } from "@decky/ui";
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { FaFan, FaLayerGroup, FaSuperpowers } from "react-icons/fa";
 import {
   Backend,
@@ -67,17 +67,17 @@ const TabView: FC<{ show?: boolean }> = ({ show = true }) => {
     Settings.currentTabRoute = route;
   };
 
-  const [supportChargeLimit, _] = useState<boolean>(
-    Backend.data.getIsSupportChargeLimit()
-  );
+  const supportChargeLimit = useMemo(() => {
+    return Backend.data.getIsSupportChargeLimit();
+  }, []);
 
-  const [isSupportSoftwareChargeLimit, __] = useState<boolean>(
-    Backend.data.isSupportSoftwareChargeLimit()
-  );
+  const isSupportSoftwareChargeLimit = useMemo(() => {
+    return Backend.data.isSupportSoftwareChargeLimit();
+  }, []);
 
-  const [showPowerTab, ___] = useState<boolean>(
-    supportChargeLimit || isSupportSoftwareChargeLimit
-  );
+  const showPowerTab = useMemo(() => {
+    return supportChargeLimit || isSupportSoftwareChargeLimit;
+  }, [supportChargeLimit, isSupportSoftwareChargeLimit]);
 
   return (
     <>
