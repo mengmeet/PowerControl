@@ -345,7 +345,7 @@ export const RyzenadjInfoModel: FC = ({
   closeModal?: () => void;
 }) => {
   const fontStyle: React.CSSProperties = {
-    fontFamily: "Courier New",
+    fontFamily: "'DejaVu Sans Mono', Hack, 'Source Code Pro', 'Courier New', monospace, Consolas",
     fontSize: "12px",
     lineHeight: "0.2", // 调整行距
     maxHeight: "300px", // 设置最大高度
