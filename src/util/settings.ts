@@ -473,7 +473,8 @@ export class Settings {
   // }
 
   static appEnableNativeTDPSlider(): boolean {
-    return this._instance.data.enableNativeTDPSlider;
+    // return this._instance.data.enableNativeTDPSlider;
+    return false;
   }
 
   static setEnableNativeTDPSlider(enableNativeTDPSlider: boolean) {

@@ -239,9 +239,9 @@ const CPUTDPComponent: FC = () => {
   );
 
   // const [cpuVendor, _] = useState<string>(Backend.data.getCpuVendor());
-  const cpuVendor = useMemo(() => {
-    return Backend.data.getCpuVendor();
-  }, []);
+  // const cpuVendor = useMemo(() => {
+  //   return Backend.data.getCpuVendor();
+  // }, []);
 
   const supportsSteamosManager = useMemo(() => {
     return Backend.data.getSupportsSteamosManager();
@@ -328,7 +328,7 @@ const CPUTDPComponent: FC = () => {
           </PanelSectionRow>
         </>
       )}
-      {cpuVendor == "AuthenticAMD" && !supportsSteamosManager && (
+      {/* {cpuVendor == "AuthenticAMD" && !supportsSteamosManager && (
         <PanelSectionRow>
           <ToggleField
             label={localizationManager.getString(
@@ -343,7 +343,7 @@ const CPUTDPComponent: FC = () => {
             }}
           />
         </PanelSectionRow>
-      )}
+      )} */}
     </>
   );
 };

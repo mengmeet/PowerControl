@@ -31,13 +31,13 @@ class Plugin:
         decky.logger.info("start _migration")
 
         # 使用单例模式获取 FuseManager 实例
-        fuseManager = FuseManager.get_instance(power_manager=self.powerManager)
-        settings = self.confManager.getSettings()
-        enableNativeTDPSlider = (
-            settings.get("enableNativeTDPSlider", False) if settings else False
-        )
-        if enableNativeTDPSlider:
-            fuseManager.fuse_init()
+        # fuseManager = FuseManager.get_instance(power_manager=self.powerManager)
+        # settings = self.confManager.getSettings()
+        # enableNativeTDPSlider = (
+        #     settings.get("enableNativeTDPSlider", False) if settings else False
+        # )
+        # if enableNativeTDPSlider:
+        #     fuseManager.fuse_init()
 
     async def _main(self):
         decky.logger.info("start _main")
@@ -48,7 +48,7 @@ class Plugin:
         decky.logger.info("start _unload")
         gpuManager.unload()
         # 使用单例模式获取实例并卸载
-        FuseManager.get_instance().unload()
+        # FuseManager.get_instance().unload()
         self.powerManager.unload()
         logger.info("End PowerControl")
 

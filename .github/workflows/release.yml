@@ -36,17 +36,17 @@ jobs:
           make
           cp -f ryzenadj ../../../bin
 
-      - name: build python-fuse
-        run: |
-          PWD=$(pwd)
-          echo "PWD: $PWD"
-          mkdir -p py_modules/site-packages
-          pacman -S python-fuse python-setuptools python-wheel python-installer rsync --noconfirm --needed --overwrite='*'
-          cd ${PWD}/submodule/python-fuse && \
-            PYTHONPATH=${PWD}/py_modules/site-packages \
-            python3 setup.py install --prefix=${PWD} --install-lib=install
-          cd -
-          rsync -av --progress --exclude=*.pyc --exclude=__pycache__ ./submodule/python-fuse/install/fuse*/fuse* ./py_modules/site-packages/
+      # - name: build python-fuse
+      #   run: |
+      #     PWD=$(pwd)
+      #     echo "PWD: $PWD"
+      #     mkdir -p py_modules/site-packages
+      #     pacman -S python-fuse python-setuptools python-wheel python-installer rsync --noconfirm --needed --overwrite='*'
+      #     cd ${PWD}/submodule/python-fuse && \
+      #       PYTHONPATH=${PWD}/py_modules/site-packages \
+      #       python3 setup.py install --prefix=${PWD} --install-lib=install
+      #     cd -
+      #     rsync -av --progress --exclude=*.pyc --exclude=__pycache__ ./submodule/python-fuse/install/fuse*/fuse* ./py_modules/site-packages/
           
       - name: change log level
         run: |
