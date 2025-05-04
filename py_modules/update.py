@@ -42,7 +42,7 @@ def update_latest():
             shutil.unpack_archive(
                 downloaded_filepath,
                 f"{decky.DECKY_USER_HOME}/homebrew/plugins",
-                format="gztar",
+                format="gztar" if downloaded_filepath.endswith(".tar.gz") else "zip",
             )
 
             # cleanup downloaded files
@@ -77,11 +77,15 @@ def download_latest_build():
 
     logger.info(download_url)
 
-    file_path = f"/tmp/{decky.DECKY_PLUGIN_NAME}.tag.gz"
+    if download_url.endswith(".zip"):
+        file_path = f"/tmp/{decky.DECKY_PLUGIN_NAME}.zip"
+    else:
+        file_path = f"/tmp/{decky.DECKY_PLUGIN_NAME}.tar.gz"
 
-    with urllib.request.urlopen(download_url, context=gcontext) as response, open(
-        file_path, "wb"
-    ) as output_file:
+    with (
+        urllib.request.urlopen(download_url, context=gcontext) as response,
+        open(file_path, "wb") as output_file,
+    ):
         output_file.write(response.read())
         output_file.close()
 
