@@ -32,7 +32,7 @@ if [[ $use_jq == true ]]; then
   RELEASE_URL=$(echo "$RELEASE" | jq -r '.assets[0].browser_download_url')
 else
   MESSAGE=$(echo $RELEASE | grep "message" | cut -d '"' -f 4)
-  RELEASE_URL=$(echo $RELEASE | grep "browser_download_url" | cut -d '"' -f 4)
+  RELEASE_URL=$(echo $RELEASE | grep "browser_download_url" | cut -d '"' -f 4 | grep ".tar.gz")
   RELEASE_VERSION=$(echo $RELEASE | grep "tag_name" | cut -d '"' -f 4)
 fi
 
