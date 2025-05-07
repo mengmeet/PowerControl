@@ -45,11 +45,11 @@ class AsusDevice(PowerDevice):
         current_profile = self.get_platform_profile(PLATFORM_PROFILE_NAME)
         if tdp < 8:
             profile = PLATFORM_PROFILE_QUIET
-        elif tdp < 15:
-            profile = PLATFORM_PROFILE_BALANCED
+        # elif tdp < 15:
+        #     profile = PLATFORM_PROFILE_BALANCED
         else:
             profile = PLATFORM_PROFILE_PERFORMANCE
-
+            
         if current_profile != profile:
             logger.info(f"Setting platform profile to {profile}")
             self.set_platform_profile(PLATFORM_PROFILE_NAME, profile)
