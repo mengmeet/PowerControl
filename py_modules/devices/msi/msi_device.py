@@ -41,7 +41,7 @@ MSI_WIM_STAPM_MIN_PATH = f"{MSI_WIM_PATH}/ppt_pl1_spl/min_value"
 
 
 PLATFORM_PROFILE_NAME = "msi-wmi-platform"
-SUGGESTED_DEFAULT = "performance"
+SUGGESTED_DEFAULT = "balanced-performance"
 
 
 class MsiDevice(PowerDevice):
