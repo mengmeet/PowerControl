@@ -95,6 +95,18 @@ class PowerDevice(IDevice):
             logger.error(f"Failed to get platform profile {name}: {e}")
             return None
 
+    def get_available_platform_profiles(self, name: str) -> list[str]:
+        base_path = self.find_platform_profile(name)
+        try:
+            with open(os.path.join(base_path, "choices"), "r") as f:
+                return f.read().strip().splitlines()
+        except FileNotFoundError:
+            logger.error(f"Platform profile {name} not found")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to get platform profile {name}: {e}")
+            return None
+
     def set_platform_profile(self, name: str, profile: str) -> None:
         base_path = self.find_platform_profile(name)
         try:
