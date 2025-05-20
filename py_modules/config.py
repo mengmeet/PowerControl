@@ -61,7 +61,7 @@ EC_CONFS = glob.glob(f"{FAN_EC_CONFIG_DIR}/*.yml")
 HWMON_SCHEMA = f"{FAN_CONFIG_DIR}/schema/hwmon.json"
 EC_SCHEMA = f"{FAN_CONFIG_DIR}/schema/ec.json"
 
-API_URL = "https://api.github.com/repos/mengmeet/PowerControl/releases/latest"
+API_URL = "https://api.github.com/repos/aarron-lee/PowerControl/releases/latest"
 
 CONFIG_KEY = "PowerControl"
 

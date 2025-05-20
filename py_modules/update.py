@@ -51,8 +51,8 @@ def update_latest():
             decky.logger.error(f"error during ota file extraction {e}")
 
         logger.info("restarting plugin_loader")
-        # cmd = "systemctl restart plugin_loader.service"
-        cmd = "pkill -HUP PluginLoader"
+        cmd = "systemctl restart plugin_loader.service"
+        # cmd = "pkill -HUP PluginLoader"
         FuseManager.get_instance().unload()
         result = subprocess.run(
             cmd,

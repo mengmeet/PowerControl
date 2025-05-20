@@ -340,6 +340,7 @@ def start_tdp_client(
     should_exit: Event, emit, min_tdp: int, default_tdp: int, max_tdp: int
 ):
     def set_tdp(tdp):
+        return False
         return emit and emit(tdp)
         # return emit and emit({"type": "tdp", "tdp": tdp})
 

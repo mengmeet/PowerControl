@@ -27,6 +27,7 @@ class CPUAutoMaxFreqManager(threading.Thread):
         threading.Thread.__init__(self)
 
     def Set_cpuMaxPct(self, pct: int):
+        return False
         """设置 CPU 最大性能百分比
 
         Args:
@@ -325,6 +326,7 @@ class CPUManager:
             return []
 
     def set_cpuTDP(self, value: int) -> bool:
+        return False
         """设置CPU TDP值。
 
         Args:
@@ -342,6 +344,7 @@ class CPUManager:
             return False
 
     def set_cpuTDP_unlimited(self) -> bool:
+        return False
         """设置CPU TDP 为最大值。"""
         logger.info(f"set_cpuTDP_unlimited {self.cpu_tdpMax}")
         return self.set_cpuTDP(int(self.cpu_tdpMax))
@@ -421,6 +424,7 @@ class CPUManager:
             return "", "", ""
 
     def set_cpuTDP_Intel(self, value: int) -> bool:
+        return False
         """设置Intel CPU TDP值。
 
         Args:
@@ -461,6 +465,7 @@ class CPUManager:
             return False
 
     def set_cpuTDP_AMD(self, value: int) -> bool:
+        return False
         """设置AMD CPU TDP值。
 
         Args:
@@ -509,6 +514,7 @@ class CPUManager:
             return False
 
     def set_cpuOnline(self, value: int) -> bool:
+        return False
         """设置CPU在线状态。
 
         Args:
@@ -636,6 +642,7 @@ class CPUManager:
         return self.is_support_smt
 
     def set_smt(self, value: bool) -> bool:
+        return False
         """设置SMT状态。
 
         Args:
@@ -656,6 +663,7 @@ class CPUManager:
             return False
 
     def set_cpuBoost(self, value: bool) -> bool:
+        return False
         """设置CPU Boost状态。
 
         Args:
@@ -754,6 +762,7 @@ class CPUManager:
             return False
 
     def set_cpuFreq(self, value: int) -> bool:
+        return False
         """设置CPU频率。
 
         Args:
@@ -848,6 +857,7 @@ class CPUManager:
             file.write("1")
 
     def set_cpu_online(self, cpu_number: int, online: bool) -> None:
+        return False
         """设置CPU核心状态。
 
         Args:
@@ -1006,6 +1016,7 @@ class CPUManager:
             return ""
 
     def set_cpu_governor(self, governor: str) -> bool:
+        return False
         """设置 CPU 调度器。
 
         Args:
@@ -1134,6 +1145,7 @@ class CPUManager:
             return []
 
     def set_epp(self, mode: str) -> bool:
+        return False
         """设置 EPP 模式。
 
         Args:

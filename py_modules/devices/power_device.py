@@ -165,6 +165,7 @@ class PowerDevice(IDevice):
     # ------ TDP ------ #
 
     def set_tdp(self, tdp: int) -> None:
+        return False
         if self._cpuManager is None:
             logger.error("Failed to set TDP: cpuManager is None")
             return

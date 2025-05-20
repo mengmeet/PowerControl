@@ -7,7 +7,7 @@ if [ "$EUID" -eq 0 ]; then
   exit
 fi
 
-github_api_url="https://api.github.com/repos/mengmeet/PowerControl/releases/latest"
+github_api_url="https://api.github.com/repos/aarron-lee/PowerControl/releases/latest"
 package="PowerControl"
 
 echo "installing $package"

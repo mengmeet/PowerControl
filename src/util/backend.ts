@@ -55,67 +55,83 @@ export class BackendData {
   private has_supportsSteamosManager = false;
 
   public async init() {
-    await call<[], number>("get_cpuMaxNum").then((res) => {
-      // console.info("cpuMaxNum = " + res.result);
-      this.cpuMaxNum = res;
-      this.has_cpuMaxNum = true;
-    }).catch((err) => {
-      console.error("获取 CPU 最大核心数失败:", err);
-      Backend.logError(`获取 CPU 最大核心数失败: ${err}`);
-      this.cpuMaxNum = 0;
-      this.has_cpuMaxNum = false;
-    });
-    await call<[], number>("get_tdpMax").then((res) => {
-      this.tdpMax = res;
-      this.has_tdpMax = true;
-    }).catch((err) => {
-      console.error("获取 TDP 最大值失败:", err);
-      Backend.logError(`获取 TDP 最大值失败: ${err}`);
-    });
-    await call<[], number[]>("get_gpuFreqRange").then((res) => {
-      this.gpuMin = res[0];
-      this.gpuMax = res[1];
-      this.has_gpuMin = true;
-      this.has_gpuMax = true;
-    }).catch((err) => {
-      console.error("获取 GPU 频率范围失败:", err);
-      Backend.logError(`获取 GPU 频率范围失败: ${err}`);
-    });
-    await call<[], []>("get_fanConfigList").then((res) => {
-      this.fanConfigs = res;
-      this.has_fanConfigs = res.length > 0;
-    }).catch((err) => {
-      console.error("获取风扇配置列表失败:", err);
-    });
+    await call<[], number>("get_cpuMaxNum")
+      .then((res) => {
+        // console.info("cpuMaxNum = " + res.result);
+        this.cpuMaxNum = res;
+        this.has_cpuMaxNum = true;
+      })
+      .catch((err) => {
+        console.error("获取 CPU 最大核心数失败:", err);
+        Backend.logError(`获取 CPU 最大核心数失败: ${err}`);
+        this.cpuMaxNum = 0;
+        this.has_cpuMaxNum = false;
+      });
+    await call<[], number>("get_tdpMax")
+      .then((res) => {
+        this.tdpMax = res;
+        this.has_tdpMax = true;
+      })
+      .catch((err) => {
+        console.error("获取 TDP 最大值失败:", err);
+        Backend.logError(`获取 TDP 最大值失败: ${err}`);
+      });
+    await call<[], number[]>("get_gpuFreqRange")
+      .then((res) => {
+        this.gpuMin = res[0];
+        this.gpuMax = res[1];
+        this.has_gpuMin = true;
+        this.has_gpuMax = true;
+      })
+      .catch((err) => {
+        console.error("获取 GPU 频率范围失败:", err);
+        Backend.logError(`获取 GPU 频率范围失败: ${err}`);
+      });
+    await call<[], []>("get_fanConfigList")
+      .then((res) => {
+        this.fanConfigs = res;
+        this.has_fanConfigs = res.length > 0;
+      })
+      .catch((err) => {
+        console.error("获取风扇配置列表失败:", err);
+      });
 
-    await call<[], boolean>("get_isSupportSMT").then((res) => {
-      this.isSupportSMT = res;
-      this.has_isSupportSMT = true;
-    }).catch((err) => {
-      console.error("获取 SMT 支持失败:", err);
-      Backend.logError(`获取 SMT 支持失败: ${err}`);
-    });
+    await call<[], boolean>("get_isSupportSMT")
+      .then((res) => {
+        this.isSupportSMT = res;
+        this.has_isSupportSMT = true;
+      })
+      .catch((err) => {
+        console.error("获取 SMT 支持失败:", err);
+        Backend.logError(`获取 SMT 支持失败: ${err}`);
+      });
 
-    Backend.getMaxPerfPct().then((value) => {
-      this.supportCPUMaxPct = value > 0;
-    }).catch((err) => {
-      console.error("获取 CPU 最大性能百分比支持失败:", err);
-      Backend.logError(`获取 CPU 最大性能百分比支持失败: ${err}`);
-    });
+    Backend.getMaxPerfPct()
+      .then((value) => {
+        this.supportCPUMaxPct = value > 0;
+      })
+      .catch((err) => {
+        console.error("获取 CPU 最大性能百分比支持失败:", err);
+        Backend.logError(`获取 CPU 最大性能百分比支持失败: ${err}`);
+      });
 
-    await call<[], string>("get_version").then((res) => {
-      this.current_version = res;
-    }).catch((err) => {
-      console.error("获取当前版本失败:", err);
-      Backend.logError(`获取当前版本失败: ${err}`);
-    });
+    await call<[], string>("get_version")
+      .then((res) => {
+        this.current_version = res;
+      })
+      .catch((err) => {
+        console.error("获取当前版本失败:", err);
+        Backend.logError(`获取当前版本失败: ${err}`);
+      });
 
-    SteamUtils.getSystemInfo().then((systemInfo) => {
-      this.systemInfo = systemInfo;
-    }).catch((err) => {
-      console.error("获取系统信息失败:", err);
-      Backend.logError(`获取系统信息失败: ${err}`);
-    });
+    SteamUtils.getSystemInfo()
+      .then((systemInfo) => {
+        this.systemInfo = systemInfo;
+      })
+      .catch((err) => {
+        console.error("获取系统信息失败:", err);
+        Backend.logError(`获取系统信息失败: ${err}`);
+      });
 
     await call<[], string[]>("get_available_governors")
       .then((res) => {
@@ -225,15 +241,17 @@ export class BackendData {
         this.has_supportsSoftwareChargeLimit = false;
       });
 
-    await Backend.checkFileExist("/usr/bin/steamosctl").then((res) => {
-      this.supportsSteamosManager = res;
-      this.has_supportsSteamosManager = true;
-    }).catch((err) => {
-      console.error("检查 steamos-manager 支持失败:", err);
-      Backend.logError(`检查 steamos-manager 支持失败: ${err}`);
-      this.supportsSteamosManager = false;
-      this.has_supportsSteamosManager = false;
-    });
+    await Backend.checkFileExist("/usr/bin/steamosctl")
+      .then((res) => {
+        this.supportsSteamosManager = res;
+        this.has_supportsSteamosManager = true;
+      })
+      .catch((err) => {
+        console.error("检查 steamos-manager 支持失败:", err);
+        Backend.logError(`检查 steamos-manager 支持失败: ${err}`);
+        this.supportsSteamosManager = false;
+        this.has_supportsSteamosManager = false;
+      });
   }
 
   public getForceShowTDP() {
@@ -506,7 +524,9 @@ export class Backend {
   public static async applySettings(applyTarget: APPLYTYPE) {
     try {
       const currentEnable = Settings.ensureEnable();
-      Logger.info(`applySettings: currentEnable = ${currentEnable}, lastEnable = ${Backend.lastEnable}`);
+      Logger.info(
+        `applySettings: currentEnable = ${currentEnable}, lastEnable = ${Backend.lastEnable}`
+      );
       if (!currentEnable) {
         if (currentEnable !== Backend.lastEnable) {
           Backend.resetSettings();
@@ -694,7 +714,9 @@ export class Backend {
       : tdp;
 
     Logger.info(`handleTDP: ${Settings.appTDPEnable()}`);
-    Logger.info(`tdpEnable = ${tdpEnable}, lastTDPEnable = ${Backend.lastTDPEnable}`);
+    Logger.info(
+      `tdpEnable = ${tdpEnable}, lastTDPEnable = ${Backend.lastTDPEnable}`
+    );
 
     const enableNativeTDPSlider = Settings.appEnableNativeTDPSlider();
     if (enableNativeTDPSlider) {

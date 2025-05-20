@@ -173,6 +173,7 @@ class Plugin:
             return False
 
     async def set_gpuAuto(self, value: bool):
+        return False
         try:
             return gpuManager.set_gpuAuto(value)
         except Exception as e:
@@ -180,6 +181,7 @@ class Plugin:
             return False
 
     async def set_gpuAutoFreqRange(self, min: int, max: int):
+        return False
         try:
             return gpuManager.set_gpuAutoFreqRange(min, max)
         except Exception as e:
@@ -187,6 +189,7 @@ class Plugin:
             return False
 
     async def set_gpuFreq(self, value: int):
+        return False
         try:
             return gpuManager.set_gpuFreqFix(value)
         except Exception as e:
@@ -194,6 +197,7 @@ class Plugin:
             return False
 
     async def set_gpuFreqRange(self, value: int, value2: int):
+        return False
         try:
             return gpuManager.set_gpuFreqRange(value, value2)
         except Exception as e:
@@ -201,6 +205,7 @@ class Plugin:
             return False
 
     async def set_cpuTDP(self, value: int):
+        return False
         try:
             # return cpuManager.set_cpuTDP(value)
             return self.powerManager.set_tdp(value)
@@ -209,6 +214,7 @@ class Plugin:
             return False
 
     async def set_cpuTDP_unlimited(self):
+        return False
         logger.info("Main set_cpuTDP_unlimited")
         try:
             return self.powerManager.set_tdp_unlimited()
@@ -224,6 +230,7 @@ class Plugin:
             return False
 
     async def set_cpuOnline(self, value: int):
+        return False
         try:
             return cpuManager.set_cpuOnline(value)
         except Exception as e:
@@ -231,6 +238,7 @@ class Plugin:
             return False
 
     async def set_smt(self, value: bool):
+        return False
         try:
             return cpuManager.set_smt(value)
         except Exception as e:
@@ -238,6 +246,7 @@ class Plugin:
             return False
 
     async def set_cpuBoost(self, value: bool):
+        return False
         try:
             return cpuManager.set_cpuBoost(value)
         except Exception as e:
@@ -245,6 +254,7 @@ class Plugin:
             return False
 
     async def set_cpuFreq(self, value: int):
+        return False
         try:
             return cpuManager.set_cpuFreq(value)
         except Exception as e:
@@ -343,6 +353,7 @@ class Plugin:
             return []
 
     async def set_cpu_governor(self, governor: str):
+        return False
         """设置 CPU 调度器
 
         Args:
@@ -380,6 +391,7 @@ class Plugin:
             return None
 
     async def set_epp(self, mode: str):
+        return False
         """设置 EPP 模式。"""
         try:
             return cpuManager.set_epp(mode)
@@ -493,6 +505,7 @@ class Plugin:
 
     # 创建一个新的方法来控制 FUSE 挂载
     async def toggle_native_tdp_slider(self, enabled: bool):
+        return False
         """
         启用或禁用原生 TDP 滑块
 

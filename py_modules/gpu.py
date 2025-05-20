@@ -35,6 +35,7 @@ class GPUAutoFreqManager(threading.Thread):
         threading.Thread.__init__(self)
 
     def Set_gpuFreq(self, freq: int):
+        return False
         try:
             return self._gpuManager.set_gpuFreq(freq, freq)
         except Exception as e:
@@ -304,6 +305,7 @@ class GPUManager:
             return 0, 0
 
     def set_gpuAuto(self, value: bool):
+        return False
         try:
             logger.debug(f"set_gpuAuto  isAuto: {value}")
             # 判断是否已经有自动频率管理
@@ -326,6 +328,7 @@ class GPUManager:
             return False
 
     def set_gpuAutoFreqRange(self, value1: int, value2: int):
+        return False
         try:
             logger.debug(f"set_gpuAutoFreqRange: [{value1},{value2}]")
             self.gpu_autoFreqRange = [
@@ -337,6 +340,7 @@ class GPUManager:
             return False
 
     def set_gpuFreq(self, minValue: int, maxValue: int):
+        return False
         try:
             logger.debug(
                 f"set_gpuFreq: [{minValue}, {maxValue}], gpu_freqRange={self.gpu_freqRange}"
@@ -424,6 +428,7 @@ class GPUManager:
             return False
 
     def set_gpuFreqFix(self, value: int):
+        return False
         try:
             logger.debug(f"set_gpuFixFreq {value}")
             # 有自动频率时关闭它
@@ -437,6 +442,7 @@ class GPUManager:
             return False
 
     def set_gpuFreqRange(self, value: int, value2: int):
+        return False
         try:
             logger.debug(f"set_gpuRangeFreq {value}  {value2}")
             # 有自动频率时关闭它
@@ -449,6 +455,7 @@ class GPUManager:
             return False
 
     def fix_gpuFreqSlider(self):
+        return False
         try:
             # 执行 lsb_release 命令并捕获输出
             result = subprocess.run(

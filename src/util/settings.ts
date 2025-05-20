@@ -216,7 +216,7 @@ export class SettingsData {
   public currentTabRoute: string = "cpu";
 
   @JsonProperty()
-  public useOldUI: boolean = false; // 是否使用旧的 UI
+  public useOldUI: boolean = true; // 是否使用旧的 UI
 
   @JsonProperty({ type: AppSettingData, dataStructure: "dictionary" })
   public perApp: { [appId: string]: AppSettingData } = {};

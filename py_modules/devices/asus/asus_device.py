@@ -26,6 +26,7 @@ class AsusDevice(FirmwareAttributeDevice):
         self.init_attribute(ATTRIBUTE_NAME, PLATFORM_PROFILE_NAME)
 
     def set_tdp(self, tdp: int) -> None:
+        return False
         logger.debug(f"Setting TDP to {tdp}")
         if self.supports_attribute_tdp():
             super().set_tdp(tdp)

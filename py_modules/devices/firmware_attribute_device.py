@@ -33,6 +33,7 @@ class FirmwareAttributeDevice(PowerDevice):
         return False
 
     def set_tdp(self, tdp: int) -> None:
+        return False
         logger.info(f"Setting TDP to {tdp}")
         if not self.supports_attribute_tdp():
             logger.info("Device does not support attribute TDP, use fallback method")

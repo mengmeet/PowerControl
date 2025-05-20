@@ -32,8 +32,8 @@ import {
   UpdateType,
 } from "./util";
 import {
-  GPUComponent,
-  CPUComponent,
+  // GPUComponent,
+  // CPUComponent,
   SettingsComponent,
   FANComponent,
   MoreComponent,
@@ -48,9 +48,9 @@ const ListView: FC<{}> = ({}) => {
   return (
     <>
       <SettingsComponent />
-      <CPUComponent />
+      {/* <CPUComponent />
       <GPUComponent />
-      <PowerComponent />
+      <PowerComponent /> */}
       <FANComponent />
       <MoreComponent />
     </>
@@ -108,37 +108,37 @@ const TabView: FC<{ show?: boolean }> = ({ show = true }) => {
               updateCurrentTabRoute(tabID);
             }}
             tabs={[
-              {
-                title: <BsCpuFill size={20} style={{ display: "block" }} />,
-                content: <TabCpu />,
-                id: "cpu",
-              },
-              {
-                title: (
-                  <PiGraphicsCardFill size={21} style={{ display: "block" }} />
-                ),
-                content: <TabGpu />,
-                id: "gpu",
-              },
+              // {
+              //   title: <BsCpuFill size={20} style={{ display: "block" }} />,
+              //   content: <TabCpu />,
+              //   id: "cpu",
+              // },
+              // {
+              //   title: (
+              //     <PiGraphicsCardFill size={21} style={{ display: "block" }} />
+              //   ),
+              //   content: <TabGpu />,
+              //   id: "gpu",
+              // },
               {
                 title: <FaFan size={20} style={{ display: "block" }} />,
                 content: <TabFans />,
                 id: "fans",
               },
-              ...(showPowerTab
-                ? [
-                    {
-                      title: (
-                        <PiLightningFill
-                          size={20}
-                          style={{ display: "block" }}
-                        />
-                      ),
-                      content: <TabPower />,
-                      id: "power",
-                    },
-                  ]
-                : []),
+              // ...(showPowerTab
+              //   ? [
+              //       {
+              //         title: (
+              //           <PiLightningFill
+              //             size={20}
+              //             style={{ display: "block" }}
+              //           />
+              //         ),
+              //         content: <TabPower />,
+              //         id: "power",
+              //       },
+              //     ]
+              //   : []),
               {
                 title: <FaLayerGroup size={20} style={{ display: "block" }} />,
                 content: <TabMore />,
