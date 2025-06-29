@@ -52,12 +52,15 @@ class AyaneoDevice(PowerDevice):
         return self.ec_version_of_bypass_charge is not None and compare_result >= 0
 
     def supports_charge_limit(self) -> bool:
+        return False
         return self.supports_bypass_charge()
 
     def software_charge_limit(self) -> bool:
+        return False
         return self.supports_bypass_charge()
 
     def get_bypass_charge(self) -> bool | None:
+        return False
         """
         获取旁路供电开关状态
         :return:
@@ -71,12 +74,14 @@ class AyaneoDevice(PowerDevice):
             return None
 
     def _set_bypass_charge(self, value: bool) -> None:
+        return False
         self._ec_write(
             self.ec_bypass_charge_addr,
             self.ec_bypass_charge_open if value else self.ec_bypass_charge_close,
         )
 
     def set_bypass_charge(self, value: bool) -> None:
+        return False
         """
         设置旁路供电
         :param value: True 开启旁路供电，False 关闭旁路供电

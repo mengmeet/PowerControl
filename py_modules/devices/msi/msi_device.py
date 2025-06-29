@@ -89,15 +89,19 @@ class MsiDevice(FirmwareAttributeDevice):
         return os.path.exists(self.shift_mode_path)
 
     def supports_reset_charge_limit(self) -> bool:
+        return False
         return True
 
     def supports_charge_limit(self) -> bool:
+        return False
         return True
 
     def reset_charge_limit(self) -> None:
+        return False
         self._ec_write(EC_CHARGE_LIMIT_ADDR, EC_CHARGE_LIMIT_DISABLE)
 
     def set_charge_limit(self, value: int) -> None:
+        return False
         if support_charge_control_end_threshold():
             super().set_charge_limit(value)
         else:

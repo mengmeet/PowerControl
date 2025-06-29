@@ -120,15 +120,18 @@ class PowerDevice(IDevice):
     # ------ Charge ------ #
 
     def supports_bypass_charge(self) -> bool:
+        return False
         return support_charge_behaviour() or support_charge_type()
 
     def supports_charge_limit(self) -> bool:
+        return False
         return support_charge_control_end_threshold()
 
     def software_charge_limit(self) -> bool:
         return False
 
     def get_bypass_charge(self) -> bool:
+        return False
         if support_charge_behaviour():
             return get_charge_behaviour() == "inhibit-charge"
         if support_charge_type():
@@ -136,12 +139,14 @@ class PowerDevice(IDevice):
         return False
 
     def set_bypass_charge(self, value: bool) -> None:
+        return False
         if support_charge_behaviour():
             set_charge_behaviour("inhibit-charge" if value else "auto")
         if support_charge_type():
             set_charge_type("Bypass" if value else "Standard")
 
     def set_charge_limit(self, value: int) -> None:
+        return False
         # check value
         if not 0 <= value <= 100:
             logger.error(f"Charge limit must be between 0-100, current value: {value}")
@@ -151,6 +156,7 @@ class PowerDevice(IDevice):
         set_charge_control_end_threshold(value)
 
     def supports_reset_charge_limit(self) -> bool:
+        return False
         return (
             support_charge_control_end_threshold()
             or support_charge_behaviour()
@@ -158,6 +164,7 @@ class PowerDevice(IDevice):
         )
 
     def reset_charge_limit(self) -> None:
+        return False
         if support_charge_control_end_threshold():
             set_charge_control_end_threshold(100)
         self.set_bypass_charge(False)

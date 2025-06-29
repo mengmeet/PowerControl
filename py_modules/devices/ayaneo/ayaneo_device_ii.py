@@ -32,6 +32,7 @@ class AyaneoDeviceII(AyaneoDevice):
         EC.RamWrite(self.ec_comm_port, self.ec_data_port, address2, data)
 
     def supports_charge_limit(self) -> bool:
+        return False
         return self.supports_bypass_charge()
 
     def get_bypass_charge(self) -> bool:

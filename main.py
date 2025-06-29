@@ -400,6 +400,7 @@ class Plugin:
             return False
 
     async def get_bypass_charge(self) -> bool | None:
+        return False
         """获取 Bypass Charge 值。"""
         try:
             return self.powerManager.get_bypass_charge()
@@ -408,6 +409,7 @@ class Plugin:
             return None
 
     async def set_bypass_charge(self, value: int):
+        return False
         """设置旁路供电值。"""
         logger.info(f"Main 设置旁路供电值为 {value}")
         try:
@@ -417,6 +419,7 @@ class Plugin:
             return False
 
     async def set_charge_limit(self, value: int):
+        return False
         """设置充电限制电量"""
         logger.debug(f"设置充电限制电量为 {value}")
         try:
@@ -426,6 +429,7 @@ class Plugin:
             return False
 
     async def supports_bypass_charge(self) -> bool:
+        return False
         """判断设备是否支持旁路供电"""
         try:
             result = self.powerManager.supports_bypass_charge()
@@ -436,6 +440,7 @@ class Plugin:
             return False
 
     async def supports_charge_limit(self) -> bool:
+        return False
         """判断设备是否支持充电限制"""
         try:
             result = self.powerManager.supports_charge_limit()
@@ -446,6 +451,7 @@ class Plugin:
             return False
 
     async def software_charge_limit(self) -> bool:
+        return False
         """判断设备是否支持软件充电限制"""
         try:
             result = self.powerManager.software_charge_limit()
@@ -457,6 +463,7 @@ class Plugin:
 
     # supports_reset_charge_limit
     async def supports_reset_charge_limit(self) -> bool:
+        return False
         """判断设备是否支持重置充电限制"""
         try:
             result = self.powerManager.supports_reset_charge_limit()
@@ -468,6 +475,7 @@ class Plugin:
 
     # reset_charge_limit
     async def reset_charge_limit(self):
+        return False
         """重置充电限制"""
         try:
             return self.powerManager.reset_charge_limit()
