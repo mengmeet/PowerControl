@@ -85,8 +85,8 @@ export class AppSetting {
     this.fanProfileNameList = [];
     this.cpuMaxPerfPct = 100;
     this.autoCPUMaxPct = false; // 默认关闭自动CPU最大性能百分比
-    this.cpuGovernor = "performance"; // 默认使用性能模式
-    this.epp = "performance"; // 默认使用性能模式
+    this.cpuGovernor = "powersave"; // 默认使用 powersave 模式
+    this.epp = "balance-performance"; // 默认使用平衡性能模式
   }
   deepCopy(copyTarget: AppSetting) {
     // this.overwrite=copyTarget.overwrite;
@@ -216,7 +216,7 @@ export class SettingsData {
   public currentTabRoute: string = "cpu";
 
   @JsonProperty()
-  public useOldUI: boolean = false; // 是否使用旧的 UI
+  public useOldUI: boolean = true; // 是否使用旧的 UI
 
   @JsonProperty({ type: AppSettingData, dataStructure: "dictionary" })
   public perApp: { [appId: string]: AppSettingData } = {};
