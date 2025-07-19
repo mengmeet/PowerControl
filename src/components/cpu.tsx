@@ -413,13 +413,17 @@ const CPUGovernorComponent: FC = () => {
 
 export const CPUEPPComponent: FC = () => {
   const [epp, setEPP] = useState<string>(Settings.appEPPMode());
-  const [eppModes, setEPPModes] = useState<string[]>([]);
+  const [eppModes, setEPPModes] = useState<string[]>(Backend.data.getEPPModes());
 
   const refresh = () => {
     setEPP(Settings.appEPPMode());
-    if (Backend.data.hasEPPModes()) {
-      setEPPModes(Backend.data.getEPPModes());
-    }
+    const updateEPPModes = async () => {
+      await Backend.data.refreshEPPModes();
+      if (Backend.data.hasEPPModes()) {
+        setEPPModes(Backend.data.getEPPModes());
+      }
+    };
+    updateEPPModes();
   };
 
   // 初始化和监听设置变化

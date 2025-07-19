@@ -1059,7 +1059,7 @@ export class Settings {
   }
 
   static appCPUGovernor(): string {
-    return Settings.ensureApp().cpuGovernor || "performance";
+    return Settings.ensureApp().cpuGovernor || "powersave";
   }
 
   static setCPUGovernor(governor: string) {
@@ -1093,7 +1093,7 @@ export class Settings {
 
   // 获取当前 EPP 模式
   public static appEPPMode(): string {
-    return this.ensureApp().epp || "performance";
+    return this.ensureApp().epp || "balance-performance";
   }
 
   // 设置 EPP 模式

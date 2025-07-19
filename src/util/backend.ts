@@ -236,6 +236,20 @@ export class BackendData {
     });
   }
 
+  // 简单刷新 EPP 模式列表
+  public async refreshEPPModes(): Promise<void> {
+    await call<[], string[]>("get_epp_modes")
+      .then((res) => {
+        this.eppModes = res;
+        this.has_eppModes = true;
+      })
+      .catch((err) => {
+        console.error("刷新 EPP 模式失败:", err);
+        this.eppModes = [];
+        this.has_eppModes = false;
+      });
+  }
+
   public getForceShowTDP() {
     // 检查 Steam 客户端版本，如果版本大于等于 minSteamVersion。不显示强制 TDP 开关。并默认显示 TDP 控制组件
     return this.systemInfo!.nSteamVersion >= minSteamVersion;
@@ -596,8 +610,11 @@ export class Backend {
     const cpuGovernor = Settings.appCPUGovernor();
     if (cpuGovernor) {
       await Backend.setCpuGovernor(cpuGovernor);
+      if (cpuGovernor !== "performance") {
+        await Backend.data.refreshEPPModes();
+      }
     }
-    if (eppMode) {
+    if (eppMode && cpuGovernor !== "performance") {
       await Backend.setEPP(eppMode);
     }
   }
