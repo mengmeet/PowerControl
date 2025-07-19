@@ -305,6 +305,9 @@ class Plugin:
         logger.info("Main get_rapl_info")
         return cpuManager.get_rapl_info()
 
+    async def get_power_info(self):
+        return self.powerManager.get_power_info()
+
     async def get_max_perf_pct(self):
         try:
             return cpuManager.get_max_perf_pct()

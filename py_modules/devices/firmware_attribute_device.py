@@ -32,6 +32,49 @@ class FirmwareAttributeDevice(PowerDevice):
         logger.error("Attribute or profile name is not set")
         return False
 
+    def get_power_info(self) -> str:
+        power_info = {}
+        pl1_current_path = (
+            f"{PREFIX}/{self.attribute}/attributes/{SPL_SUFFIX}/current_value"
+        )
+        pl2_current_path = (
+            f"{PREFIX}/{self.attribute}/attributes/{SLOW_SUFFIX}/current_value"
+        )
+        pl3_current_path = (
+            f"{PREFIX}/{self.attribute}/attributes/{FAST_SUFFIX}/current_value"
+        )
+        pl1_max_path = f"{PREFIX}/{self.attribute}/attributes/{SPL_SUFFIX}/max_value"
+        pl2_max_path = f"{PREFIX}/{self.attribute}/attributes/{SLOW_SUFFIX}/max_value"
+        pl3_max_path = f"{PREFIX}/{self.attribute}/attributes/{FAST_SUFFIX}/max_value"
+        pl1_min_path = f"{PREFIX}/{self.attribute}/attributes/{SPL_SUFFIX}/min_value"
+        pl2_min_path = f"{PREFIX}/{self.attribute}/attributes/{SLOW_SUFFIX}/min_value"
+        pl3_min_path = f"{PREFIX}/{self.attribute}/attributes/{FAST_SUFFIX}/min_value"
+
+        path_dict = {
+            "SPL_PL1_CURRENT": pl1_current_path,
+            "SLOW_PL2_CURRENT": pl2_current_path,
+            "FAST_PL3_CURRENT": pl3_current_path,
+            "SPL_PL1_MAX": pl1_max_path,
+            "SLOW_PL2_MAX": pl2_max_path,
+            "FAST_PL3_MAX": pl3_max_path,
+            "SPL_PL1_MIN": pl1_min_path,
+            "SLOW_PL2_MIN": pl2_min_path,
+            "FAST_PL3_MIN": pl3_min_path,
+        }
+
+        for key, value in path_dict.items():
+            if os.path.exists(value):
+                with open(value, "r") as f:
+                    power_info[key] = f.read().strip()
+
+        power_info_str = ""
+        for key, value in power_info.items():
+            power_info_str += f"{key}: {value}\n"
+        logger.info(f"power_info_str: {power_info_str}")
+        if power_info_str == "":
+            return super().get_power_info()
+        return power_info_str
+
     def set_tdp(self, tdp: int) -> None:
         logger.info(f"Setting TDP to {tdp}")
         if not self.supports_attribute_tdp():

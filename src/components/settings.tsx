@@ -364,17 +364,21 @@ export const PowerInfoModel: FC = ({
 
   const getPowerInfo = () => {
     // if amd
-    if (Backend.data.getCpuVendor() === "AuthenticAMD") {
-      Logger.info(`fn:invoke getRyzenadjInfo`);
-      Backend.getRyzenadjInfo().then((info) => {
-        setInfo(info);
-      });
-    } else {
-      Logger.info(`fn:invoke getRAPLInfo`);
-      Backend.getRAPLInfo().then((info) => {
-        setInfo(info);
-      });
-    }
+    // if (Backend.data.getCpuVendor() === "AuthenticAMD") {
+    //   Logger.info(`fn:invoke getRyzenadjInfo`);
+    //   Backend.getRyzenadjInfo().then((info) => {
+    //     setInfo(info);
+    //   });
+    // } else {
+    //   Logger.info(`fn:invoke getRAPLInfo`);
+    //   Backend.getRAPLInfo().then((info) => {
+    //     setInfo(info);
+    //   });
+    // }
+    Logger.info(`fn:invoke getPowerInfo`);
+    Backend.getPowerInfo().then((info) => {
+      setInfo(info);
+    });
   };
 
   useEffect(() => {

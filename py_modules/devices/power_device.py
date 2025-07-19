@@ -176,6 +176,18 @@ class PowerDevice(IDevice):
             return
         self._cpuManager.set_cpuTDP_unlimited()
 
+    def get_power_info(self) -> str:
+        if self._cpuManager is None:
+            logger.error("Failed to get power info: cpuManager is None")
+            return ""
+        if self._cpuManager.is_intel():
+            return self._cpuManager.get_rapl_info()
+        elif self._cpuManager.is_amd():
+            return self._cpuManager.get_ryzenadj_info()
+        else:
+            logger.error("Failed to get power info: unknown CPU_VENDOR")
+            return ""
+
     # ------ sched_ext ------ #
 
     def supports_sched_ext(self) -> bool:

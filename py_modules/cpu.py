@@ -879,7 +879,7 @@ class CPUManager:
                 env=get_env(),
             )
             stdout, stderr = process.stdout, process.stderr
-            if stderr:
+            if stderr and stdout == "":
                 logger.error(f"get_ryzenadj_info error:\n{stderr}")
                 return f"get_ryzenadj_info error:\n{stderr}"
             else:

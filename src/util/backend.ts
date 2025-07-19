@@ -979,6 +979,11 @@ export class Backend {
     return (await call("get_rapl_info")) as string;
   }
 
+  // get_power_info
+  public static async getPowerInfo(): Promise<string> {
+    return (await call("get_power_info")) as string;
+  }
+
   // set_settings
   public static async setSettings(settingsData: SettingsData) {
     const obj = serializer.serializeObject(settingsData);
