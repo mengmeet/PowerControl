@@ -27,14 +27,14 @@
   "homepage": "https://github.com/mengmeet/PowerControl#readme",
   "devDependencies": {
     "@decky/rollup": "^1.0.1",
-    "@decky/ui": "^4.10.0",
+    "@decky/ui": "^4.10.4",
     "@types/markdown-it": "^14.1.2",
     "@types/react": "19.1.1",
     "@types/react-dom": "19.1.2",
     "@types/webpack": "^5.28.5",
     "markdown-it": "^14.1.0",
     "merge-anything": "^6.0.6",
-    "rollup": "^4.40.0",
+    "rollup": "^4.45.1",
     "shx": "^0.4.0",
     "tslib": "^2.8.1",
     "typescript": "^5.8.3"
