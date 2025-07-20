@@ -950,8 +950,8 @@ class CPUManager:
         return -1
 
     def _populate_topology_relationships(self, topology: CPUTopology):
-        """填充拓扑关系信息"""
-        # 按物理核心分组，填充sibling_threads
+        """填充拓扑关系信息 - 智能大小核分组"""
+        # 1. 按物理核心分组，填充sibling_threads
         logical_by_core = topology.get_logical_ids_by_physical_core()
         for core_id, logical_ids in logical_by_core.items():
             for logical_id in logical_ids:
@@ -959,20 +959,55 @@ class CPUManager:
                 if core_info:
                     core_info.sibling_threads = logical_ids.copy()
         
-        # 按cluster分组，填充cluster_cpus
-        cluster_groups = {}
-        for logical_id, core in topology.cores.items():
-            if core.cluster_id not in cluster_groups:
-                cluster_groups[core.cluster_id] = []
-            cluster_groups[core.cluster_id].append(logical_id)
+        # 2. 智能cluster分组 - 基于频率特征处理大小核架构
+        unique_clusters = set(core.cluster_id for core in topology.cores.values())
+        if len(unique_clusters) <= 1 or 65535 in unique_clusters:
+            # cluster_id无效(如65535)，使用频率分组
+            logger.debug("检测到cluster_id无效，使用频率特征进行大小核分组")
+            
+            # 获取所有不同的最大频率
+            freq_set = set(core.max_freq_hw for core in topology.cores.values() if core.max_freq_hw > 0)
+            freq_list = sorted(freq_set, reverse=True)  # 按频率降序
+            
+            if len(freq_list) > 1:
+                logger.info(f"检测到{len(freq_list)}种频率类型: {[f/1000.0 for f in freq_list]}MHz")
+                
+                # 为每个频率类型分配virtual cluster
+                freq_to_cluster = {freq: i for i, freq in enumerate(freq_list)}
+                
+                cluster_groups = {}
+                for logical_id, core in topology.cores.items():
+                    if core.max_freq_hw > 0:
+                        virtual_cluster = freq_to_cluster[core.max_freq_hw]
+                    else:
+                        virtual_cluster = 999  # 未知频率
+                    
+                    if virtual_cluster not in cluster_groups:
+                        cluster_groups[virtual_cluster] = []
+                    cluster_groups[virtual_cluster].append(logical_id)
+                
+                # 填充cluster_cpus并更新cluster_id
+                for cluster_id, logical_ids in cluster_groups.items():
+                    sorted_logical_ids = sorted(logical_ids)
+                    if cluster_id < len(freq_list):
+                        freq = freq_list[cluster_id]
+                        cluster_type = "P-Core" if freq > 4000000 else "E-Core"
+                        logger.debug(f"Virtual Cluster {cluster_id}: {cluster_type} {freq/1000:.1f}MHz, 逻辑CPU {sorted_logical_ids}")
+                    
+                    for logical_id in logical_ids:
+                        core_info = topology.get_core_info(logical_id)
+                        if core_info:
+                            core_info.cluster_cpus = sorted_logical_ids
+                            core_info.cluster_id = cluster_id  # 更新为虚拟cluster ID
+            else:
+                # 只有一种频率，使用原有逻辑
+                self._fallback_cluster_grouping(topology)
+        else:
+            # 使用系统提供的有效cluster_id
+            logger.debug("使用系统提供的cluster_id分组")
+            self._fallback_cluster_grouping(topology)
         
-        for cluster_id, logical_ids in cluster_groups.items():
-            for logical_id in logical_ids:
-                core_info = topology.get_core_info(logical_id)
-                if core_info:
-                    core_info.cluster_cpus = logical_ids.copy()
-        
-        # 按package分组，填充package_cpus
+        # 3. 按package分组，填充package_cpus
         package_groups = {}
         for logical_id, core in topology.cores.items():
             if core.package_id not in package_groups:
@@ -984,6 +1019,20 @@ class CPUManager:
                 core_info = topology.get_core_info(logical_id)
                 if core_info:
                     core_info.package_cpus = logical_ids.copy()
+
+    def _fallback_cluster_grouping(self, topology: CPUTopology):
+        """回退到原有的cluster分组逻辑"""
+        cluster_groups = {}
+        for logical_id, core in topology.cores.items():
+            if core.cluster_id not in cluster_groups:
+                cluster_groups[core.cluster_id] = []
+            cluster_groups[core.cluster_id].append(logical_id)
+        
+        for cluster_id, logical_ids in cluster_groups.items():
+            for logical_id in logical_ids:
+                core_info = topology.get_core_info(logical_id)
+                if core_info:
+                    core_info.cluster_cpus = logical_ids.copy()
 
     def get_cpu_online_status(self, logical_id: int) -> bool:
         """实时获取CPU在线状态"""
