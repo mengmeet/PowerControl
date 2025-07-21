@@ -259,6 +259,19 @@ class Plugin:
             logger.error(f"按核心类型设置CPU频率失败: {e}", exc_info=True)
             return False
 
+    async def get_cpu_core_info(self):
+        """获取CPU核心类型详细信息"""
+        try:
+            return cpuManager.get_cpu_core_info()
+        except Exception as e:
+            logger.error(f"获取CPU核心信息失败: {e}", exc_info=True)
+            return {
+                "is_heterogeneous": False,
+                "vendor": "Error",
+                "architecture_summary": "Failed to detect CPU information",
+                "core_types": {},
+            }
+
     async def receive_suspendEvent(self):
         try:
             return True

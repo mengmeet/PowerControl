@@ -1676,5 +1676,80 @@ class CPUManager:
             logger.error(f"按核心类型设置CPU频率发生异常: {e}")
             return False
 
+    def _get_core_type_freq_range(
+        self, core_type: str, cpu_list: List[int]
+    ) -> Tuple[int, int]:
+        """获取指定核心类型的频率范围"""
+        if not self.cpu_topology or not cpu_list:
+            return (0, 0)
+
+        valid_freqs = []
+        for cpu_id in cpu_list:
+            core_info = self.cpu_topology.get_core_info(cpu_id)
+            if core_info and core_info.max_freq_hw > 0:
+                valid_freqs.append((core_info.min_freq_hw, core_info.max_freq_hw))
+
+        if not valid_freqs:
+            return (0, 0)
+
+        min_freq = min(freq[0] for freq in valid_freqs if freq[0] > 0)
+        max_freq = max(freq[1] for freq in valid_freqs if freq[1] > 0)
+
+        return (min_freq if min_freq > 0 else 0, max_freq if max_freq > 0 else 0)
+
+    def get_cpu_core_info(self) -> Dict:
+        """获取CPU核心类型详细信息
+
+        Returns:
+            Dict: {
+                "is_heterogeneous": bool,
+                "vendor": str,
+                "architecture_summary": str,
+                "core_types": {
+                    "P-Core": {
+                        "count": int,
+                        "cpus": List[int],
+                        "max_freq_khz": int,
+                        "min_freq_khz": int
+                    }
+                }
+            }
+        """
+        # 基础信息
+        result = {
+            "is_heterogeneous": self.is_heterogeneous_cpu(),
+            "vendor": getattr(self, "hw_analysis", {}).get("vendor", "Unknown"),
+            "architecture_summary": self.get_cpu_architecture_summary(),
+            "core_types": {},
+        }
+
+        # 检查硬件检测数据和混合架构
+        if (
+            not hasattr(self, "hw_analysis")
+            or not self.hw_analysis
+            or not result["is_heterogeneous"]
+        ):
+            return result
+
+        # 获取核心类型映射
+        core_type_mapping = self.hw_analysis.get("core_type_mapping", {})
+        core_types_count = self.hw_analysis.get("core_types", {})
+
+        if not core_type_mapping:
+            return result
+
+        # 构建核心类型详细信息
+        for core_type, cpu_list in core_type_mapping.items():
+            if cpu_list:
+                min_freq, max_freq = self._get_core_type_freq_range(core_type, cpu_list)
+                result["core_types"][core_type] = {
+                    "count": core_types_count.get(core_type, len(cpu_list)),
+                    "cpus": sorted(cpu_list),
+                    "max_freq_khz": max_freq,
+                    "min_freq_khz": min_freq,
+                }
+
+        return result
+
 
 cpuManager = CPUManager()
