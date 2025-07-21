@@ -12,6 +12,7 @@ import {
 import { JsonSerializer } from "typescript-json-serializer";
 import { call } from "@decky/api";
 import { Logger } from "./logger";
+import { CPUCoreInfo } from "../types/cpu";
 const serializer = new JsonSerializer();
 
 const minSteamVersion = 1714854927;
@@ -43,6 +44,13 @@ export class BackendData {
   private has_currentEpp = false;
   private cpuVendor: string = "";
   private has_cpuVendor = false;
+  private cpuCoreInfo: CPUCoreInfo = {
+    is_heterogeneous: false,
+    vendor: "Unknown",
+    architecture_summary: "Traditional Architecture",
+    core_types: {}
+  };
+  private has_cpuCoreInfo = false;
   private supportsBypassCharge = false;
   private has_supportsBypassCharge = false;
   private supportsChargeLimit = false;
@@ -234,6 +242,23 @@ export class BackendData {
       this.supportsSteamosManager = false;
       this.has_supportsSteamosManager = false;
     });
+
+    await call<[], CPUCoreInfo>("get_cpu_core_info")
+      .then((res) => {
+        this.cpuCoreInfo = res;
+        this.has_cpuCoreInfo = true;
+      })
+      .catch((err) => {
+        console.error("获取 CPU 核心信息失败:", err);
+        Backend.logError(`获取 CPU 核心信息失败: ${err}`);
+        this.cpuCoreInfo = {
+          is_heterogeneous: false,
+          vendor: "Unknown",
+          architecture_summary: "Traditional Architecture",
+          core_types: {}
+        };
+        this.has_cpuCoreInfo = false;
+      });
   }
 
   // 简单刷新 EPP 模式列表
@@ -453,6 +478,22 @@ export class BackendData {
 
   public hasCpuVendor() {
     return this.has_cpuVendor;
+  }
+
+  public getCpuCoreInfo() {
+    return this.cpuCoreInfo;
+  }
+
+  public hasCpuCoreInfo() {
+    return this.has_cpuCoreInfo;
+  }
+
+  public isHeterogeneousCpu() {
+    return this.cpuCoreInfo.is_heterogeneous;
+  }
+
+  public getCpuArchitectureSummary() {
+    return this.cpuCoreInfo.architecture_summary;
   }
 
   public getIsSupportBypassCharge() {
@@ -845,6 +886,30 @@ export class Backend {
     }
   }
 
+  private static async handleCPUFreqControl(): Promise<void> {
+    const enable = Settings.appCpuFreqControlEnable();
+    
+    if (enable) {
+      // 开关打开时，应用保存的频率配置
+      const freqConfig = Settings.getCpuCoreFreqConfig();
+      if (Object.keys(freqConfig).length > 0) {
+        await Backend.setCpuFreqByCoreType(freqConfig);
+      }
+    } else {
+      // 开关关闭时，恢复硬件默认频率（设置为0表示无限制）
+      const coreInfo = Backend.data.getCpuCoreInfo();
+      if (coreInfo.is_heterogeneous) {
+        const resetConfig: Record<string, number> = {};
+        Object.keys(coreInfo.core_types).forEach(coreType => {
+          resetConfig[coreType] = 0; // 0表示恢复硬件默认
+        });
+        await Backend.setCpuFreqByCoreType(resetConfig);
+      } else {
+        await Backend.setCpuFreqByCoreType({ "All": 0 });
+      }
+    }
+  }
+
   private static settingsHandlers: Map<APPLYTYPE, () => Promise<void>> =
     new Map([
       [APPLYTYPE.SET_CPUCORE, Backend.handleCPUNum],
@@ -852,6 +917,7 @@ export class Backend {
       [APPLYTYPE.SET_CPU_GOVERNOR, Backend.handleCPUGovernor],
       [APPLYTYPE.SET_CPU_MAX_PERF, Backend.handleCpuMaxPerfPct],
       [APPLYTYPE.SET_EPP, Backend.handleEPP],
+      [APPLYTYPE.SET_CPU_FREQ_CONTROL, Backend.handleCPUFreqControl],
       [APPLYTYPE.SET_GPUMODE, Backend.handleGPUMode],
       [APPLYTYPE.SET_GPUSLIDERFIX, Backend.handleGPUSliderFix],
       [APPLYTYPE.SET_TDP, Backend.handleTDP],
@@ -1113,6 +1179,17 @@ export class Backend {
   // log_debug
   public static logDebug(message: string) {
     return call("log_debug", message);
+  }
+
+  // set_cpu_freq_by_core_type
+  public static setCpuFreqByCoreType(freqConfig: Record<string, number>): Promise<boolean> {
+    console.log(`设置按核心类型CPU频率:`, freqConfig);
+    return call("set_cpu_freq_by_core_type", freqConfig);
+  }
+
+  // get_cpu_core_info
+  public static getCpuCoreInfo(): Promise<CPUCoreInfo> {
+    return call("get_cpu_core_info");
   }
 
   // start_gpu_notify

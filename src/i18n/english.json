@@ -80,5 +80,9 @@
     "CHARGE_LIMIT_DESC": "Set battery charge limit to extend battery life",
     "CHARGE_LIMIT_DESC_WITH_BYPASS": "Manual bypass charging is enabled, charge limit is temporarily disabled",
     "USE_OLD_UI": "Use Old UI",
-    "USE_OLD_UI_DESC": "Use the old List View instead of the new Tab View"
+    "USE_OLD_UI_DESC": "Use the old List View instead of the new Tab View",
+    "CPU_FREQ_CONTROL": "CPU Frequency Control",
+    "CORE_FREQUENCY": "Core Frequency",
+    "CPU_FREQUENCY": "CPU Frequency",
+    "ALL_CORES": "All Cores"
 }

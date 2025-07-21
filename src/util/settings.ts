@@ -56,6 +56,10 @@ export class AppSetting {
   cpuGovernor?: string;
   @JsonProperty()
   epp?: string;
+  @JsonProperty()
+  cpuFreqControlEnable?: boolean;
+  @JsonProperty()
+  cpuCoreFreqConfig?: Record<string, number>;
 
   constructor() {
     this.smt = true;
@@ -87,6 +91,8 @@ export class AppSetting {
     this.autoCPUMaxPct = false; // 默认关闭自动CPU最大性能百分比
     this.cpuGovernor = "powersave"; // 默认使用 powersave 模式
     this.epp = "balance-performance"; // 默认使用平衡性能模式
+    this.cpuFreqControlEnable = false; // 默认关闭CPU频率控制
+    this.cpuCoreFreqConfig = {}; // 默认空的核心频率配置
   }
   deepCopy(copyTarget: AppSetting) {
     // this.overwrite=copyTarget.overwrite;
@@ -107,6 +113,8 @@ export class AppSetting {
     this.autoCPUMaxPct = copyTarget.autoCPUMaxPct;
     this.cpuGovernor = copyTarget.cpuGovernor;
     this.epp = copyTarget.epp;
+    this.cpuFreqControlEnable = copyTarget.cpuFreqControlEnable;
+    this.cpuCoreFreqConfig = copyTarget.cpuCoreFreqConfig ? {...copyTarget.cpuCoreFreqConfig} : {};
   }
 }
 
@@ -1106,6 +1114,47 @@ export class Settings {
     this._instance.settingChangeEvent.dispatchEvent(
       new CustomEvent(APPLYTYPE.SET_EPP, { detail: epp })
     );
+  }
+
+  // 获取CPU频率控制开关状态
+  public static appCpuFreqControlEnable(): boolean {
+    return this.ensureApp().cpuFreqControlEnable || false;
+  }
+
+  // 设置CPU频率控制开关
+  public static setCpuFreqControlEnable(enable: boolean) {
+    const app = this.ensureApp();
+    app.cpuFreqControlEnable = enable;
+    this.saveSettingsToLocalStorage();
+    Backend.applySettings(APPLYTYPE.SET_CPU_FREQ_CONTROL);
+    PluginManager.updateComponent(ComponentName.CPU_FREQ_CONTROL, UpdateType.UPDATE);
+  }
+
+  // 获取指定核心类型的频率设置
+  public static getCpuCoreFreq(coreType: string): number {
+    const config = this.ensureApp().cpuCoreFreqConfig || {};
+    return config[coreType] || 0;
+  }
+
+  // 设置指定核心类型的频率
+  public static setCpuCoreFreq(coreType: string, freq: number) {
+    const app = this.ensureApp();
+    if (!app.cpuCoreFreqConfig) {
+      app.cpuCoreFreqConfig = {};
+    }
+    app.cpuCoreFreqConfig[coreType] = freq;
+    this.saveSettingsToLocalStorage();
+    
+    // 只有开关打开时才应用设置
+    if (app.cpuFreqControlEnable) {
+      Backend.setCpuFreqByCoreType({ [coreType]: freq });
+    }
+    PluginManager.updateComponent(ComponentName.CPU_FREQ_CONTROL, UpdateType.UPDATE);
+  }
+
+  // 获取所有核心类型的频率配置
+  public static getCpuCoreFreqConfig(): Record<string, number> {
+    return this.ensureApp().cpuCoreFreqConfig || {};
   }
 
   // 监听 EPP 模式变化

@@ -472,6 +472,91 @@ export const CPUEPPComponent: FC = () => {
   );
 };
 
+const CPUFreqControlComponent: FC = () => {
+  const [freqControlEnable, setFreqControlEnable] = useState<boolean>(
+    Settings.appCpuFreqControlEnable()
+  );
+  const coreInfo = Backend.data.getCpuCoreInfo();
+
+  const refresh = () => {
+    setFreqControlEnable(Settings.appCpuFreqControlEnable());
+  };
+
+  useEffect(() => {
+    PluginManager.listenUpdateComponent(
+      ComponentName.CPU_FREQ_CONTROL,
+      [ComponentName.CPU_FREQ_CONTROL],
+      (_ComponentName, updateType) => {
+        if (updateType === UpdateType.UPDATE) {
+          refresh();
+        }
+      }
+    );
+  }, []);
+
+  // 处理频率变化，使用SlowSliderField的内置延迟
+  const handleFreqChange = (coreType: string, freq: number) => {
+    Settings.setCpuCoreFreq(coreType, freq * 1000); // 转换为kHz
+  };
+
+  // 不显示组件的条件
+  if (!Backend.data.hasCpuCoreInfo()) {
+    return null;
+  }
+
+  return (
+    <div>
+      <PanelSectionRow>
+        <ToggleField
+          label={localizationManager.getString(localizeStrEnum.CPU_FREQ_CONTROL)}
+          checked={freqControlEnable}
+          onChange={(value) => {
+            Settings.setCpuFreqControlEnable(value);
+          }}
+        />
+      </PanelSectionRow>
+      
+      {freqControlEnable && (
+        <>
+          {coreInfo.is_heterogeneous ? (
+            // 异构CPU：显示各核心类型的控制
+            Object.entries(coreInfo.core_types).map(([coreType, typeInfo]) => (
+              <div key={coreType}>
+                <PanelSectionRow>
+                  <SlowSliderField
+                    label={`${coreType} (${typeInfo.count} cores)`}
+                    value={Settings.getCpuCoreFreq(coreType) / 1000 || typeInfo.max_freq_khz / 1000}
+                    valueSuffix=" MHz"
+                    max={typeInfo.max_freq_khz / 1000}
+                    min={typeInfo.min_freq_khz / 1000}
+                    step={100}
+                    showValue={true}
+                    onChangeEnd={(value: number) => handleFreqChange(coreType, value)}
+                  />
+                </PanelSectionRow>
+              </div>
+            ))
+          ) : (
+            // 传统CPU：显示单一控制
+            <PanelSectionRow>
+              <SlowSliderField
+                label={localizationManager.getString(localizeStrEnum.ALL_CORES)}
+                value={Settings.getCpuCoreFreq("All") / 1000 || Backend.data.getCpuMaxNum() * 1000}
+                valueSuffix=" MHz"
+                max={5000} // 默认最大5GHz
+                min={800}  // 默认最小800MHz
+                step={100}
+                showValue={true}
+                onChangeEnd={(value: number) => handleFreqChange("All", value)}
+              />
+            </PanelSectionRow>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
 export const CPUComponent: FC<{
   isTab?: boolean;
 }> = ({ isTab = false }) => {
@@ -546,6 +631,7 @@ export const CPUComponent: FC<{
               <CPUGovernorComponent />
               <CPUNumComponent />
               <CPUPerformancePerfComponent />
+              <CPUFreqControlComponent />
             </>
           )}
         </PanelSection>
