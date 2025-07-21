@@ -898,15 +898,11 @@ export class Backend {
     } else {
       // 开关关闭时，恢复硬件默认频率（设置为0表示无限制）
       const coreInfo = Backend.data.getCpuCoreInfo();
-      if (coreInfo.is_heterogeneous) {
-        const resetConfig: Record<string, number> = {};
-        Object.keys(coreInfo.core_types).forEach(coreType => {
-          resetConfig[coreType] = 0; // 0表示恢复硬件默认
-        });
-        await Backend.setCpuFreqByCoreType(resetConfig);
-      } else {
-        await Backend.setCpuFreqByCoreType({ "All": 0 });
-      }
+      const resetConfig: Record<string, number> = {};
+      Object.keys(coreInfo.core_types).forEach(coreType => {
+        resetConfig[coreType] = 0; // 0表示恢复硬件默认
+      });
+      await Backend.setCpuFreqByCoreType(resetConfig);
     }
   }
 

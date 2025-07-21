@@ -1,4 +1,5 @@
 import glob
+import json
 import os
 import re
 import subprocess
@@ -292,6 +293,9 @@ class CPUManager:
             self.detector = create_cpu_detector()
             self.hw_analysis = self.detector.get_detailed_analysis()
             logger.info(f"CPU硬件检测完成: {self.get_cpu_architecture_summary()}")
+            logger.info(
+                f"CPU硬件检测详细信息: {json.dumps(self.hw_analysis, indent=2)}"
+            )
         except Exception as e:
             logger.warning(f"硬件检测失败，使用传统方法: {e}")
             self.detector = None
@@ -1723,25 +1727,8 @@ class CPUManager:
             "core_types": {},
         }
 
-        # 检查硬件检测数据和混合架构
-        if (
-            not hasattr(self, "hw_analysis")
-            or not self.hw_analysis
-            or not result["is_heterogeneous"]
-        ):
-            # 为传统CPU（非异构）创建"All"核心类型
-            if not result["is_heterogeneous"]:
-                cpu_count = self.get_cpu_count()
-                all_cpus = list(range(cpu_count))
-                min_freq, max_freq = self._get_core_type_freq_range("All", all_cpus)
-
-                result["core_types"]["All"] = {
-                    "count": cpu_count,
-                    "cpus": all_cpus,
-                    "max_freq_khz": max_freq,
-                    "min_freq_khz": min_freq,
-                }
-
+        # 检查硬件检测数据
+        if not hasattr(self, "hw_analysis") or not self.hw_analysis:
             return result
 
         # 获取核心类型映射

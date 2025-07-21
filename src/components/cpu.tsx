@@ -499,6 +499,11 @@ const CPUFreqControlComponent: FC = () => {
     Settings.setCpuCoreFreq(coreType, freq * 1000); // 转换为kHz
   };
 
+  // 频率格式化：向下取整到100MHz倍数
+  const roundTo100MHz = (freqKhz: number): number => {
+    return Math.floor(freqKhz / 100000) * 100;
+  };
+
   // 验证频率范围有效性
   const validateFreqRange = (typeInfo: any) => {
     return typeInfo && 
@@ -525,48 +530,25 @@ const CPUFreqControlComponent: FC = () => {
       
       {freqControlEnable && (
         <>
-          {coreInfo.is_heterogeneous ? (
-            // 异构CPU：显示各核心类型的控制
-            Object.entries(coreInfo.core_types)
-              .filter(([_, typeInfo]) => validateFreqRange(typeInfo))
-              .map(([coreType, typeInfo]) => (
-                <div key={coreType}>
-                  <PanelSectionRow>
-                    <SlowSliderField
-                      label={`${coreType} (${typeInfo.count} cores)`}
-                      value={Settings.getCpuCoreFreq(coreType) / 1000 || typeInfo.max_freq_khz / 1000}
-                      valueSuffix=" MHz"
-                      max={typeInfo.max_freq_khz / 1000}
-                      min={typeInfo.min_freq_khz / 1000}
-                      step={100}
-                      showValue={true}
-                      onChangeEnd={(value: number) => handleFreqChange(coreType, value)}
-                    />
-                  </PanelSectionRow>
-                </div>
-              ))
-          ) : (
-            // 传统CPU：显示单一控制
-            (() => {
-              const allCoreInfo = coreInfo.core_types["All"];
-              if (!allCoreInfo || !validateFreqRange(allCoreInfo)) return null;
-              
-              return (
+          {/* 统一处理所有核心类型 */}
+          {Object.entries(coreInfo.core_types)
+            .filter(([_, typeInfo]) => validateFreqRange(typeInfo))
+            .map(([coreType, typeInfo]) => (
+              <div key={coreType}>
                 <PanelSectionRow>
                   <SlowSliderField
-                    label={localizationManager.getString(localizeStrEnum.ALL_CORES)}
-                    value={Settings.getCpuCoreFreq("All") / 1000 || allCoreInfo.max_freq_khz / 1000}
+                    label={coreType}
+                    value={Settings.getCpuCoreFreq(coreType) / 1000 || roundTo100MHz(typeInfo.max_freq_khz)}
                     valueSuffix=" MHz"
-                    max={allCoreInfo.max_freq_khz / 1000}
-                    min={allCoreInfo.min_freq_khz / 1000}
+                    max={roundTo100MHz(typeInfo.max_freq_khz)}
+                    min={roundTo100MHz(typeInfo.min_freq_khz)}
                     step={100}
                     showValue={true}
-                    onChangeEnd={(value: number) => handleFreqChange("All", value)}
+                    onChangeEnd={(value: number) => handleFreqChange(coreType, value)}
                   />
                 </PanelSectionRow>
-              );
-            })()
-          )}
+              </div>
+            ))}
         </>
       )}
     </div>
