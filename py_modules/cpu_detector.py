@@ -21,9 +21,12 @@ import subprocess
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple
+import yaml
 
-from utils import get_env
-
+def get_env():
+    env = os.environ.copy()
+    env["LD_LIBRARY_PATH"] = ""
+    return env
 
 @dataclass
 class CPUCoreInfo:
@@ -95,8 +98,18 @@ class CPUDetector:
     """Main CPU detection and analysis class"""
 
     def __init__(self):
+        """Initialize CPU detector"""
         self.topology = CPUTopology()
         self._populate_basic_topology()
+        
+        # Load CPU core whitelist for hybrid strategy
+        self.cpu_whitelist = load_cpu_core_whitelist()
+        self.hybrid_core_types = None
+        try:
+            self.hybrid_core_types = detect_core_types()
+        except Exception:
+            # Fallback to traditional detection if hybrid strategy fails
+            pass
 
     def _populate_basic_topology(self):
         """Populate basic CPU topology from sysfs"""
@@ -270,30 +283,62 @@ class CPUDetector:
             return True  # Assume yes if error
 
     def determine_core_type_intel(self, core_info: CPUCoreInfo) -> str:
-        """Determine Intel core type using CPUID.1Ah + L3 cache detection"""
-        if core_info.core_type_cpuid == 0x40:
-            return "P-Core"
-        elif core_info.core_type_cpuid == 0x20:
-            # Distinguish E-Core vs LPE-Core using L3 cache access
-            if core_info.l3_cache_access:
-                return "E-Core"
-            else:
-                return "LPE-Core"
-        else:
-            # Fallback to frequency-based detection for Meteor Lake
-            if core_info.family == 6 and core_info.model == 0xAA:
-                if core_info.max_freq_hw > 4000000:
-                    return "P-Core"
-                elif core_info.max_freq_hw > 2800000:
+        """Determine Intel core type using hybrid strategy with fallbacks
+        
+        Priority:
+        1. Hybrid strategy (YAML whitelist + cache/freq analysis)
+        2. CPUID.1Ah detection (existing)
+        3. Frequency-based detection (existing)
+        """
+        
+        # Method 1: Use hybrid strategy if available
+        if self.hybrid_core_types:
+            logical_id = core_info.logical_id
+            for core_type, core_list in self.hybrid_core_types.items():
+                if logical_id in core_list:
+                    return core_type
+        
+        # Method 2: CPUID.1Ah detection (existing logic)
+        core_type_cpuid = self._get_cpuid_core_type(core_info.logical_id)
+        if core_type_cpuid != -1:
+            if core_type_cpuid == 0x20:
+                return "P-Core"
+            elif core_type_cpuid == 0x40:
+                # Distinguish E-Core vs LPE-Core using L3 cache access
+                if core_info.l3_cache_access:
                     return "E-Core"
                 else:
                     return "LPE-Core"
             else:
-                # Other Intel CPUs: assume P-Core for high freq, E-Core for lower
-                if core_info.max_freq_hw > 3500000:
-                    return "P-Core"
+                # Fallback to frequency-based detection for Meteor Lake
+                if core_info.family == 6 and core_info.model == 0xAA:
+                    if core_info.max_freq_hw > 4000000:
+                        return "P-Core"
+                    elif core_info.max_freq_hw > 2800000:
+                        return "E-Core"
+                    else:
+                        return "LPE-Core"
                 else:
-                    return "E-Core"
+                    # Other Intel CPUs: assume P-Core for high freq, E-Core for lower
+                    if core_info.max_freq_hw > 3500000:
+                        return "P-Core"
+                    else:
+                        return "E-Core"
+        
+        # Method 3: Frequency-based detection (existing fallback)
+        if core_info.family == 6 and core_info.model == 0xAA:
+            if core_info.max_freq_hw > 4000000:
+                return "P-Core"
+            elif core_info.max_freq_hw > 2800000:
+                return "E-Core"
+            else:
+                return "LPE-Core"
+        else:
+            # Other Intel CPUs: assume P-Core for high freq, E-Core for lower
+            if core_info.max_freq_hw > 3500000:
+                return "P-Core"
+            else:
+                return "E-Core"
 
     def determine_core_type_amd(self, core_info: CPUCoreInfo) -> str:
         """AMD core type detection - based on limited sample inference
@@ -386,10 +431,247 @@ class CPUDetector:
         return analysis
 
 
+def load_cpu_core_whitelist(path="py_modules/cpu_core_whitelist.yaml"):
+    if not os.path.exists(path):
+        return []
+    with open(path, "r") as f:
+        return yaml.safe_load(f)
+
+def find_core_types(whitelist, family, model, vendor=None):
+    for entry in whitelist:
+        if entry["family"] == family and entry["model"] == model:
+            if vendor is None:
+                return entry["core_types"]
+            
+            # Normalize vendor names for comparison
+            entry_vendor = entry["vendor"].lower()
+            actual_vendor = vendor.lower()
+            
+            # Check for vendor match (handle both simplified and full names)
+            vendor_match = (
+                entry_vendor == actual_vendor or
+                (entry_vendor == "intel" and "intel" in actual_vendor) or
+                (entry_vendor == "amd" and "amd" in actual_vendor)
+            )
+            
+            if vendor_match:
+                return entry["core_types"]
+    return None
+
+def auto_group_core_types(cpuinfo_list, lscpu_info):
+    if not cpuinfo_list:
+        return {}
+    
+    # Determine vendor from first CPU entry
+    vendor = cpuinfo_list[0].get("vendor_id", "unknown")
+    
+    # Collect all cores with their characteristics
+    cores_data = []
+    for core in cpuinfo_list:
+        idx = core["processor"]
+        cache = core.get("cache_size", 0)
+        maxmhz = lscpu_info.get(idx, {}).get("maxmhz", 0)
+        cores_data.append({
+            "id": idx,
+            "cache": cache,
+            "freq": maxmhz
+        })
+    
+    # Sort by frequency (descending) to identify frequency tiers
+    freq_sorted = sorted(cores_data, key=lambda x: x["freq"], reverse=True)
+    
+    # Group cores by frequency ranges (with small tolerance for variations)
+    freq_groups = []
+    current_group = []
+    current_freq = None
+    freq_tolerance = 100  # 100MHz tolerance for grouping
+    
+    for core in freq_sorted:
+        if current_freq is None or abs(core["freq"] - current_freq) <= freq_tolerance:
+            current_group.append(core)
+            current_freq = core["freq"] if current_freq is None else current_freq
+        else:
+            if current_group:
+                freq_groups.append(current_group)
+            current_group = [core]
+            current_freq = core["freq"]
+    
+    if current_group:
+        freq_groups.append(current_group)
+    
+    # Now intelligently assign core types based on vendor and frequency tiers
+    if vendor == "GenuineIntel":
+        return _classify_intel_cores(freq_groups)
+    elif vendor == "AuthenticAMD":
+        return _classify_amd_cores(freq_groups)
+    else:
+        return _classify_generic_cores(freq_groups)
+
+def _classify_intel_cores(freq_groups):
+    """Intel-specific core classification logic"""
+    if len(freq_groups) == 1:
+        # Single frequency tier - likely all same type
+        cores = [core["id"] for core in freq_groups[0]]
+        return {"P-Core": cores}
+    
+    elif len(freq_groups) == 2:
+        # Two tiers: High freq = P-Core, Low freq = E-Core or LPE-Core
+        high_freq_cores = [core["id"] for core in freq_groups[0]]
+        low_freq_cores = [core["id"] for core in freq_groups[1]]
+        
+        # Determine if low freq cores are E-Core or LPE-Core based on frequency
+        low_freq = freq_groups[1][0]["freq"]
+        if low_freq < 3000:  # < 3GHz likely LPE-Core
+            return {
+                "P-Core": high_freq_cores,
+                "LPE-Core": low_freq_cores
+            }
+        else:  # >= 3GHz likely E-Core
+            return {
+                "P-Core": high_freq_cores,
+                "E-Core": low_freq_cores
+            }
+    
+    elif len(freq_groups) >= 3:
+        # Three or more tiers: High = P-Core, Mid = E-Core, Low = LPE-Core
+        high_freq_cores = [core["id"] for core in freq_groups[0]]
+        mid_freq_cores = [core["id"] for core in freq_groups[1]]
+        low_freq_cores = []
+        
+        # Combine all remaining lower tiers as LPE-Core
+        for group in freq_groups[2:]:
+            low_freq_cores.extend([core["id"] for core in group])
+        
+        result = {"P-Core": high_freq_cores}
+        
+        # Only add E-Core and LPE-Core if they have cores
+        if mid_freq_cores:
+            result["E-Core"] = mid_freq_cores
+        if low_freq_cores:
+            result["LPE-Core"] = low_freq_cores
+            
+        return result
+    
+    return {}
+
+def _classify_amd_cores(freq_groups):
+    """AMD-specific core classification logic"""
+    if len(freq_groups) == 1:
+        # Single frequency tier
+        cores = [core["id"] for core in freq_groups[0]]
+        return {"Zen-Core": cores}
+    
+    elif len(freq_groups) >= 2:
+        # High freq = Zen-Core, Low freq = Zen-c-Core
+        high_freq_cores = [core["id"] for core in freq_groups[0]]
+        low_freq_cores = []
+        
+        # Combine all lower frequency tiers as Zen-c-Core
+        for group in freq_groups[1:]:
+            low_freq_cores.extend([core["id"] for core in group])
+        
+        return {
+            "Zen-Core": high_freq_cores,
+            "Zen-c-Core": low_freq_cores
+        }
+    
+    return {}
+
+def _classify_generic_cores(freq_groups):
+    """Generic classification for unknown vendors"""
+    if len(freq_groups) == 1:
+        cores = [core["id"] for core in freq_groups[0]]
+        return {"High-Perf-Core": cores}
+    
+    elif len(freq_groups) >= 2:
+        high_freq_cores = [core["id"] for core in freq_groups[0]]
+        low_freq_cores = []
+        
+        for group in freq_groups[1:]:
+            low_freq_cores.extend([core["id"] for core in group])
+        
+        return {
+            "High-Perf-Core": high_freq_cores,
+            "Low-Perf-Core": low_freq_cores
+        }
+    
+    return {}
+
+def parse_cpuinfo():
+    # 解析/proc/cpuinfo，返回每核dict列表
+    cpuinfo_list = []
+    cpuinfo = {}
+    with open("/proc/cpuinfo", "r") as f:
+        for line in f:
+            if line.strip() == "":
+                if cpuinfo:
+                    cpuinfo_list.append(cpuinfo)
+                    cpuinfo = {}
+                continue
+            if ":" in line:
+                k, v = line.split(":", 1)
+                k = k.strip()
+                v = v.strip()
+                if k == "processor":
+                    cpuinfo["processor"] = int(v)
+                elif k == "cache size":
+                    # 例如 "12288 KB"
+                    cpuinfo["cache_size"] = int(v.split()[0])
+                elif k == "vendor_id":
+                    cpuinfo["vendor_id"] = v
+                elif k == "cpu family":
+                    cpuinfo["family"] = int(v)
+                elif k == "model":
+                    cpuinfo["model"] = int(v)
+    if cpuinfo:
+        cpuinfo_list.append(cpuinfo)
+    return cpuinfo_list
+
+def parse_lscpu():
+    # 解析lscpu -e=cpu,maxmhz输出，返回{cpu: {maxmhz: ...}}
+    import subprocess
+    lscpu_info = {}
+    try:
+        out = subprocess.check_output(["lscpu", "-e=cpu,maxmhz"], text=True)
+        for line in out.splitlines():
+            if line.startswith("CPU") or not line.strip():
+                continue
+            parts = line.split()
+            if len(parts) >= 2:
+                cpu = int(parts[0])
+                try:
+                    maxmhz = float(parts[1])
+                except ValueError:
+                    maxmhz = 0
+                lscpu_info[cpu] = {"maxmhz": maxmhz}
+    except Exception:
+        pass
+    return lscpu_info
+
+def get_cpu_family_model_vendor(cpuinfo_list):
+    # 取第一个核心的family/model/vendor_id
+    if not cpuinfo_list:
+        return 0, 0, None
+    c = cpuinfo_list[0]
+    family = c.get("family", 0)
+    model = c.get("model", 0)
+    vendor = c.get("vendor_id", None)
+    return family, model, vendor
+
+def detect_core_types():
+    cpuinfo_list = parse_cpuinfo()
+    lscpu_info = parse_lscpu()
+    family, model, vendor = get_cpu_family_model_vendor(cpuinfo_list)
+    whitelist = load_cpu_core_whitelist()
+    core_types = find_core_types(whitelist, family, model, vendor)
+    if core_types:
+        return core_types
+    core_types = auto_group_core_types(cpuinfo_list, lscpu_info)
+    return core_types
+
 def create_cpu_detector() -> CPUDetector:
     """Factory function to create a configured CPU detector"""
     detector = CPUDetector()
-    detector.detect_core_types()
     return detector
 
 
