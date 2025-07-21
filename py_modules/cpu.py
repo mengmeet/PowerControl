@@ -1729,6 +1729,19 @@ class CPUManager:
             or not self.hw_analysis
             or not result["is_heterogeneous"]
         ):
+            # 为传统CPU（非异构）创建"All"核心类型
+            if not result["is_heterogeneous"]:
+                cpu_count = self.get_cpu_count()
+                all_cpus = list(range(cpu_count))
+                min_freq, max_freq = self._get_core_type_freq_range("All", all_cpus)
+
+                result["core_types"]["All"] = {
+                    "count": cpu_count,
+                    "cpus": all_cpus,
+                    "max_freq_khz": max_freq,
+                    "min_freq_khz": min_freq,
+                }
+
             return result
 
         # 获取核心类型映射

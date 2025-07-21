@@ -499,8 +499,15 @@ const CPUFreqControlComponent: FC = () => {
     Settings.setCpuCoreFreq(coreType, freq * 1000); // 转换为kHz
   };
 
-  // 不显示组件的条件
-  if (!Backend.data.hasCpuCoreInfo()) {
+  // 验证频率范围有效性
+  const validateFreqRange = (typeInfo: any) => {
+    return typeInfo && 
+           typeInfo.min_freq_khz > 0 && 
+           typeInfo.max_freq_khz > typeInfo.min_freq_khz;
+  };
+
+  // 验证CPU信息有效性
+  if (!Backend.data.hasCpuCoreInfo() || !coreInfo.core_types || Object.keys(coreInfo.core_types).length === 0) {
     return null;
   }
 
@@ -520,36 +527,45 @@ const CPUFreqControlComponent: FC = () => {
         <>
           {coreInfo.is_heterogeneous ? (
             // 异构CPU：显示各核心类型的控制
-            Object.entries(coreInfo.core_types).map(([coreType, typeInfo]) => (
-              <div key={coreType}>
-                <PanelSectionRow>
-                  <SlowSliderField
-                    label={`${coreType} (${typeInfo.count} cores)`}
-                    value={Settings.getCpuCoreFreq(coreType) / 1000 || typeInfo.max_freq_khz / 1000}
-                    valueSuffix=" MHz"
-                    max={typeInfo.max_freq_khz / 1000}
-                    min={typeInfo.min_freq_khz / 1000}
-                    step={100}
-                    showValue={true}
-                    onChangeEnd={(value: number) => handleFreqChange(coreType, value)}
-                  />
-                </PanelSectionRow>
-              </div>
-            ))
+            Object.entries(coreInfo.core_types)
+              .filter(([_, typeInfo]) => validateFreqRange(typeInfo))
+              .map(([coreType, typeInfo]) => (
+                <div key={coreType}>
+                  <PanelSectionRow>
+                    <SlowSliderField
+                      label={`${coreType} (${typeInfo.count} cores)`}
+                      value={Settings.getCpuCoreFreq(coreType) / 1000 || typeInfo.max_freq_khz / 1000}
+                      valueSuffix=" MHz"
+                      max={typeInfo.max_freq_khz / 1000}
+                      min={typeInfo.min_freq_khz / 1000}
+                      step={100}
+                      showValue={true}
+                      onChangeEnd={(value: number) => handleFreqChange(coreType, value)}
+                    />
+                  </PanelSectionRow>
+                </div>
+              ))
           ) : (
             // 传统CPU：显示单一控制
-            <PanelSectionRow>
-              <SlowSliderField
-                label={localizationManager.getString(localizeStrEnum.ALL_CORES)}
-                value={Settings.getCpuCoreFreq("All") / 1000 || Backend.data.getCpuMaxNum() * 1000}
-                valueSuffix=" MHz"
-                max={5000} // 默认最大5GHz
-                min={800}  // 默认最小800MHz
-                step={100}
-                showValue={true}
-                onChangeEnd={(value: number) => handleFreqChange("All", value)}
-              />
-            </PanelSectionRow>
+            (() => {
+              const allCoreInfo = coreInfo.core_types["All"];
+              if (!allCoreInfo || !validateFreqRange(allCoreInfo)) return null;
+              
+              return (
+                <PanelSectionRow>
+                  <SlowSliderField
+                    label={localizationManager.getString(localizeStrEnum.ALL_CORES)}
+                    value={Settings.getCpuCoreFreq("All") / 1000 || allCoreInfo.max_freq_khz / 1000}
+                    valueSuffix=" MHz"
+                    max={allCoreInfo.max_freq_khz / 1000}
+                    min={allCoreInfo.min_freq_khz / 1000}
+                    step={100}
+                    showValue={true}
+                    onChangeEnd={(value: number) => handleFreqChange("All", value)}
+                  />
+                </PanelSectionRow>
+              );
+            })()
           )}
         </>
       )}
