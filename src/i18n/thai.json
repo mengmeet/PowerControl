@@ -80,6 +80,7 @@
     "USE_OLD_UI": "ใช้ UI แบบเก่า",
     "USE_OLD_UI_DESC": "ใช้มุมมองรายการแบบเก่าแทนมุมมองแท็บใหม่",
     "CPU_FREQ_CONTROL": "การควบคุมความถี่ CPU",
+    "CPU_FREQ_CONTROL_DESC": "จำกัดความถี่สูงสุดของ CPU เพื่อลดการใช้พลังงานและความร้อน สถาปัตยกรรม: {{architecture}}",
     "CORE_FREQUENCY": "ความถี่แกน",
     "CPU_FREQUENCY": "ความถี่ CPU",
     "ALL_CORES": "แกนทั้งหมด"

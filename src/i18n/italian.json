@@ -80,6 +80,7 @@
     "USE_OLD_UI": "Usa la vecchia interfaccia",
     "USE_OLD_UI_DESC": "Usa la vecchia visualizzazione a lista invece della nuova visualizzazione a schede",
     "CPU_FREQ_CONTROL": "Controllo frequenza CPU",
+    "CPU_FREQ_CONTROL_DESC": "Limita la frequenza massima della CPU per ridurre consumo e calore. Architettura: {{architecture}}",
     "CORE_FREQUENCY": "Frequenza del core",
     "CPU_FREQUENCY": "Frequenza CPU",
     "ALL_CORES": "Tutti i core"

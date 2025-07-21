@@ -82,6 +82,7 @@
     "USE_OLD_UI": "使用旧版 UI",
     "USE_OLD_UI_DESC": "使用旧的列表视图而不是新的标签视图",
     "CPU_FREQ_CONTROL": "CPU频率控制",
+    "CPU_FREQ_CONTROL_DESC": "限制CPU最大频率以降低功耗和发热。架构：{{architecture}}",
     "CORE_FREQUENCY": "核心频率",
     "CPU_FREQUENCY": "CPU频率",
     "ALL_CORES": "所有核心"

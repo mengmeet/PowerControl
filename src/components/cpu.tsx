@@ -511,6 +511,13 @@ const CPUFreqControlComponent: FC = () => {
            typeInfo.max_freq_khz > typeInfo.min_freq_khz;
   };
 
+  // 生成架构信息描述
+  const getArchitectureInfo = (): string => {
+    return Object.entries(coreInfo.core_types)
+      .map(([type, info]) => `${info.count}×${type}`)
+      .join(' + ');
+  };
+
   // 验证CPU信息有效性
   if (!Backend.data.hasCpuCoreInfo() || !coreInfo.core_types || Object.keys(coreInfo.core_types).length === 0) {
     return null;
@@ -521,6 +528,9 @@ const CPUFreqControlComponent: FC = () => {
       <PanelSectionRow>
         <ToggleField
           label={localizationManager.getString(localizeStrEnum.CPU_FREQ_CONTROL)}
+          description={localizationManager.getString(localizeStrEnum.CPU_FREQ_CONTROL_DESC, {
+            architecture: getArchitectureInfo()
+          })}
           checked={freqControlEnable}
           onChange={(value) => {
             Settings.setCpuFreqControlEnable(value);

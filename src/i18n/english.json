@@ -82,6 +82,7 @@
     "USE_OLD_UI": "Use Old UI",
     "USE_OLD_UI_DESC": "Use the old List View instead of the new Tab View",
     "CPU_FREQ_CONTROL": "CPU Frequency Control",
+    "CPU_FREQ_CONTROL_DESC": "Limit maximum CPU frequency to reduce power consumption and heat. Architecture: {{architecture}}",
     "CORE_FREQUENCY": "Core Frequency",
     "CPU_FREQUENCY": "CPU Frequency",
     "ALL_CORES": "All Cores"
