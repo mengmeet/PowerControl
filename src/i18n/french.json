@@ -78,5 +78,9 @@
     "CHARGE_LIMIT_DESC": "Définir une limite de charge pour prolonger la durée de vie de la batterie",
     "CHARGE_LIMIT_DESC_WITH_BYPASS": "Charge en dérivation activée, limite de charge temporairement désactivée",
     "USE_OLD_UI": "Utiliser l'ancienne interface",
-    "USE_OLD_UI_DESC": "Utiliser l'ancienne vue en liste au lieu de la nouvelle vue par onglets"
+    "USE_OLD_UI_DESC": "Utiliser l'ancienne vue en liste au lieu de la nouvelle vue par onglets",
+    "CPU_FREQ_CONTROL": "Contrôle de fréquence CPU",
+    "CORE_FREQUENCY": "Fréquence du cœur",
+    "CPU_FREQUENCY": "Fréquence CPU",
+    "ALL_CORES": "Tous les cœurs"
 }

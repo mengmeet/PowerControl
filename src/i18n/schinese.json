@@ -80,5 +80,9 @@
     "CHARGE_LIMIT_DESC": "设置电池充电限制，延长电池寿命",
     "CHARGE_LIMIT_DESC_WITH_BYPASS": "手动旁路供电已开启，充电限制暂时无效",
     "USE_OLD_UI": "使用旧版 UI",
-    "USE_OLD_UI_DESC": "使用旧的列表视图而不是新的标签视图"
+    "USE_OLD_UI_DESC": "使用旧的列表视图而不是新的标签视图",
+    "CPU_FREQ_CONTROL": "CPU频率控制",
+    "CORE_FREQUENCY": "核心频率",
+    "CPU_FREQUENCY": "CPU频率",
+    "ALL_CORES": "所有核心"
 }

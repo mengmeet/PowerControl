@@ -78,5 +78,9 @@
     "CHARGE_LIMIT_DESC": "バッテリー寿命を延ばすために充電制限を設定",
     "CHARGE_LIMIT_DESC_WITH_BYPASS": "手動バイパス充電が有効、充電制限は一時的に無効",
     "USE_OLD_UI": "旧UIを使用",
-    "USE_OLD_UI_DESC": "新しいタブビューの代わりに旧リストビューを使用する"
+    "USE_OLD_UI_DESC": "新しいタブビューの代わりに旧リストビューを使用する",
+    "CPU_FREQ_CONTROL": "CPU周波数制御",
+    "CORE_FREQUENCY": "コア周波数",
+    "CPU_FREQUENCY": "CPU周波数",
+    "ALL_CORES": "全コア"
 }
