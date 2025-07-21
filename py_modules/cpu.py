@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 import sysInfo
 from config import CPU_VENDOR, RYZENADJ_PATH, SH_PATH, logger
 from utils import get_env, getMaxTDP
+from cpu_detector import create_cpu_detector
 
 
 @dataclass
@@ -274,6 +275,20 @@ class CPUManager:
         for core_id in sorted(logical_by_core.keys()):
             logical_ids = logical_by_core[core_id]
             logger.debug(f"物理核心{core_id}: 逻辑CPU {logical_ids}")
+        
+        # 🔥 新增：硬件检测增强
+        self._init_hardware_detection()
+
+    def _init_hardware_detection(self):
+        """初始化硬件检测功能"""
+        try:
+            self.detector = create_cpu_detector()
+            self.hw_analysis = self.detector.get_detailed_analysis()
+            logger.info(f"CPU硬件检测完成: {self.get_cpu_architecture_summary()}")
+        except Exception as e:
+            logger.warning(f"硬件检测失败，使用传统方法: {e}")
+            self.detector = None
+            self.hw_analysis = {}
 
     def get_hasRyzenadj(self) -> bool:
         """检查系统是否安装了ryzenadj工具。
@@ -991,7 +1006,12 @@ class CPUManager:
                     sorted_logical_ids = sorted(logical_ids)
                     if cluster_id < len(freq_list):
                         freq = freq_list[cluster_id]
-                        cluster_type = "P-Core" if freq > 4000000 else "E-Core"
+                        if freq > 4500000:
+                            cluster_type = "P-Core"
+                        elif freq > 3000000:
+                            cluster_type = "E-Core"
+                        else:
+                            cluster_type = "LPE-Core"
                         logger.debug(f"Virtual Cluster {cluster_id}: {cluster_type} {freq/1000:.1f}MHz, 逻辑CPU {sorted_logical_ids}")
                     
                     for logical_id in logical_ids:
@@ -1425,6 +1445,70 @@ class CPUManager:
         except Exception:
             logger.error(f"Failed to set EPP mode: mode={mode}", exc_info=True)
             return False
+
+    # === 新增：硬件检测相关方法 ===
+
+    def get_core_type(self, logical_id: int) -> str:
+        """获取CPU核心类型"""
+        if not hasattr(self, 'hw_analysis') or not self.hw_analysis:
+            return "Unknown-Core"
+        
+        core_type_mapping = self.hw_analysis.get('core_type_mapping', {})
+        for core_type, cpu_list in core_type_mapping.items():
+            if logical_id in cpu_list:
+                return core_type
+        return "Unknown-Core"
+
+    def get_performance_cores(self) -> List[int]:
+        """获取高性能核心列表"""
+        if not hasattr(self, 'hw_analysis') or not self.hw_analysis:
+            return list(range(self.cpu_maxNum))  # 回退到所有核心
+        
+        core_mapping = self.hw_analysis.get('core_type_mapping', {})
+        perf_cores = []
+        perf_cores.extend(core_mapping.get('P-Core', []))
+        perf_cores.extend(core_mapping.get('Zen-Core', []))
+        return sorted(perf_cores)
+
+    def get_efficiency_cores(self) -> List[int]:
+        """获取效率核心列表"""
+        if not hasattr(self, 'hw_analysis') or not self.hw_analysis:
+            return []  # 回退：假设没有效率核心
+        
+        core_mapping = self.hw_analysis.get('core_type_mapping', {})
+        eff_cores = []
+        eff_cores.extend(core_mapping.get('E-Core', []))
+        eff_cores.extend(core_mapping.get('LPE-Core', []))
+        eff_cores.extend(core_mapping.get('Zen-c-Core', []))
+        return sorted(eff_cores)
+
+    def is_heterogeneous_cpu(self) -> bool:
+        """检测是否为混合架构CPU"""
+        if not hasattr(self, 'hw_analysis') or not self.hw_analysis:
+            return False
+        core_types = self.hw_analysis.get('core_types', {})
+        return len(core_types) > 1
+
+    def get_cpu_architecture_summary(self) -> str:
+        """获取CPU架构摘要"""
+        if not hasattr(self, 'hw_analysis') or not self.hw_analysis:
+            return "Traditional Architecture"
+        
+        vendor = self.hw_analysis.get('vendor', 'Unknown')
+        core_types = self.hw_analysis.get('core_types', {})
+        
+        if 'Intel' in vendor:
+            summary_parts = []
+            for core_type, count in core_types.items():
+                summary_parts.append(f"{count}×{core_type}")
+            return f"Intel Heterogeneous: {' + '.join(summary_parts)}"
+        elif 'AMD' in vendor:
+            summary_parts = []
+            for core_type, count in core_types.items():
+                summary_parts.append(f"{count}×{core_type}")
+            return f"AMD Architecture: {' + '.join(summary_parts)}"
+        else:
+            return f"Unknown Vendor: {core_types}"
 
 
 cpuManager = CPUManager()
