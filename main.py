@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import List
+from typing import Dict, List
 
 import decky
 
@@ -251,6 +251,14 @@ class Plugin:
             logger.error(e, exc_info=True)
             return False
 
+    async def set_cpu_freq_by_core_type(self, freq_config: Dict[str, int]):
+        try:
+            logger.info(f"设置按核心类型CPU频率: {freq_config}")
+            return cpuManager.set_cpu_freq_by_core_type(freq_config)
+        except Exception as e:
+            logger.error(f"按核心类型设置CPU频率失败: {e}", exc_info=True)
+            return False
+
     async def receive_suspendEvent(self):
         try:
             return True
@@ -300,7 +308,7 @@ class Plugin:
 
     async def get_ryzenadj_info(self):
         return cpuManager.get_ryzenadj_info()
-    
+
     async def get_rapl_info(self):
         logger.info("Main get_rapl_info")
         return cpuManager.get_rapl_info()

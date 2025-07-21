@@ -5,28 +5,29 @@ import subprocess
 import threading
 import time
 import traceback
-from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Tuple
 
 import sysInfo
 from config import CPU_VENDOR, RYZENADJ_PATH, SH_PATH, logger
-from utils import get_env, getMaxTDP
 from cpu_detector import create_cpu_detector
+from utils import get_env, getMaxTDP
 
 
 @dataclass
 class CPUCoreInfo:
     """CPU核心静态信息"""
-    logical_id: int          # 逻辑处理器ID
-    core_id: int            # 物理核心ID
-    package_id: int         # 物理封装ID
-    cluster_id: int         # 集群ID
-    die_id: int             # Die ID
-    
+
+    logical_id: int  # 逻辑处理器ID
+    core_id: int  # 物理核心ID
+    package_id: int  # 物理封装ID
+    cluster_id: int  # 集群ID
+    die_id: int  # Die ID
+
     # 硬件固有频率信息
-    max_freq_hw: int        # 硬件最大频率 (cpuinfo_max_freq)
-    min_freq_hw: int        # 硬件最小频率 (cpuinfo_min_freq)
-    
+    max_freq_hw: int  # 硬件最大频率 (cpuinfo_max_freq)
+    min_freq_hw: int  # 硬件最小频率 (cpuinfo_min_freq)
+
     # 拓扑关系（初始化后填充）
     sibling_threads: List[int] = field(default_factory=list)
     cluster_cpus: List[int] = field(default_factory=list)
@@ -35,26 +36,26 @@ class CPUCoreInfo:
 
 class CPUTopology:
     """CPU拓扑管理器"""
-    
+
     def __init__(self):
         self.cores: Dict[int, CPUCoreInfo] = {}
-        
+
     def add_core(self, core_info: CPUCoreInfo):
         """添加CPU核心信息"""
         self.cores[core_info.logical_id] = core_info
-        
+
     def get_all_logical_ids(self) -> List[int]:
         """获取所有逻辑CPU ID（解决CPU编号不连续问题）"""
         return sorted(self.cores.keys())
-    
+
     def get_physical_core_ids(self) -> List[int]:
         """获取所有物理核心ID（替代cps_ids）"""
         return sorted(set(core.core_id for core in self.cores.values()))
-    
+
     def get_physical_core_count(self) -> int:
         """获取物理核心数量（替代cpu_maxNum）"""
         return len(self.get_physical_core_ids())
-    
+
     def get_logical_ids_by_physical_core(self) -> Dict[int, List[int]]:
         """按物理核心分组逻辑CPU（用于SMT处理）"""
         result = {}
@@ -66,29 +67,33 @@ class CPUTopology:
         for core_id in result:
             result[core_id].sort()
         return result
-    
+
     def get_core_info(self, logical_id: int) -> Optional[CPUCoreInfo]:
         """获取指定逻辑CPU的核心信息"""
         return self.cores.get(logical_id)
-    
+
     def get_sibling_threads(self, logical_id: int) -> List[int]:
         """获取指定CPU的兄弟线程"""
         core_info = self.cores.get(logical_id)
         return core_info.sibling_threads if core_info else []
-    
+
     def is_smt_supported(self) -> bool:
         """检查是否支持SMT（通过拓扑信息判断）"""
         for core in self.cores.values():
             if len(core.sibling_threads) > 1:
                 return True
         return False
-    
+
     def get_max_freq_range(self) -> Tuple[int, int]:
         """获取所有CPU的频率范围"""
         if not self.cores:
             return (0, 0)
-        min_freq = min(core.min_freq_hw for core in self.cores.values() if core.min_freq_hw > 0)
-        max_freq = max(core.max_freq_hw for core in self.cores.values() if core.max_freq_hw > 0)
+        min_freq = min(
+            core.min_freq_hw for core in self.cores.values() if core.min_freq_hw > 0
+        )
+        max_freq = max(
+            core.max_freq_hw for core in self.cores.values() if core.max_freq_hw > 0
+        )
         return (min_freq, max_freq)
 
 
@@ -237,7 +242,7 @@ class CPUManager:
 
         # 新的拓扑系统（替代原来的字典）
         self.cpu_topology: CPUTopology = None
-        self.cps_ids: List[int] = []      # 保持兼容性
+        self.cps_ids: List[int] = []  # 保持兼容性
         self.is_support_smt: Optional[bool] = None
 
         # CPU自动优化线程
@@ -251,31 +256,33 @@ class CPUManager:
         self.set_enable_All()  # 先开启所有cpu, 否则拓扑信息不全
         self.get_isSupportSMT()  # 获取 is_support_smt
         self.__get_tdpMax()  # 获取 cpu_tdpMax
-        
+
         # 获取新的拓扑信息
         self.cpu_topology = self.get_cpu_topology_extended()
-        
+
         # 保持现有属性的兼容性
         self.cps_ids = self.cpu_topology.get_physical_core_ids()
         self.cpu_maxNum = self.cpu_topology.get_physical_core_count()
-        
+
         # 更新频率范围信息
         min_freq, max_freq = self.cpu_topology.get_max_freq_range()
         if min_freq > 0:
             self.cpu_avaMinFreq = min_freq
         if max_freq > 0:
             self.cpu_avaMaxFreq = max_freq
-        
-        logger.info(f"CPU拓扑信息: 逻辑CPU数={len(self.cpu_topology.cores)}, 物理核心数={self.cpu_maxNum}")
+
+        logger.info(
+            f"CPU拓扑信息: 逻辑CPU数={len(self.cpu_topology.cores)}, 物理核心数={self.cpu_maxNum}"
+        )
         logger.info(f"物理核心ID: {self.cps_ids}")
         logger.info(f"频率范围: {min_freq}-{max_freq} kHz")
-        
+
         # 打印详细拓扑信息（调试用）
         logical_by_core = self.cpu_topology.get_logical_ids_by_physical_core()
         for core_id in sorted(logical_by_core.keys()):
             logical_ids = logical_by_core[core_id]
             logger.debug(f"物理核心{core_id}: 逻辑CPU {logical_ids}")
-        
+
         # 🔥 新增：硬件检测增强
         self._init_hardware_detection()
 
@@ -634,24 +641,24 @@ class CPUManager:
 
             # 使用新的拓扑方法，更加准确
             cpu_topology_by_core = self.cpu_topology.get_logical_ids_by_physical_core()
-            
+
             # 核心数逻辑 - 基于实际物理核心
             core_ids = sorted(cpu_topology_by_core.keys())
-            cores_to_keep = core_ids[:self.enable_cpu_num]
-            cores_to_offline = core_ids[self.enable_cpu_num:]
-            
+            cores_to_keep = core_ids[: self.enable_cpu_num]
+            cores_to_offline = core_ids[self.enable_cpu_num :]
+
             logger.info(f"保留核心: {cores_to_keep}")
             logger.info(f"关闭核心: {cores_to_offline}")
-            
+
             # 计算需要关闭的逻辑CPU
             to_offline = set()
-            
+
             # 添加要关闭的物理核心的所有逻辑CPU
             for core_id in cores_to_offline:
                 logical_cpus = cpu_topology_by_core[core_id]
                 logger.info(f"关闭物理核心{core_id}的逻辑CPU: {logical_cpus}")
                 to_offline.update(logical_cpus)
-            
+
             # SMT逻辑 - 基于实际拓扑关系，修复原有错误
             if not self.cpu_smt:
                 for core_id in cores_to_keep:
@@ -659,22 +666,28 @@ class CPUManager:
                     if len(logical_cpus) > 1:
                         # 使用拓扑信息确定主线程（通常是编号最小的）
                         main_thread = min(logical_cpus)
-                        smt_threads = [cpu for cpu in logical_cpus if cpu != main_thread]
-                        logger.info(f"物理核心{core_id}: 保留主线程{main_thread}, 关闭SMT线程{smt_threads}")
+                        smt_threads = [
+                            cpu for cpu in logical_cpus if cpu != main_thread
+                        ]
+                        logger.info(
+                            f"物理核心{core_id}: 保留主线程{main_thread}, 关闭SMT线程{smt_threads}"
+                        )
                         to_offline.update(smt_threads)
-            
+
             logger.debug(f"最终关闭的逻辑CPU: {sorted(to_offline)}")
-            
+
             # 遍历所有实际存在的逻辑CPU
             for logical_id in self.cpu_topology.get_all_logical_ids():
                 if logical_id in to_offline:
                     self.offline_cpu(logical_id)
                 else:
                     self.online_cpu(logical_id)
-            
+
             return True
         except Exception:
-            logger.error(f"Failed to set CPU online status: value={value}", exc_info=True)
+            logger.error(
+                f"Failed to set CPU online status: value={value}", exc_info=True
+            )
             return False
 
     def set_enable_All(self) -> bool:
@@ -716,7 +729,9 @@ class CPUManager:
                 return self.is_support_smt
 
             # 方法2：使用lscpu命令（备用方法）
-            command = "LANG=en_US.UTF-8 lscpu | grep 'Thread(s) per core' | awk '{print $4}'"
+            command = (
+                "LANG=en_US.UTF-8 lscpu | grep 'Thread(s) per core' | awk '{print $4}'"
+            )
             process = subprocess.run(
                 command,
                 shell=True,
@@ -732,12 +747,14 @@ class CPUManager:
             else:
                 threads_per_core = int(stdout.strip()) if stdout.strip() else 1
                 self.is_support_smt = threads_per_core > 1
-                logger.info(f"通过lscpu检测SMT支持: {self.is_support_smt} (每核心线程数: {threads_per_core})")
-                
+                logger.info(
+                    f"通过lscpu检测SMT支持: {self.is_support_smt} (每核心线程数: {threads_per_core})"
+                )
+
         except Exception:
             logger.error("Failed to check SMT support", exc_info=True)
             self.is_support_smt = False
-            
+
         return self.is_support_smt
 
     def set_smt(self, value: bool) -> bool:
@@ -837,22 +854,24 @@ class CPUManager:
             logger.debug(f"check_cpuFreq cpu_nowLimitFreq = {self.cpu_nowLimitFreq}")
             if self.cpu_nowLimitFreq == 0:
                 return False
-            
+
             # 获取当前在线的逻辑CPU（修复：不再假设CPU编号连续）
             online_cpus = self.get_online_logical_cpus()
             logger.debug(f"检查频率的在线CPU: {online_cpus}")
-            
+
             # 检查在线CPU的频率
             for cpu_id in online_cpus:
                 try:
                     current_freq = self.get_cpu_current_freq(cpu_id)
                     if current_freq > self.cpu_nowLimitFreq:
-                        logger.debug(f"CPU{cpu_id} 频率{current_freq} > 限制{self.cpu_nowLimitFreq}")
+                        logger.debug(
+                            f"CPU{cpu_id} 频率{current_freq} > 限制{self.cpu_nowLimitFreq}"
+                        )
                         return True
                 except Exception as e:
                     logger.warning(f"无法读取CPU{cpu_id}频率: {e}")
                     continue
-            
+
             return False
         except Exception as e:
             logger.error(f"check_cpuFreq error: {e}")
@@ -869,33 +888,35 @@ class CPUManager:
         """
         try:
             logger.debug(f"set_cpuFreq: 当前限制={self.cpu_nowLimitFreq}, 新值={value}")
-            
+
             # 频率检查逻辑
             if self.cpu_nowLimitFreq != value:
                 need_set = True
                 self.cpu_nowLimitFreq = value
             else:
                 need_set = self.check_cpuFreq()
-            
+
             if need_set:
                 # 获取所有在线的逻辑CPU（修复：不再使用cpu_maxNum*2假设）
                 online_cpus = self.get_online_logical_cpus()
                 logger.debug(f"设置频率的在线CPU: {online_cpus}")
-                
+
                 # 先设置到最小频率（如果需要）
-                if (self.cpu_nowLimitFreq != self.cpu_avaMinFreq and
-                    self.cpu_nowLimitFreq != self.cpu_avaMaxFreq):
+                if (
+                    self.cpu_nowLimitFreq != self.cpu_avaMinFreq
+                    and self.cpu_nowLimitFreq != self.cpu_avaMaxFreq
+                ):
                     logger.debug(f"先设置到最小频率: {self.cpu_avaMinFreq}")
                     for cpu_id in online_cpus:
                         command = f"sudo sh {SH_PATH} set_cpu_Freq {cpu_id} {self.cpu_avaMinFreq}"
                         os.system(command)
-                
+
                 # 设置目标频率
                 logger.debug(f"设置目标频率: {self.cpu_nowLimitFreq}")
                 for cpu_id in online_cpus:
                     command = f"sudo sh {SH_PATH} set_cpu_Freq {cpu_id} {self.cpu_nowLimitFreq}"
                     os.system(command)
-                
+
                 return True
             return False
         except Exception as e:
@@ -905,42 +926,50 @@ class CPUManager:
     def get_cpu_topology_extended(self) -> CPUTopology:
         """获取扩展的CPU拓扑信息（只包含固有硬件属性）"""
         topology = CPUTopology()
-        
+
         cpu_path = "/sys/devices/system/cpu/"
         cpu_pattern = re.compile(r"^cpu(\d+)$")
-        
+
         for cpu_dir in os.listdir(cpu_path):
             match = cpu_pattern.match(cpu_dir)
             if match:
                 logical_id = int(match.group(1))
                 cpu_full_path = os.path.join(cpu_path, cpu_dir)
-                
+
                 # 只读取固有的硬件属性
                 core_info = self._read_static_cpu_info(logical_id, cpu_full_path)
                 if core_info:
                     topology.add_core(core_info)
-        
+
         # 填充拓扑关系
         self._populate_topology_relationships(topology)
-        
+
         return topology
 
-    def _read_static_cpu_info(self, logical_id: int, cpu_path: str) -> Optional[CPUCoreInfo]:
+    def _read_static_cpu_info(
+        self, logical_id: int, cpu_path: str
+    ) -> Optional[CPUCoreInfo]:
         """读取CPU的静态硬件信息"""
         try:
             topology_path = os.path.join(cpu_path, "topology")
             cpufreq_path = os.path.join(cpu_path, "cpufreq")
-            
+
             # 读取拓扑信息
             core_id = self._read_sysfs_int(os.path.join(topology_path, "core_id"))
-            package_id = self._read_sysfs_int(os.path.join(topology_path, "physical_package_id"))
+            package_id = self._read_sysfs_int(
+                os.path.join(topology_path, "physical_package_id")
+            )
             cluster_id = self._read_sysfs_int(os.path.join(topology_path, "cluster_id"))
             die_id = self._read_sysfs_int(os.path.join(topology_path, "die_id"))
-            
+
             # 读取硬件频率范围
-            max_freq_hw = self._read_sysfs_int(os.path.join(cpufreq_path, "cpuinfo_max_freq"))
-            min_freq_hw = self._read_sysfs_int(os.path.join(cpufreq_path, "cpuinfo_min_freq"))
-            
+            max_freq_hw = self._read_sysfs_int(
+                os.path.join(cpufreq_path, "cpuinfo_max_freq")
+            )
+            min_freq_hw = self._read_sysfs_int(
+                os.path.join(cpufreq_path, "cpuinfo_min_freq")
+            )
+
             return CPUCoreInfo(
                 logical_id=logical_id,
                 core_id=core_id,
@@ -948,7 +977,7 @@ class CPUManager:
                 cluster_id=cluster_id,
                 die_id=die_id,
                 max_freq_hw=max_freq_hw,
-                min_freq_hw=min_freq_hw
+                min_freq_hw=min_freq_hw,
             )
         except Exception as e:
             logger.error(f"Failed to read CPU {logical_id} info: {e}")
@@ -973,34 +1002,40 @@ class CPUManager:
                 core_info = topology.get_core_info(logical_id)
                 if core_info:
                     core_info.sibling_threads = logical_ids.copy()
-        
+
         # 2. 智能cluster分组 - 基于频率特征处理大小核架构
         unique_clusters = set(core.cluster_id for core in topology.cores.values())
         if len(unique_clusters) <= 1 or 65535 in unique_clusters:
             # cluster_id无效(如65535)，使用频率分组
             logger.debug("检测到cluster_id无效，使用频率特征进行大小核分组")
-            
+
             # 获取所有不同的最大频率
-            freq_set = set(core.max_freq_hw for core in topology.cores.values() if core.max_freq_hw > 0)
+            freq_set = set(
+                core.max_freq_hw
+                for core in topology.cores.values()
+                if core.max_freq_hw > 0
+            )
             freq_list = sorted(freq_set, reverse=True)  # 按频率降序
-            
+
             if len(freq_list) > 1:
-                logger.info(f"检测到{len(freq_list)}种频率类型: {[f/1000.0 for f in freq_list]}MHz")
-                
+                logger.info(
+                    f"检测到{len(freq_list)}种频率类型: {[f/1000.0 for f in freq_list]}MHz"
+                )
+
                 # 为每个频率类型分配virtual cluster
                 freq_to_cluster = {freq: i for i, freq in enumerate(freq_list)}
-                
+
                 cluster_groups = {}
                 for logical_id, core in topology.cores.items():
                     if core.max_freq_hw > 0:
                         virtual_cluster = freq_to_cluster[core.max_freq_hw]
                     else:
                         virtual_cluster = 999  # 未知频率
-                    
+
                     if virtual_cluster not in cluster_groups:
                         cluster_groups[virtual_cluster] = []
                     cluster_groups[virtual_cluster].append(logical_id)
-                
+
                 # 填充cluster_cpus并更新cluster_id
                 for cluster_id, logical_ids in cluster_groups.items():
                     sorted_logical_ids = sorted(logical_ids)
@@ -1012,8 +1047,10 @@ class CPUManager:
                             cluster_type = "E-Core"
                         else:
                             cluster_type = "LPE-Core"
-                        logger.debug(f"Virtual Cluster {cluster_id}: {cluster_type} {freq/1000:.1f}MHz, 逻辑CPU {sorted_logical_ids}")
-                    
+                        logger.debug(
+                            f"Virtual Cluster {cluster_id}: {cluster_type} {freq/1000:.1f}MHz, 逻辑CPU {sorted_logical_ids}"
+                        )
+
                     for logical_id in logical_ids:
                         core_info = topology.get_core_info(logical_id)
                         if core_info:
@@ -1026,14 +1063,14 @@ class CPUManager:
             # 使用系统提供的有效cluster_id
             logger.debug("使用系统提供的cluster_id分组")
             self._fallback_cluster_grouping(topology)
-        
+
         # 3. 按package分组，填充package_cpus
         package_groups = {}
         for logical_id, core in topology.cores.items():
             if core.package_id not in package_groups:
                 package_groups[core.package_id] = []
             package_groups[core.package_id].append(logical_id)
-        
+
         for package_id, logical_ids in package_groups.items():
             for logical_id in logical_ids:
                 core_info = topology.get_core_info(logical_id)
@@ -1047,7 +1084,7 @@ class CPUManager:
             if core.cluster_id not in cluster_groups:
                 cluster_groups[core.cluster_id] = []
             cluster_groups[core.cluster_id].append(logical_id)
-        
+
         for cluster_id, logical_ids in cluster_groups.items():
             for logical_id in logical_ids:
                 core_info = topology.get_core_info(logical_id)
@@ -1094,7 +1131,10 @@ class CPUManager:
             Dict[int, int]: CPU拓扑信息，键为逻辑处理器ID，值为物理核心ID
         """
         if self.cpu_topology:
-            return {logical_id: core.core_id for logical_id, core in self.cpu_topology.cores.items()}
+            return {
+                logical_id: core.core_id
+                for logical_id, core in self.cpu_topology.cores.items()
+            }
         return {}
 
     def offline_cpu(self, cpu_number: int) -> None:
@@ -1450,10 +1490,10 @@ class CPUManager:
 
     def get_core_type(self, logical_id: int) -> str:
         """获取CPU核心类型"""
-        if not hasattr(self, 'hw_analysis') or not self.hw_analysis:
+        if not hasattr(self, "hw_analysis") or not self.hw_analysis:
             return "Unknown-Core"
-        
-        core_type_mapping = self.hw_analysis.get('core_type_mapping', {})
+
+        core_type_mapping = self.hw_analysis.get("core_type_mapping", {})
         for core_type, cpu_list in core_type_mapping.items():
             if logical_id in cpu_list:
                 return core_type
@@ -1461,54 +1501,180 @@ class CPUManager:
 
     def get_performance_cores(self) -> List[int]:
         """获取高性能核心列表"""
-        if not hasattr(self, 'hw_analysis') or not self.hw_analysis:
+        if not hasattr(self, "hw_analysis") or not self.hw_analysis:
             return list(range(self.cpu_maxNum))  # 回退到所有核心
-        
-        core_mapping = self.hw_analysis.get('core_type_mapping', {})
+
+        core_mapping = self.hw_analysis.get("core_type_mapping", {})
         perf_cores = []
-        perf_cores.extend(core_mapping.get('P-Core', []))
-        perf_cores.extend(core_mapping.get('Zen-Core', []))
+        perf_cores.extend(core_mapping.get("P-Core", []))
+        perf_cores.extend(core_mapping.get("Zen-Core", []))
         return sorted(perf_cores)
 
     def get_efficiency_cores(self) -> List[int]:
         """获取效率核心列表"""
-        if not hasattr(self, 'hw_analysis') or not self.hw_analysis:
+        if not hasattr(self, "hw_analysis") or not self.hw_analysis:
             return []  # 回退：假设没有效率核心
-        
-        core_mapping = self.hw_analysis.get('core_type_mapping', {})
+
+        core_mapping = self.hw_analysis.get("core_type_mapping", {})
         eff_cores = []
-        eff_cores.extend(core_mapping.get('E-Core', []))
-        eff_cores.extend(core_mapping.get('LPE-Core', []))
-        eff_cores.extend(core_mapping.get('Zen-c-Core', []))
+        eff_cores.extend(core_mapping.get("E-Core", []))
+        eff_cores.extend(core_mapping.get("LPE-Core", []))
+        eff_cores.extend(core_mapping.get("Zen-c-Core", []))
         return sorted(eff_cores)
 
     def is_heterogeneous_cpu(self) -> bool:
         """检测是否为混合架构CPU"""
-        if not hasattr(self, 'hw_analysis') or not self.hw_analysis:
+        if not hasattr(self, "hw_analysis") or not self.hw_analysis:
             return False
-        core_types = self.hw_analysis.get('core_types', {})
+        core_types = self.hw_analysis.get("core_types", {})
         return len(core_types) > 1
 
     def get_cpu_architecture_summary(self) -> str:
         """获取CPU架构摘要"""
-        if not hasattr(self, 'hw_analysis') or not self.hw_analysis:
+        if not hasattr(self, "hw_analysis") or not self.hw_analysis:
             return "Traditional Architecture"
-        
-        vendor = self.hw_analysis.get('vendor', 'Unknown')
-        core_types = self.hw_analysis.get('core_types', {})
-        
-        if 'Intel' in vendor:
+
+        vendor = self.hw_analysis.get("vendor", "Unknown")
+        core_types = self.hw_analysis.get("core_types", {})
+
+        if "Intel" in vendor:
             summary_parts = []
             for core_type, count in core_types.items():
                 summary_parts.append(f"{count}×{core_type}")
             return f"Intel Heterogeneous: {' + '.join(summary_parts)}"
-        elif 'AMD' in vendor:
+        elif "AMD" in vendor:
             summary_parts = []
             for core_type, count in core_types.items():
                 summary_parts.append(f"{count}×{core_type}")
             return f"AMD Architecture: {' + '.join(summary_parts)}"
         else:
             return f"Unknown Vendor: {core_types}"
+
+    def _set_cpu_max_freq_direct(self, cpu_id: int, freq: int) -> bool:
+        """直接通过sysfs设置单个CPU的最大频率
+
+        Args:
+            cpu_id (int): CPU逻辑ID
+            freq (int): 目标频率（kHz），0表示恢复硬件最大频率
+
+        Returns:
+            bool: 设置是否成功
+        """
+        try:
+            # 频率值验证和修正
+            if freq == 0:
+                # 0表示恢复到硬件最大频率
+                freq = self.cpu_avaMaxFreq
+            else:
+                # 确保频率在合法范围内
+                freq = max(self.cpu_avaMinFreq, min(freq, self.cpu_avaMaxFreq))
+
+            # 直接写入sysfs文件
+            scaling_max_freq_path = (
+                f"/sys/devices/system/cpu/cpu{cpu_id}/cpufreq/scaling_max_freq"
+            )
+            with open(scaling_max_freq_path, "w") as f:
+                f.write(str(freq))
+
+            logger.debug(f"CPU{cpu_id}最大频率已设置为 {freq}kHz")
+            return True
+
+        except (FileNotFoundError, PermissionError) as e:
+            logger.error(f"设置CPU{cpu_id}频率失败，文件访问错误: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"设置CPU{cpu_id}频率失败: {e}")
+            return False
+
+    def set_cpu_freq_by_core_type(self, freq_config: Dict[str, int]) -> bool:
+        """按核心类型设置CPU最大频率
+
+        Args:
+            freq_config (Dict[str, int]): 核心类型到频率的映射，例如:
+                {'P-Core': 4000000, 'E-Core': 2500000}
+                {'Zen-Core': 5000000, 'Zen-c-Core': 3300000}
+                频率单位为kHz，值为0表示恢复该类型核心的硬件最大频率
+
+        Returns:
+            bool: 设置是否成功（至少一个CPU设置成功即返回True）
+
+        Examples:
+            # Intel三核心类型精确控制
+            cpuManager.set_cpu_freq_by_core_type({
+                'P-Core': 4500000,
+                'E-Core': 3200000,
+                'LPE-Core': 2000000
+            })
+
+            # AMD大小核控制
+            cpuManager.set_cpu_freq_by_core_type({
+                'Zen-Core': 5000000,
+                'Zen-c-Core': 3300000
+            })
+
+            # 部分核心限制
+            cpuManager.set_cpu_freq_by_core_type({'P-Core': 3000000})
+        """
+        try:
+            # 参数验证
+            if not freq_config or not isinstance(freq_config, dict):
+                logger.error("freq_config参数必须是非空字典")
+                return False
+
+            # 获取核心类型映射
+            if not hasattr(self, "hw_analysis") or not self.hw_analysis:
+                logger.error("硬件检测信息不可用，无法按核心类型设置频率")
+                return False
+
+            core_type_mapping = self.hw_analysis.get("core_type_mapping", {})
+            if not core_type_mapping:
+                logger.error("核心类型映射信息不可用")
+                return False
+
+            # 获取在线CPU列表
+            online_cpus = self.get_online_logical_cpus()
+            if not online_cpus:
+                logger.error("没有检测到在线CPU")
+                return False
+
+            # 执行频率设置
+            success_count = 0
+            total_count = 0
+
+            logger.info(f"按核心类型设置CPU频率: {freq_config}")
+
+            # 遍历用户配置的核心类型
+            for core_type, target_freq in freq_config.items():
+                if core_type not in core_type_mapping:
+                    logger.warning(f"未知的核心类型: {core_type}，跳过")
+                    continue
+
+                cpu_list = core_type_mapping[core_type]
+                logger.debug(f"核心类型 {core_type} 包含CPU: {cpu_list}")
+
+                # 遍历该核心类型的所有CPU
+                for cpu_id in cpu_list:
+                    if cpu_id not in online_cpus:
+                        logger.debug(f"CPU{cpu_id} 不在线，跳过")
+                        continue
+
+                    total_count += 1
+                    if self._set_cpu_max_freq_direct(cpu_id, target_freq):
+                        success_count += 1
+
+            # 统计结果
+            if success_count > 0:
+                logger.info(
+                    f"按核心类型设置CPU频率完成: {success_count}/{total_count} 成功"
+                )
+                return True
+            else:
+                logger.error("按核心类型设置CPU频率失败: 没有任何CPU设置成功")
+                return False
+
+        except Exception as e:
+            logger.error(f"按核心类型设置CPU频率发生异常: {e}")
+            return False
 
 
 cpuManager = CPUManager()
