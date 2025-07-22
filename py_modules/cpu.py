@@ -255,6 +255,7 @@ class CPUManager:
     def __init_cpu_info(self) -> None:
         """初始化CPU信息 - 使用新拓扑系统"""
         self.set_enable_All()  # 先开启所有cpu, 否则拓扑信息不全
+        self.set_cpuBoost(True)  # 先开启cpu boost, 否则频率信息范围不准确
         self.get_isSupportSMT()  # 获取 is_support_smt
         self.__get_tdpMax()  # 获取 cpu_tdpMax
 
