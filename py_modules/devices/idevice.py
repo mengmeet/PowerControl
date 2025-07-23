@@ -150,3 +150,11 @@ class IDevice(ABC):
     @abstractmethod
     def set_tdp_unlimited(self) -> bool:
         pass
+
+    @abstractmethod
+    def get_tdpMax(self) -> int:
+        pass
+
+    @abstractmethod
+    def get_power_info(self) -> str:
+        pass
