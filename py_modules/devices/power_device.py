@@ -188,6 +188,12 @@ class PowerDevice(IDevice):
             logger.error("Failed to get power info: unknown CPU_VENDOR")
             return ""
 
+    def get_tdpMax(self) -> int:
+        if self._cpuManager is None:
+            logger.error("Failed to get TDP: cpuManager is None")
+            return 15
+        return self._cpuManager.get_tdpMax()
+
     # ------ sched_ext ------ #
 
     def supports_sched_ext(self) -> bool:

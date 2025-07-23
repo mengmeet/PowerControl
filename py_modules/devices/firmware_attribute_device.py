@@ -1,7 +1,9 @@
 import os
 from time import sleep
-from .power_device import PowerDevice
+
 from config import logger
+
+from .power_device import PowerDevice
 
 PREFIX = "/sys/class/firmware-attributes"
 SPL_SUFFIX = "ppt_pl1_spl"
@@ -74,6 +76,11 @@ class FirmwareAttributeDevice(PowerDevice):
         if power_info_str == "":
             return super().get_power_info()
         return power_info_str
+
+    def get_tdpMax(self) -> int:
+        if not self.check_init():
+            return super().get_tdpMax()
+        return self._get_max_tdp()
 
     def set_tdp(self, tdp: int) -> None:
         logger.info(f"Setting TDP to {tdp}")

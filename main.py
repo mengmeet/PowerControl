@@ -82,7 +82,7 @@ class Plugin:
 
     async def get_tdpMax(self):
         try:
-            return cpuManager.get_tdpMax()
+            return self.powerManager.get_tdpMax()
         except Exception as e:
             logger.error(e, exc_info=True)
             return 0

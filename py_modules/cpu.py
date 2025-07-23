@@ -257,7 +257,7 @@ class CPUManager:
         self.set_enable_All()  # 先开启所有cpu, 否则拓扑信息不全
         self.set_cpuBoost(True)  # 先开启cpu boost, 否则频率信息范围不准确
         self.get_isSupportSMT()  # 获取 is_support_smt
-        self.__get_tdpMax()  # 获取 cpu_tdpMax
+        # self.__get_tdpMax()  # 获取 cpu_tdpMax
 
         # 获取新的拓扑信息
         self.cpu_topology = self.get_cpu_topology_extended()
@@ -350,7 +350,7 @@ class CPUManager:
     def get_cpuMaxNum(self) -> int:
         return self.cpu_maxNum
 
-    def __get_tdpMax(self) -> int:
+    def get_tdpMax(self) -> int:
         """获取最大TDP值。
 
         Returns:
@@ -365,8 +365,8 @@ class CPUManager:
             else:
                 self.cpu_tdpMax = 0
 
-    def get_tdpMax(self) -> int:
-        return self.cpu_tdpMax
+    # def get_tdpMax(self) -> int:
+    #     return self.__get_tdpMax()
 
     def get_cpuTDP_Intel(self) -> int:
         """获取Intel CPU最大TDP值。
