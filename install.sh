@@ -7,7 +7,16 @@ if [ "$EUID" -eq 0 ]; then
   exit
 fi
 
-github_api_url="https://api.github.com/repos/aarron-lee/PowerControl/releases/latest"
+sudo rm -rf $HOME/homebrew/plugins/PowerControl
+
+VERSION=${VERSION_TAG:-"LATEST"}
+
+github_api_url='https://api.github.com/repos/aarron-lee/PowerControl/releases/latest'
+
+if [ $VERSION != "LATEST" ] ; then
+  github_api_url="https://api.github.com/repos/aarron-lee/PowerControl/releases/${VERSION}"
+fi
+
 package="PowerControl"
 
 echo "installing $package"

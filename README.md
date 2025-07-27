@@ -10,6 +10,12 @@ Powercontrol fork with fan controls only
 curl -L https://github.com/aarron-lee/PowerControl/raw/main/install.sh | sh
 ```
 
+You can install earlier versions via the following command:
+
+```bash
+curl -L https://github.com/aarron-lee/PowerControl/raw/main/install.sh | VERSION_TAG=v2.7.1 sh
+```
+
 # Desktop App
 
 There is also an experimental [Desktop app](https://github.com/aarron-lee/PowerControl-Electron), which has separate install instructions.
