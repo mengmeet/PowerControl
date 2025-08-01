@@ -80,7 +80,12 @@ class FirmwareAttributeDevice(PowerDevice):
     def get_tdpMax(self) -> int:
         if not self.check_init():
             return super().get_tdpMax()
-        return self._get_max_tdp()
+        max_tdp = self._get_max_tdp()
+        if max_tdp is None:
+            logger.error("Failed to get TDP max, use fallback method")
+            return super().get_tdpMax()
+        logger.info(f">>>> TDP max: {max_tdp}")
+        return max_tdp
 
     def set_tdp(self, tdp: int) -> None:
         logger.info(f"Setting TDP to {tdp}")
