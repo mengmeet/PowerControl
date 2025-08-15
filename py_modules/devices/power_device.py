@@ -208,3 +208,12 @@ class PowerDevice(IDevice):
             use_service (bool, optional): 是否使用 scx_loader 服务设置，默认为 False
         """
         self._schedExtManager.set_sched_ext(value, param, use_service)
+
+    def get_current_sched_ext_scheduler(self) -> str:
+        """
+        获取当前运行的 sched_ext 调度器
+
+        Returns:
+            str: 当前调度器名称，如果没有运行则返回空字符串
+        """
+        return self._schedExtManager.get_current_scheduler()

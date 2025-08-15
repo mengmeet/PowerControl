@@ -413,7 +413,9 @@ const CPUGovernorComponent: FC = () => {
 
 export const CPUEPPComponent: FC = () => {
   const [epp, setEPP] = useState<string>(Settings.appEPPMode());
-  const [eppModes, setEPPModes] = useState<string[]>(Backend.data.getEPPModes());
+  const [eppModes, setEPPModes] = useState<string[]>(
+    Backend.data.getEPPModes()
+  );
 
   const refresh = () => {
     setEPP(Settings.appEPPMode());
@@ -472,6 +474,71 @@ export const CPUEPPComponent: FC = () => {
   );
 };
 
+const CPUSchedExtComponent: FC = () => {
+  const [currentScheduler, setCurrentScheduler] = useState<string>(
+    Settings.appSchedExtScheduler()
+  );
+  const [availableSchedulers, setAvailableSchedulers] = useState<string[]>(
+    Backend.data.getAvailableSchedExtSchedulers()
+  );
+
+  const refresh = () => {
+    setCurrentScheduler(Settings.appSchedExtScheduler());
+    if (Backend.data.hasSchedExtSupport()) {
+      setAvailableSchedulers(Backend.data.getAvailableSchedExtSchedulers());
+    }
+  };
+
+  // 初始化和监听设置变化
+  useEffect(() => {
+    refresh();
+    PluginManager.listenUpdateComponent(
+      ComponentName.CPU_SCHED_EXT,
+      [
+        ComponentName.CPU_SCHED_EXT,
+        ComponentName.CPU_TDP,
+        ComponentName.CPU_BOOST,
+      ],
+      (_ComponentName, updateType) => {
+        if (updateType === UpdateType.UPDATE) {
+          refresh();
+        }
+      }
+    );
+  }, []);
+
+  // 条件渲染：只有在支持且有可用调度器时才显示
+  if (!Backend.data.hasSchedExtSupport() || availableSchedulers.length === 0) {
+    return null;
+  }
+
+  return (
+    <div>
+      <PanelSectionRow>
+        <DropdownItem
+          label={localizationManager.getString(localizeStrEnum.CPU_SCHED_EXT)}
+          description={localizationManager.getString(
+            localizeStrEnum.CPU_SCHED_EXT_DESC
+          )}
+          menuLabel={localizationManager.getString(
+            localizeStrEnum.CPU_SCHED_EXT
+          )}
+          rgOptions={availableSchedulers.map((sched) => ({
+            data: sched,
+            label: sched,
+          }))}
+          selectedOption={currentScheduler}
+          onChange={(value) => {
+            if (value.data != currentScheduler) {
+              Settings.setSchedExtScheduler(value.data);
+            }
+          }}
+        />
+      </PanelSectionRow>
+    </div>
+  );
+};
+
 const CPUFreqControlComponent: FC = () => {
   const [freqControlEnable, setFreqControlEnable] = useState<boolean>(
     Settings.appCpuFreqControlEnable()
@@ -506,20 +573,26 @@ const CPUFreqControlComponent: FC = () => {
 
   // 验证频率范围有效性
   const validateFreqRange = (typeInfo: any) => {
-    return typeInfo && 
-           typeInfo.min_freq_khz > 0 && 
-           typeInfo.max_freq_khz > typeInfo.min_freq_khz;
+    return (
+      typeInfo &&
+      typeInfo.min_freq_khz > 0 &&
+      typeInfo.max_freq_khz > typeInfo.min_freq_khz
+    );
   };
 
   // 生成架构信息描述
   const getArchitectureInfo = (): string => {
     return Object.entries(coreInfo.core_types)
       .map(([type, info]) => `${info.count}×${type}`)
-      .join(' + ');
+      .join(" + ");
   };
 
   // 验证CPU信息有效性
-  if (!Backend.data.hasCpuCoreInfo() || !coreInfo.core_types || Object.keys(coreInfo.core_types).length === 0) {
+  if (
+    !Backend.data.hasCpuCoreInfo() ||
+    !coreInfo.core_types ||
+    Object.keys(coreInfo.core_types).length === 0
+  ) {
     return null;
   }
 
@@ -527,17 +600,22 @@ const CPUFreqControlComponent: FC = () => {
     <div>
       <PanelSectionRow>
         <ToggleField
-          label={localizationManager.getString(localizeStrEnum.CPU_FREQ_CONTROL)}
-          description={localizationManager.getString(localizeStrEnum.CPU_FREQ_CONTROL_DESC, {
-            architecture: getArchitectureInfo()
-          })}
+          label={localizationManager.getString(
+            localizeStrEnum.CPU_FREQ_CONTROL
+          )}
+          description={localizationManager.getString(
+            localizeStrEnum.CPU_FREQ_CONTROL_DESC,
+            {
+              architecture: getArchitectureInfo(),
+            }
+          )}
           checked={freqControlEnable}
           onChange={(value) => {
             Settings.setCpuFreqControlEnable(value);
           }}
         />
       </PanelSectionRow>
-      
+
       {freqControlEnable && (
         <>
           {/* 统一处理所有核心类型 */}
@@ -548,13 +626,18 @@ const CPUFreqControlComponent: FC = () => {
                 <PanelSectionRow>
                   <SlowSliderField
                     label={coreType}
-                    value={Settings.getCpuCoreFreq(coreType) / 1000 || roundTo100MHz(typeInfo.max_freq_khz)}
+                    value={
+                      Settings.getCpuCoreFreq(coreType) / 1000 ||
+                      roundTo100MHz(typeInfo.max_freq_khz)
+                    }
                     valueSuffix=" MHz"
                     max={roundTo100MHz(typeInfo.max_freq_khz)}
                     min={roundTo100MHz(typeInfo.min_freq_khz)}
                     step={100}
                     showValue={true}
-                    onChangeEnd={(value: number) => handleFreqChange(coreType, value)}
+                    onChangeEnd={(value: number) =>
+                      handleFreqChange(coreType, value)
+                    }
                   />
                 </PanelSectionRow>
               </div>
@@ -637,6 +720,7 @@ export const CPUComponent: FC<{
               <CPUBoostComponent />
               {isSpportSMT && <CPUSmtComponent />}
               <CPUGovernorComponent />
+              <CPUSchedExtComponent />
               <CPUNumComponent />
               <CPUPerformancePerfComponent />
               <CPUFreqControlComponent />

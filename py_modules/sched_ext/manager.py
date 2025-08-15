@@ -27,9 +27,28 @@ class SchedExtManager:
         "scx_flash",
     ]
 
+    # 白名单
+    WHITE_LIST = [
+        "scx_bpfland",
+        "scx_rustland",
+        "scx_flash",
+        "scx_lavd",
+        "scx_rusty",
+        "scx_p2dq",
+        "scx_tickless",
+    ]
+
     def __init__(self):
         self._current_scheduler_pid = None
         self._current_scheduler_name = None
+
+    def get_current_scheduler_name(self) -> str:
+        """获取当前调度器名称"""
+        return self._current_scheduler_name or "none"
+
+    def get_current_scheduler_pid(self) -> int | None:
+        """获取当前调度器进程ID"""
+        return self._current_scheduler_pid
 
     def supports_sched_ext(self) -> bool:
         """
@@ -105,14 +124,13 @@ class SchedExtManager:
             # Remove duplicates and sort
             schedulers = sorted(list(set(schedulers)))
 
-            if not schedulers:
-                # If all methods fail, return common scheduler list as fallback
-                logger.warning(
-                    "Could not find any sched_ext schedulers, returning common list"
-                )
-                return self.COMMON_SCHEDULERS
+            # 白名单过滤
+            real_schedulers = []
+            for scheduler in self.WHITE_LIST:
+                if scheduler in schedulers:
+                    real_schedulers.append(scheduler)
 
-            return schedulers
+            return real_schedulers
 
         except Exception as e:
             logger.error(f"Error getting sched_ext list: {e}")
@@ -356,6 +374,21 @@ class SchedExtManager:
         except Exception as e:
             logger.error(f"Error occurred while stopping sched_ext scheduler: {e}")
 
+    def _is_scx_loader_service_active(self) -> bool:
+        """检查 scx_loader 服务是否活跃"""
+        try:
+            cmd = ["systemctl", "is-active", "scx_loader.service"]
+            logger.debug(f"检查 scx_loader 服务状态：{cmd}")
+            result = subprocess.run(cmd, capture_output=True, text=True, env=get_env())
+            is_active = result.returncode == 0
+            logger.info(
+                f"scx_loader 服务状态检查结果：{is_active} (返回码: {result.returncode})"
+            )
+            return is_active
+        except Exception as e:
+            logger.error(f"检查 scx_loader 服务状态时出错：{e}", exc_info=True)
+            return False
+
     def _set_by_scx_loader_service(self, value: str, param: str = "") -> None:
         """
         Use scx_loader service to set sched_ext scheduler
@@ -549,7 +582,7 @@ class SchedExtManager:
             # Restart scx_loader service, only use systemctl
             service_name = "scx_loader"
             try:
-                cmd = ["sudo", "systemctl", "restart", f"{service_name}.service"]
+                cmd = ["systemctl", "restart", f"{service_name}.service"]
                 subprocess.run(cmd, check=True, env=get_env())
                 logger.info(f"Restarted {service_name} service with systemd")
             except subprocess.CalledProcessError as e:
@@ -559,4 +592,161 @@ class SchedExtManager:
                 )
 
         except Exception as e:
-            logger.error(f"Error setting sched_ext scheduler via service: {e}")
+            logger.error(
+                f"Error setting sched_ext scheduler via service: {e}", exc_info=True
+            )
+
+    def get_current_scheduler_from_config(self) -> str:
+        """从 scx_loader 配置文件读取当前调度器"""
+        logger.info("开始从配置文件读取当前调度器")
+        config_paths = [
+            "/etc/scx_loader/config.toml",
+            "/etc/scx_loader.toml",
+        ]
+
+        for path in config_paths:
+            logger.debug(f"尝试读取配置文件：{path}")
+            if os.path.exists(path):
+                logger.info(f"配置文件存在：{path}")
+                try:
+                    # 尝试导入 toml 库
+                    try:
+                        import tomli
+
+                        has_toml = True
+                        logger.debug("使用 tomli 库解析配置文件")
+                    except ImportError:
+                        has_toml = False
+                        logger.debug("tomli 库不可用，使用文本解析")
+
+                    if has_toml:
+                        # 使用 tomli 库读取
+                        with open(path, "rb") as f:
+                            config = tomli.load(f)
+                            logger.debug(f"TOML 解析结果：{config}")
+                            if "default_sched" in config:
+                                scheduler = config["default_sched"]
+                                logger.info(f"从 TOML 配置中读取到调度器：{scheduler}")
+                                return scheduler
+                            else:
+                                logger.debug("TOML 配置中没有 default_sched 字段")
+                    else:
+                        # 使用简单的文本解析
+                        with open(path, "r") as f:
+                            content = f.read()
+                            logger.debug(f"配置文件内容长度：{len(content)} 字符")
+                            # 查找 default_sched 行
+                            import re
+
+                            pattern = r'^default_sched\s*=\s*"([^"]*)"'
+                            match = re.search(pattern, content, re.MULTILINE)
+                            if match:
+                                scheduler = match.group(1)
+                                logger.info(f"从文本配置中读取到调度器：{scheduler}")
+                                return scheduler
+                            else:
+                                logger.debug("文本配置中没有找到 default_sched 行")
+                except Exception as e:
+                    logger.error(f"读取配置文件 {path} 失败：{e}")
+            else:
+                logger.debug(f"配置文件不存在：{path}")
+
+        logger.info("所有配置文件都无法读取，返回默认值：none")
+        return "none"
+
+    def verify_current_process_status(self) -> bool:
+        """验证当前记录的进程是否仍然有效"""
+        if self._current_scheduler_pid is None:
+            logger.debug("没有记录的 PID，无法验证进程状态")
+            return False
+
+        logger.info(
+            f"验证进程状态：PID={self._current_scheduler_pid}, 期望名称={self._current_scheduler_name}"
+        )
+        try:
+            # 检查 /proc/{pid}/comm 文件
+            proc_comm_path = f"/proc/{self._current_scheduler_pid}/comm"
+            if os.path.exists(proc_comm_path):
+                with open(proc_comm_path, "r") as f:
+                    proc_name = f.read().strip()
+                    logger.debug(f"进程实际名称：{proc_name}")
+                    # 验证进程名称是否匹配
+                    if proc_name == self._current_scheduler_name:
+                        logger.info("进程名称匹配，验证成功")
+                        return True
+                    else:
+                        logger.info(
+                            f"进程名称不匹配：期望={self._current_scheduler_name}, 实际={proc_name}"
+                        )
+            else:
+                logger.info(f"进程文件不存在：{proc_comm_path}")
+
+            # 如果进程不存在或名称不匹配，清理状态
+            logger.info("清理无效的进程状态")
+            self._current_scheduler_pid = None
+            self._current_scheduler_name = None
+            return False
+        except Exception as e:
+            logger.error(f"验证进程状态时出错：{e}")
+            # 出错时清理状态
+            self._current_scheduler_pid = None
+            self._current_scheduler_name = None
+            return False
+
+    def get_current_scheduler(self) -> str:
+        """获取当前调度器（推荐使用）"""
+        logger.info("开始获取当前调度器状态")
+
+        # 1. 检查是否有记录的 PID（直接模式）
+        if self._current_scheduler_pid is not None:
+            logger.info(
+                f"检查直接模式：PID={self._current_scheduler_pid}, 名称={self._current_scheduler_name}"
+            )
+            if self.verify_current_process_status():
+                logger.info(
+                    f"直接模式验证成功，返回调度器：{self._current_scheduler_name}"
+                )
+                return self._current_scheduler_name
+            else:
+                logger.info("直接模式验证失败，进程已无效")
+        else:
+            logger.debug("没有记录的 PID，跳过直接模式检查")
+
+        # 2. 检查 scx_loader 服务状态（服务模式）
+        if self._is_scx_loader_service_active():
+            logger.info("scx_loader 服务活跃，尝试从配置文件读取")
+            config_scheduler = self.get_current_scheduler_from_config()
+            logger.info(f"从配置文件读取到调度器：{config_scheduler}")
+            return config_scheduler
+
+        # 3. 回退到默认值
+        logger.info("所有检查都失败，回退到默认值：none")
+        return "none"
+
+    def is_current_state_valid(self) -> bool:
+        """检查当前状态是否有效"""
+        logger.info("检查当前状态是否有效")
+
+        if self._current_scheduler_pid is not None:
+            logger.info("有记录的 PID，验证进程状态")
+            is_valid = self.verify_current_process_status()
+            logger.info(f"进程状态验证结果：{is_valid}")
+            return is_valid
+        elif self._is_scx_loader_service_active():
+            logger.info("scx_loader 服务活跃，检查配置文件")
+            config_scheduler = self.get_current_scheduler_from_config()
+            is_valid = config_scheduler != "none"
+            logger.info(f"配置文件检查结果：{is_valid} (调度器: {config_scheduler})")
+            return is_valid
+        else:
+            logger.info("没有 PID 记录且服务不活跃，状态无效")
+            return False
+
+    def get_current_scheduler_info(self) -> dict:
+        """获取详细状态信息"""
+        return {
+            "name": self.get_current_scheduler(),
+            "pid": self._current_scheduler_pid,
+            "mode": "service" if self._is_scx_loader_service_active() else "direct",
+            "valid": self.is_current_state_valid(),
+        }

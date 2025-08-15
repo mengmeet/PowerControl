@@ -17,6 +17,8 @@
     "CPU_GOVERNOR_DESC": "Select CPU frequency scaling governor",
     "CPU_EPP": "Energy Performance Preference",
     "CPU_EPP_DESC": "Balance between energy efficiency and performance",
+    "CPU_SCHED_EXT": "SCX Scheduler",
+    "CPU_SCHED_EXT_DESC": "Select sched_ext scheduler for CPU",
     "TDP":"Thermal Power (TDP) Limit",
     "TDP_DESC":"Limits processor power for less total power",
     "RYZENADJ_NOT_FOUND":"RyzenAdj Not Detected",

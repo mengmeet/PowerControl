@@ -36,6 +36,8 @@ export class BackendData {
   private systemInfo: SystemInfo | undefined;
   private availableGovernors: string[] = [];
   private has_availableGovernors = false;
+  private currentGovernor: string = "";
+  private has_currentGovernor = false;
   private isEppSupported = false;
   private has_isEppSupported = false;
   private eppModes: string[] = [];
@@ -61,6 +63,12 @@ export class BackendData {
   private has_supportsSoftwareChargeLimit = false;
   private supportsSteamosManager = false;
   private has_supportsSteamosManager = false;
+  private schedExtSupport = false;
+  private has_schedExtSupport = false;
+  private availableSchedExtSchedulers: string[] = [];
+  private has_availableSchedExtSchedulers = false;
+  private currentSchedExtScheduler: string = "";
+  private has_currentSchedExtScheduler = false;
 
   public async init() {
     await call<[], number>("get_cpuMaxNum").then((res) => {
@@ -243,6 +251,46 @@ export class BackendData {
       this.has_supportsSteamosManager = false;
     });
 
+    // 初始化 SCX 调度器相关
+    await call<[], boolean>("supports_sched_ext")
+      .then((res) => {
+        this.schedExtSupport = res;
+        this.has_schedExtSupport = true;
+      })
+      .catch((err) => {
+        console.error("检查 sched_ext 支持失败:", err);
+        Backend.logError(`检查 sched_ext 支持失败: ${err}`);
+        this.schedExtSupport = false;
+        this.has_schedExtSupport = false;
+      });
+
+    if (this.schedExtSupport) {
+      await call<[], string[]>("get_sched_ext_list")
+        .then((res) => {
+          this.availableSchedExtSchedulers = res;
+          this.has_availableSchedExtSchedulers = true;
+        })
+        .catch((err) => {
+          console.error("获取可用 SCX 调度器列表失败:", err);
+          Backend.logError(`获取可用 SCX 调度器列表失败: ${err}`);
+          this.availableSchedExtSchedulers = [];
+          this.has_availableSchedExtSchedulers = false;
+        });
+
+      await call<[], string>("get_current_sched_ext_scheduler")
+        .then((res) => {
+          Backend.logInfo(`初始化数据, 获取当前 SCX 调度器: ${res}`);
+          this.currentSchedExtScheduler = res;
+          this.has_currentSchedExtScheduler = true;
+        })
+        .catch((err) => {
+          console.error("获取当前 SCX 调度器失败:", err);
+          Backend.logError(`获取当前 SCX 调度器失败: ${err}`);
+          this.currentSchedExtScheduler = "";
+          this.has_currentSchedExtScheduler = false;
+        });
+    }
+
     await call<[], CPUCoreInfo>("get_cpu_core_info")
       .then((res) => {
         this.cpuCoreInfo = res;
@@ -258,6 +306,16 @@ export class BackendData {
           core_types: {}
         };
         this.has_cpuCoreInfo = false;
+      });
+
+    await call<[], string>("get_cpu_governor")
+      .then((res) => {
+        this.currentGovernor = res;
+        this.has_currentGovernor = true;
+      })
+      .catch((err) => {
+        console.error("获取当前 CPU 调度器失败:", err);
+        Backend.logError(`获取当前 CPU 调度器失败: ${err}`);
       });
   }
 
@@ -410,6 +468,38 @@ export class BackendData {
 
   public getAvailableGovernors(): string[] {
     return this.availableGovernors;
+  }
+
+  public getCurrentGovernor() {
+    return this.currentGovernor;
+  }
+
+  public hasCurrentGovernor() {
+    return this.has_currentGovernor;
+  }
+
+  public hasSchedExtSupport() {
+    return this.has_schedExtSupport;
+  }
+
+  public getSchedExtSupport() {
+    return this.schedExtSupport;
+  }
+
+  public hasAvailableSchedExtSchedulers() {
+    return this.has_availableSchedExtSchedulers;
+  }
+
+  public getAvailableSchedExtSchedulers(): string[] {
+    return this.availableSchedExtSchedulers;
+  }
+
+  public hasCurrentSchedExtScheduler() {
+    return this.has_currentSchedExtScheduler;
+  }
+
+  public getCurrentSchedExtScheduler(): string {
+    return this.currentSchedExtScheduler;
   }
 
   public async getFanRPM(index: number) {
@@ -586,6 +676,7 @@ export class Backend {
           Backend.handleCPUGovernor,
           Backend.handleEPP,
           Backend.handleCpuMaxPerfPct,
+          Backend.handleSchedExtScheduler,
         ];
         await Promise.all(cpuHandlers.map((handler) => handler()));
 
@@ -631,6 +722,13 @@ export class Backend {
 
   private static async handleCPUGovernor(): Promise<void> {
     await Backend.handleGovernorAndEPP();
+  }
+
+  private static async handleSchedExtScheduler(): Promise<void> {
+    const schedExtScheduler = Settings.appSchedExtScheduler();
+    if (schedExtScheduler) {
+      await Backend.setSchedExtScheduler(schedExtScheduler);
+    }
   }
 
   private static async handleCpuMaxPerfPct(): Promise<void> {
@@ -913,6 +1011,7 @@ export class Backend {
       [APPLYTYPE.SET_CPU_GOVERNOR, Backend.handleCPUGovernor],
       [APPLYTYPE.SET_CPU_MAX_PERF, Backend.handleCpuMaxPerfPct],
       [APPLYTYPE.SET_EPP, Backend.handleEPP],
+      [APPLYTYPE.SET_CPU_SCHED_EXT, Backend.handleSchedExtScheduler],
       [APPLYTYPE.SET_CPU_FREQ_CONTROL, Backend.handleCPUFreqControl],
       [APPLYTYPE.SET_GPUMODE, Backend.handleGPUMode],
       [APPLYTYPE.SET_GPUSLIDERFIX, Backend.handleGPUSliderFix],
@@ -1122,6 +1221,48 @@ export class Backend {
     } catch (error) {
       console.error("获取可用 CPU 调度器列表失败:", error);
       return [];
+    }
+  }
+
+  // 检查是否支持 sched_ext
+  public static async hasSchedExtSupport(): Promise<boolean> {
+    try {
+      return await call<[], boolean>("supports_sched_ext");
+    } catch (error) {
+      console.error("检查 sched_ext 支持失败:", error);
+      return false;
+    }
+  }
+
+  // 获取可用的 SCX 调度器列表
+  public static async getAvailableSchedExtSchedulers(): Promise<string[]> {
+    try {
+      return await call<[], string[]>("get_sched_ext_list");
+    } catch (error) {
+      console.error("获取可用 SCX 调度器列表失败:", error);
+      return [];
+    }
+  }
+
+  // 获取当前 SCX 调度器
+  public static async getCurrentSchedExtScheduler(): Promise<string> {
+    try {
+      return await call<[], string>("get_current_sched_ext_scheduler");
+    } catch (error) {
+      console.error("获取当前 SCX 调度器失败:", error);
+      return "";
+    }
+  }
+
+  // 设置 SCX 调度器
+  public static async setSchedExtScheduler(scheduler: string, param?: string): Promise<boolean> {
+    try {
+      const paramValue = param || "";
+      console.log(`设置 SCX 调度器为: ${scheduler}, 参数: ${paramValue}`);
+      return await call<[string, string], boolean>("set_sched_ext_scheduler", scheduler, paramValue);
+    } catch (error) {
+      console.error("设置 SCX 调度器失败:", error);
+      return false;
     }
   }
 

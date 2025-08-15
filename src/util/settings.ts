@@ -60,6 +60,8 @@ export class AppSetting {
   cpuFreqControlEnable?: boolean;
   @JsonProperty()
   cpuCoreFreqConfig?: Record<string, number>;
+  @JsonProperty()
+  schedExtScheduler?: string;
 
   constructor() {
     this.smt = true;
@@ -89,10 +91,11 @@ export class AppSetting {
     this.fanProfileNameList = [];
     this.cpuMaxPerfPct = 100;
     this.autoCPUMaxPct = false; // 默认关闭自动CPU最大性能百分比
-    this.cpuGovernor = "powersave"; // 默认使用 powersave 模式
-    this.epp = "balance-performance"; // 默认使用平衡性能模式
+    this.cpuGovernor = "";
+    this.epp = "";
     this.cpuFreqControlEnable = false; // 默认关闭CPU频率控制
     this.cpuCoreFreqConfig = {}; // 默认空的核心频率配置
+    this.schedExtScheduler = "";
   }
   deepCopy(copyTarget: AppSetting) {
     // this.overwrite=copyTarget.overwrite;
@@ -114,7 +117,10 @@ export class AppSetting {
     this.cpuGovernor = copyTarget.cpuGovernor;
     this.epp = copyTarget.epp;
     this.cpuFreqControlEnable = copyTarget.cpuFreqControlEnable;
-    this.cpuCoreFreqConfig = copyTarget.cpuCoreFreqConfig ? {...copyTarget.cpuCoreFreqConfig} : {};
+    this.cpuCoreFreqConfig = copyTarget.cpuCoreFreqConfig
+      ? { ...copyTarget.cpuCoreFreqConfig }
+      : {};
+    this.schedExtScheduler = copyTarget.schedExtScheduler;
   }
 }
 
@@ -1067,7 +1073,11 @@ export class Settings {
   }
 
   static appCPUGovernor(): string {
-    return Settings.ensureApp().cpuGovernor || "powersave";
+    return (
+      Settings.ensureApp().cpuGovernor ||
+      Backend.data.getCurrentGovernor() ||
+      "powersave"
+    );
   }
 
   static setCPUGovernor(governor: string) {
@@ -1099,9 +1109,52 @@ export class Settings {
     );
   }
 
+  // 获取当前 SCX 调度器
+  static appSchedExtScheduler(): string {
+    return (
+      Settings.ensureApp().schedExtScheduler ||
+      Backend.data.getCurrentSchedExtScheduler() ||
+      "none"
+    );
+  }
+
+  // 设置 SCX 调度器
+  static setSchedExtScheduler(scheduler: string) {
+    const app = Settings.ensureApp();
+    app.schedExtScheduler = scheduler;
+    Backend.applySettings(APPLYTYPE.SET_CPU_SCHED_EXT);
+    PluginManager.updateComponent(
+      ComponentName.CPU_SCHED_EXT,
+      UpdateType.UPDATE
+    );
+    this.saveSettingsToLocalStorage();
+    this._instance.settingChangeEvent.dispatchEvent(
+      new Event("CPU_SCHED_EXT_Change")
+    );
+  }
+
+  // 监听 SCX 调度器变化
+  static addSchedExtSchedulerEventListener(callback: () => void) {
+    this._instance.settingChangeEvent.addEventListener(
+      "CPU_SCHED_EXT_Change",
+      callback
+    );
+  }
+
+  static removeSchedExtSchedulerEventListener(callback: () => void) {
+    this._instance.settingChangeEvent.removeEventListener(
+      "CPU_SCHED_EXT_Change",
+      callback
+    );
+  }
+
   // 获取当前 EPP 模式
   public static appEPPMode(): string {
-    return this.ensureApp().epp || "balance-performance";
+    return (
+      this.ensureApp().epp ||
+      Backend.data.getCurrentEPP() ||
+      "balance-performance"
+    );
   }
 
   // 设置 EPP 模式
@@ -1127,7 +1180,10 @@ export class Settings {
     app.cpuFreqControlEnable = enable;
     this.saveSettingsToLocalStorage();
     Backend.applySettings(APPLYTYPE.SET_CPU_FREQ_CONTROL);
-    PluginManager.updateComponent(ComponentName.CPU_FREQ_CONTROL, UpdateType.UPDATE);
+    PluginManager.updateComponent(
+      ComponentName.CPU_FREQ_CONTROL,
+      UpdateType.UPDATE
+    );
   }
 
   // 获取指定核心类型的频率设置
@@ -1144,12 +1200,15 @@ export class Settings {
     }
     app.cpuCoreFreqConfig[coreType] = freq;
     this.saveSettingsToLocalStorage();
-    
+
     // 只有开关打开时才应用设置
     if (app.cpuFreqControlEnable) {
       Backend.setCpuFreqByCoreType({ [coreType]: freq });
     }
-    PluginManager.updateComponent(ComponentName.CPU_FREQ_CONTROL, UpdateType.UPDATE);
+    PluginManager.updateComponent(
+      ComponentName.CPU_FREQ_CONTROL,
+      UpdateType.UPDATE
+    );
   }
 
   // 获取所有核心类型的频率配置
