@@ -83,5 +83,13 @@
     "CPU_FREQ_CONTROL_DESC": "Limiter la fréquence maximale du CPU pour réduire la consommation et la chaleur. Architecture: {{architecture}}",
     "CORE_FREQUENCY": "Fréquence du cœur",
     "CPU_FREQUENCY": "Fréquence CPU",
-    "ALL_CORES": "Tous les cœurs"
+    "ALL_CORES": "Tous les cœurs",
+    "CHECK_VERSION": "Vérifier la version",
+    "CHECKING_VERSION": "Vérification...",
+    "LAST_CHECK_TIME": "Dernière vérification",
+    "JUST_NOW": "à l'instant",
+    "MINUTES_AGO": "il y a {{minutes}} minutes",
+    "HOURS_AGO": "il y a {{hours}} heures",
+    "DAYS_AGO": "il y a {{days}} jours",
+    "CLICK_TO_CHECK": "Cliquer pour vérifier les mises à jour"
 }

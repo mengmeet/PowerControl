@@ -87,5 +87,13 @@
     "CPU_FREQ_CONTROL_DESC": "限制CPU最大频率以降低功耗和发热。架构：{{architecture}}",
     "CORE_FREQUENCY": "核心频率",
     "CPU_FREQUENCY": "CPU频率",
-    "ALL_CORES": "所有核心"
+    "ALL_CORES": "所有核心",
+    "CHECK_VERSION": "检查版本",
+    "CHECKING_VERSION": "检查中...",
+    "LAST_CHECK_TIME": "最后检查",
+    "JUST_NOW": "刚刚",
+    "MINUTES_AGO": "{{minutes}}分钟前",
+    "HOURS_AGO": "{{hours}}小时前",
+    "DAYS_AGO": "{{days}}天前",
+    "CLICK_TO_CHECK": "点击检查最新版本"
 }

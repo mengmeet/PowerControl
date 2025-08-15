@@ -83,5 +83,13 @@
     "CPU_FREQ_CONTROL_DESC": "CPU-Maximalfrequenz begrenzen um Stromverbrauch und Hitze zu reduzieren. Architektur: {{architecture}}",
     "CORE_FREQUENCY": "Kernfrequenz",
     "CPU_FREQUENCY": "CPU-Frequenz",
-    "ALL_CORES": "Alle Kerne"
+    "ALL_CORES": "Alle Kerne",
+    "CHECK_VERSION": "Version prüfen",
+    "CHECKING_VERSION": "Prüfe...",
+    "LAST_CHECK_TIME": "Letzte Prüfung",
+    "JUST_NOW": "gerade eben",
+    "MINUTES_AGO": "vor {{minutes}} Minuten",
+    "HOURS_AGO": "vor {{hours}} Stunden",
+    "DAYS_AGO": "vor {{days}} Tagen",
+    "CLICK_TO_CHECK": "Klicken um nach Updates zu suchen"
 }

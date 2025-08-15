@@ -83,5 +83,13 @@
     "CPU_FREQ_CONTROL_DESC": "전력 소비와 발열을 줄이기 위해 CPU 최대 주파수를 제한합니다。아키텍처: {{architecture}}",
     "CORE_FREQUENCY": "코어 주파수",
     "CPU_FREQUENCY": "CPU 주파수",
-    "ALL_CORES": "모든 코어"
+    "ALL_CORES": "모든 코어",
+    "CHECK_VERSION": "버전 확인",
+    "CHECKING_VERSION": "확인 중...",
+    "LAST_CHECK_TIME": "마지막 확인",
+    "JUST_NOW": "방금 전",
+    "MINUTES_AGO": "{{minutes}}분 전",
+    "HOURS_AGO": "{{hours}}시간 전",
+    "DAYS_AGO": "{{days}}일 전",
+    "CLICK_TO_CHECK": "클릭하여 최신 버전 확인"
 }

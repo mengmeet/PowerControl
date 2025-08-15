@@ -83,5 +83,13 @@
     "CPU_FREQ_CONTROL_DESC": "Ограничи максималната честота на CPU за намаляване на консумацията и топлината. Архитектура: {{architecture}}",
     "CORE_FREQUENCY": "Честота на ядрото",
     "CPU_FREQUENCY": "Честота на CPU",
-    "ALL_CORES": "Всички ядра"
+    "ALL_CORES": "Всички ядра",
+    "CHECK_VERSION": "Проверка на версия",
+    "CHECKING_VERSION": "Проверява...",
+    "LAST_CHECK_TIME": "Последна проверка",
+    "JUST_NOW": "току що",
+    "MINUTES_AGO": "преди {{minutes}} минути",
+    "HOURS_AGO": "преди {{hours}} часа",
+    "DAYS_AGO": "преди {{days}} дни",
+    "CLICK_TO_CHECK": "Кликнете за проверка на обновления"
 }

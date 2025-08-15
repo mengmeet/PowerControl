@@ -87,5 +87,13 @@
     "CPU_FREQ_CONTROL_DESC": "Limit maximum CPU frequency to reduce power consumption and heat. Architecture: {{architecture}}",
     "CORE_FREQUENCY": "Core Frequency",
     "CPU_FREQUENCY": "CPU Frequency",
-    "ALL_CORES": "All Cores"
+    "ALL_CORES": "All Cores",
+    "CHECK_VERSION": "Check Version",
+    "CHECKING_VERSION": "Checking...",
+    "LAST_CHECK_TIME": "Last check",
+    "JUST_NOW": "just now",
+    "MINUTES_AGO": "{{minutes}} minutes ago",
+    "HOURS_AGO": "{{hours}} hours ago",
+    "DAYS_AGO": "{{days}} days ago",
+    "CLICK_TO_CHECK": "Click to check for updates"
 }
