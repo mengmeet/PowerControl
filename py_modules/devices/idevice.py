@@ -57,9 +57,9 @@ class IDevice(ABC):
 
                         cls._instance = AyaneoKun()
                     case _:
-                        from . import PowerDevice
+                        from . import PowerStationDevice
 
-                        cls._instance = PowerDevice()
+                        cls._instance = PowerStationDevice()
             case "ASUSTeK COMPUTER INC.":
                 from . import AsusDevice
 
@@ -84,9 +84,9 @@ class IDevice(ABC):
 
                 cls._instance = LenovoDevice()
             case _:
-                from . import PowerDevice
+                from . import PowerStationDevice
 
-                cls._instance = PowerDevice()
+                cls._instance = PowerStationDevice()
 
         return cls._instance
 

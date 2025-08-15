@@ -2,8 +2,8 @@ import os
 from time import sleep
 
 from config import logger
+from .power_station_device import PowerStationDevice
 
-from .power_device import PowerDevice
 
 PREFIX = "/sys/class/firmware-attributes"
 SPL_SUFFIX = "ppt_pl1_spl"
@@ -13,7 +13,7 @@ FAST_SUFFIX = "ppt_pl3_fppt"
 SUGGESTED_DEFAULT = ["custom", "performance"]
 
 
-class FirmwareAttributeDevice(PowerDevice):
+class FirmwareAttributeDevice(PowerStationDevice):
     def __init__(self):
         super().__init__()
         self.attribute = None
