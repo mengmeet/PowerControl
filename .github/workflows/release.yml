@@ -58,6 +58,7 @@ jobs:
           pnpm install --no-frozen-lockfile
           pnpm update
           pnpm run build
+          rm -f dist/*.js.map
           tar -czvf PowerControl.tar.gz --transform 's,^,PowerControl/,' dist backend py_modules bin *.py *.json *.md *.js LICENSE
           # zip
           mkdir -p PowerControl
