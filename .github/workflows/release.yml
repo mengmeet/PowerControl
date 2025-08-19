@@ -23,6 +23,8 @@ jobs:
           git config --global --add safe.directory $(realpath .)
 
       - uses: actions/checkout@v4
+        with:
+          submodules: true
 
       # - name: update submodules
       #   run: git submodule update --init --recursive
