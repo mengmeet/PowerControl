@@ -19,13 +19,13 @@ jobs:
     steps:
       - name: set git global safe directory
         run: |
-          pacman -Syu git npm tree zip unzip --noconfirm
+          pacman -Syu git npm tree zip unzip upx --noconfirm
           git config --global --add safe.directory $(realpath .)
 
       - uses: actions/checkout@v4
 
-      - name: update submodules
-        run: git submodule update --init --recursive
+      # - name: update submodules
+      #   run: git submodule update --init --recursive
 
       - name: build RyzenAdj
         run: |
@@ -34,6 +34,7 @@ jobs:
           mkdir build && cd build
           cmake -DCMAKE_BUILD_TYPE=Release ..
           make
+          upx -9 ryzenadj
           cp -f ryzenadj ../../../bin
 
       # - name: build python-fuse
