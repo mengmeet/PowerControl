@@ -51,7 +51,7 @@ def get_env():
     return env
 
 
-def get_ryzenadj_path(prefer_plugin=False):
+def get_ryzenadj_path(prefer_plugin=True):
     """
     Get the path to ryzenadj executable.
 
