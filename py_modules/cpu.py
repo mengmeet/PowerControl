@@ -12,7 +12,7 @@ from typing import Dict, List, Optional, Tuple
 import sysInfo
 from config import CPU_VENDOR, RYZENADJ_PATH, SH_PATH, logger
 from cpu_detector import create_cpu_detector
-from utils import get_env, getMaxTDP
+from utils import get_env, get_ryzenadj_path, getMaxTDP
 
 
 @dataclass
@@ -595,9 +595,7 @@ class CPUManager:
         try:
             if value >= 3:
                 tdp = value * 1000
-                sys_ryzenadj_path = "/usr/bin/ryzenadj"
-                if not os.path.exists(sys_ryzenadj_path):
-                    sys_ryzenadj_path = RYZENADJ_PATH
+                sys_ryzenadj_path = get_ryzenadj_path()
 
                 stapm_limit = tdp
                 fast_minit = tdp
@@ -1185,9 +1183,7 @@ class CPUManager:
             str: Ryzenadj信息
         """
         try:
-            sys_ryzenadj_path = "/usr/bin/ryzenadj"
-            if not os.path.exists(sys_ryzenadj_path):
-                sys_ryzenadj_path = RYZENADJ_PATH
+            sys_ryzenadj_path = get_ryzenadj_path()
             command = f"{sys_ryzenadj_path} -i"
             process = subprocess.run(
                 command,
