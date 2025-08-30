@@ -202,7 +202,7 @@ export const MoreComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
           <ButtonItem
             layout="below"
             onClick={() => {
-              Settings.resetToLocalStorage();
+              Settings.resetSettings();
             }}
           >
             {localizationManager.getString(localizeStrEnum.RESET_ALL) ||

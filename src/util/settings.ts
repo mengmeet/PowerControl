@@ -302,7 +302,7 @@ export class Settings {
   // ui 菜单展开控制
   public static set showSettingMenu(show: boolean) {
     this._instance.data.showSettingMenu = show;
-    Settings.saveSettingsToLocalStorage();
+    Settings.saveSettings();
   }
 
   public static get showSettingMenu(): boolean {
@@ -311,7 +311,7 @@ export class Settings {
 
   public static set showFanMenu(show: boolean) {
     this._instance.data.showFanMenu = show;
-    Settings.saveSettingsToLocalStorage();
+    Settings.saveSettings();
   }
 
   public static get showFanMenu(): boolean {
@@ -320,7 +320,7 @@ export class Settings {
 
   public static set showCpuMenu(show: boolean) {
     this._instance.data.showCpuMenu = show;
-    Settings.saveSettingsToLocalStorage();
+    Settings.saveSettings();
   }
 
   public static get showCpuMenu(): boolean {
@@ -329,7 +329,7 @@ export class Settings {
 
   public static set showGpuMenu(show: boolean) {
     this._instance.data.showGpuMenu = show;
-    Settings.saveSettingsToLocalStorage();
+    Settings.saveSettings();
   }
 
   public static get showGpuMenu(): boolean {
@@ -338,7 +338,7 @@ export class Settings {
 
   public static set showPowerMenu(show: boolean) {
     this._instance.data.showPowerMenu = show;
-    Settings.saveSettingsToLocalStorage();
+    Settings.saveSettings();
   }
 
   public static get showPowerMenu(): boolean {
@@ -348,7 +348,7 @@ export class Settings {
 
   public static set currentTabRoute(route: string) {
     this._instance.data.currentTabRoute = route;
-    Settings.saveSettingsToLocalStorage();
+    Settings.saveSettings();
   }
 
   public static get currentTabRoute(): string {
@@ -357,7 +357,7 @@ export class Settings {
 
   public static set useOldUI(useOldUI: boolean) {
     this._instance.data.useOldUI = useOldUI;
-    Settings.saveSettingsToLocalStorage();
+    Settings.saveSettings();
     PluginManager.updateAllComponent(UpdateType.UPDATE);
   }
 
@@ -374,7 +374,7 @@ export class Settings {
   public static setEnable(enabled: boolean) {
     if (this._instance.data.enabled != enabled) {
       this._instance.data.enabled = enabled;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       if (enabled) {
         Backend.applySettings(APPLYTYPE.SET_ALL);
         PluginManager.updateAllComponent(UpdateType.SHOW);
@@ -461,7 +461,7 @@ export class Settings {
     ) {
       this._instance.data.perApp[RunningApps.active()].overwrite = overwrite;
 
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_ALL);
       PluginManager.updateAllComponent(UpdateType.UPDATE);
     }
@@ -470,7 +470,7 @@ export class Settings {
   static saveOverWrite(overwrite: boolean) {
     if (RunningApps.active() != DEFAULT_APP) {
       this._instance.data.perApp[RunningApps.active()].overwrite = overwrite;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       PluginManager.updateAllComponent(UpdateType.UPDATE);
     }
   }
@@ -495,7 +495,7 @@ export class Settings {
   static setEnableNativeTDPSlider(enableNativeTDPSlider: boolean) {
     if (this._instance.data.enableNativeTDPSlider != enableNativeTDPSlider) {
       this._instance.data.enableNativeTDPSlider = enableNativeTDPSlider;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_TDP);
       PluginManager.updateComponent(ComponentName.CPU_TDP, UpdateType.UPDATE);
     }
@@ -515,7 +515,7 @@ export class Settings {
     ) {
       this._instance.data.perApp[Settings.ensureAppID()].acStateOverwrite =
         acStateOverwrite;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_ALL);
       PluginManager.updateAllComponent(UpdateType.UPDATE);
     }
@@ -528,7 +528,7 @@ export class Settings {
   static setSmt(smt: boolean) {
     if (Settings.ensureApp().smt != smt) {
       Settings.ensureApp().smt = smt;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_CPUCORE);
       PluginManager.updateComponent(ComponentName.CPU_SMT, UpdateType.UPDATE);
     }
@@ -545,7 +545,7 @@ export class Settings {
   static setBypassCharge(bypassCharge: boolean) {
     if (Settings._instance.data.bypassCharge != bypassCharge) {
       Settings._instance.data.bypassCharge = bypassCharge;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_POWER_BATTERY);
       PluginManager.updateComponent(ComponentName.POWER_ALL, UpdateType.UPDATE);
     }
@@ -558,7 +558,7 @@ export class Settings {
   static setChargeLimit(chargeLimit: number) {
     if (Settings._instance.data.chargeLimit != chargeLimit) {
       Settings._instance.data.chargeLimit = chargeLimit;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_POWER_BATTERY);
       PluginManager.updateComponent(ComponentName.POWER_ALL, UpdateType.UPDATE);
     }
@@ -572,7 +572,7 @@ export class Settings {
   static setEnableChargeLimit(enableChargeLimit: boolean) {
     if (Settings._instance.data.enableChargeLimit != enableChargeLimit) {
       Settings._instance.data.enableChargeLimit = enableChargeLimit;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_POWER_BATTERY);
       PluginManager.updateComponent(ComponentName.POWER_ALL, UpdateType.UPDATE);
     }
@@ -585,7 +585,7 @@ export class Settings {
   static setCpuNum(cpuNum: number) {
     if (Settings.ensureApp().cpuNum != cpuNum) {
       Settings.ensureApp().cpuNum = cpuNum;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_CPUCORE);
       PluginManager.updateComponent(ComponentName.CPU_NUM, UpdateType.UPDATE);
     }
@@ -598,7 +598,7 @@ export class Settings {
   static setCpuboost(cpuboost: boolean) {
     if (Settings.ensureApp().cpuboost != cpuboost) {
       Settings.ensureApp().cpuboost = cpuboost;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_CPUBOOST);
       PluginManager.updateComponent(ComponentName.CPU_BOOST, UpdateType.UPDATE);
     }
@@ -611,7 +611,7 @@ export class Settings {
   static setTDP(tdp: number) {
     if (Settings.ensureApp().tdp != tdp) {
       Settings.ensureApp().tdp = tdp;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_TDP);
       PluginManager.updateComponent(ComponentName.CPU_TDP, UpdateType.UPDATE);
     }
@@ -628,7 +628,7 @@ export class Settings {
   static setAutoCPUMaxPct(autoPerf: boolean) {
     if (Settings.ensureApp().autoCPUMaxPct != autoPerf) {
       Settings.ensureApp().autoCPUMaxPct = autoPerf;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_CPU_MAX_PERF);
       PluginManager.updateComponent(
         ComponentName.CPU_PERFORMANCE,
@@ -640,7 +640,7 @@ export class Settings {
   static setCpuMaxPerfPct(cpuMaxPerfPct: number) {
     if (Settings.ensureApp().cpuMaxPerfPct != cpuMaxPerfPct) {
       Settings.ensureApp().cpuMaxPerfPct = cpuMaxPerfPct;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_CPU_MAX_PERF);
       PluginManager.updateComponent(
         ComponentName.CPU_PERFORMANCE,
@@ -656,7 +656,7 @@ export class Settings {
   static setEnableCustomTDPRange(enableCustomTDPRange: boolean) {
     if (this._instance.data.enableCustomTDPRange != enableCustomTDPRange) {
       this._instance.data.enableCustomTDPRange = enableCustomTDPRange;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_TDP);
       PluginManager.updateComponent(
         ComponentName.CUSTOM_TDP,
@@ -672,7 +672,7 @@ export class Settings {
   static setCustomTDPRangeMax(customTDPRangeMax: number) {
     if (this._instance.data.customTDPRangeMax != customTDPRangeMax) {
       this._instance.data.customTDPRangeMax = customTDPRangeMax;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_TDP);
       PluginManager.updateComponent(
         ComponentName.CUSTOM_TDP,
@@ -705,7 +705,7 @@ export class Settings {
   static setTDPEnable(tdpEnable: boolean) {
     if (Settings.ensureApp().tdpEnable != tdpEnable) {
       Settings.ensureApp().tdpEnable = tdpEnable;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_TDP);
       PluginManager.updateComponent(ComponentName.CPU_TDP, UpdateType.UPDATE);
     }
@@ -737,7 +737,7 @@ export class Settings {
       // console.log("saveTDP", tdp, tdpEnable);
       Settings.ensureApp().tdp = tdp;
       Settings.ensureApp().tdpEnable = tdpEnable;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
     }
   }
 
@@ -749,7 +749,7 @@ export class Settings {
   static setGPUMode(gpuMode: GPUMODE) {
     if (Settings.ensureApp().gpuMode != gpuMode) {
       Settings.ensureApp().gpuMode = gpuMode;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
       PluginManager.updateComponent(
         ComponentName.GPU_FREQMODE,
@@ -784,7 +784,7 @@ export class Settings {
   static setGPUFreq(gpuFreq: number) {
     if (Settings.ensureApp().gpuFreq != gpuFreq) {
       Settings.ensureApp().gpuFreq = gpuFreq;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
       PluginManager.updateComponent(
         ComponentName.GPU_FREQFIX,
@@ -801,7 +801,7 @@ export class Settings {
   static setGPUAutoMaxFreq(gpuAutoMaxFreq: number) {
     if (Settings.ensureApp().gpuAutoMaxFreq != gpuAutoMaxFreq) {
       Settings.ensureApp().gpuAutoMaxFreq = gpuAutoMaxFreq;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
       PluginManager.updateComponent(
         ComponentName.GPU_FREQRANGE,
@@ -818,7 +818,7 @@ export class Settings {
   static setGPUAutoMinFreq(gpuAutoMinFreq: number) {
     if (Settings.ensureApp().gpuAutoMinFreq != gpuAutoMinFreq) {
       Settings.ensureApp().gpuAutoMinFreq = gpuAutoMinFreq;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
       PluginManager.updateComponent(
         ComponentName.GPU_FREQRANGE,
@@ -844,7 +844,7 @@ export class Settings {
       Settings.ensureApp().gpuRangeMaxFreq = gpuRangeMaxFreq;
       Settings.ensureApp().gpuRangeMinFreq = gpuRangeMinFreq;
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       PluginManager.updateComponent(
         ComponentName.GPU_FREQRANGE,
         UpdateType.UPDATE
@@ -859,7 +859,7 @@ export class Settings {
   static setGPUSliderFix(gpuSliderFix: boolean) {
     if (Settings.ensureApp().gpuSliderFix != gpuSliderFix) {
       Settings.ensureApp().gpuSliderFix = gpuSliderFix;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_GPUSLIDERFIX);
       PluginManager.updateComponent(
         ComponentName.GPU_SLIDERFIX,
@@ -913,7 +913,7 @@ export class Settings {
   ) {
     if (force || Settings.appFanSettingNameList()[index] != fanProfileName) {
       Settings.appFanSettingNameList()[index] = fanProfileName;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_FAN_ALL);
       PluginManager.updateComponent(ComponentName.FAN_ALL, UpdateType.UPDATE);
     }
@@ -923,7 +923,7 @@ export class Settings {
   static addFanSetting(fanProfileName: string, fanSetting: FanSetting) {
     if (fanProfileName != undefined) {
       this._instance.data.fanSettings[fanProfileName] = fanSetting;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       return true;
     } else {
       return false;
@@ -1016,7 +1016,7 @@ export class Settings {
           });
         }
       );
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
     }
   }
 
@@ -1053,7 +1053,7 @@ export class Settings {
     // }
   }
 
-  static saveSettingsToLocalStorage() {
+  static saveSettings() {
     // const settingsJsonObj = serializer.serializeObject(this._instance.data);
     // const settingsString = JSON.stringify(settingsJsonObj);
     // console.log(`>>>>> saveSettingsToLocalStorage: \n${settingsString}`);
@@ -1061,7 +1061,7 @@ export class Settings {
     Backend.setSettings(this._instance.data);
   }
 
-  static resetToLocalStorage(apply = true) {
+  static resetSettings(apply = true) {
     console.log(">>>>>  resetToLocalStorage");
     localStorage.removeItem(SETTINGS_KEY);
     const _data = new SettingsData();
@@ -1089,7 +1089,7 @@ export class Settings {
       ComponentName.CPU_GOVERNOR,
       UpdateType.UPDATE
     );
-    this.saveSettingsToLocalStorage();
+    this.saveSettings();
     this._instance.settingChangeEvent.dispatchEvent(
       new Event("CPU_GOVERNOR_Change")
     );
@@ -1128,7 +1128,7 @@ export class Settings {
       ComponentName.CPU_SCHED_EXT,
       UpdateType.UPDATE
     );
-    this.saveSettingsToLocalStorage();
+    this.saveSettings();
     this._instance.settingChangeEvent.dispatchEvent(
       new Event("CPU_SCHED_EXT_Change")
     );
@@ -1162,7 +1162,7 @@ export class Settings {
   public static setEPP(epp: string) {
     const app = this.ensureApp();
     app.epp = epp;
-    this.saveSettingsToLocalStorage();
+    this.saveSettings();
     Backend.applySettings(APPLYTYPE.SET_EPP);
     PluginManager.updateComponent(ComponentName.CPU_EPP, UpdateType.UPDATE);
     this._instance.settingChangeEvent.dispatchEvent(
@@ -1179,7 +1179,7 @@ export class Settings {
   public static setCpuFreqControlEnable(enable: boolean) {
     const app = this.ensureApp();
     app.cpuFreqControlEnable = enable;
-    this.saveSettingsToLocalStorage();
+    this.saveSettings();
     Backend.applySettings(APPLYTYPE.SET_CPU_FREQ_CONTROL);
     PluginManager.updateComponent(
       ComponentName.CPU_FREQ_CONTROL,
@@ -1200,7 +1200,7 @@ export class Settings {
       app.cpuCoreFreqConfig = {};
     }
     app.cpuCoreFreqConfig[coreType] = freq;
-    this.saveSettingsToLocalStorage();
+    this.saveSettings();
 
     // 只有开关打开时才应用设置
     if (app.cpuFreqControlEnable) {
