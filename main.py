@@ -422,6 +422,9 @@ class Plugin:
     async def get_sched_ext_list(self):
         """获取可用的 sched_ext 调度器列表。"""
         try:
+            # 先检查是否支持 sched_ext
+            if not self.powerManager.supports_sched_ext():
+                return []
             return self.powerManager.get_sched_ext_list()
         except Exception as e:
             logger.error(e, exc_info=True)
@@ -430,7 +433,12 @@ class Plugin:
     async def get_current_sched_ext_scheduler(self):
         """获取当前的 sched_ext 调度器。"""
         try:
-            return self.powerManager.get_current_sched_ext_scheduler()
+            # 先检查是否支持 sched_ext
+            if not self.powerManager.supports_sched_ext():
+                return ""
+            result = self.powerManager.get_current_sched_ext_scheduler()
+            logger.info(f"获取当前 SCX 调度器: {result}")
+            return result
         except Exception as e:
             logger.error(e, exc_info=True)
             return ""

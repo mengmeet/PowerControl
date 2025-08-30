@@ -12,14 +12,13 @@ import {
 import { JsonSerializer } from "typescript-json-serializer";
 import { callable } from "@decky/api";
 import { Logger } from "./logger";
-import { CPUCoreInfo } from "../types/cpu";
+import { CPUCoreInfo, CPUCoreTypeInfo, FanConfig } from "../types";
 const serializer = new JsonSerializer();
 
-// Fan config type
-interface FanConfig {
-  fan_max_rpm?: number;
-  fan_name?: string;
-  [key: string]: unknown;
+type InitCallable = () => Promise<(typeof BackendData.DEFAULTS)[keyof typeof BackendData.DEFAULTS]>;
+
+interface InitConfigItem {
+  callable: InitCallable;
 }
 
 // Proxy methods type definition
@@ -94,7 +93,6 @@ export const stopGpuNotify = callable<[], any>("stop_gpu_notify");
 export const checkFileExist = callable<[string], boolean>("check_file_exist");
 
 
-
 export class BackendData {
   // 使用 Map 存储数据和状态
   private data = new Map<string, any>();
@@ -124,16 +122,27 @@ export class BackendData {
     }
   }
 
-  // 获取默认值
+  // GPU 频率范围缓存
+  private gpuFreqCache: number[] | null = null;
+
+  // 获取并缓存 GPU 频率范围（只调用一次后端接口）
+  private async getGpuFreqRangeOnce(): Promise<number[]> {
+    if (!this.gpuFreqCache) {
+      this.gpuFreqCache = await getGpuFreqRange();
+    }
+    return this.gpuFreqCache;
+  }
+
+  // 获取默认值 设置 as 类型用于 InitCallable 推断类型
   public static readonly DEFAULTS = {
-    cpuMaxNum: 0,
+    cpuMaxNum: 0 as number,
     tdpMax: 0,
     gpuMin: 0,
     gpuMax: 0,
     fanConfigs: [] as FanConfig[],
-    currentVersion: "",
+    currentVersion: "" as string,
     latestVersion: "",
-    supportCPUMaxPct: false,
+    supportCPUMaxPct: false as boolean,
     systemInfo: undefined as SystemInfo | undefined,
     availableGovernors: [] as string[],
     currentGovernor: "",
@@ -145,7 +154,7 @@ export class BackendData {
       is_heterogeneous: false,
       vendor: "Unknown",
       architecture_summary: "Traditional Architecture",
-      core_types: {}
+      core_types: {} as Record<string, CPUCoreTypeInfo>
     } as CPUCoreInfo,
     supportsBypassCharge: false,
     supportsChargeLimit: false,
@@ -154,7 +163,7 @@ export class BackendData {
     supportsSteamosManager: false,
     schedExtSupport: false,
     availableSchedExtSchedulers: [] as string[],
-    currentSchedExtScheduler: "",
+    currentSchedExtScheduler: "" as string,
     supportsSMT: false
   } as const;
 
@@ -163,12 +172,20 @@ export class BackendData {
   }
 
   // 极简的初始化配置
-  private initConfig = {
+  private initConfig: { [K in keyof typeof BackendData.DEFAULTS]: InitConfigItem } = {
     cpuMaxNum: { callable: getCpuMaxNum },
     tdpMax: { callable: getTdpMax },
-    gpuFreqRange: {
-      callable: getGpuFreqRange,
-      transform: (value: number[]) => ({ min: value[0], max: value[1] })
+    gpuMin: {
+      callable: async () => {
+        const [min] = await this.getGpuFreqRangeOnce();
+        return min;
+      }
+    },
+    gpuMax: {
+      callable: async () => {
+        const [, max] = await this.getGpuFreqRangeOnce();
+        return max;
+      }
     },
     fanConfigs: { callable: getFanConfigList },
     supportsSMT: { callable: supportsSMT },
@@ -186,7 +203,11 @@ export class BackendData {
     supportsSoftwareChargeLimit: { callable: softwareChargeLimit },
     supportsSteamosManager: { callable: () => checkFileExist("/usr/bin/steamosctl") },
     cpuCoreInfo: { callable: getCpuCoreInfo },
-    currentGovernor: { callable: getCpuGovernor }
+    currentGovernor: { callable: getCpuGovernor },
+    latestVersion: { callable: getLatestVersion },
+    schedExtSupport: { callable: supportsSchedExt },
+    availableSchedExtSchedulers: { callable: getSchedExtList },
+    currentSchedExtScheduler: { callable: getCurrentSchedExtScheduler }
   };
 
   // 主初始化方法
@@ -197,64 +218,17 @@ export class BackendData {
     );
 
     await Promise.allSettled(tasks);
-
-    // 单独处理有依赖关系的 sched_ext
-    await this.initSchedExt();
   }
 
   // 极简的字段初始化方法
-  private async initField(key: string, config: any) {
+  private async initField(key: string, config: InitConfigItem) {
     try {
       const result = await config.callable();
-      if (config.transform) {
-        const transformed = config.transform(result);
-        if (key === 'gpuFreqRange') {
-          this.set('gpuMin', transformed.min);
-          this.set('gpuMax', transformed.max);
-          return;
-        }
-      }
       this.set(key, result);
     } catch (error) {
       console.error(`初始化 ${key} 失败:`, error);
       logError(`初始化 ${key} 失败: ${error}`);
       this.set(key, this.getDefaultValue(key), error as Error);
-    }
-  }
-
-  // 处理有依赖关系的 sched_ext 初始化
-  private async initSchedExt() {
-    // 先检查 sched_ext 支持
-    try {
-      const supported = await supportsSchedExt();
-      this.set('schedExtSupport', supported);
-
-      // 如果支持，再获取详细信息
-      if (supported) {
-        const schedExtTasks = [
-          this.initField('availableSchedExtSchedulers', {
-            callable: getSchedExtList
-          }),
-          // 特殊处理当前调度器（需要额外的日志）
-          (async () => {
-            try {
-              const result = await getCurrentSchedExtScheduler();
-              logInfo(`初始化数据, 获取当前 SCX 调度器: ${result}`);
-              this.set('currentSchedExtScheduler', result);
-            } catch (error) {
-              console.error(`初始化 currentSchedExtScheduler 失败:`, error);
-              logError(`初始化 currentSchedExtScheduler 失败: ${error}`);
-              this.set('currentSchedExtScheduler', '', error as Error);
-            }
-          })()
-        ];
-
-        await Promise.allSettled(schedExtTasks);
-      }
-    } catch (error) {
-      console.error(`初始化 schedExtSupport 失败:`, error);
-      logError(`初始化 schedExtSupport 失败: ${error}`);
-      this.set('schedExtSupport', false, error as Error);
     }
   }
 
