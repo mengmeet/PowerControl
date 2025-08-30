@@ -73,7 +73,7 @@ class Plugin:
             logger.error(e, exc_info=True)
             return 0
 
-    async def get_isSupportSMT(self):
+    async def supports_smt(self):
         try:
             return cpuManager.get_isSupportSMT()
         except Exception as e:
@@ -379,7 +379,7 @@ class Plugin:
             logger.error(e, exc_info=True)
             return False
 
-    async def is_epp_supported(self):
+    async def supported_epp(self):
         """检查系统是否支持 EPP 功能。"""
         try:
             return cpuManager.is_epp_supported()

@@ -535,7 +535,7 @@ export class Settings {
   }
 
   static appIsSupportSMT(): boolean {
-    return Backend.data?.hasIsSupportSMT() ? Backend.data?.getIsSupportSMT() : true;
+    return Backend.data?.hasSupportsSMT() ? Backend.data?.getSupportsSMT() : true;
   }
 
   static appBypassCharge(): boolean {

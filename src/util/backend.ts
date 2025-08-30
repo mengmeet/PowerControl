@@ -27,8 +27,6 @@ type ProxyMethods<T> = {
   [K in keyof T as `get${Capitalize<K & string>}`]: () => T[K];
 } & {
   [K in keyof T as `has${Capitalize<K & string>}`]: () => boolean;
-} & {
-  [K in keyof T as T[K] extends boolean ? `is${Capitalize<K & string>}` : never]: () => T[K];
 };
 
 // Backend API callable functions
@@ -36,10 +34,10 @@ export const getCpuMaxNum = callable<[], number>("get_cpuMaxNum");
 export const getTdpMax = callable<[], number>("get_tdpMax");
 export const getGpuFreqRange = callable<[], number[]>("get_gpuFreqRange");
 export const getFanConfigList = callable<[], FanConfig[]>("get_fanConfigList");
-export const getIsSupportSMT = callable<[], boolean>("get_isSupportSMT");
+export const supportsSMT = callable<[], boolean>("supports_smt");
 export const getVersion = callable<[], string>("get_version");
 export const getAvailableGovernors = callable<[], string[]>("get_available_governors");
-export const isEppSupported = callable<[], boolean>("is_epp_supported");
+export const supportedEpp = callable<[], boolean>("supported_epp");
 export const getEppModes = callable<[], string[]>("get_epp_modes");
 export const getCurrentEpp = callable<[], string | null>("get_current_epp");
 export const getCpuVendor = callable<[], string>("get_cpu_vendor");
@@ -139,7 +137,7 @@ export class BackendData {
     systemInfo: undefined as SystemInfo | undefined,
     availableGovernors: [] as string[],
     currentGovernor: "",
-    isEppSupported: false,
+    supportsEpp: false,
     eppModes: [] as string[],
     currentEpp: null as string | null,
     cpuVendor: "",
@@ -157,7 +155,7 @@ export class BackendData {
     schedExtSupport: false,
     availableSchedExtSchedulers: [] as string[],
     currentSchedExtScheduler: "",
-    isSupportSMT: false
+    supportsSMT: false
   } as const;
 
   private getDefaultValue(key: string) {
@@ -173,12 +171,12 @@ export class BackendData {
       transform: (value: number[]) => ({ min: value[0], max: value[1] })
     },
     fanConfigs: { callable: getFanConfigList },
-    isSupportSMT: { callable: getIsSupportSMT },
+    supportsSMT: { callable: supportsSMT },
     supportCPUMaxPct: { callable: () => getMaxPerfPct().then(v => v > 0) },
     currentVersion: { callable: getVersion },
     systemInfo: { callable: () => SteamUtils.getSystemInfo() },
     availableGovernors: { callable: getAvailableGovernors },
-    isEppSupported: { callable: isEppSupported },
+    supportsEpp: { callable: supportedEpp },
     eppModes: { callable: getEppModes },
     currentEpp: { callable: getCurrentEpp },
     cpuVendor: { callable: getCpuVendor },
@@ -273,14 +271,6 @@ export class BackendData {
           }
         }
 
-        if (propStr.startsWith('is') && propStr.length > 2) {
-          const fieldName = propStr.slice(2);
-          const actualFieldName = fieldName.charAt(0).toLowerCase() + fieldName.slice(1);
-          if (actualFieldName in BackendData.DEFAULTS) {
-            return () => target.data.get(actualFieldName) ?? BackendData.DEFAULTS[actualFieldName as keyof typeof BackendData.DEFAULTS];
-          }
-        }
-
         if (propStr.startsWith('has') && propStr.length > 3) {
           const fieldName = propStr.slice(3);
           const actualFieldName = fieldName.charAt(0).toLowerCase() + fieldName.slice(1);
@@ -299,17 +289,6 @@ export class BackendData {
     await this.initField('eppModes', this.initConfig.eppModes);
     await this.initField('currentEpp', this.initConfig.currentEpp);
   }
-
-
-
-
-
-
-
-
-
-
-
 
   public getFanMAXPRM(index: number) {
     const fanConfigs = this.get<any[]>('fanConfigs', []);
@@ -735,10 +714,10 @@ export class Backend {
   private static async handleChargeLimit() {
     const chargeLimit = Settings.appChargeLimit();
     const bypassCharge = Settings.appBypassCharge();
-    const supportsChargeLimit = Backend.data.isSupportsChargeLimit();
-    const supportsBypassCharge = Backend.data.isSupportsBypassCharge();
+    const supportsChargeLimit = Backend.data.getSupportsChargeLimit();
+    const supportsBypassCharge = Backend.data.getSupportsBypassCharge();
     const enableChargeLimit = Settings.appEnableChargeLimit();
-    const supportsResetChargeLimit = Backend.data.isSupportsResetChargeLimit();
+    const supportsResetChargeLimit = Backend.data.getSupportsResetChargeLimit();
     // const softwareChargeLimit = Backend.data.isSupportSoftwareChargeLimit();
 
     if (supportsResetChargeLimit && !enableChargeLimit) {
