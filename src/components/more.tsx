@@ -8,6 +8,7 @@ import {
 import { FC, useEffect, useState } from "react";
 import { localizationManager, localizeStrEnum } from "../i18n";
 import { Backend, Settings, compareVersions } from "../util";
+import { getVersion, getLatestVersion, updateLatest } from "../util/backend";
 import { ActionButtonItem } from ".";
 
 interface VersionCache {
@@ -90,8 +91,8 @@ export const MoreComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
   const performVersionCheck = async (): Promise<void> => {
     try {
       const [current, latest] = await Promise.all([
-        Backend.getCurrentVersion(),
-        Backend.getLatestVersion()
+        getVersion(),
+        getLatestVersion()
       ]);
 
       setCurrentVersion(current);
@@ -174,7 +175,7 @@ export const MoreComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
           <ActionButtonItem
             layout="below"
             onClick={async () => {
-              await Backend.updateLatest();
+              await updateLatest();
             }}
           >
             {uptButtonText}

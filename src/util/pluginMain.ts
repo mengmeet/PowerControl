@@ -9,6 +9,7 @@ import {
   UpdateType,
 } from "./enum";
 import { Backend } from "./backend";
+import { receiveSuspendEvent } from "./backend";
 import { localizationManager } from "../i18n";
 import { Settings } from "./settings";
 import { EACState, AppOverviewExt, BatteryStateChange } from "./steamClient";
@@ -414,7 +415,8 @@ export class PluginManager {
           try {
             await new Promise((resolve) => setTimeout(resolve, 10000));
             if (Settings.ensureEnable()) {
-              await Backend.throwSuspendEvt();
+              console.log("throwSuspendEvt");
+              await receiveSuspendEvent();
             }
             await Timeout.withTimeout(
               () => Backend.applySettings(APPLYTYPE.SET_ALL),

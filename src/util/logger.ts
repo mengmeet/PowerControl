@@ -1,4 +1,4 @@
-import { Backend } from ".";
+import { logInfo, logError, logWarn, logDebug } from "./backend";
 
 /**
  * Logger utility class for consistent logging across the application
@@ -24,24 +24,24 @@ export class Logger {
   static info(message: string): void {
     const formattedMessage = this.formatMessage('INFO', message);
     console.log(formattedMessage);
-    Backend.logInfo(formattedMessage);
+    logInfo(formattedMessage);
   }
 
   static error(message: string): void {
     const formattedMessage = this.formatMessage('ERROR', message);
     console.error(formattedMessage);
-    Backend.logError(formattedMessage);
+    logError(formattedMessage);
   }
 
   static warn(message: string): void {
     const formattedMessage = this.formatMessage('WARN', message);
     console.warn(formattedMessage);
-    Backend.logWarn(formattedMessage);
+    logWarn(formattedMessage);
   }
 
   static debug(message: string): void {
     const formattedMessage = this.formatMessage('DEBUG', message);
     console.debug(formattedMessage);
-    Backend.logDebug(formattedMessage);
+    logDebug(formattedMessage);
   }
 } 

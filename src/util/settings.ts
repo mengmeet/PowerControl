@@ -5,6 +5,7 @@ import {
 } from "typescript-json-serializer";
 import { APPLYTYPE, ComponentName, FANMODE, GPUMODE, UpdateType } from "./enum";
 import { Backend } from "./backend";
+import { setCpuFreqByCoreType } from "./backend";
 import { FanPosition } from "./position";
 import {
   ACStateManager,
@@ -1203,7 +1204,7 @@ export class Settings {
 
     // 只有开关打开时才应用设置
     if (app.cpuFreqControlEnable) {
-      Backend.setCpuFreqByCoreType({ [coreType]: freq });
+      setCpuFreqByCoreType({ [coreType]: freq });
     }
     PluginManager.updateComponent(
       ComponentName.CPU_FREQ_CONTROL,
