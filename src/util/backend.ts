@@ -82,397 +82,253 @@ export const checkFileExist = callable<[string], boolean>("check_file_exist");
 const minSteamVersion = 1714854927;
 
 export class BackendData {
-  private cpuMaxNum = 0;
-  private has_cpuMaxNum = false;
-  private isSupportSMT = false;
-  private has_isSupportSMT = false;
-  private tdpMax = 0;
-  private has_tdpMax = false;
-  private gpuMax = 0;
-  private has_gpuMax = false;
-  private gpuMin = 0;
-  private has_gpuMin = false;
-  private fanConfigs: any[] = [];
-  private has_fanConfigs = false;
-  private current_version = "";
-  private latest_version = "";
-  private supportCPUMaxPct = false;
-  private systemInfo: SystemInfo | undefined;
-  private availableGovernors: string[] = [];
-  private has_availableGovernors = false;
-  private currentGovernor: string = "";
-  private has_currentGovernor = false;
-  private isEppSupported = false;
-  private has_isEppSupported = false;
-  private eppModes: string[] = [];
-  private has_eppModes = false;
-  private currentEpp: string | null = null;
-  private has_currentEpp = false;
-  private cpuVendor: string = "";
-  private has_cpuVendor = false;
-  private cpuCoreInfo: CPUCoreInfo = {
-    is_heterogeneous: false,
-    vendor: "Unknown",
-    architecture_summary: "Traditional Architecture",
-    core_types: {}
-  };
-  private has_cpuCoreInfo = false;
-  private supportsBypassCharge = false;
-  private has_supportsBypassCharge = false;
-  private supportsChargeLimit = false;
-  private has_supportsChargeLimit = false;
-  private supportsResetChargeLimit = false;
-  private has_supportsResetChargeLimit = false;
-  private supportsSoftwareChargeLimit = false;
-  private has_supportsSoftwareChargeLimit = false;
-  private supportsSteamosManager = false;
-  private has_supportsSteamosManager = false;
-  private schedExtSupport = false;
-  private has_schedExtSupport = false;
-  private availableSchedExtSchedulers: string[] = [];
-  private has_availableSchedExtSchedulers = false;
-  private currentSchedExtScheduler: string = "";
-  private has_currentSchedExtScheduler = false;
+  // 使用 Map 存储数据和状态
+  private data = new Map<string, any>();
+  private loadedFlags = new Set<string>();
+  private errors = new Map<string, Error>();
 
-  public async init() {
-    await getCpuMaxNum().then((res) => {
-      // console.info("cpuMaxNum = " + res.result);
-      this.cpuMaxNum = res;
-      this.has_cpuMaxNum = true;
-    }).catch((err) => {
-      console.error("获取 CPU 最大核心数失败:", err);
-      logError(`获取 CPU 最大核心数失败: ${err}`);
-      this.cpuMaxNum = 0;
-      this.has_cpuMaxNum = false;
-    });
-    await getTdpMax().then((res) => {
-      this.tdpMax = res;
-      this.has_tdpMax = true;
-    }).catch((err) => {
-      console.error("获取 TDP 最大值失败:", err);
-      logError(`获取 TDP 最大值失败: ${err}`);
-    });
-    await getGpuFreqRange().then((res) => {
-      this.gpuMin = res[0];
-      this.gpuMax = res[1];
-      this.has_gpuMin = true;
-      this.has_gpuMax = true;
-    }).catch((err) => {
-      console.error("获取 GPU 频率范围失败:", err);
-      logError(`获取 GPU 频率范围失败: ${err}`);
-    });
-    await getFanConfigList().then((res) => {
-      this.fanConfigs = res;
-      this.has_fanConfigs = res.length > 0;
-    }).catch((err) => {
-      console.error("获取风扇配置列表失败:", err);
-    });
-
-    await getIsSupportSMT().then((res) => {
-      this.isSupportSMT = res;
-      this.has_isSupportSMT = true;
-    }).catch((err) => {
-      console.error("获取 SMT 支持失败:", err);
-      logError(`获取 SMT 支持失败: ${err}`);
-    });
-
-    getMaxPerfPct().then((value) => {
-      this.supportCPUMaxPct = value > 0;
-    }).catch((err) => {
-      console.error("获取 CPU 最大性能百分比支持失败:", err);
-      logError(`获取 CPU 最大性能百分比支持失败: ${err}`);
-    });
-
-    await getVersion().then((res) => {
-      this.current_version = res;
-    }).catch((err) => {
-      console.error("获取当前版本失败:", err);
-      logError(`获取当前版本失败: ${err}`);
-    });
-
-    SteamUtils.getSystemInfo().then((systemInfo) => {
-      this.systemInfo = systemInfo;
-    }).catch((err) => {
-      console.error("获取系统信息失败:", err);
-      logError(`获取系统信息失败: ${err}`);
-    });
-
-    await getAvailableGovernors()
-      .then((res) => {
-        this.availableGovernors = res;
-        this.has_availableGovernors = true;
-      })
-      .catch((err) => {
-        console.error("获取可用 CPU 调度器失败:", err);
-        logError(`获取可用 CPU 调度器失败: ${err}`);
-        this.availableGovernors = [];
-        this.has_availableGovernors = false;
-      });
-
-    await isEppSupported()
-      .then((res) => {
-        this.isEppSupported = res;
-        this.has_isEppSupported = true;
-      })
-      .catch((err) => {
-        console.error("检查 EPP 支持失败:", err);
-        logError(`检查 EPP 支持失败: ${err}`);
-        this.isEppSupported = false;
-        this.has_isEppSupported = false;
-      });
-
-    await getEppModes()
-      .then((res) => {
-        this.eppModes = res;
-        this.has_eppModes = true;
-      })
-      .catch((err) => {
-        console.error("获取可用 EPP 模式失败:", err);
-        logError(`获取可用 EPP 模式失败: ${err}`);
-        this.eppModes = [];
-        this.has_eppModes = false;
-      });
-
-    await getCurrentEpp()
-      .then((res) => {
-        this.currentEpp = res;
-        this.has_currentEpp = true;
-      })
-      .catch((err) => {
-        console.error("获取当前 EPP 模式失败:", err);
-        logError(`获取当前 EPP 模式失败: ${err}`);
-        this.currentEpp = null;
-        this.has_currentEpp = false;
-      });
-
-    await getCpuVendor()
-      .then((res) => {
-        this.cpuVendor = res;
-        this.has_cpuVendor = true;
-      })
-      .catch((err) => {
-        console.error("获取 CPU 厂商失败:", err);
-        logError(`获取 CPU 厂商失败: ${err}`);
-        this.cpuVendor = "";
-        this.has_cpuVendor = false;
-      });
-
-    await supportsBypassCharge()
-      .then((res) => {
-        this.supportsBypassCharge = res;
-        this.has_supportsBypassCharge = true;
-      })
-      .catch((err) => {
-        console.error("检查 BYPASS_CHARGE 支持失败:", err);
-        logError(`检查 BYPASS_CHARGE 支持失败: ${err}`);
-        this.supportsBypassCharge = false;
-        this.has_supportsBypassCharge = false;
-      });
-
-    await supportsChargeLimit()
-      .then((res) => {
-        this.supportsChargeLimit = res;
-        this.has_supportsChargeLimit = true;
-      })
-      .catch((err) => {
-        console.error("检查 CHARGE_LIMIT 支持失败:", err);
-        logError(`检查 CHARGE_LIMIT 支持失败: ${err}`);
-        this.supportsChargeLimit = false;
-        this.has_supportsChargeLimit = false;
-      });
-
-    await supportsResetChargeLimit()
-      .then((res) => {
-        this.supportsResetChargeLimit = res;
-        this.has_supportsResetChargeLimit = true;
-      })
-      .catch((err) => {
-        console.error("检查 RESET_CHARGE_LIMIT 支持失败:", err);
-        logError(`检查 RESET_CHARGE_LIMIT 支持失败: ${err}`);
-        this.supportsResetChargeLimit = false;
-        this.has_supportsResetChargeLimit = false;
-      });
-
-    await softwareChargeLimit()
-      .then((res) => {
-        this.supportsSoftwareChargeLimit = res;
-        this.has_supportsSoftwareChargeLimit = true;
-      })
-      .catch((err) => {
-        console.error("检查 SOFTWARE_CHARGE_LIMIT 支持失败:", err);
-        logError(`检查 SOFTWARE_CHARGE_LIMIT 支持失败: ${err}`);
-        this.supportsSoftwareChargeLimit = false;
-        this.has_supportsSoftwareChargeLimit = false;
-      });
-
-    await checkFileExist("/usr/bin/steamosctl").then((res) => {
-      this.supportsSteamosManager = res;
-      this.has_supportsSteamosManager = true;
-    }).catch((err) => {
-      console.error("检查 steamos-manager 支持失败:", err);
-      logError(`检查 steamos-manager 支持失败: ${err}`);
-      this.supportsSteamosManager = false;
-      this.has_supportsSteamosManager = false;
-    });
-
-    // 初始化 SCX 调度器相关
-    await supportsSchedExt()
-      .then((res) => {
-        this.schedExtSupport = res;
-        this.has_schedExtSupport = true;
-      })
-      .catch((err) => {
-        console.error("检查 sched_ext 支持失败:", err);
-        logError(`检查 sched_ext 支持失败: ${err}`);
-        this.schedExtSupport = false;
-        this.has_schedExtSupport = false;
-      });
-
-    if (this.schedExtSupport) {
-      await getSchedExtList()
-        .then((res) => {
-          this.availableSchedExtSchedulers = res;
-          this.has_availableSchedExtSchedulers = true;
-        })
-        .catch((err) => {
-          console.error("获取可用 SCX 调度器列表失败:", err);
-          logError(`获取可用 SCX 调度器列表失败: ${err}`);
-          this.availableSchedExtSchedulers = [];
-          this.has_availableSchedExtSchedulers = false;
-        });
-
-      await getCurrentSchedExtScheduler()
-        .then((res) => {
-          logInfo(`初始化数据, 获取当前 SCX 调度器: ${res}`);
-          this.currentSchedExtScheduler = res;
-          this.has_currentSchedExtScheduler = true;
-        })
-        .catch((err) => {
-          console.error("获取当前 SCX 调度器失败:", err);
-          logError(`获取当前 SCX 调度器失败: ${err}`);
-          this.currentSchedExtScheduler = "";
-          this.has_currentSchedExtScheduler = false;
-        });
-    }
-
-    await getCpuCoreInfo()
-      .then((res) => {
-        this.cpuCoreInfo = res;
-        this.has_cpuCoreInfo = true;
-      })
-      .catch((err) => {
-        console.error("获取 CPU 核心信息失败:", err);
-        logError(`获取 CPU 核心信息失败: ${err}`);
-        this.cpuCoreInfo = {
-          is_heterogeneous: false,
-          vendor: "Unknown",
-          architecture_summary: "Traditional Architecture",
-          core_types: {}
-        };
-        this.has_cpuCoreInfo = false;
-      });
-
-    await getCpuGovernor()
-      .then((res) => {
-        this.currentGovernor = res;
-        this.has_currentGovernor = true;
-      })
-      .catch((err) => {
-        console.error("获取当前 CPU 调度器失败:", err);
-        logError(`获取当前 CPU 调度器失败: ${err}`);
-      });
+  // 通用的获取方法
+  private get<T>(key: string, defaultValue?: T): T {
+    return this.data.get(key) ?? defaultValue;
   }
 
-  // 简单刷新 EPP 模式列表
+  // 通用的检查方法
+  private has(key: string): boolean {
+    return this.loadedFlags.has(key);
+  }
+
+  // 通用的设置方法
+  private set<T>(key: string, value: T, error?: Error) {
+    if (error) {
+      this.errors.set(key, error);
+      this.loadedFlags.delete(key);
+      this.data.set(key, this.getDefaultValue(key));
+    } else {
+      this.data.set(key, value);
+      this.loadedFlags.add(key);
+      this.errors.delete(key);
+    }
+  }
+
+  // 获取默认值
+  private getDefaultValue(key: string): any {
+    const defaults: Record<string, any> = {
+      cpuMaxNum: 0,
+      tdpMax: 0,
+      gpuMin: 0,
+      gpuMax: 0,
+      fanConfigs: [],
+      current_version: "",
+      latest_version: "",
+      supportCPUMaxPct: false,
+      systemInfo: undefined,
+      availableGovernors: [],
+      currentGovernor: "",
+      isEppSupported: false,
+      eppModes: [],
+      currentEpp: null,
+      cpuVendor: "",
+      cpuCoreInfo: {
+        is_heterogeneous: false,
+        vendor: "Unknown",
+        architecture_summary: "Traditional Architecture",
+        core_types: {}
+      },
+      supportsBypassCharge: false,
+      supportsChargeLimit: false,
+      supportsResetChargeLimit: false,
+      supportsSoftwareChargeLimit: false,
+      supportsSteamosManager: false,
+      schedExtSupport: false,
+      availableSchedExtSchedulers: [],
+      currentSchedExtScheduler: "",
+      isSupportSMT: false
+    };
+    return defaults[key];
+  }
+
+  // 极简的初始化配置
+  private initConfig = {
+    cpuMaxNum: { callable: getCpuMaxNum },
+    tdpMax: { callable: getTdpMax },
+    gpuFreqRange: {
+      callable: getGpuFreqRange,
+      transform: (value: number[]) => ({ min: value[0], max: value[1] })
+    },
+    fanConfigs: { callable: getFanConfigList },
+    isSupportSMT: { callable: getIsSupportSMT },
+    supportCPUMaxPct: { callable: () => getMaxPerfPct().then(v => v > 0) },
+    current_version: { callable: getVersion },
+    systemInfo: { callable: () => SteamUtils.getSystemInfo() },
+    availableGovernors: { callable: getAvailableGovernors },
+    isEppSupported: { callable: isEppSupported },
+    eppModes: { callable: getEppModes },
+    currentEpp: { callable: getCurrentEpp },
+    cpuVendor: { callable: getCpuVendor },
+    supportsBypassCharge: { callable: supportsBypassCharge },
+    supportsChargeLimit: { callable: supportsChargeLimit },
+    supportsResetChargeLimit: { callable: supportsResetChargeLimit },
+    supportsSoftwareChargeLimit: { callable: softwareChargeLimit },
+    supportsSteamosManager: { callable: () => checkFileExist("/usr/bin/steamosctl") },
+    cpuCoreInfo: { callable: getCpuCoreInfo },
+    currentGovernor: { callable: getCpuGovernor }
+  };
+
+  // 主初始化方法
+  public async init() {
+    // 并行执行所有基础初始化
+    const tasks = Object.entries(this.initConfig).map(([key, config]) =>
+      this.initField(key, config)
+    );
+
+    await Promise.allSettled(tasks);
+
+    // 单独处理有依赖关系的 sched_ext
+    await this.initSchedExt();
+  }
+
+  // 极简的字段初始化方法
+  private async initField(key: string, config: any) {
+    try {
+      const result = await config.callable();
+      if (config.transform) {
+        const transformed = config.transform(result);
+        if (key === 'gpuFreqRange') {
+          this.set('gpuMin', transformed.min);
+          this.set('gpuMax', transformed.max);
+          return;
+        }
+      }
+      this.set(key, result);
+    } catch (error) {
+      console.error(`初始化 ${key} 失败:`, error);
+      logError(`初始化 ${key} 失败: ${error}`);
+      this.set(key, this.getDefaultValue(key), error as Error);
+    }
+  }
+
+  // 处理有依赖关系的 sched_ext 初始化
+  private async initSchedExt() {
+    // 先检查 sched_ext 支持
+    try {
+      const supported = await supportsSchedExt();
+      this.set('schedExtSupport', supported);
+
+      // 如果支持，再获取详细信息
+      if (supported) {
+        const schedExtTasks = [
+          this.initField('availableSchedExtSchedulers', {
+            callable: getSchedExtList
+          }),
+          // 特殊处理当前调度器（需要额外的日志）
+          (async () => {
+            try {
+              const result = await getCurrentSchedExtScheduler();
+              logInfo(`初始化数据, 获取当前 SCX 调度器: ${result}`);
+              this.set('currentSchedExtScheduler', result);
+            } catch (error) {
+              console.error(`初始化 currentSchedExtScheduler 失败:`, error);
+              logError(`初始化 currentSchedExtScheduler 失败: ${error}`);
+              this.set('currentSchedExtScheduler', '', error as Error);
+            }
+          })()
+        ];
+
+        await Promise.allSettled(schedExtTasks);
+      }
+    } catch (error) {
+      console.error(`初始化 schedExtSupport 失败:`, error);
+      logError(`初始化 schedExtSupport 失败: ${error}`);
+      this.set('schedExtSupport', false, error as Error);
+    }
+  }
+
+  // 刷新 EPP 模式（保持现有方法）
   public async refreshEPPModes(): Promise<void> {
-    await getEppModes()
-      .then((res) => {
-        this.eppModes = res;
-        this.has_eppModes = true;
-      })
-      .catch((err) => {
-        console.error("刷新 EPP 模式失败:", err);
-        this.eppModes = [];
-        this.has_eppModes = false;
-      });
+    await this.initField('eppModes', this.initConfig.eppModes);
+    await this.initField('currentEpp', this.initConfig.currentEpp);
   }
 
   public getForceShowTDP() {
-    // 检查 Steam 客户端版本，如果版本大于等于 minSteamVersion。不显示强制 TDP 开关。并默认显示 TDP 控制组件
-    return this.systemInfo!.nSteamVersion >= minSteamVersion;
+    const systemInfo = this.get<SystemInfo>('systemInfo');
+    return systemInfo?.nSteamVersion >= minSteamVersion;
   }
 
   public getCpuMaxNum() {
-    return this.cpuMaxNum;
+    return this.get<number>('cpuMaxNum', 0);
   }
 
   public HasCpuMaxNum() {
-    return this.has_cpuMaxNum;
+    return this.has('cpuMaxNum');
   }
 
   public getSupportSMT() {
-    return this.isSupportSMT;
+    return this.get<boolean>('isSupportSMT', false);
   }
 
   public HasSupportSMT() {
-    return this.has_isSupportSMT;
+    return this.has('isSupportSMT');
   }
 
   public getTDPMax() {
-    return this.tdpMax;
+    return this.get<number>('tdpMax', 0);
   }
 
   public getGPUFreqMax() {
-    return this.gpuMax;
+    return this.get<number>('gpuMax', 0);
   }
 
   public HasGPUFreqMax() {
-    return this.has_gpuMax;
+    return this.has('gpuMax');
   }
 
   public getGPUFreqMin() {
-    return this.gpuMin;
+    return this.get<number>('gpuMin', 0);
   }
 
   public HasGPUFreqMin() {
-    return this.has_gpuMin;
+    return this.has('gpuMin');
   }
 
   public HasTDPMax() {
-    return this.has_tdpMax;
+    return this.has('tdpMax');
   }
 
   public getFanMAXPRM(index: number) {
-    if (this.has_fanConfigs) {
-      return this.fanConfigs?.[index]?.fan_max_rpm ?? 0;
+    const fanConfigs = this.get<any[]>('fanConfigs', []);
+    if (this.has('fanConfigs')) {
+      return fanConfigs?.[index]?.fan_max_rpm ?? 0;
     }
     return 0;
   }
 
   public getFanCount() {
-    if (this.has_fanConfigs) {
-      return this.fanConfigs?.length ?? 0;
+    const fanConfigs = this.get<any[]>('fanConfigs', []);
+    if (this.has('fanConfigs')) {
+      return fanConfigs?.length ?? 0;
     }
     return 0;
   }
 
   public getFanName(index: number) {
-    if (this.has_fanConfigs) {
-      return this.fanConfigs?.[index]?.fan_name ?? "Fan";
+    const fanConfigs = this.get<any[]>('fanConfigs', []);
+    if (this.has('fanConfigs')) {
+      return fanConfigs?.[index]?.fan_name ?? "Fan";
     }
     return "Fan";
   }
 
   public getFanConfigs() {
-    if (this.has_fanConfigs) {
-      return this.fanConfigs;
+    if (this.has('fanConfigs')) {
+      return this.get<any[]>('fanConfigs', []);
     }
     return [];
   }
 
   public getFanPwmMode(index: number) {
-    if (this.has_fanConfigs) {
-      return this.fanConfigs?.[index]?.fan_hwmon_mode ?? 0;
+    const fanConfigs = this.get<any[]>('fanConfigs', []);
+    if (this.has('fanConfigs')) {
+      return fanConfigs?.[index]?.fan_hwmon_mode ?? 0;
     }
     return 0;
   }
@@ -481,10 +337,11 @@ export class BackendData {
     index: number
   ): { speedValue: number; tempValue: number }[] {
     const result: { speedValue: number; tempValue: number }[] = [];
-    if (this.has_fanConfigs) {
-      const defaultCurve = this.fanConfigs?.[index]?.fan_default_curve ?? [];
+    const fanConfigs = this.get<any[]>('fanConfigs', []);
+    if (this.has('fanConfigs')) {
+      const defaultCurve = fanConfigs?.[index]?.fan_default_curve ?? [];
       const pwmWriteMax: number =
-        this.fanConfigs?.[index]?.fan_pwm_write_max ?? 255;
+        fanConfigs?.[index]?.fan_pwm_write_max ?? 255;
       // console.log(">>>>>>>>>>> getHwmonDefaultCurve", defaultCurve);
       if (defaultCurve instanceof Array && defaultCurve.length > 0) {
         for (let i = 0; i < defaultCurve.length; i++) {
@@ -515,55 +372,55 @@ export class BackendData {
   }
 
   public getCurrentVersion() {
-    return this.current_version;
+    return this.get<string>('current_version', '');
   }
 
   public getLatestVersion() {
-    return this.latest_version;
+    return this.get<string>('latest_version', '');
   }
 
   public getSupportCPUMaxPct() {
-    return this.supportCPUMaxPct;
+    return this.get<boolean>('supportCPUMaxPct', false);
   }
 
   public HasAvailableGovernors() {
-    return this.has_availableGovernors;
+    return this.has('availableGovernors');
   }
 
   public getAvailableGovernors(): string[] {
-    return this.availableGovernors;
+    return this.get<string[]>('availableGovernors', []);
   }
 
   public getCurrentGovernor() {
-    return this.currentGovernor;
+    return this.get<string>('currentGovernor', '');
   }
 
   public hasCurrentGovernor() {
-    return this.has_currentGovernor;
+    return this.has('currentGovernor');
   }
 
   public hasSchedExtSupport() {
-    return this.has_schedExtSupport;
+    return this.has('schedExtSupport');
   }
 
   public getSchedExtSupport() {
-    return this.schedExtSupport;
+    return this.get<boolean>('schedExtSupport', false);
   }
 
   public hasAvailableSchedExtSchedulers() {
-    return this.has_availableSchedExtSchedulers;
+    return this.has('availableSchedExtSchedulers');
   }
 
   public getAvailableSchedExtSchedulers(): string[] {
-    return this.availableSchedExtSchedulers;
+    return this.get<string[]>('availableSchedExtSchedulers', []);
   }
 
   public hasCurrentSchedExtScheduler() {
-    return this.has_currentSchedExtScheduler;
+    return this.has('currentSchedExtScheduler');
   }
 
   public getCurrentSchedExtScheduler(): string {
-    return this.currentSchedExtScheduler;
+    return this.get<string>('currentSchedExtScheduler', '');
   }
 
   public async getFanRPM(index: number) {
@@ -603,92 +460,97 @@ export class BackendData {
   }
 
   public isEPPSupported() {
-    return this.isEppSupported;
+    return this.get<boolean>('isEppSupported', false);
   }
 
   public hasEPPSupported() {
-    return this.has_isEppSupported;
+    return this.has('isEppSupported');
   }
 
   public getEPPModes() {
-    return this.eppModes;
+    return this.get<string[]>('eppModes', []);
   }
 
   public hasEPPModes() {
-    return this.has_eppModes;
+    return this.has('eppModes');
   }
 
   public getCurrentEPP() {
-    return this.currentEpp;
+    return this.get<string | null>('currentEpp', null);
   }
 
   public hasCurrentEPP() {
-    return this.has_currentEpp;
+    return this.has('currentEpp');
   }
 
   public getCpuVendor() {
-    return this.cpuVendor;
+    return this.get<string>('cpuVendor', '');
   }
 
   public hasCpuVendor() {
-    return this.has_cpuVendor;
+    return this.has('cpuVendor');
   }
 
   public getCpuCoreInfo() {
-    return this.cpuCoreInfo;
+    return this.get<CPUCoreInfo>('cpuCoreInfo', {
+      is_heterogeneous: false,
+      vendor: "Unknown",
+      architecture_summary: "Traditional Architecture",
+      core_types: {}
+    });
   }
 
   public hasCpuCoreInfo() {
-    return this.has_cpuCoreInfo;
+    return this.has('cpuCoreInfo');
   }
 
   public isHeterogeneousCpu() {
-    return this.cpuCoreInfo.is_heterogeneous;
+    return this.getCpuCoreInfo().is_heterogeneous;
   }
 
   public getCpuArchitectureSummary() {
-    return this.cpuCoreInfo.architecture_summary;
+    return this.getCpuCoreInfo().architecture_summary;
   }
 
   public getIsSupportBypassCharge() {
-    return this.supportsBypassCharge;
+    return this.get<boolean>('supportsBypassCharge', false);
   }
 
   public hasIsSupportBypassCharge() {
-    return this.has_supportsBypassCharge;
+    return this.has('supportsBypassCharge');
   }
 
   public getIsSupportChargeLimit() {
-    return this.supportsChargeLimit;
+    return this.get<boolean>('supportsChargeLimit', false);
   }
 
   public hasIsSupportChargeLimit() {
-    return this.has_supportsChargeLimit;
+    return this.has('supportsChargeLimit');
   }
 
   public isSupportResetChargeLimit() {
-    return this.supportsResetChargeLimit;
+    return this.get<boolean>('supportsResetChargeLimit', false);
   }
 
   public hasIsSupportResetChargeLimit() {
-    return this.has_supportsResetChargeLimit;
+    return this.has('supportsResetChargeLimit');
   }
 
   // isSupportSoftwareChargeLimit
   public isSupportSoftwareChargeLimit() {
-    return this.supportsSoftwareChargeLimit;
+    return this.get<boolean>('supportsSoftwareChargeLimit', false);
   }
 
   public hasIsSupportSoftwareChargeLimit() {
-    return this.has_supportsSoftwareChargeLimit;
+    return this.has('supportsSoftwareChargeLimit');
   }
 
   public getSupportsSteamosManager() {
-    return this.supportsSteamosManager;
+    return this.get<boolean>('supportsSteamosManager', false);
   }
 
   public hasSupportsSteamosManager() {
-    return this.has_supportsSteamosManager;
+    return this.has('supportsSteamosManager');
   }
 }
 
