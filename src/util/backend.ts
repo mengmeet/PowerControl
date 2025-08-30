@@ -67,7 +67,7 @@ export const setBypassCharge = callable<[boolean], any>("set_bypass_charge");
 export const getBypassCharge = callable<[], boolean>("get_bypass_charge");
 export const setChargeLimit = callable<[number], any>("set_charge_limit");
 export const resetChargeLimit = callable<[], any>("reset_charge_limit");
-export const setSchedExtScheduler = callable<[string, string], boolean>("set_sched_ext_scheduler");
+export const setSchedExtScheduler = callable<[string, string?], boolean>("set_sched_ext_scheduler");
 export const setCpuGovernorCallable = callable<[string], boolean>("set_cpu_governor");
 export const setEpp = callable<[string], boolean>("set_epp");
 export const logInfo = callable<[string], any>("log_info");
@@ -772,15 +772,15 @@ export class Backend {
     const cpuNum = Settings.appCpuNum();
     const smt = Settings.appSmt();
     if (cpuNum) {
-      await Backend.applySmt(smt);
-      await Backend.applyCpuNum(cpuNum);
+      await setSmt(smt);
+      await setCpuOnline(cpuNum);
     }
   }
 
   private static async handleCPUBoost(): Promise<void> {
     const cpuBoost = Settings.appCpuboost();
     if (cpuBoost !== undefined) {
-      await Backend.applyCpuBoost(cpuBoost);
+      await setCpuBoost(cpuBoost);
     }
   }
 
@@ -791,7 +791,7 @@ export class Backend {
   private static async handleSchedExtScheduler(): Promise<void> {
     const schedExtScheduler = Settings.appSchedExtScheduler();
     if (schedExtScheduler) {
-      await Backend.setSchedExtScheduler(schedExtScheduler);
+      await setSchedExtScheduler(schedExtScheduler);
     }
   }
 
@@ -812,7 +812,7 @@ export class Backend {
     const eppMode = Settings.appEPPMode();
     const cpuGovernor = Settings.appCPUGovernor();
     if (cpuGovernor) {
-      await Backend.setCpuGovernor(cpuGovernor);
+      await setCpuGovernorCallable(cpuGovernor);
       if (cpuGovernor !== "performance") {
         await Backend.data.refreshEPPModes();
       }
@@ -850,12 +850,12 @@ export class Backend {
 
     switch (gpuMode) {
       case GPUMODE.NOLIMIT:
-        await Backend.applyGPUAuto(false);
-        await Backend.applyGPUFreq(0);
+        await setGpuAuto(false);
+        await setGpuFreq(0);
         break;
       case GPUMODE.FIX:
-        await Backend.applyGPUAuto(false);
-        await Backend.applyGPUFreq(gpuFreq);
+        await setGpuAuto(false);
+        await setGpuFreq(gpuFreq);
         break;
       case GPUMODE.NATIVE:
         if (gpuSliderFix) {
@@ -865,16 +865,16 @@ export class Backend {
       case GPUMODE.AUTO:
         Settings.setTDPEnable(false);
         Settings.setCpuboost(false);
-        await Backend.applyGPUAutoRange(gpuAutoMinFreq, gpuAutoMaxFreq);
-        await Backend.applyGPUAuto(true);
+        await setGpuAutoFreqRange(gpuAutoMinFreq, gpuAutoMaxFreq);
+        await setGpuAuto(true);
         break;
       case GPUMODE.RANGE:
-        await Backend.applyGPUAuto(false);
-        await Backend.applyGPUFreqRange(gpuRangeMinFreq, gpuRangeMaxFreq);
+        await setGpuAuto(false);
+        await setGpuFreqRange(gpuRangeMinFreq, gpuRangeMaxFreq);
         break;
       default:
         console.log(`出现意外的GPUmode = ${gpuMode}`);
-        await Backend.applyGPUFreq(0);
+        await setGpuFreq(0);
     }
   }
 
@@ -927,48 +927,16 @@ export class Backend {
     if (!tdpEnable) {
       if (tdpEnable !== Backend.lastTDPEnable) {
         Logger.info(`tdpEnable is false, applyTDPUnlimited`);
-        await Backend.applyTDPUnlimited();
+        await setCpuTDPUnlimited();
       }
       Backend.lastTDPEnable = tdpEnable;
       return;
     }
 
     Logger.info(`applyTDP: ${_tdp}`);
-    await Backend.applyTDP(_tdp);
+    await setCpuTDP(_tdp);
     Backend.lastTDPEnable = tdpEnable;
 
-    // 处理非插件模式或强制显示 TDP 的情况
-    // if (
-    //   !PluginManager.isPatchSuccess(Patch.TDPPatch)
-    // ) {
-    //   if (tdpEnable) {
-    //     await Backend.applyTDP(_tdp);
-    //   } else {
-    //     Logger.info("not isPatchSuccess: not tdpEnable, applyTDPUnlimited");
-    //     await Backend.applyTDPUnlimited();
-    //   }
-
-    //   try {
-    //     await QAMPatch.setTDPEanble(tdpEnable);
-    //     if (tdpEnable) {
-    //       await QAMPatch.setTDP(_tdp);
-    //     }
-    //   } catch (error) {
-    //     console.error(`强制显示 TDP 时设置QAM失败`, error);
-    //   }
-    // }
-
-    // 处理插件模式的情况
-    // if (PluginManager.isPatchSuccess(Patch.TDPPatch)) {
-    //   await QAMPatch.setTDPEanble(tdpEnable);
-    //   await QAMPatch.setTDP(_tdp);
-    //   if (tdpEnable) {
-    //     await Backend.applyTDP(_tdp);
-    //   } else {
-    //     Logger.info("isPatchSuccess: not tdpEnable, applyTDPUnlimited");
-    //     await Backend.applyTDPUnlimited();
-    //   }
-    // }
   }
 
   private static async handleFanControl(): Promise<void> {
@@ -981,7 +949,7 @@ export class Backend {
       const fanSetting = Settings.appFanSettings()?.[index];
       //没有配置时转自动
       if (!fanSetting) {
-        await Backend.applyFanAuto(index, true);
+        await setFanAuto(index, true);
         // console.log(`没有配置 index= ${index}`);
         continue;
       }
@@ -994,7 +962,7 @@ export class Backend {
       switch (fanMode) {
         case FANMODE.NOCONTROL:
           // console.log(`不控制 index= ${index}`);
-          await Backend.applyFanAuto(index, true);
+          await setFanAuto(index, true);
           break;
         case FANMODE.FIX:
         case FANMODE.CURVE:
@@ -1004,16 +972,20 @@ export class Backend {
               console.error(`风扇转速百分比未设置: index=${index}`);
               continue;
             }
-            await Backend.applyFanPercent(index, fanRPMPercent);
-            await Backend.applyFanAuto(index, false);
+            await setFanPercent(index, fanRPMPercent);
+            await setFanAuto(index, false);
           } else {
             console.log(`直接写入曲线数据`);
-            await Backend.applyFanCurve(index, fanSetting);
+            await setFanCurve(
+              index,
+              fanSetting?.curvePoints?.map((point) => point?.temperature ?? 0) ?? [],
+              fanSetting?.curvePoints?.map((point) => point?.fanRPMpercent ?? 0) ?? []
+            );
           }
           break;
         default:
           console.error(`出现意外的FanMode = ${fanMode}`);
-          await Backend.applyFanAuto(index, true);
+          await setFanAuto(index, true);
       }
     }
   }
@@ -1090,77 +1062,23 @@ export class Backend {
 
   public static resetFanSettings = () => {
     FanControl.fanInfo.forEach((_value, index) => {
-      Backend.applyFanAuto(index, true);
+      setFanAuto(index, true);
     });
   };
 
   public static resetSettings = () => {
     console.log("重置所有设置");
-    Backend.applySmt(true);
-    Backend.applyCpuNum(Backend.data.getCpuMaxNum());
-    Backend.applyCpuBoost(true);
-    // Backend.applyTDP(Backend.data.getTDPMax());
+    setSmt(true);
+    setCpuOnline(Backend.data.getCpuMaxNum());
+    setCpuBoost(true);
+    // setCpuTDP(Backend.data.getTDPMax());
     Logger.info("resetSettings: applyTDPUnlimited");
-    Backend.applyTDPUnlimited();
-    Backend.applyGPUFreq(0);
+    setCpuTDPUnlimited();
+    setGpuFreq(0);
     FanControl.fanInfo.forEach((_value, index) => {
-      Backend.applyFanAuto(index, true);
+      setFanAuto(index, true);
     });
   };
-
-  private static applySmt(smt: boolean) {
-    setSmt(smt);
-  }
-
-  private static applyCpuNum(cpuNum: number) {
-    setCpuOnline(cpuNum);
-  }
-
-  private static applyCpuBoost(cpuBoost: boolean) {
-    setCpuBoost(cpuBoost);
-  }
-
-  public static applyTDP = (tdp: number) => {
-    setCpuTDP(tdp);
-  };
-
-  public static applyTDPUnlimited = () => {
-    setCpuTDPUnlimited();
-  };
-
-  public static applyGPUFreq(freq: number) {
-    setGpuFreq(freq);
-  }
-
-  private static applyGPUFreqRange(freqMin: number, freqMax: number) {
-    setGpuFreqRange(freqMin, freqMax);
-  }
-
-  private static applyGPUAuto(auto: boolean) {
-    setGpuAuto(auto);
-  }
-
-  private static applyGPUAutoRange(minAutoFreq: number, maxAutoFreq: number) {
-    setGpuAutoFreqRange(minAutoFreq, maxAutoFreq);
-  }
-
-  private static applyFanAuto(index: number, auto: boolean) {
-    setFanAuto(index, auto);
-  }
-
-  private static applyFanPercent(index: number, percent: number) {
-    setFanPercent(index, percent);
-  }
-
-  private static applyFanCurve(index: number, fanSetting: FanSetting) {
-    setFanCurve(
-      index,
-      fanSetting?.curvePoints?.map((point) => point?.temperature ?? 0) ?? [],
-      fanSetting?.curvePoints?.map((point) => point?.fanRPMpercent ?? 0) ?? []
-    );
-  }
-
-
 
   // set_settings
   public static async setSettings(settingsData: SettingsData) {
@@ -1180,81 +1098,4 @@ export class Backend {
       return new SettingsData();
     }
   }
-
-
-
-  // 获取当前 CPU 调度器
-  public static async getCpuGovernor(): Promise<string> {
-    try {
-      return await getCpuGovernor();
-    } catch (error) {
-      console.error("获取 CPU 调度器失败:", error);
-      return "";
-    }
-  }
-
-  // 获取所有可用的 CPU 调度器
-  public static async getAvailableGovernors(): Promise<string[]> {
-    try {
-      return await getAvailableGovernors();
-    } catch (error) {
-      console.error("获取可用 CPU 调度器列表失败:", error);
-      return [];
-    }
-  }
-
-  // 检查是否支持 sched_ext
-  public static async hasSchedExtSupport(): Promise<boolean> {
-    try {
-      return await supportsSchedExt();
-    } catch (error) {
-      console.error("检查 sched_ext 支持失败:", error);
-      return false;
-    }
-  }
-
-  // 获取可用的 SCX 调度器列表
-  public static async getAvailableSchedExtSchedulers(): Promise<string[]> {
-    try {
-      return await getSchedExtList();
-    } catch (error) {
-      console.error("获取可用 SCX 调度器列表失败:", error);
-      return [];
-    }
-  }
-
-  // 获取当前 SCX 调度器
-  public static async getCurrentSchedExtScheduler(): Promise<string> {
-    try {
-      return await getCurrentSchedExtScheduler();
-    } catch (error) {
-      console.error("获取当前 SCX 调度器失败:", error);
-      return "";
-    }
-  }
-
-  // 设置 SCX 调度器
-  public static async setSchedExtScheduler(scheduler: string, param?: string): Promise<boolean> {
-    try {
-      const paramValue = param || "";
-      console.log(`设置 SCX 调度器为: ${scheduler}, 参数: ${paramValue}`);
-      return await setSchedExtScheduler(scheduler, paramValue);
-    } catch (error) {
-      console.error("设置 SCX 调度器失败:", error);
-      return false;
-    }
-  }
-
-  // 设置 CPU 调度器
-  public static async setCpuGovernor(governor: string): Promise<boolean> {
-    try {
-      return await setCpuGovernorCallable(governor);
-    } catch (error) {
-      console.error("设置 CPU 调度器失败:", error);
-      return false;
-    }
-  }
-
-
-
 }
