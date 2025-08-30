@@ -137,7 +137,7 @@ const CPUNumComponent: FC = () => {
           step={1}
           max={Backend.data.getCpuMaxNum()}
           min={1}
-          disabled={!Backend.data.HasCpuMaxNum()}
+          disabled={!Backend.data.hasCpuMaxNum()}
           showValue={true}
           onChangeEnd={(value: number) => {
             Settings.setCpuNum(value);
@@ -302,7 +302,7 @@ const CPUTDPComponent: FC = () => {
                 max={
                   enableCustomTDPRange
                     ? customTDPRangeMax
-                    : Backend.data.getTDPMax()
+                    : Backend.data.getTdpMax()
                 }
                 min={enableCustomTDPRange ? customTDPRangeMin : 3}
                 disabled={disabled}
@@ -354,7 +354,7 @@ const CPUGovernorComponent: FC = () => {
 
   const refresh = () => {
     setGovernor(Settings.appCPUGovernor());
-    if (Backend.data.HasAvailableGovernors()) {
+    if (Backend.data.hasAvailableGovernors()) {
       setAvailableGovernors(Backend.data.getAvailableGovernors());
     }
   };
@@ -378,7 +378,7 @@ const CPUGovernorComponent: FC = () => {
   }, []);
 
   if (
-    !Backend.data.HasAvailableGovernors() ||
+    !Backend.data.hasAvailableGovernors() ||
     availableGovernors.length === 0
   ) {
     return null;
@@ -414,15 +414,15 @@ const CPUGovernorComponent: FC = () => {
 export const CPUEPPComponent: FC = () => {
   const [epp, setEPP] = useState<string>(Settings.appEPPMode());
   const [eppModes, setEPPModes] = useState<string[]>(
-    Backend.data.getEPPModes()
+    Backend.data.getEppModes()
   );
 
   const refresh = () => {
     setEPP(Settings.appEPPMode());
     const updateEPPModes = async () => {
       await Backend.data.refreshEPPModes();
-      if (Backend.data.hasEPPModes()) {
-        setEPPModes(Backend.data.getEPPModes());
+      if (Backend.data.hasEppModes()) {
+        setEPPModes(Backend.data.getEppModes());
       }
     };
     updateEPPModes();
@@ -447,7 +447,7 @@ export const CPUEPPComponent: FC = () => {
     );
   }, []);
 
-  // if (!Backend.data.hasEPPModes() || eppModes.length === 0) {
+  // if (!Backend.data.hasEppModes() || eppModes.length === 0) {
   //   return null;
   // }
 

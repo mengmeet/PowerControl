@@ -85,7 +85,7 @@ const ChargeLimitComponent: FC = () => {
   );
 
   const [supportsResetChargeLimit, __] = useState<boolean>(
-    Backend.data.isSupportResetChargeLimit()
+    Backend.data.isSupportsResetChargeLimit()
   );
 
   const [enableChargeLimit, setEnableChargeLimit] = useState<boolean>(
@@ -170,11 +170,11 @@ export const PowerComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
   const [show, setShow] = useState<boolean>(Settings.ensureEnable());
 
   const supportChargeLimit = useMemo(() => {
-    return Backend.data.getIsSupportChargeLimit();
+    return Backend.data.isSupportsChargeLimit();
   }, []);
 
   const isSupportSoftwareChargeLimit = useMemo(() => {
-    return Backend.data.isSupportSoftwareChargeLimit();
+    return Backend.data.isSupportsSoftwareChargeLimit();
   }, []);
 
   const [showPowerMenu, setShowPowerMenu] = useState<boolean>(

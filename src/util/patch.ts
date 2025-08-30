@@ -367,14 +367,14 @@ class GPUPerformancePatch {
         "Get",
         (_: any[], ret: any) => {
           try {
-            if (Backend.data.HasGPUFreqMax()) {
+            if (Backend.data.hasGpuMax()) {
               this.perfStore.msgLimits.gpu_performance_manual_max_mhz =
-                Backend.data.getGPUFreqMax();
+                Backend.data.getGpuMax();
               this.perfStore.msgLimits.gpu_performance_manual_min_mhz =
-                Backend.data.getGPUFreqMin();
+                Backend.data.getGpuMin();
               if (!this.perfStore.msgLimits.gpu_performance_manual_mhz) {
                 this.perfStore.msgLimits.gpu_performance_manual_mhz =
-                  Backend.data.getGPUFreqMin();
+                  Backend.data.getGpuMin();
               }
             } else {
               console.error("未获取到gpu频率范围,结束修补");

@@ -66,28 +66,28 @@ export class AppSetting {
 
   constructor() {
     this.smt = true;
-    this.cpuNum = Backend.data?.HasCpuMaxNum()
+    this.cpuNum = Backend.data?.hasCpuMaxNum()
       ? Backend.data?.getCpuMaxNum()
       : 4;
     this.cpuboost = true;
     this.tdpEnable = false;
-    this.tdp = Backend.data?.HasTDPMax()
-      ? Math.trunc(Backend.data?.getTDPMax() / 2)
+    this.tdp = Backend.data?.hasTdpMax()
+      ? Math.trunc(Backend.data?.getTdpMax() / 2)
       : 15;
     this.gpuMode = GPUMODE.NATIVE;
     this.gpuSliderFix = false;
-    //this.gpuFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
-    this.gpuAutoMaxFreq = Backend.data?.HasGPUFreqMax()
-      ? Backend.data.getGPUFreqMax()
+    //this.gpuFreq=Backend.data?.hasGpuMax()?Backend.data.getGpuMax():1600;
+    this.gpuAutoMaxFreq = Backend.data?.hasGpuMax()
+      ? Backend.data.getGpuMax()
       : 1600;
-    this.gpuAutoMinFreq = Backend.data?.HasGPUFreqMin()
-      ? Backend.data.getGPUFreqMin()
+    this.gpuAutoMinFreq = Backend.data?.hasGpuMin()
+      ? Backend.data.getGpuMin()
       : 200;
-    this.gpuRangeMaxFreq = Backend.data?.HasGPUFreqMax()
-      ? Backend.data.getGPUFreqMax()
+    this.gpuRangeMaxFreq = Backend.data?.hasGpuMax()
+      ? Backend.data.getGpuMax()
       : 1600;
-    this.gpuRangeMinFreq = Backend.data?.HasGPUFreqMin()
-      ? Backend.data.getGPUFreqMin()
+    this.gpuRangeMinFreq = Backend.data?.hasGpuMin()
+      ? Backend.data.getGpuMin()
       : 200;
     this.fanProfileNameList = [];
     this.cpuMaxPerfPct = 100;
@@ -535,7 +535,7 @@ export class Settings {
   }
 
   static appIsSupportSMT(): boolean {
-    return Backend.data?.HasSupportSMT() ? Backend.data?.getSupportSMT() : true;
+    return Backend.data?.hasIsSupportSMT() ? Backend.data?.getIsSupportSMT() : true;
   }
 
   static appBypassCharge(): boolean {
@@ -715,7 +715,7 @@ export class Settings {
     if (this._instance.data.enableCustomTDPRange) {
       return this._instance.data.customTDPRangeMax;
     } else {
-      return Backend.data.getTDPMax();
+      return Backend.data.getTdpMax();
     }
   }
 
@@ -1153,7 +1153,7 @@ export class Settings {
   public static appEPPMode(): string {
     return (
       this.ensureApp().epp ||
-      Backend.data.getCurrentEPP() ||
+      Backend.data.getCurrentEpp() ||
       "balance-performance"
     );
   }

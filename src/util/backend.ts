@@ -15,11 +15,27 @@ import { Logger } from "./logger";
 import { CPUCoreInfo } from "../types/cpu";
 const serializer = new JsonSerializer();
 
+// Fan config type
+interface FanConfig {
+  fan_max_rpm?: number;
+  fan_name?: string;
+  [key: string]: unknown;
+}
+
+// Proxy methods type definition
+type ProxyMethods<T> = {
+  [K in keyof T as `get${Capitalize<K & string>}`]: () => T[K];
+} & {
+  [K in keyof T as `has${Capitalize<K & string>}`]: () => boolean;
+} & {
+  [K in keyof T as T[K] extends boolean ? `is${Capitalize<K & string>}` : never]: () => T[K];
+};
+
 // Backend API callable functions
 export const getCpuMaxNum = callable<[], number>("get_cpuMaxNum");
 export const getTdpMax = callable<[], number>("get_tdpMax");
 export const getGpuFreqRange = callable<[], number[]>("get_gpuFreqRange");
-export const getFanConfigList = callable<[], []>("get_fanConfigList");
+export const getFanConfigList = callable<[], FanConfig[]>("get_fanConfigList");
 export const getIsSupportSMT = callable<[], boolean>("get_isSupportSMT");
 export const getVersion = callable<[], string>("get_version");
 export const getAvailableGovernors = callable<[], string[]>("get_available_governors");
@@ -79,7 +95,7 @@ export const startGpuNotify = callable<[], any>("start_gpu_notify");
 export const stopGpuNotify = callable<[], any>("stop_gpu_notify");
 export const checkFileExist = callable<[string], boolean>("check_file_exist");
 
-const minSteamVersion = 1714854927;
+
 
 export class BackendData {
   // 使用 Map 存储数据和状态
@@ -111,40 +127,41 @@ export class BackendData {
   }
 
   // 获取默认值
-  private getDefaultValue(key: string): any {
-    const defaults: Record<string, any> = {
-      cpuMaxNum: 0,
-      tdpMax: 0,
-      gpuMin: 0,
-      gpuMax: 0,
-      fanConfigs: [],
-      current_version: "",
-      latest_version: "",
-      supportCPUMaxPct: false,
-      systemInfo: undefined,
-      availableGovernors: [],
-      currentGovernor: "",
-      isEppSupported: false,
-      eppModes: [],
-      currentEpp: null,
-      cpuVendor: "",
-      cpuCoreInfo: {
-        is_heterogeneous: false,
-        vendor: "Unknown",
-        architecture_summary: "Traditional Architecture",
-        core_types: {}
-      },
-      supportsBypassCharge: false,
-      supportsChargeLimit: false,
-      supportsResetChargeLimit: false,
-      supportsSoftwareChargeLimit: false,
-      supportsSteamosManager: false,
-      schedExtSupport: false,
-      availableSchedExtSchedulers: [],
-      currentSchedExtScheduler: "",
-      isSupportSMT: false
-    };
-    return defaults[key];
+  public static readonly DEFAULTS = {
+    cpuMaxNum: 0,
+    tdpMax: 0,
+    gpuMin: 0,
+    gpuMax: 0,
+    fanConfigs: [] as FanConfig[],
+    currentVersion: "",
+    latestVersion: "",
+    supportCPUMaxPct: false,
+    systemInfo: undefined as SystemInfo | undefined,
+    availableGovernors: [] as string[],
+    currentGovernor: "",
+    isEppSupported: false,
+    eppModes: [] as string[],
+    currentEpp: null as string | null,
+    cpuVendor: "",
+    cpuCoreInfo: {
+      is_heterogeneous: false,
+      vendor: "Unknown",
+      architecture_summary: "Traditional Architecture",
+      core_types: {}
+    } as CPUCoreInfo,
+    supportsBypassCharge: false,
+    supportsChargeLimit: false,
+    supportsResetChargeLimit: false,
+    supportsSoftwareChargeLimit: false,
+    supportsSteamosManager: false,
+    schedExtSupport: false,
+    availableSchedExtSchedulers: [] as string[],
+    currentSchedExtScheduler: "",
+    isSupportSMT: false
+  } as const;
+
+  private getDefaultValue(key: string) {
+    return BackendData.DEFAULTS[key as keyof typeof BackendData.DEFAULTS];
   }
 
   // 极简的初始化配置
@@ -158,7 +175,7 @@ export class BackendData {
     fanConfigs: { callable: getFanConfigList },
     isSupportSMT: { callable: getIsSupportSMT },
     supportCPUMaxPct: { callable: () => getMaxPerfPct().then(v => v > 0) },
-    current_version: { callable: getVersion },
+    currentVersion: { callable: getVersion },
     systemInfo: { callable: () => SteamUtils.getSystemInfo() },
     availableGovernors: { callable: getAvailableGovernors },
     isEppSupported: { callable: isEppSupported },
@@ -243,56 +260,56 @@ export class BackendData {
     }
   }
 
+  constructor() {
+    return new Proxy(this, {
+      get(target, prop) {
+        const propStr = prop.toString();
+
+        if (propStr.startsWith('get') && propStr.length > 3) {
+          const fieldName = propStr.slice(3);
+          const actualFieldName = fieldName.charAt(0).toLowerCase() + fieldName.slice(1);
+          if (actualFieldName in BackendData.DEFAULTS) {
+            return () => target.data.get(actualFieldName) ?? BackendData.DEFAULTS[actualFieldName as keyof typeof BackendData.DEFAULTS];
+          }
+        }
+
+        if (propStr.startsWith('is') && propStr.length > 2) {
+          const fieldName = propStr.slice(2);
+          const actualFieldName = fieldName.charAt(0).toLowerCase() + fieldName.slice(1);
+          if (actualFieldName in BackendData.DEFAULTS) {
+            return () => target.data.get(actualFieldName) ?? BackendData.DEFAULTS[actualFieldName as keyof typeof BackendData.DEFAULTS];
+          }
+        }
+
+        if (propStr.startsWith('has') && propStr.length > 3) {
+          const fieldName = propStr.slice(3);
+          const actualFieldName = fieldName.charAt(0).toLowerCase() + fieldName.slice(1);
+          if (actualFieldName in BackendData.DEFAULTS) {
+            return () => target.loadedFlags.has(actualFieldName);
+          }
+        }
+
+        return target[prop as keyof BackendData];
+      }
+    }) as this & ProxyMethods<typeof BackendData.DEFAULTS>;
+  }
+
   // 刷新 EPP 模式（保持现有方法）
   public async refreshEPPModes(): Promise<void> {
     await this.initField('eppModes', this.initConfig.eppModes);
     await this.initField('currentEpp', this.initConfig.currentEpp);
   }
 
-  public getForceShowTDP() {
-    const systemInfo = this.get<SystemInfo>('systemInfo');
-    return systemInfo?.nSteamVersion >= minSteamVersion;
-  }
 
-  public getCpuMaxNum() {
-    return this.get<number>('cpuMaxNum', 0);
-  }
 
-  public HasCpuMaxNum() {
-    return this.has('cpuMaxNum');
-  }
 
-  public getSupportSMT() {
-    return this.get<boolean>('isSupportSMT', false);
-  }
 
-  public HasSupportSMT() {
-    return this.has('isSupportSMT');
-  }
 
-  public getTDPMax() {
-    return this.get<number>('tdpMax', 0);
-  }
 
-  public getGPUFreqMax() {
-    return this.get<number>('gpuMax', 0);
-  }
 
-  public HasGPUFreqMax() {
-    return this.has('gpuMax');
-  }
 
-  public getGPUFreqMin() {
-    return this.get<number>('gpuMin', 0);
-  }
 
-  public HasGPUFreqMin() {
-    return this.has('gpuMin');
-  }
 
-  public HasTDPMax() {
-    return this.has('tdpMax');
-  }
 
   public getFanMAXPRM(index: number) {
     const fanConfigs = this.get<any[]>('fanConfigs', []);
@@ -371,58 +388,6 @@ export class BackendData {
     return undefined;
   }
 
-  public getCurrentVersion() {
-    return this.get<string>('current_version', '');
-  }
-
-  public getLatestVersion() {
-    return this.get<string>('latest_version', '');
-  }
-
-  public getSupportCPUMaxPct() {
-    return this.get<boolean>('supportCPUMaxPct', false);
-  }
-
-  public HasAvailableGovernors() {
-    return this.has('availableGovernors');
-  }
-
-  public getAvailableGovernors(): string[] {
-    return this.get<string[]>('availableGovernors', []);
-  }
-
-  public getCurrentGovernor() {
-    return this.get<string>('currentGovernor', '');
-  }
-
-  public hasCurrentGovernor() {
-    return this.has('currentGovernor');
-  }
-
-  public hasSchedExtSupport() {
-    return this.has('schedExtSupport');
-  }
-
-  public getSchedExtSupport() {
-    return this.get<boolean>('schedExtSupport', false);
-  }
-
-  public hasAvailableSchedExtSchedulers() {
-    return this.has('availableSchedExtSchedulers');
-  }
-
-  public getAvailableSchedExtSchedulers(): string[] {
-    return this.get<string[]>('availableSchedExtSchedulers', []);
-  }
-
-  public hasCurrentSchedExtScheduler() {
-    return this.has('currentSchedExtScheduler');
-  }
-
-  public getCurrentSchedExtScheduler(): string {
-    return this.get<string>('currentSchedExtScheduler', '');
-  }
-
   public async getFanRPM(index: number) {
     var fanPRM: number = 0;
     await getFanRPM(index)
@@ -459,109 +424,24 @@ export class BackendData {
     return fanIsAuto;
   }
 
-  public isEPPSupported() {
-    return this.get<boolean>('isEppSupported', false);
-  }
-
-  public hasEPPSupported() {
-    return this.has('isEppSupported');
-  }
-
-  public getEPPModes() {
-    return this.get<string[]>('eppModes', []);
-  }
-
-  public hasEPPModes() {
-    return this.has('eppModes');
-  }
-
-  public getCurrentEPP() {
-    return this.get<string | null>('currentEpp', null);
-  }
-
-  public hasCurrentEPP() {
-    return this.has('currentEpp');
-  }
-
-  public getCpuVendor() {
-    return this.get<string>('cpuVendor', '');
-  }
-
-  public hasCpuVendor() {
-    return this.has('cpuVendor');
-  }
-
-  public getCpuCoreInfo() {
+  public isHeterogeneousCpu() {
     return this.get<CPUCoreInfo>('cpuCoreInfo', {
       is_heterogeneous: false,
       vendor: "Unknown",
       architecture_summary: "Traditional Architecture",
       core_types: {}
-    });
-  }
-
-  public hasCpuCoreInfo() {
-    return this.has('cpuCoreInfo');
-  }
-
-  public isHeterogeneousCpu() {
-    return this.getCpuCoreInfo().is_heterogeneous;
-  }
-
-  public getCpuArchitectureSummary() {
-    return this.getCpuCoreInfo().architecture_summary;
-  }
-
-  public getIsSupportBypassCharge() {
-    return this.get<boolean>('supportsBypassCharge', false);
-  }
-
-  public hasIsSupportBypassCharge() {
-    return this.has('supportsBypassCharge');
-  }
-
-  public getIsSupportChargeLimit() {
-    return this.get<boolean>('supportsChargeLimit', false);
-  }
-
-  public hasIsSupportChargeLimit() {
-    return this.has('supportsChargeLimit');
-  }
-
-  public isSupportResetChargeLimit() {
-    return this.get<boolean>('supportsResetChargeLimit', false);
-  }
-
-  public hasIsSupportResetChargeLimit() {
-    return this.has('supportsResetChargeLimit');
-  }
-
-  // isSupportSoftwareChargeLimit
-  public isSupportSoftwareChargeLimit() {
-    return this.get<boolean>('supportsSoftwareChargeLimit', false);
-  }
-
-  public hasIsSupportSoftwareChargeLimit() {
-    return this.has('supportsSoftwareChargeLimit');
-  }
-
-  public getSupportsSteamosManager() {
-    return this.get<boolean>('supportsSteamosManager', false);
-  }
-
-  public hasSupportsSteamosManager() {
-    return this.has('supportsSteamosManager');
+    }).is_heterogeneous;
   }
 }
 
 export class Backend {
-  public static data: BackendData;
+  public static data: BackendData & ProxyMethods<typeof BackendData.DEFAULTS>;
   private static lastEnable: boolean = false;
   private static lastTDPEnable: boolean = false;
   private static lastGPUMode: GPUMODE = GPUMODE.NOLIMIT;
 
   public static async init() {
-    this.data = new BackendData();
+    this.data = new BackendData() as BackendData & ProxyMethods<typeof BackendData.DEFAULTS>;
     await this.data.init();
     Backend.lastEnable = Settings.ensureEnable();
     Backend.lastTDPEnable = Settings.appTDPEnable();
@@ -759,8 +639,8 @@ export class Backend {
       } else {
         await QAMPatch.setTDPRange(
           DEFAULT_TDP_MIN,
-          Backend.data.getTDPMax() !== 0
-            ? Backend.data.getTDPMax()
+          Backend.data.getTdpMax() !== 0
+            ? Backend.data.getTdpMax()
             : DEFAULT_TDP_MAX
         );
       }
@@ -855,10 +735,10 @@ export class Backend {
   private static async handleChargeLimit() {
     const chargeLimit = Settings.appChargeLimit();
     const bypassCharge = Settings.appBypassCharge();
-    const supportsChargeLimit = Backend.data.getIsSupportChargeLimit();
-    const supportsBypassCharge = Backend.data.getIsSupportBypassCharge();
+    const supportsChargeLimit = Backend.data.isSupportsChargeLimit();
+    const supportsBypassCharge = Backend.data.isSupportsBypassCharge();
     const enableChargeLimit = Settings.appEnableChargeLimit();
-    const supportsResetChargeLimit = Backend.data.isSupportResetChargeLimit();
+    const supportsResetChargeLimit = Backend.data.isSupportsResetChargeLimit();
     // const softwareChargeLimit = Backend.data.isSupportSoftwareChargeLimit();
 
     if (supportsResetChargeLimit && !enableChargeLimit) {
@@ -933,7 +813,7 @@ export class Backend {
     setSmt(true);
     setCpuOnline(Backend.data.getCpuMaxNum());
     setCpuBoost(true);
-    // setCpuTDP(Backend.data.getTDPMax());
+    // setCpuTDP(Backend.data.getTdpMax());
     Logger.info("resetSettings: applyTDPUnlimited");
     setCpuTDPUnlimited();
     setGpuFreq(0);
