@@ -93,6 +93,14 @@ export const stopGpuNotify = callable<[], any>("stop_gpu_notify");
 export const checkFileExist = callable<[string], boolean>("check_file_exist");
 
 
+const defaultCpuCoreInfo: CPUCoreInfo = {
+  is_heterogeneous: false,
+  vendor: "Unknown",
+  architecture_summary: "Traditional Architecture",
+  core_types: {} as Record<string, CPUCoreTypeInfo>
+};
+
+
 export class BackendData {
   // 使用 Map 存储数据和状态
   private data = new Map<string, any>();
@@ -150,12 +158,7 @@ export class BackendData {
     eppModes: [] as string[],
     currentEpp: null as string | null,
     cpuVendor: "",
-    cpuCoreInfo: {
-      is_heterogeneous: false,
-      vendor: "Unknown",
-      architecture_summary: "Traditional Architecture",
-      core_types: {} as Record<string, CPUCoreTypeInfo>
-    } as CPUCoreInfo,
+    cpuCoreInfo: defaultCpuCoreInfo,
     supportsBypassCharge: false,
     supportsChargeLimit: false,
     supportsResetChargeLimit: false,
@@ -378,12 +381,7 @@ export class BackendData {
   }
 
   public isHeterogeneousCpu() {
-    return this.get<CPUCoreInfo>('cpuCoreInfo', {
-      is_heterogeneous: false,
-      vendor: "Unknown",
-      architecture_summary: "Traditional Architecture",
-      core_types: {}
-    }).is_heterogeneous;
+    return this.get<CPUCoreInfo>('cpuCoreInfo', defaultCpuCoreInfo).is_heterogeneous;
   }
 }
 
