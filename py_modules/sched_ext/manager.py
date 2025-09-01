@@ -34,6 +34,7 @@ class SchedExtManager:
         "scx_flash",
         "scx_lavd",
         "scx_rusty",
+        "scx_cosmos",
         "scx_p2dq",
         "scx_tickless",
     ]
