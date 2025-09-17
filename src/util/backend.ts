@@ -671,8 +671,8 @@ export class Backend {
               console.error(`风扇转速百分比未设置: index=${index}`);
               continue;
             }
-            await setFanPercent(index, fanRPMPercent);
             await setFanAuto(index, false);
+            await setFanPercent(index, fanRPMPercent);
           } else {
             console.log(`直接写入曲线数据`);
             await setFanCurve(
