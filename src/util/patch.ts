@@ -1,5 +1,6 @@
 import { findModuleChild, afterPatch } from "@decky/ui";
 import { Backend } from "./backend";
+import { setCpuTDP, setGpuFreq } from "./backend";
 import { GPUMODE, GPUPerformanceLevel, Patch } from "./enum";
 import { Settings } from "./settings";
 import { BatteryStateChange, SteamUtils } from ".";
@@ -94,7 +95,7 @@ class TDPPatch {
       // console.log(
       //   `qam applyTDP: ${this.perfStore?.msgSettingsPerApp?.tdp_limit}`
       // );
-      Backend.applyTDP(this.perfStore?.msgSettingsPerApp?.tdp_limit);
+      setCpuTDP(this.perfStore?.msgSettingsPerApp?.tdp_limit);
     } else {
       // console.log(`qam applyTDP: ${Settings.getTDPMax()}`);
       // Backend.applyTDP(Settings.getTDPMax());
@@ -345,11 +346,11 @@ class GPUPerformancePatch {
       GPUPerformanceLevel.ENABLE ==
       this.perfStore?.msgSettingsPerApp?.gpu_performance_level
     ) {
-      Backend.applyGPUFreq(
+      setGpuFreq(
         this.perfStore.msgSettingsPerApp.gpu_performance_manual_mhz ?? 0
       );
     } else {
-      Backend.applyGPUFreq(0);
+      setGpuFreq(0);
     }
   };
   private onGpuModeChange = () => {
@@ -366,14 +367,14 @@ class GPUPerformancePatch {
         "Get",
         (_: any[], ret: any) => {
           try {
-            if (Backend.data.HasGPUFreqMax()) {
+            if (Backend.data.hasGpuMax()) {
               this.perfStore.msgLimits.gpu_performance_manual_max_mhz =
-                Backend.data.getGPUFreqMax();
+                Backend.data.getGpuMax();
               this.perfStore.msgLimits.gpu_performance_manual_min_mhz =
-                Backend.data.getGPUFreqMin();
+                Backend.data.getGpuMin();
               if (!this.perfStore.msgLimits.gpu_performance_manual_mhz) {
                 this.perfStore.msgLimits.gpu_performance_manual_mhz =
-                  Backend.data.getGPUFreqMin();
+                  Backend.data.getGpuMin();
               }
             } else {
               console.error("未获取到gpu频率范围,结束修补");

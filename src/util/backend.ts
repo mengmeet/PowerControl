@@ -10,326 +10,298 @@ import {
   SystemInfo,
 } from ".";
 import { JsonSerializer } from "typescript-json-serializer";
-import { call } from "@decky/api";
+import { callable } from "@decky/api";
 import { Logger } from "./logger";
+import { CPUCoreInfo, CPUCoreTypeInfo, FanConfig } from "../types";
 const serializer = new JsonSerializer();
 
-const minSteamVersion = 1714854927;
+type InitCallable = () => Promise<(typeof BackendData.DEFAULTS)[keyof typeof BackendData.DEFAULTS]>;
+
+interface InitConfigItem {
+  callable: InitCallable;
+}
+
+// Proxy methods type definition
+type ProxyMethods<T> = {
+  [K in keyof T as `get${Capitalize<K & string>}`]: () => T[K];
+} & {
+  [K in keyof T as `has${Capitalize<K & string>}`]: () => boolean;
+};
+
+// Backend API callable functions
+export const getCpuMaxNum = callable<[], number>("get_cpuMaxNum");
+export const getTdpMax = callable<[], number>("get_tdpMax");
+export const getGpuFreqRange = callable<[], number[]>("get_gpuFreqRange");
+export const getFanConfigList = callable<[], FanConfig[]>("get_fanConfigList");
+export const supportsSMT = callable<[], boolean>("supports_smt");
+export const getVersion = callable<[], string>("get_version");
+export const getAvailableGovernors = callable<[], string[]>("get_available_governors");
+export const supportedEpp = callable<[], boolean>("supported_epp");
+export const getEppModes = callable<[], string[]>("get_epp_modes");
+export const getCurrentEpp = callable<[], string | null>("get_current_epp");
+export const getCpuVendor = callable<[], string>("get_cpu_vendor");
+export const supportsBypassCharge = callable<[], boolean>("supports_bypass_charge");
+export const supportsChargeLimit = callable<[], boolean>("supports_charge_limit");
+export const supportsResetChargeLimit = callable<[], boolean>("supports_reset_charge_limit");
+export const softwareChargeLimit = callable<[], boolean>("software_charge_limit");
+export const supportsSchedExt = callable<[], boolean>("supports_sched_ext");
+export const getSchedExtList = callable<[], string[]>("get_sched_ext_list");
+export const getCurrentSchedExtScheduler = callable<[], string>("get_current_sched_ext_scheduler");
+export const getCpuCoreInfo = callable<[], CPUCoreInfo>("get_cpu_core_info");
+export const getCpuGovernor = callable<[], string>("get_cpu_governor");
+export const getFanRPM = callable<[number], number>("get_fanRPM");
+export const getFanTemp = callable<[number], number>("get_fanTemp");
+export const getFanIsAuto = callable<[number], boolean>("get_fanIsAuto");
+export const setSmt = callable<[boolean], void>("set_smt");
+export const setCpuOnline = callable<[number], void>("set_cpuOnline");
+export const setCpuBoost = callable<[boolean], void>("set_cpuBoost");
+export const setCpuTDP = callable<[number], void>("set_cpuTDP");
+export const setCpuTDPUnlimited = callable<[], void>("set_cpuTDP_unlimited");
+export const setGpuFreq = callable<[number], void>("set_gpuFreq");
+export const setGpuFreqRange = callable<[number, number], void>("set_gpuFreqRange");
+export const setGpuAuto = callable<[boolean], void>("set_gpuAuto");
+export const setGpuAutoFreqRange = callable<[number, number], void>("set_gpuAutoFreqRange");
+export const setFanAuto = callable<[number, boolean], void>("set_fanAuto");
+export const setFanPercent = callable<[number, number], void>("set_fanPercent");
+export const setFanCurve = callable<[number, number[], number[]], void>("set_fanCurve");
+export const receiveSuspendEvent = callable<[], void>("receive_suspendEvent");
+export const getLatestVersion = callable<[], string>("get_latest_version");
+export const updateLatest = callable<[], any>("update_latest");
+export const fixGpuFreqSlider = callable<[], any>("fix_gpuFreqSlider");
+export const getRyzenadjInfo = callable<[], string>("get_ryzenadj_info");
+export const getRaplInfo = callable<[], string>("get_rapl_info");
+export const getPowerInfo = callable<[], string>("get_power_info");
+export const setSettings = callable<[any], void>("set_settings");
+export const getSettings = callable<[], string>("get_settings");
+export const getMaxPerfPct = callable<[], number>("get_max_perf_pct");
+export const setMaxPerfPct = callable<[number], any>("set_max_perf_pct");
+export const setAutoCpumaxPct = callable<[boolean], any>("set_auto_cpumax_pct");
+export const setBypassCharge = callable<[boolean], any>("set_bypass_charge");
+export const getBypassCharge = callable<[], boolean>("get_bypass_charge");
+export const setChargeLimit = callable<[number], any>("set_charge_limit");
+export const resetChargeLimit = callable<[], any>("reset_charge_limit");
+export const setSchedExtScheduler = callable<[string, string?], boolean>("set_sched_ext_scheduler");
+export const setCpuGovernorCallable = callable<[string], boolean>("set_cpu_governor");
+export const setEpp = callable<[string], boolean>("set_epp");
+export const logInfo = callable<[string], any>("log_info");
+export const logError = callable<[string], any>("log_error");
+export const logWarn = callable<[string], any>("log_warn");
+export const logDebug = callable<[string], any>("log_debug");
+export const setCpuFreqByCoreType = callable<[Record<string, number>], boolean>("set_cpu_freq_by_core_type");
+export const startGpuNotify = callable<[], any>("start_gpu_notify");
+export const stopGpuNotify = callable<[], any>("stop_gpu_notify");
+export const checkFileExist = callable<[string], boolean>("check_file_exist");
+
+
+const defaultCpuCoreInfo: CPUCoreInfo = {
+  is_heterogeneous: false,
+  vendor: "Unknown",
+  architecture_summary: "Traditional Architecture",
+  core_types: {} as Record<string, CPUCoreTypeInfo>
+};
+
 
 export class BackendData {
-  private cpuMaxNum = 0;
-  private has_cpuMaxNum = false;
-  private isSupportSMT = false;
-  private has_isSupportSMT = false;
-  private tdpMax = 0;
-  private has_tdpMax = false;
-  private gpuMax = 0;
-  private has_gpuMax = false;
-  private gpuMin = 0;
-  private has_gpuMin = false;
-  private fanConfigs: any[] = [];
-  private has_fanConfigs = false;
-  private current_version = "";
-  private latest_version = "";
-  private supportCPUMaxPct = false;
-  private systemInfo: SystemInfo | undefined;
-  private availableGovernors: string[] = [];
-  private has_availableGovernors = false;
-  private isEppSupported = false;
-  private has_isEppSupported = false;
-  private eppModes: string[] = [];
-  private has_eppModes = false;
-  private currentEpp: string | null = null;
-  private has_currentEpp = false;
-  private cpuVendor: string = "";
-  private has_cpuVendor = false;
-  private supportsBypassCharge = false;
-  private has_supportsBypassCharge = false;
-  private supportsChargeLimit = false;
-  private has_supportsChargeLimit = false;
-  private supportsResetChargeLimit = false;
-  private has_supportsResetChargeLimit = false;
-  private supportsSoftwareChargeLimit = false;
-  private has_supportsSoftwareChargeLimit = false;
-  private supportsSteamosManager = false;
-  private has_supportsSteamosManager = false;
+  // 使用 Map 存储数据和状态
+  private data = new Map<string, any>();
+  private loadedFlags = new Set<string>();
+  private errors = new Map<string, Error>();
 
+  // 通用的获取方法
+  private get<T>(key: string, defaultValue?: T): T {
+    return this.data.get(key) ?? defaultValue;
+  }
+
+  // 通用的检查方法
+  private has(key: string): boolean {
+    return this.loadedFlags.has(key);
+  }
+
+  // 通用的设置方法
+  private set<T>(key: string, value: T, error?: Error) {
+    if (error) {
+      this.errors.set(key, error);
+      this.loadedFlags.delete(key);
+      this.data.set(key, this.getDefaultValue(key));
+    } else {
+      this.data.set(key, value);
+      this.loadedFlags.add(key);
+      this.errors.delete(key);
+    }
+  }
+
+  // GPU 频率范围缓存
+  private gpuFreqCache: number[] | null = null;
+
+  // 获取并缓存 GPU 频率范围（只调用一次后端接口）
+  private async getGpuFreqRangeOnce(): Promise<number[]> {
+    if (!this.gpuFreqCache) {
+      this.gpuFreqCache = await getGpuFreqRange();
+    }
+    return this.gpuFreqCache;
+  }
+
+  // 获取默认值 设置 as 类型用于 InitCallable 推断类型
+  public static readonly DEFAULTS = {
+    cpuMaxNum: 0 as number,
+    tdpMax: 0 as number,
+    gpuMin: 0 as number,
+    gpuMax: 0 as number,
+    fanConfigs: [] as FanConfig[],
+    currentVersion: "" as string,
+    latestVersion: "" as string,
+    supportCPUMaxPct: false as boolean,
+    systemInfo: undefined as SystemInfo | undefined,
+    availableGovernors: [] as string[],
+    currentGovernor: "" as string,
+    supportsEpp: false as boolean,
+    eppModes: [] as string[],
+    currentEpp: null as string | null,
+    cpuVendor: "" as string,
+    cpuCoreInfo: defaultCpuCoreInfo,
+    supportsBypassCharge: false as boolean,
+    supportsChargeLimit: false as boolean,
+    supportsResetChargeLimit: false as boolean,
+    supportsSoftwareChargeLimit: false as boolean,
+    supportsSteamosManager: false as boolean,
+    schedExtSupport: false as boolean,
+    availableSchedExtSchedulers: [] as string[],
+    currentSchedExtScheduler: "" as string,
+    supportsSMT: false as boolean
+  } as const;
+
+  private getDefaultValue(key: string) {
+    return BackendData.DEFAULTS[key as keyof typeof BackendData.DEFAULTS];
+  }
+
+  // 极简的初始化配置
+  private initConfig: { [K in keyof typeof BackendData.DEFAULTS]: InitConfigItem } = {
+    cpuMaxNum: { callable: getCpuMaxNum },
+    tdpMax: { callable: getTdpMax },
+    gpuMin: {
+      callable: async () => {
+        const [min] = await this.getGpuFreqRangeOnce();
+        return min;
+      }
+    },
+    gpuMax: {
+      callable: async () => {
+        const [, max] = await this.getGpuFreqRangeOnce();
+        return max;
+      }
+    },
+    fanConfigs: { callable: getFanConfigList },
+    supportsSMT: { callable: supportsSMT },
+    supportCPUMaxPct: { callable: () => getMaxPerfPct().then(v => v > 0) },
+    currentVersion: { callable: getVersion },
+    systemInfo: { callable: () => SteamUtils.getSystemInfo() },
+    availableGovernors: { callable: getAvailableGovernors },
+    supportsEpp: { callable: supportedEpp },
+    eppModes: { callable: getEppModes },
+    currentEpp: { callable: getCurrentEpp },
+    cpuVendor: { callable: getCpuVendor },
+    supportsBypassCharge: { callable: supportsBypassCharge },
+    supportsChargeLimit: { callable: supportsChargeLimit },
+    supportsResetChargeLimit: { callable: supportsResetChargeLimit },
+    supportsSoftwareChargeLimit: { callable: softwareChargeLimit },
+    supportsSteamosManager: { callable: () => checkFileExist("/usr/bin/steamosctl") },
+    cpuCoreInfo: { callable: getCpuCoreInfo },
+    currentGovernor: { callable: getCpuGovernor },
+    latestVersion: { callable: getLatestVersion },
+    schedExtSupport: { callable: supportsSchedExt },
+    availableSchedExtSchedulers: { callable: getSchedExtList },
+    currentSchedExtScheduler: { callable: getCurrentSchedExtScheduler }
+  };
+
+  // 主初始化方法
   public async init() {
-    await call<[], number>("get_cpuMaxNum")
-      .then((res) => {
-        // console.info("cpuMaxNum = " + res.result);
-        this.cpuMaxNum = res;
-        this.has_cpuMaxNum = true;
-      })
-      .catch((err) => {
-        console.error("获取 CPU 最大核心数失败:", err);
-        Backend.logError(`获取 CPU 最大核心数失败: ${err}`);
-        this.cpuMaxNum = 0;
-        this.has_cpuMaxNum = false;
-      });
-    await call<[], number>("get_tdpMax")
-      .then((res) => {
-        this.tdpMax = res;
-        this.has_tdpMax = true;
-      })
-      .catch((err) => {
-        console.error("获取 TDP 最大值失败:", err);
-        Backend.logError(`获取 TDP 最大值失败: ${err}`);
-      });
-    await call<[], number[]>("get_gpuFreqRange")
-      .then((res) => {
-        this.gpuMin = res[0];
-        this.gpuMax = res[1];
-        this.has_gpuMin = true;
-        this.has_gpuMax = true;
-      })
-      .catch((err) => {
-        console.error("获取 GPU 频率范围失败:", err);
-        Backend.logError(`获取 GPU 频率范围失败: ${err}`);
-      });
-    await call<[], []>("get_fanConfigList")
-      .then((res) => {
-        this.fanConfigs = res;
-        this.has_fanConfigs = res.length > 0;
-      })
-      .catch((err) => {
-        console.error("获取风扇配置列表失败:", err);
-      });
+    // 并行执行所有基础初始化
+    const tasks = Object.entries(this.initConfig).map(([key, config]) =>
+      this.initField(key, config)
+    );
 
-    await call<[], boolean>("get_isSupportSMT")
-      .then((res) => {
-        this.isSupportSMT = res;
-        this.has_isSupportSMT = true;
-      })
-      .catch((err) => {
-        console.error("获取 SMT 支持失败:", err);
-        Backend.logError(`获取 SMT 支持失败: ${err}`);
-      });
-
-    Backend.getMaxPerfPct()
-      .then((value) => {
-        this.supportCPUMaxPct = value > 0;
-      })
-      .catch((err) => {
-        console.error("获取 CPU 最大性能百分比支持失败:", err);
-        Backend.logError(`获取 CPU 最大性能百分比支持失败: ${err}`);
-      });
-
-    await call<[], string>("get_version")
-      .then((res) => {
-        this.current_version = res;
-      })
-      .catch((err) => {
-        console.error("获取当前版本失败:", err);
-        Backend.logError(`获取当前版本失败: ${err}`);
-      });
-
-    SteamUtils.getSystemInfo()
-      .then((systemInfo) => {
-        this.systemInfo = systemInfo;
-      })
-      .catch((err) => {
-        console.error("获取系统信息失败:", err);
-        Backend.logError(`获取系统信息失败: ${err}`);
-      });
-
-    await call<[], string[]>("get_available_governors")
-      .then((res) => {
-        this.availableGovernors = res;
-        this.has_availableGovernors = true;
-      })
-      .catch((err) => {
-        console.error("获取可用 CPU 调度器失败:", err);
-        Backend.logError(`获取可用 CPU 调度器失败: ${err}`);
-        this.availableGovernors = [];
-        this.has_availableGovernors = false;
-      });
-
-    await call<[], boolean>("is_epp_supported")
-      .then((res) => {
-        this.isEppSupported = res;
-        this.has_isEppSupported = true;
-      })
-      .catch((err) => {
-        console.error("检查 EPP 支持失败:", err);
-        Backend.logError(`检查 EPP 支持失败: ${err}`);
-        this.isEppSupported = false;
-        this.has_isEppSupported = false;
-      });
-
-    await call<[], string[]>("get_epp_modes")
-      .then((res) => {
-        this.eppModes = res;
-        this.has_eppModes = true;
-      })
-      .catch((err) => {
-        console.error("获取可用 EPP 模式失败:", err);
-        Backend.logError(`获取可用 EPP 模式失败: ${err}`);
-        this.eppModes = [];
-        this.has_eppModes = false;
-      });
-
-    await call<[], string | null>("get_current_epp")
-      .then((res) => {
-        this.currentEpp = res;
-        this.has_currentEpp = true;
-      })
-      .catch((err) => {
-        console.error("获取当前 EPP 模式失败:", err);
-        Backend.logError(`获取当前 EPP 模式失败: ${err}`);
-        this.currentEpp = null;
-        this.has_currentEpp = false;
-      });
-
-    await call<[], string>("get_cpu_vendor")
-      .then((res) => {
-        this.cpuVendor = res;
-        this.has_cpuVendor = true;
-      })
-      .catch((err) => {
-        console.error("获取 CPU 厂商失败:", err);
-        Backend.logError(`获取 CPU 厂商失败: ${err}`);
-        this.cpuVendor = "";
-        this.has_cpuVendor = false;
-      });
-
-    await call<[], boolean>("supports_bypass_charge")
-      .then((res) => {
-        this.supportsBypassCharge = res;
-        this.has_supportsBypassCharge = true;
-      })
-      .catch((err) => {
-        console.error("检查 BYPASS_CHARGE 支持失败:", err);
-        Backend.logError(`检查 BYPASS_CHARGE 支持失败: ${err}`);
-        this.supportsBypassCharge = false;
-        this.has_supportsBypassCharge = false;
-      });
-
-    await call<[], boolean>("supports_charge_limit")
-      .then((res) => {
-        this.supportsChargeLimit = res;
-        this.has_supportsChargeLimit = true;
-      })
-      .catch((err) => {
-        console.error("检查 CHARGE_LIMIT 支持失败:", err);
-        Backend.logError(`检查 CHARGE_LIMIT 支持失败: ${err}`);
-        this.supportsChargeLimit = false;
-        this.has_supportsChargeLimit = false;
-      });
-
-    await call<[], boolean>("supports_reset_charge_limit")
-      .then((res) => {
-        this.supportsResetChargeLimit = res;
-        this.has_supportsResetChargeLimit = true;
-      })
-      .catch((err) => {
-        console.error("检查 RESET_CHARGE_LIMIT 支持失败:", err);
-        Backend.logError(`检查 RESET_CHARGE_LIMIT 支持失败: ${err}`);
-        this.supportsResetChargeLimit = false;
-        this.has_supportsResetChargeLimit = false;
-      });
-
-    await call<[], boolean>("software_charge_limit")
-      .then((res) => {
-        this.supportsSoftwareChargeLimit = res;
-        this.has_supportsSoftwareChargeLimit = true;
-      })
-      .catch((err) => {
-        console.error("检查 SOFTWARE_CHARGE_LIMIT 支持失败:", err);
-        Backend.logError(`检查 SOFTWARE_CHARGE_LIMIT 支持失败: ${err}`);
-        this.supportsSoftwareChargeLimit = false;
-        this.has_supportsSoftwareChargeLimit = false;
-      });
-
-    await Backend.checkFileExist("/usr/bin/steamosctl")
-      .then((res) => {
-        this.supportsSteamosManager = res;
-        this.has_supportsSteamosManager = true;
-      })
-      .catch((err) => {
-        console.error("检查 steamos-manager 支持失败:", err);
-        Backend.logError(`检查 steamos-manager 支持失败: ${err}`);
-        this.supportsSteamosManager = false;
-        this.has_supportsSteamosManager = false;
-      });
+    await Promise.allSettled(tasks);
   }
 
-  public getForceShowTDP() {
-    // 检查 Steam 客户端版本，如果版本大于等于 minSteamVersion。不显示强制 TDP 开关。并默认显示 TDP 控制组件
-    return this.systemInfo!.nSteamVersion >= minSteamVersion;
+  // 极简的字段初始化方法
+  private async initField(key: string, config: InitConfigItem) {
+    try {
+      const result = await config.callable();
+      this.set(key, result);
+    } catch (error) {
+      console.error(`初始化 ${key} 失败:`, error);
+      logError(`初始化 ${key} 失败: ${error}`);
+      this.set(key, this.getDefaultValue(key), error as Error);
+    }
   }
 
-  public getCpuMaxNum() {
-    return this.cpuMaxNum;
+  constructor() {
+    return new Proxy(this, {
+      get(target, prop) {
+        const propStr = prop.toString();
+
+        if (propStr.startsWith('get') && propStr.length > 3) {
+          const fieldName = propStr.slice(3);
+          const actualFieldName = fieldName.charAt(0).toLowerCase() + fieldName.slice(1);
+          if (actualFieldName in BackendData.DEFAULTS) {
+            return () => target.data.get(actualFieldName) ?? BackendData.DEFAULTS[actualFieldName as keyof typeof BackendData.DEFAULTS];
+          }
+        }
+
+        if (propStr.startsWith('has') && propStr.length > 3) {
+          const fieldName = propStr.slice(3);
+          const actualFieldName = fieldName.charAt(0).toLowerCase() + fieldName.slice(1);
+          if (actualFieldName in BackendData.DEFAULTS) {
+            return () => target.loadedFlags.has(actualFieldName);
+          }
+        }
+
+        return target[prop as keyof BackendData];
+      }
+    }) as this & ProxyMethods<typeof BackendData.DEFAULTS>;
   }
 
-  public HasCpuMaxNum() {
-    return this.has_cpuMaxNum;
-  }
-
-  public getSupportSMT() {
-    return this.isSupportSMT;
-  }
-
-  public HasSupportSMT() {
-    return this.has_isSupportSMT;
-  }
-
-  public getTDPMax() {
-    return this.tdpMax;
-  }
-
-  public getGPUFreqMax() {
-    return this.gpuMax;
-  }
-
-  public HasGPUFreqMax() {
-    return this.has_gpuMax;
-  }
-
-  public getGPUFreqMin() {
-    return this.gpuMin;
-  }
-
-  public HasGPUFreqMin() {
-    return this.has_gpuMin;
-  }
-
-  public HasTDPMax() {
-    return this.has_tdpMax;
+  // 刷新 EPP 模式（保持现有方法）
+  public async refreshEPPModes(): Promise<void> {
+    await this.initField('eppModes', this.initConfig.eppModes);
+    await this.initField('currentEpp', this.initConfig.currentEpp);
   }
 
   public getFanMAXPRM(index: number) {
-    if (this.has_fanConfigs) {
-      return this.fanConfigs?.[index]?.fan_max_rpm ?? 0;
+    const fanConfigs = this.get<any[]>('fanConfigs', []);
+    if (this.has('fanConfigs')) {
+      return fanConfigs?.[index]?.fan_max_rpm ?? 0;
     }
     return 0;
   }
 
   public getFanCount() {
-    if (this.has_fanConfigs) {
-      return this.fanConfigs?.length ?? 0;
+    const fanConfigs = this.get<any[]>('fanConfigs', []);
+    if (this.has('fanConfigs')) {
+      return fanConfigs?.length ?? 0;
     }
     return 0;
   }
 
   public getFanName(index: number) {
-    if (this.has_fanConfigs) {
-      return this.fanConfigs?.[index]?.fan_name ?? "Fan";
+    const fanConfigs = this.get<any[]>('fanConfigs', []);
+    if (this.has('fanConfigs')) {
+      return fanConfigs?.[index]?.fan_name ?? "Fan";
     }
     return "Fan";
   }
 
   public getFanConfigs() {
-    if (this.has_fanConfigs) {
-      return this.fanConfigs;
+    if (this.has('fanConfigs')) {
+      return this.get<any[]>('fanConfigs', []);
     }
     return [];
   }
 
   public getFanPwmMode(index: number) {
-    if (this.has_fanConfigs) {
-      return this.fanConfigs?.[index]?.fan_hwmon_mode ?? 0;
+    const fanConfigs = this.get<any[]>('fanConfigs', []);
+    if (this.has('fanConfigs')) {
+      return fanConfigs?.[index]?.fan_hwmon_mode ?? 0;
     }
     return 0;
   }
@@ -338,10 +310,11 @@ export class BackendData {
     index: number
   ): { speedValue: number; tempValue: number }[] {
     const result: { speedValue: number; tempValue: number }[] = [];
-    if (this.has_fanConfigs) {
-      const defaultCurve = this.fanConfigs?.[index]?.fan_default_curve ?? [];
+    const fanConfigs = this.get<any[]>('fanConfigs', []);
+    if (this.has('fanConfigs')) {
+      const defaultCurve = fanConfigs?.[index]?.fan_default_curve ?? [];
       const pwmWriteMax: number =
-        this.fanConfigs?.[index]?.fan_pwm_write_max ?? 255;
+        fanConfigs?.[index]?.fan_pwm_write_max ?? 255;
       // console.log(">>>>>>>>>>> getHwmonDefaultCurve", defaultCurve);
       if (defaultCurve instanceof Array && defaultCurve.length > 0) {
         for (let i = 0; i < defaultCurve.length; i++) {
@@ -371,29 +344,9 @@ export class BackendData {
     return undefined;
   }
 
-  public getCurrentVersion() {
-    return this.current_version;
-  }
-
-  public getLatestVersion() {
-    return this.latest_version;
-  }
-
-  public getSupportCPUMaxPct() {
-    return this.supportCPUMaxPct;
-  }
-
-  public HasAvailableGovernors() {
-    return this.has_availableGovernors;
-  }
-
-  public getAvailableGovernors(): string[] {
-    return this.availableGovernors;
-  }
-
   public async getFanRPM(index: number) {
     var fanPRM: number = 0;
-    await call<[index: number], number>("get_fanRPM", index)
+    await getFanRPM(index)
       .then((res) => {
         fanPRM = res;
       })
@@ -405,7 +358,7 @@ export class BackendData {
 
   public async getFanTemp(index: number) {
     var fanTemp: number = -1;
-    await call<[index: number], number>("get_fanTemp", index)
+    await getFanTemp(index)
       .then((res) => {
         fanTemp = res / 1000;
       })
@@ -417,7 +370,7 @@ export class BackendData {
 
   public async getFanIsAuto(index: number) {
     var fanIsAuto: boolean = false;
-    await call<[index: number], boolean>("get_fanIsAuto", index)
+    await getFanIsAuto(index)
       .then((res) => {
         fanIsAuto = res;
       })
@@ -427,88 +380,19 @@ export class BackendData {
     return fanIsAuto;
   }
 
-  public isEPPSupported() {
-    return this.isEppSupported;
-  }
-
-  public hasEPPSupported() {
-    return this.has_isEppSupported;
-  }
-
-  public getEPPModes() {
-    return this.eppModes;
-  }
-
-  public hasEPPModes() {
-    return this.has_eppModes;
-  }
-
-  public getCurrentEPP() {
-    return this.currentEpp;
-  }
-
-  public hasCurrentEPP() {
-    return this.has_currentEpp;
-  }
-
-  public getCpuVendor() {
-    return this.cpuVendor;
-  }
-
-  public hasCpuVendor() {
-    return this.has_cpuVendor;
-  }
-
-  public getIsSupportBypassCharge() {
-    return this.supportsBypassCharge;
-  }
-
-  public hasIsSupportBypassCharge() {
-    return this.has_supportsBypassCharge;
-  }
-
-  public getIsSupportChargeLimit() {
-    return this.supportsChargeLimit;
-  }
-
-  public hasIsSupportChargeLimit() {
-    return this.has_supportsChargeLimit;
-  }
-
-  public isSupportResetChargeLimit() {
-    return this.supportsResetChargeLimit;
-  }
-
-  public hasIsSupportResetChargeLimit() {
-    return this.has_supportsResetChargeLimit;
-  }
-
-  // isSupportSoftwareChargeLimit
-  public isSupportSoftwareChargeLimit() {
-    return this.supportsSoftwareChargeLimit;
-  }
-
-  public hasIsSupportSoftwareChargeLimit() {
-    return this.has_supportsSoftwareChargeLimit;
-  }
-
-  public getSupportsSteamosManager() {
-    return this.supportsSteamosManager;
-  }
-
-  public hasSupportsSteamosManager() {
-    return this.has_supportsSteamosManager;
+  public isHeterogeneousCpu() {
+    return this.get<CPUCoreInfo>('cpuCoreInfo', defaultCpuCoreInfo).is_heterogeneous;
   }
 }
 
 export class Backend {
-  public static data: BackendData;
+  public static data: BackendData & ProxyMethods<typeof BackendData.DEFAULTS>;
   private static lastEnable: boolean = false;
   private static lastTDPEnable: boolean = false;
   private static lastGPUMode: GPUMODE = GPUMODE.NOLIMIT;
 
   public static async init() {
-    this.data = new BackendData();
+    this.data = new BackendData() as BackendData & ProxyMethods<typeof BackendData.DEFAULTS>;
     await this.data.init();
     Backend.lastEnable = Settings.ensureEnable();
     Backend.lastTDPEnable = Settings.appTDPEnable();
@@ -551,6 +435,7 @@ export class Backend {
           Backend.handleCPUGovernor,
           Backend.handleEPP,
           Backend.handleCpuMaxPerfPct,
+          Backend.handleSchedExtScheduler,
         ];
         await Promise.all(cpuHandlers.map((handler) => handler()));
 
@@ -582,15 +467,15 @@ export class Backend {
     const cpuNum = Settings.appCpuNum();
     const smt = Settings.appSmt();
     if (cpuNum) {
-      await Backend.applySmt(smt);
-      await Backend.applyCpuNum(cpuNum);
+      await setSmt(smt);
+      await setCpuOnline(cpuNum);
     }
   }
 
   private static async handleCPUBoost(): Promise<void> {
     const cpuBoost = Settings.appCpuboost();
     if (cpuBoost !== undefined) {
-      await Backend.applyCpuBoost(cpuBoost);
+      await setCpuBoost(cpuBoost);
     }
   }
 
@@ -598,12 +483,19 @@ export class Backend {
     await Backend.handleGovernorAndEPP();
   }
 
+  private static async handleSchedExtScheduler(): Promise<void> {
+    const schedExtScheduler = Settings.appSchedExtScheduler();
+    if (schedExtScheduler) {
+      await setSchedExtScheduler(schedExtScheduler);
+    }
+  }
+
   private static async handleCpuMaxPerfPct(): Promise<void> {
     const cpuMaxPerfPct = Settings.appCpuMaxPerfPct();
     const autoCPUMaxPct = Settings.appAutoCPUMaxPct();
-    await Backend.setAutoCPUMaxPct(autoCPUMaxPct);
+    await setAutoCpumaxPct(autoCPUMaxPct);
     if (!autoCPUMaxPct) {
-      await Backend.setMaxPerfPct(cpuMaxPerfPct);
+      await setMaxPerfPct(cpuMaxPerfPct);
     }
   }
 
@@ -615,10 +507,14 @@ export class Backend {
     const eppMode = Settings.appEPPMode();
     const cpuGovernor = Settings.appCPUGovernor();
     if (cpuGovernor) {
-      await Backend.setCpuGovernor(cpuGovernor);
+      await setCpuGovernorCallable(cpuGovernor);
+      if (cpuGovernor !== "performance") {
+        await Backend.data.refreshEPPModes();
+      }
     }
-    if (eppMode) {
-      await Backend.setEPP(eppMode);
+    if (eppMode && cpuGovernor !== "performance") {
+      console.log(`设置 EPP 模式为: ${eppMode}`);
+      await setEpp(eppMode);
     }
   }
 
@@ -634,11 +530,11 @@ export class Backend {
 
     if (gpuMode !== Backend.lastGPUMode) {
       if (Backend.lastGPUMode === GPUMODE.NOLIMIT) {
-        await Backend.startGpuNotify();
+        await startGpuNotify();
       }
 
       if (gpuMode === GPUMODE.NOLIMIT) {
-        await Backend.stopGpuNotify();
+        await stopGpuNotify();
       }
 
       Backend.lastGPUMode = gpuMode as GPUMODE;
@@ -649,12 +545,12 @@ export class Backend {
 
     switch (gpuMode) {
       case GPUMODE.NOLIMIT:
-        await Backend.applyGPUAuto(false);
-        await Backend.applyGPUFreq(0);
+        await setGpuAuto(false);
+        await setGpuFreq(0);
         break;
       case GPUMODE.FIX:
-        await Backend.applyGPUAuto(false);
-        await Backend.applyGPUFreq(gpuFreq);
+        await setGpuAuto(false);
+        await setGpuFreq(gpuFreq);
         break;
       case GPUMODE.NATIVE:
         if (gpuSliderFix) {
@@ -664,23 +560,24 @@ export class Backend {
       case GPUMODE.AUTO:
         Settings.setTDPEnable(false);
         Settings.setCpuboost(false);
-        await Backend.applyGPUAutoRange(gpuAutoMinFreq, gpuAutoMaxFreq);
-        await Backend.applyGPUAuto(true);
+        await setGpuAutoFreqRange(gpuAutoMinFreq, gpuAutoMaxFreq);
+        await setGpuAuto(true);
         break;
       case GPUMODE.RANGE:
-        await Backend.applyGPUAuto(false);
-        await Backend.applyGPUFreqRange(gpuRangeMinFreq, gpuRangeMaxFreq);
+        await setGpuAuto(false);
+        await setGpuFreqRange(gpuRangeMinFreq, gpuRangeMaxFreq);
         break;
       default:
         console.log(`出现意外的GPUmode = ${gpuMode}`);
-        await Backend.applyGPUFreq(0);
+        await setGpuFreq(0);
     }
   }
 
   private static async handleGPUSliderFix(): Promise<void> {
     const gpuSliderFix = Settings.appGPUSliderFix();
     if (gpuSliderFix) {
-      await Backend.applyGPUSliderFix();
+      console.log("applyGPUSliderFix");
+      await fixGpuFreqSlider();
     }
   }
 
@@ -695,8 +592,8 @@ export class Backend {
       } else {
         await QAMPatch.setTDPRange(
           DEFAULT_TDP_MIN,
-          Backend.data.getTDPMax() !== 0
-            ? Backend.data.getTDPMax()
+          Backend.data.getTdpMax() !== 0
+            ? Backend.data.getTdpMax()
             : DEFAULT_TDP_MAX
         );
       }
@@ -727,48 +624,16 @@ export class Backend {
     if (!tdpEnable) {
       if (tdpEnable !== Backend.lastTDPEnable) {
         Logger.info(`tdpEnable is false, applyTDPUnlimited`);
-        await Backend.applyTDPUnlimited();
+        await setCpuTDPUnlimited();
       }
       Backend.lastTDPEnable = tdpEnable;
       return;
     }
 
     Logger.info(`applyTDP: ${_tdp}`);
-    await Backend.applyTDP(_tdp);
+    await setCpuTDP(_tdp);
     Backend.lastTDPEnable = tdpEnable;
 
-    // 处理非插件模式或强制显示 TDP 的情况
-    // if (
-    //   !PluginManager.isPatchSuccess(Patch.TDPPatch)
-    // ) {
-    //   if (tdpEnable) {
-    //     await Backend.applyTDP(_tdp);
-    //   } else {
-    //     Logger.info("not isPatchSuccess: not tdpEnable, applyTDPUnlimited");
-    //     await Backend.applyTDPUnlimited();
-    //   }
-
-    //   try {
-    //     await QAMPatch.setTDPEanble(tdpEnable);
-    //     if (tdpEnable) {
-    //       await QAMPatch.setTDP(_tdp);
-    //     }
-    //   } catch (error) {
-    //     console.error(`强制显示 TDP 时设置QAM失败`, error);
-    //   }
-    // }
-
-    // 处理插件模式的情况
-    // if (PluginManager.isPatchSuccess(Patch.TDPPatch)) {
-    //   await QAMPatch.setTDPEanble(tdpEnable);
-    //   await QAMPatch.setTDP(_tdp);
-    //   if (tdpEnable) {
-    //     await Backend.applyTDP(_tdp);
-    //   } else {
-    //     Logger.info("isPatchSuccess: not tdpEnable, applyTDPUnlimited");
-    //     await Backend.applyTDPUnlimited();
-    //   }
-    // }
   }
 
   private static async handleFanControl(): Promise<void> {
@@ -781,7 +646,7 @@ export class Backend {
       const fanSetting = Settings.appFanSettings()?.[index];
       //没有配置时转自动
       if (!fanSetting) {
-        await Backend.applyFanAuto(index, true);
+        await setFanAuto(index, true);
         // console.log(`没有配置 index= ${index}`);
         continue;
       }
@@ -794,7 +659,7 @@ export class Backend {
       switch (fanMode) {
         case FANMODE.NOCONTROL:
           // console.log(`不控制 index= ${index}`);
-          await Backend.applyFanAuto(index, true);
+          await setFanAuto(index, true);
           break;
         case FANMODE.FIX:
         case FANMODE.CURVE:
@@ -804,16 +669,20 @@ export class Backend {
               console.error(`风扇转速百分比未设置: index=${index}`);
               continue;
             }
-            await Backend.applyFanPercent(index, fanRPMPercent);
-            await Backend.applyFanAuto(index, false);
+            await setFanPercent(index, fanRPMPercent);
+            await setFanAuto(index, false);
           } else {
             console.log(`直接写入曲线数据`);
-            await Backend.applyFanCurve(index, fanSetting);
+            await setFanCurve(
+              index,
+              fanSetting?.curvePoints?.map((point) => point?.temperature ?? 0) ?? [],
+              fanSetting?.curvePoints?.map((point) => point?.fanRPMpercent ?? 0) ?? []
+            );
           }
           break;
         default:
           console.error(`出现意外的FanMode = ${fanMode}`);
-          await Backend.applyFanAuto(index, true);
+          await setFanAuto(index, true);
       }
     }
   }
@@ -821,15 +690,15 @@ export class Backend {
   private static async handleChargeLimit() {
     const chargeLimit = Settings.appChargeLimit();
     const bypassCharge = Settings.appBypassCharge();
-    const supportsChargeLimit = Backend.data.getIsSupportChargeLimit();
-    const supportsBypassCharge = Backend.data.getIsSupportBypassCharge();
+    const supportsChargeLimit = Backend.data.getSupportsChargeLimit();
+    const supportsBypassCharge = Backend.data.getSupportsBypassCharge();
     const enableChargeLimit = Settings.appEnableChargeLimit();
-    const supportsResetChargeLimit = Backend.data.isSupportResetChargeLimit();
+    const supportsResetChargeLimit = Backend.data.getSupportsResetChargeLimit();
     // const softwareChargeLimit = Backend.data.isSupportSoftwareChargeLimit();
 
     if (supportsResetChargeLimit && !enableChargeLimit) {
       console.log(`重置电池充电限制`);
-      await Backend.resetChargeLimit();
+      await resetChargeLimit();
       return;
     }
 
@@ -837,16 +706,36 @@ export class Backend {
     if (bypassCharge) {
       if (supportsBypassCharge) {
         console.log(`手动开启旁路供电`);
-        await Backend.setBypassCharge(bypassCharge);
+        await setBypassCharge(bypassCharge);
       }
     } else if (supportsChargeLimit) {
       console.log(`关闭旁路供电, 但设置了电池充电限制 = ${chargeLimit}`);
-      await Backend.setChargeLimit(chargeLimit);
+      await setChargeLimit(chargeLimit);
     } else {
       if (supportsBypassCharge) {
         console.log(`手动关闭旁路供电`);
-        await Backend.setBypassCharge(false);
+        await setBypassCharge(false);
       }
+    }
+  }
+
+  private static async handleCPUFreqControl(): Promise<void> {
+    const enable = Settings.appCpuFreqControlEnable();
+
+    if (enable) {
+      // 开关打开时，应用保存的频率配置
+      const freqConfig = Settings.getCpuCoreFreqConfig();
+      if (Object.keys(freqConfig).length > 0) {
+        await setCpuFreqByCoreType(freqConfig);
+      }
+    } else {
+      // 开关关闭时，恢复硬件默认频率（设置为0表示无限制）
+      const coreInfo = Backend.data.getCpuCoreInfo();
+      const resetConfig: Record<string, number> = {};
+      Object.keys(coreInfo.core_types).forEach(coreType => {
+        resetConfig[coreType] = 0; // 0表示恢复硬件默认
+      });
+      await setCpuFreqByCoreType(resetConfig);
     }
   }
 
@@ -857,6 +746,8 @@ export class Backend {
       [APPLYTYPE.SET_CPU_GOVERNOR, Backend.handleCPUGovernor],
       [APPLYTYPE.SET_CPU_MAX_PERF, Backend.handleCpuMaxPerfPct],
       [APPLYTYPE.SET_EPP, Backend.handleEPP],
+      [APPLYTYPE.SET_CPU_SCHED_EXT, Backend.handleSchedExtScheduler],
+      [APPLYTYPE.SET_CPU_FREQ_CONTROL, Backend.handleCPUFreqControl],
       [APPLYTYPE.SET_GPUMODE, Backend.handleGPUMode],
       [APPLYTYPE.SET_GPUSLIDERFIX, Backend.handleGPUSliderFix],
       [APPLYTYPE.SET_TDP, Backend.handleTDP],
@@ -868,132 +759,34 @@ export class Backend {
 
   public static resetFanSettings = () => {
     FanControl.fanInfo.forEach((_value, index) => {
-      Backend.applyFanAuto(index, true);
+      setFanAuto(index, true);
     });
   };
 
   public static resetSettings = () => {
     console.log("重置所有设置");
-    Backend.applySmt(true);
-    Backend.applyCpuNum(Backend.data.getCpuMaxNum());
-    Backend.applyCpuBoost(true);
-    // Backend.applyTDP(Backend.data.getTDPMax());
+    setSmt(true);
+    setCpuOnline(Backend.data.getCpuMaxNum());
+    setCpuBoost(true);
+    // setCpuTDP(Backend.data.getTdpMax());
     Logger.info("resetSettings: applyTDPUnlimited");
-    Backend.applyTDPUnlimited();
-    Backend.applyGPUFreq(0);
+    setCpuTDPUnlimited();
+    setGpuFreq(0);
     FanControl.fanInfo.forEach((_value, index) => {
-      Backend.applyFanAuto(index, true);
+      setFanAuto(index, true);
     });
   };
-
-  private static applySmt(smt: boolean) {
-    call("set_smt", smt);
-  }
-
-  private static applyCpuNum(cpuNum: number) {
-    call("set_cpuOnline", cpuNum);
-  }
-
-  private static applyCpuBoost(cpuBoost: boolean) {
-    call("set_cpuBoost", cpuBoost);
-  }
-
-  public static applyTDP = (tdp: number) => {
-    call("set_cpuTDP", tdp);
-  };
-
-  public static applyTDPUnlimited = () => {
-    call("set_cpuTDP_unlimited");
-  };
-
-  public static applyGPUFreq(freq: number) {
-    call("set_gpuFreq", freq);
-  }
-
-  private static applyGPUFreqRange(freqMin: number, freqMax: number) {
-    call<[value: number, value2: number], void>(
-      "set_gpuFreqRange",
-      freqMin,
-      freqMax
-    );
-  }
-
-  private static applyGPUAuto(auto: boolean) {
-    call("set_gpuAuto", auto);
-  }
-
-  private static applyGPUAutoRange(minAutoFreq: number, maxAutoFreq: number) {
-    call<[min: number, max: number], void>(
-      "set_gpuAutoFreqRange",
-      minAutoFreq,
-      maxAutoFreq
-    );
-  }
-
-  private static applyFanAuto(index: number, auto: boolean) {
-    call<[index: number, value: boolean], void>("set_fanAuto", index, auto);
-  }
-
-  private static applyFanPercent(index: number, percent: number) {
-    call<[index: number, value: number], void>(
-      "set_fanPercent",
-      index,
-      percent
-    );
-  }
-
-  private static applyFanCurve(index: number, fanSetting: FanSetting) {
-    call<[index: number, temp_list: number[], pwm_list: number[]], void>(
-      "set_fanCurve",
-      index,
-      fanSetting?.curvePoints?.map((point) => point?.temperature ?? 0) ?? [],
-      fanSetting?.curvePoints?.map((point) => point?.fanRPMpercent ?? 0) ?? []
-    );
-  }
-
-  public static throwSuspendEvt() {
-    console.log("throwSuspendEvt");
-    call("receive_suspendEvent");
-  }
-
-  public static async getLatestVersion(): Promise<string> {
-    return (await call("get_latest_version")) as string;
-  }
-
-  public static async getCurrentVersion(): Promise<string> {
-    return (await call("get_version")) as string;
-  }
-
-  // updateLatest
-  public static async updateLatest() {
-    return await call("update_latest");
-  }
-
-  public static async applyGPUSliderFix() {
-    console.log("applyGPUSliderFix");
-    return await call("fix_gpuFreqSlider");
-  }
-
-  // get_ryzenadj_info
-  public static async getRyzenadjInfo(): Promise<string> {
-    return (await call("get_ryzenadj_info")) as string;
-  }
-
-  // get_rapl_info
-  public static async getRAPLInfo(): Promise<string> {
-    return (await call("get_rapl_info")) as string;
-  }
 
   // set_settings
   public static async setSettings(settingsData: SettingsData) {
     const obj = serializer.serializeObject(settingsData);
-    await call("set_settings", obj);
+    await setSettings(obj);
   }
 
   // get_settings
   public static async getSettings(): Promise<SettingsData> {
     try {
-      const res = (await call("get_settings")) as string;
+      const res = (await getSettings()) as string;
       return (
         serializer.deserializeObject(res, SettingsData) ?? new SettingsData()
       );
@@ -1001,132 +794,5 @@ export class Backend {
       console.error("getSettings error", error);
       return new SettingsData();
     }
-  }
-
-  // get_max_perf_pct
-  public static async getMaxPerfPct(): Promise<number> {
-    return (await call("get_max_perf_pct")) as number;
-  }
-
-  // set_max_perf_pct
-  public static async setMaxPerfPct(value: number) {
-    return await call("set_max_perf_pct", value);
-  }
-
-  // set_auto_cpumax_pct
-  public static async setAutoCPUMaxPct(value: boolean) {
-    return await call("set_auto_cpumax_pct", value);
-  }
-
-  // get_cpu_vendor
-  public static async getCpuVendor(): Promise<string> {
-    return (await call("get_cpu_vendor")) as string;
-  }
-
-  // set_bypass_charge
-  public static async setBypassCharge(value: boolean) {
-    return await call("set_bypass_charge", value);
-  }
-
-  // get_bypass_charge
-  public static async getBypassCharge(): Promise<boolean> {
-    return (await call("get_bypass_charge")) as boolean;
-  }
-
-  // set_charge_limit
-  public static async setChargeLimit(value: number) {
-    return await call("set_charge_limit", value);
-  }
-
-  // reset_charge_limit
-  public static async resetChargeLimit() {
-    return await call("reset_charge_limit");
-  }
-
-  // 获取当前 CPU 调度器
-  public static async getCpuGovernor(): Promise<string> {
-    try {
-      return await call<[], string>("get_cpu_governor");
-    } catch (error) {
-      console.error("获取 CPU 调度器失败:", error);
-      return "";
-    }
-  }
-
-  // 获取所有可用的 CPU 调度器
-  public static async getAvailableGovernors(): Promise<string[]> {
-    try {
-      return await call<[], string[]>("get_available_governors");
-    } catch (error) {
-      console.error("获取可用 CPU 调度器列表失败:", error);
-      return [];
-    }
-  }
-
-  // 设置 CPU 调度器
-  public static async setCpuGovernor(governor: string): Promise<boolean> {
-    try {
-      return await call<[string], boolean>("set_cpu_governor", governor);
-    } catch (error) {
-      console.error("设置 CPU 调度器失败:", error);
-      return false;
-    }
-  }
-
-  // 获取当前 EPP 模式
-  public static getCurrentEPP(): Promise<string | null> {
-    return call("get_current_epp");
-  }
-
-  // 获取可用的 EPP 模式列表
-  public static getEPPModes(): Promise<string[]> {
-    return call("get_epp_modes");
-  }
-
-  // 检查是否支持 EPP 功能
-  public static isEPPSupported(): Promise<boolean> {
-    return call("is_epp_supported");
-  }
-
-  // 设置 EPP 模式
-  public static setEPP(mode: string): Promise<boolean> {
-    console.log(`设置 EPP 模式为: ${mode}`);
-    return call("set_epp", mode);
-    // return Promise.resolve(true);
-  }
-
-  // log_info
-  public static logInfo(message: string) {
-    return call("log_info", message);
-  }
-
-  // log_error
-  public static logError(message: string) {
-    return call("log_error", message);
-  }
-
-  // log_warn
-  public static logWarn(message: string) {
-    return call("log_warn", message);
-  }
-
-  // log_debug
-  public static logDebug(message: string) {
-    return call("log_debug", message);
-  }
-
-  // start_gpu_notify
-  public static async startGpuNotify() {
-    return await call("start_gpu_notify");
-  }
-
-  // stop_gpu_notify
-  public static async stopGpuNotify() {
-    return await call("stop_gpu_notify");
-  }
-
-  // check_file_exist
-  public static async checkFileExist(filePath: string): Promise<boolean> {
-    return await call("check_file_exist", filePath);
   }
 }

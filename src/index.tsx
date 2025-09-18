@@ -68,11 +68,11 @@ const TabView: FC<{ show?: boolean }> = ({ show = true }) => {
   };
 
   const supportChargeLimit = useMemo(() => {
-    return Backend.data.getIsSupportChargeLimit();
+    return Backend.data.getSupportsChargeLimit();
   }, []);
 
   const isSupportSoftwareChargeLimit = useMemo(() => {
-    return Backend.data.isSupportSoftwareChargeLimit();
+    return Backend.data.getSupportsSoftwareChargeLimit();
   }, []);
 
   const showPowerTab = useMemo(() => {

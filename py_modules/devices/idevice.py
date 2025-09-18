@@ -57,9 +57,9 @@ class IDevice(ABC):
 
                         cls._instance = AyaneoKun()
                     case _:
-                        from . import PowerDevice
+                        from . import PowerStationDevice
 
-                        cls._instance = PowerDevice()
+                        cls._instance = PowerStationDevice()
             case "ASUSTeK COMPUTER INC.":
                 from . import AsusDevice
 
@@ -84,9 +84,9 @@ class IDevice(ABC):
 
                 cls._instance = LenovoDevice()
             case _:
-                from . import PowerDevice
+                from . import PowerStationDevice
 
-                cls._instance = PowerDevice()
+                cls._instance = PowerStationDevice()
 
         return cls._instance
 
@@ -149,4 +149,12 @@ class IDevice(ABC):
 
     @abstractmethod
     def set_tdp_unlimited(self) -> bool:
+        pass
+
+    @abstractmethod
+    def get_tdpMax(self) -> int:
+        pass
+
+    @abstractmethod
+    def get_power_info(self) -> str:
         pass

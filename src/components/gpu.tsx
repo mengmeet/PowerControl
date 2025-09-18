@@ -22,7 +22,7 @@ import { RiArrowDownSFill, RiArrowUpSFill } from "react-icons/ri";
 //GPUFreq模块
 const GPUFreqComponent: FC = () => {
   const [gpuFreq, setGPUFreq] = useState<number>(Settings.appGPUFreq());
-  // console.log(`gpuFreq: ${gpuFreq} , GPUFreqMax : ${Backend.data.getGPUFreqMax()} , GPUFreqMin : ${Backend.data.getGPUFreqMin()}`);
+  // console.log(`gpuFreq: ${gpuFreq} , GPUFreqMax : ${Backend.data.getGpuMax()} , GPUFreqMin : ${Backend.data.getGpuMin()}`);
   const refresh = () => {
     setGPUFreq(Settings.appGPUFreq());
   };
@@ -47,9 +47,9 @@ const GPUFreqComponent: FC = () => {
         label={localizationManager.getString(localizeStrEnum.FIXED_FREQ)}
         value={gpuFreq}
         step={50}
-        max={Backend.data.getGPUFreqMax()}
-        min={Backend.data.getGPUFreqMin()}
-        disabled={!Backend.data.HasGPUFreqMax()}
+        max={Backend.data.getGpuMax()}
+        min={Backend.data.getGpuMin()}
+        disabled={!Backend.data.hasGpuMax()}
         showValue={true}
         onChangeEnd={(value: number) => {
           Settings.setGPUFreq(value);
@@ -94,10 +94,10 @@ const GPURangeComponent: FC = () => {
           label={localizationManager.getString(localizeStrEnum.GPU_MAX_FREQ)}
           value={gpuRangeMaxFreq}
           step={50}
-          max={Backend.data.getGPUFreqMax()}
-          min={Backend.data.getGPUFreqMin()}
+          max={Backend.data.getGpuMax()}
+          min={Backend.data.getGpuMin()}
           changeMin={gpuRangeMinFreq}
-          disabled={!Backend.data.HasGPUFreqMax()}
+          disabled={!Backend.data.hasGpuMax()}
           showValue={true}
           onChangeEnd={(value: number) => {
             Settings.setGPURangeFreq(value, gpuRangeMinFreq);
@@ -109,10 +109,10 @@ const GPURangeComponent: FC = () => {
           label={localizationManager.getString(localizeStrEnum.GPU_MIN_FREQ)}
           value={gpuRangeMinFreq}
           step={50}
-          max={Backend.data.getGPUFreqMax()}
-          min={Backend.data.getGPUFreqMin()}
+          max={Backend.data.getGpuMax()}
+          min={Backend.data.getGpuMin()}
           changeMax={gpuRangeMaxFreq}
-          disabled={!Backend.data.HasGPUFreqMax()}
+          disabled={!Backend.data.hasGpuMax()}
           showValue={true}
           onChangeEnd={(value: number) => {
             Settings.setGPURangeFreq(gpuRangeMaxFreq, value);
@@ -157,10 +157,10 @@ const GPUAutoComponent: FC = () => {
           label={localizationManager.getString(localizeStrEnum.GPU_MAX_FREQ)}
           value={gpuAutoMaxFreq}
           step={50}
-          max={Backend.data.getGPUFreqMax()}
-          min={Backend.data.getGPUFreqMin()}
+          max={Backend.data.getGpuMax()}
+          min={Backend.data.getGpuMin()}
           changeMin={gpuAutoMinFreq}
-          disabled={!Backend.data.HasGPUFreqMax()}
+          disabled={!Backend.data.hasGpuMax()}
           showValue={true}
           onChangeEnd={(value: number) => {
             Settings.setGPUAutoMaxFreq(value);
@@ -172,10 +172,10 @@ const GPUAutoComponent: FC = () => {
           label={localizationManager.getString(localizeStrEnum.GPU_MIN_FREQ)}
           value={gpuAutoMinFreq}
           step={50}
-          max={Backend.data.getGPUFreqMax()}
-          min={Backend.data.getGPUFreqMin()}
+          max={Backend.data.getGpuMax()}
+          min={Backend.data.getGpuMin()}
           changeMax={gpuAutoMaxFreq}
-          disabled={!Backend.data.HasGPUFreqMax()}
+          disabled={!Backend.data.hasGpuMax()}
           showValue={true}
           onChangeEnd={(value: number) => {
             Settings.setGPUAutoMinFreq(value);

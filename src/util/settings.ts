@@ -5,6 +5,7 @@ import {
 } from "typescript-json-serializer";
 import { APPLYTYPE, ComponentName, FANMODE, GPUMODE, UpdateType } from "./enum";
 import { Backend } from "./backend";
+import { setCpuFreqByCoreType } from "./backend";
 import { FanPosition } from "./position";
 import {
   ACStateManager,
@@ -56,37 +57,46 @@ export class AppSetting {
   cpuGovernor?: string;
   @JsonProperty()
   epp?: string;
+  @JsonProperty()
+  cpuFreqControlEnable?: boolean;
+  @JsonProperty()
+  cpuCoreFreqConfig?: Record<string, number>;
+  @JsonProperty()
+  schedExtScheduler?: string;
 
   constructor() {
     this.smt = true;
-    this.cpuNum = Backend.data?.HasCpuMaxNum()
+    this.cpuNum = Backend.data?.hasCpuMaxNum()
       ? Backend.data?.getCpuMaxNum()
       : 4;
     this.cpuboost = true;
     this.tdpEnable = false;
-    this.tdp = Backend.data?.HasTDPMax()
-      ? Math.trunc(Backend.data?.getTDPMax() / 2)
+    this.tdp = Backend.data?.hasTdpMax()
+      ? Math.trunc(Backend.data?.getTdpMax() / 2)
       : 15;
     this.gpuMode = GPUMODE.NATIVE;
     this.gpuSliderFix = false;
-    //this.gpuFreq=Backend.data?.HasGPUFreqMax()?Backend.data.getGPUFreqMax():1600;
-    this.gpuAutoMaxFreq = Backend.data?.HasGPUFreqMax()
-      ? Backend.data.getGPUFreqMax()
+    //this.gpuFreq=Backend.data?.hasGpuMax()?Backend.data.getGpuMax():1600;
+    this.gpuAutoMaxFreq = Backend.data?.hasGpuMax()
+      ? Backend.data.getGpuMax()
       : 1600;
-    this.gpuAutoMinFreq = Backend.data?.HasGPUFreqMin()
-      ? Backend.data.getGPUFreqMin()
+    this.gpuAutoMinFreq = Backend.data?.hasGpuMin()
+      ? Backend.data.getGpuMin()
       : 200;
-    this.gpuRangeMaxFreq = Backend.data?.HasGPUFreqMax()
-      ? Backend.data.getGPUFreqMax()
+    this.gpuRangeMaxFreq = Backend.data?.hasGpuMax()
+      ? Backend.data.getGpuMax()
       : 1600;
-    this.gpuRangeMinFreq = Backend.data?.HasGPUFreqMin()
-      ? Backend.data.getGPUFreqMin()
+    this.gpuRangeMinFreq = Backend.data?.hasGpuMin()
+      ? Backend.data.getGpuMin()
       : 200;
     this.fanProfileNameList = [];
     this.cpuMaxPerfPct = 100;
     this.autoCPUMaxPct = false; // 默认关闭自动CPU最大性能百分比
-    this.cpuGovernor = "performance"; // 默认使用性能模式
-    this.epp = "performance"; // 默认使用性能模式
+    this.cpuGovernor = "";
+    this.epp = "";
+    this.cpuFreqControlEnable = false; // 默认关闭CPU频率控制
+    this.cpuCoreFreqConfig = {}; // 默认空的核心频率配置
+    this.schedExtScheduler = "";
   }
   deepCopy(copyTarget: AppSetting) {
     // this.overwrite=copyTarget.overwrite;
@@ -107,6 +117,11 @@ export class AppSetting {
     this.autoCPUMaxPct = copyTarget.autoCPUMaxPct;
     this.cpuGovernor = copyTarget.cpuGovernor;
     this.epp = copyTarget.epp;
+    this.cpuFreqControlEnable = copyTarget.cpuFreqControlEnable;
+    this.cpuCoreFreqConfig = copyTarget.cpuCoreFreqConfig
+      ? { ...copyTarget.cpuCoreFreqConfig }
+      : {};
+    this.schedExtScheduler = copyTarget.schedExtScheduler;
   }
 }
 
@@ -287,7 +302,7 @@ export class Settings {
   // ui 菜单展开控制
   public static set showSettingMenu(show: boolean) {
     this._instance.data.showSettingMenu = show;
-    Settings.saveSettingsToLocalStorage();
+    Settings.saveSettings();
   }
 
   public static get showSettingMenu(): boolean {
@@ -296,7 +311,7 @@ export class Settings {
 
   public static set showFanMenu(show: boolean) {
     this._instance.data.showFanMenu = show;
-    Settings.saveSettingsToLocalStorage();
+    Settings.saveSettings();
   }
 
   public static get showFanMenu(): boolean {
@@ -305,7 +320,7 @@ export class Settings {
 
   public static set showCpuMenu(show: boolean) {
     this._instance.data.showCpuMenu = show;
-    Settings.saveSettingsToLocalStorage();
+    Settings.saveSettings();
   }
 
   public static get showCpuMenu(): boolean {
@@ -314,7 +329,7 @@ export class Settings {
 
   public static set showGpuMenu(show: boolean) {
     this._instance.data.showGpuMenu = show;
-    Settings.saveSettingsToLocalStorage();
+    Settings.saveSettings();
   }
 
   public static get showGpuMenu(): boolean {
@@ -323,7 +338,7 @@ export class Settings {
 
   public static set showPowerMenu(show: boolean) {
     this._instance.data.showPowerMenu = show;
-    Settings.saveSettingsToLocalStorage();
+    Settings.saveSettings();
   }
 
   public static get showPowerMenu(): boolean {
@@ -333,7 +348,7 @@ export class Settings {
 
   public static set currentTabRoute(route: string) {
     this._instance.data.currentTabRoute = route;
-    Settings.saveSettingsToLocalStorage();
+    Settings.saveSettings();
   }
 
   public static get currentTabRoute(): string {
@@ -342,7 +357,7 @@ export class Settings {
 
   public static set useOldUI(useOldUI: boolean) {
     this._instance.data.useOldUI = useOldUI;
-    Settings.saveSettingsToLocalStorage();
+    Settings.saveSettings();
     PluginManager.updateAllComponent(UpdateType.UPDATE);
   }
 
@@ -359,7 +374,7 @@ export class Settings {
   public static setEnable(enabled: boolean) {
     if (this._instance.data.enabled != enabled) {
       this._instance.data.enabled = enabled;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       if (enabled) {
         Backend.applySettings(APPLYTYPE.SET_ALL);
         PluginManager.updateAllComponent(UpdateType.SHOW);
@@ -446,7 +461,7 @@ export class Settings {
     ) {
       this._instance.data.perApp[RunningApps.active()].overwrite = overwrite;
 
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_ALL);
       PluginManager.updateAllComponent(UpdateType.UPDATE);
     }
@@ -455,7 +470,7 @@ export class Settings {
   static saveOverWrite(overwrite: boolean) {
     if (RunningApps.active() != DEFAULT_APP) {
       this._instance.data.perApp[RunningApps.active()].overwrite = overwrite;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       PluginManager.updateAllComponent(UpdateType.UPDATE);
     }
   }
@@ -480,7 +495,7 @@ export class Settings {
   static setEnableNativeTDPSlider(enableNativeTDPSlider: boolean) {
     if (this._instance.data.enableNativeTDPSlider != enableNativeTDPSlider) {
       this._instance.data.enableNativeTDPSlider = enableNativeTDPSlider;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_TDP);
       PluginManager.updateComponent(ComponentName.CPU_TDP, UpdateType.UPDATE);
     }
@@ -500,7 +515,7 @@ export class Settings {
     ) {
       this._instance.data.perApp[Settings.ensureAppID()].acStateOverwrite =
         acStateOverwrite;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_ALL);
       PluginManager.updateAllComponent(UpdateType.UPDATE);
     }
@@ -513,14 +528,14 @@ export class Settings {
   static setSmt(smt: boolean) {
     if (Settings.ensureApp().smt != smt) {
       Settings.ensureApp().smt = smt;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_CPUCORE);
       PluginManager.updateComponent(ComponentName.CPU_SMT, UpdateType.UPDATE);
     }
   }
 
   static appIsSupportSMT(): boolean {
-    return Backend.data?.HasSupportSMT() ? Backend.data?.getSupportSMT() : true;
+    return Backend.data?.hasSupportsSMT() ? Backend.data?.getSupportsSMT() : true;
   }
 
   static appBypassCharge(): boolean {
@@ -530,7 +545,7 @@ export class Settings {
   static setBypassCharge(bypassCharge: boolean) {
     if (Settings._instance.data.bypassCharge != bypassCharge) {
       Settings._instance.data.bypassCharge = bypassCharge;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_POWER_BATTERY);
       PluginManager.updateComponent(ComponentName.POWER_ALL, UpdateType.UPDATE);
     }
@@ -543,7 +558,7 @@ export class Settings {
   static setChargeLimit(chargeLimit: number) {
     if (Settings._instance.data.chargeLimit != chargeLimit) {
       Settings._instance.data.chargeLimit = chargeLimit;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_POWER_BATTERY);
       PluginManager.updateComponent(ComponentName.POWER_ALL, UpdateType.UPDATE);
     }
@@ -557,7 +572,7 @@ export class Settings {
   static setEnableChargeLimit(enableChargeLimit: boolean) {
     if (Settings._instance.data.enableChargeLimit != enableChargeLimit) {
       Settings._instance.data.enableChargeLimit = enableChargeLimit;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_POWER_BATTERY);
       PluginManager.updateComponent(ComponentName.POWER_ALL, UpdateType.UPDATE);
     }
@@ -570,7 +585,7 @@ export class Settings {
   static setCpuNum(cpuNum: number) {
     if (Settings.ensureApp().cpuNum != cpuNum) {
       Settings.ensureApp().cpuNum = cpuNum;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_CPUCORE);
       PluginManager.updateComponent(ComponentName.CPU_NUM, UpdateType.UPDATE);
     }
@@ -583,7 +598,7 @@ export class Settings {
   static setCpuboost(cpuboost: boolean) {
     if (Settings.ensureApp().cpuboost != cpuboost) {
       Settings.ensureApp().cpuboost = cpuboost;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_CPUBOOST);
       PluginManager.updateComponent(ComponentName.CPU_BOOST, UpdateType.UPDATE);
     }
@@ -596,7 +611,7 @@ export class Settings {
   static setTDP(tdp: number) {
     if (Settings.ensureApp().tdp != tdp) {
       Settings.ensureApp().tdp = tdp;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_TDP);
       PluginManager.updateComponent(ComponentName.CPU_TDP, UpdateType.UPDATE);
     }
@@ -613,7 +628,7 @@ export class Settings {
   static setAutoCPUMaxPct(autoPerf: boolean) {
     if (Settings.ensureApp().autoCPUMaxPct != autoPerf) {
       Settings.ensureApp().autoCPUMaxPct = autoPerf;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_CPU_MAX_PERF);
       PluginManager.updateComponent(
         ComponentName.CPU_PERFORMANCE,
@@ -625,7 +640,7 @@ export class Settings {
   static setCpuMaxPerfPct(cpuMaxPerfPct: number) {
     if (Settings.ensureApp().cpuMaxPerfPct != cpuMaxPerfPct) {
       Settings.ensureApp().cpuMaxPerfPct = cpuMaxPerfPct;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_CPU_MAX_PERF);
       PluginManager.updateComponent(
         ComponentName.CPU_PERFORMANCE,
@@ -641,7 +656,7 @@ export class Settings {
   static setEnableCustomTDPRange(enableCustomTDPRange: boolean) {
     if (this._instance.data.enableCustomTDPRange != enableCustomTDPRange) {
       this._instance.data.enableCustomTDPRange = enableCustomTDPRange;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_TDP);
       PluginManager.updateComponent(
         ComponentName.CUSTOM_TDP,
@@ -657,7 +672,7 @@ export class Settings {
   static setCustomTDPRangeMax(customTDPRangeMax: number) {
     if (this._instance.data.customTDPRangeMax != customTDPRangeMax) {
       this._instance.data.customTDPRangeMax = customTDPRangeMax;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_TDP);
       PluginManager.updateComponent(
         ComponentName.CUSTOM_TDP,
@@ -690,7 +705,7 @@ export class Settings {
   static setTDPEnable(tdpEnable: boolean) {
     if (Settings.ensureApp().tdpEnable != tdpEnable) {
       Settings.ensureApp().tdpEnable = tdpEnable;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_TDP);
       PluginManager.updateComponent(ComponentName.CPU_TDP, UpdateType.UPDATE);
     }
@@ -700,7 +715,7 @@ export class Settings {
     if (this._instance.data.enableCustomTDPRange) {
       return this._instance.data.customTDPRangeMax;
     } else {
-      return Backend.data.getTDPMax();
+      return Backend.data.getTdpMax();
     }
   }
 
@@ -722,7 +737,7 @@ export class Settings {
       // console.log("saveTDP", tdp, tdpEnable);
       Settings.ensureApp().tdp = tdp;
       Settings.ensureApp().tdpEnable = tdpEnable;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
     }
   }
 
@@ -734,7 +749,7 @@ export class Settings {
   static setGPUMode(gpuMode: GPUMODE) {
     if (Settings.ensureApp().gpuMode != gpuMode) {
       Settings.ensureApp().gpuMode = gpuMode;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
       PluginManager.updateComponent(
         ComponentName.GPU_FREQMODE,
@@ -769,7 +784,7 @@ export class Settings {
   static setGPUFreq(gpuFreq: number) {
     if (Settings.ensureApp().gpuFreq != gpuFreq) {
       Settings.ensureApp().gpuFreq = gpuFreq;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
       PluginManager.updateComponent(
         ComponentName.GPU_FREQFIX,
@@ -786,7 +801,7 @@ export class Settings {
   static setGPUAutoMaxFreq(gpuAutoMaxFreq: number) {
     if (Settings.ensureApp().gpuAutoMaxFreq != gpuAutoMaxFreq) {
       Settings.ensureApp().gpuAutoMaxFreq = gpuAutoMaxFreq;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
       PluginManager.updateComponent(
         ComponentName.GPU_FREQRANGE,
@@ -803,7 +818,7 @@ export class Settings {
   static setGPUAutoMinFreq(gpuAutoMinFreq: number) {
     if (Settings.ensureApp().gpuAutoMinFreq != gpuAutoMinFreq) {
       Settings.ensureApp().gpuAutoMinFreq = gpuAutoMinFreq;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
       PluginManager.updateComponent(
         ComponentName.GPU_FREQRANGE,
@@ -829,7 +844,7 @@ export class Settings {
       Settings.ensureApp().gpuRangeMaxFreq = gpuRangeMaxFreq;
       Settings.ensureApp().gpuRangeMinFreq = gpuRangeMinFreq;
       Backend.applySettings(APPLYTYPE.SET_GPUMODE);
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       PluginManager.updateComponent(
         ComponentName.GPU_FREQRANGE,
         UpdateType.UPDATE
@@ -844,7 +859,7 @@ export class Settings {
   static setGPUSliderFix(gpuSliderFix: boolean) {
     if (Settings.ensureApp().gpuSliderFix != gpuSliderFix) {
       Settings.ensureApp().gpuSliderFix = gpuSliderFix;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_GPUSLIDERFIX);
       PluginManager.updateComponent(
         ComponentName.GPU_SLIDERFIX,
@@ -898,7 +913,7 @@ export class Settings {
   ) {
     if (force || Settings.appFanSettingNameList()[index] != fanProfileName) {
       Settings.appFanSettingNameList()[index] = fanProfileName;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       Backend.applySettings(APPLYTYPE.SET_FAN_ALL);
       PluginManager.updateComponent(ComponentName.FAN_ALL, UpdateType.UPDATE);
     }
@@ -908,7 +923,7 @@ export class Settings {
   static addFanSetting(fanProfileName: string, fanSetting: FanSetting) {
     if (fanProfileName != undefined) {
       this._instance.data.fanSettings[fanProfileName] = fanSetting;
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
       return true;
     } else {
       return false;
@@ -1001,7 +1016,7 @@ export class Settings {
           });
         }
       );
-      Settings.saveSettingsToLocalStorage();
+      Settings.saveSettings();
     }
   }
 
@@ -1038,7 +1053,7 @@ export class Settings {
     // }
   }
 
-  static saveSettingsToLocalStorage() {
+  static saveSettings() {
     // const settingsJsonObj = serializer.serializeObject(this._instance.data);
     // const settingsString = JSON.stringify(settingsJsonObj);
     // console.log(`>>>>> saveSettingsToLocalStorage: \n${settingsString}`);
@@ -1046,7 +1061,7 @@ export class Settings {
     Backend.setSettings(this._instance.data);
   }
 
-  static resetToLocalStorage(apply = true) {
+  static resetSettings(apply = true) {
     console.log(">>>>>  resetToLocalStorage");
     localStorage.removeItem(SETTINGS_KEY);
     const _data = new SettingsData();
@@ -1059,7 +1074,11 @@ export class Settings {
   }
 
   static appCPUGovernor(): string {
-    return Settings.ensureApp().cpuGovernor || "performance";
+    return (
+      Settings.ensureApp().cpuGovernor ||
+      Backend.data.getCurrentGovernor() ||
+      "powersave"
+    );
   }
 
   static setCPUGovernor(governor: string) {
@@ -1070,7 +1089,7 @@ export class Settings {
       ComponentName.CPU_GOVERNOR,
       UpdateType.UPDATE
     );
-    this.saveSettingsToLocalStorage();
+    this.saveSettings();
     this._instance.settingChangeEvent.dispatchEvent(
       new Event("CPU_GOVERNOR_Change")
     );
@@ -1091,21 +1110,111 @@ export class Settings {
     );
   }
 
+  // 获取当前 SCX 调度器
+  static appSchedExtScheduler(): string {
+    return (
+      Settings.ensureApp().schedExtScheduler ||
+      Backend.data.getCurrentSchedExtScheduler() ||
+      "none"
+    );
+  }
+
+  // 设置 SCX 调度器
+  static setSchedExtScheduler(scheduler: string) {
+    const app = Settings.ensureApp();
+    app.schedExtScheduler = scheduler;
+    Backend.applySettings(APPLYTYPE.SET_CPU_SCHED_EXT);
+    PluginManager.updateComponent(
+      ComponentName.CPU_SCHED_EXT,
+      UpdateType.UPDATE
+    );
+    this.saveSettings();
+    this._instance.settingChangeEvent.dispatchEvent(
+      new Event("CPU_SCHED_EXT_Change")
+    );
+  }
+
+  // 监听 SCX 调度器变化
+  static addSchedExtSchedulerEventListener(callback: () => void) {
+    this._instance.settingChangeEvent.addEventListener(
+      "CPU_SCHED_EXT_Change",
+      callback
+    );
+  }
+
+  static removeSchedExtSchedulerEventListener(callback: () => void) {
+    this._instance.settingChangeEvent.removeEventListener(
+      "CPU_SCHED_EXT_Change",
+      callback
+    );
+  }
+
   // 获取当前 EPP 模式
   public static appEPPMode(): string {
-    return this.ensureApp().epp || "performance";
+    return (
+      this.ensureApp().epp ||
+      Backend.data.getCurrentEpp() ||
+      "balance-performance"
+    );
   }
 
   // 设置 EPP 模式
   public static setEPP(epp: string) {
     const app = this.ensureApp();
     app.epp = epp;
-    this.saveSettingsToLocalStorage();
+    this.saveSettings();
     Backend.applySettings(APPLYTYPE.SET_EPP);
     PluginManager.updateComponent(ComponentName.CPU_EPP, UpdateType.UPDATE);
     this._instance.settingChangeEvent.dispatchEvent(
       new CustomEvent(APPLYTYPE.SET_EPP, { detail: epp })
     );
+  }
+
+  // 获取CPU频率控制开关状态
+  public static appCpuFreqControlEnable(): boolean {
+    return this.ensureApp().cpuFreqControlEnable || false;
+  }
+
+  // 设置CPU频率控制开关
+  public static setCpuFreqControlEnable(enable: boolean) {
+    const app = this.ensureApp();
+    app.cpuFreqControlEnable = enable;
+    this.saveSettings();
+    Backend.applySettings(APPLYTYPE.SET_CPU_FREQ_CONTROL);
+    PluginManager.updateComponent(
+      ComponentName.CPU_FREQ_CONTROL,
+      UpdateType.UPDATE
+    );
+  }
+
+  // 获取指定核心类型的频率设置
+  public static getCpuCoreFreq(coreType: string): number {
+    const config = this.ensureApp().cpuCoreFreqConfig || {};
+    return config[coreType] || 0;
+  }
+
+  // 设置指定核心类型的频率
+  public static setCpuCoreFreq(coreType: string, freq: number) {
+    const app = this.ensureApp();
+    if (!app.cpuCoreFreqConfig) {
+      app.cpuCoreFreqConfig = {};
+    }
+    app.cpuCoreFreqConfig[coreType] = freq;
+    this.saveSettings();
+
+    // 只有开关打开时才应用设置
+    if (app.cpuFreqControlEnable) {
+      setCpuFreqByCoreType({ [coreType]: freq });
+    }
+    PluginManager.updateComponent(
+      ComponentName.CPU_FREQ_CONTROL,
+      UpdateType.UPDATE
+    );
+  }
+
+  // 获取所有核心类型的频率配置
+  public static getCpuCoreFreqConfig(): Record<string, number> {
+    return this.ensureApp().cpuCoreFreqConfig || {};
   }
 
   // 监听 EPP 模式变化

@@ -78,5 +78,18 @@
     "CHARGE_LIMIT_DESC": "バッテリー寿命を延ばすために充電制限を設定",
     "CHARGE_LIMIT_DESC_WITH_BYPASS": "手動バイパス充電が有効、充電制限は一時的に無効",
     "USE_OLD_UI": "旧UIを使用",
-    "USE_OLD_UI_DESC": "新しいタブビューの代わりに旧リストビューを使用する"
+    "USE_OLD_UI_DESC": "新しいタブビューの代わりに旧リストビューを使用する",
+    "CPU_FREQ_CONTROL": "CPU周波数制御",
+    "CPU_FREQ_CONTROL_DESC": "CPU最大周波数を制限して消費電力と発熱を抑制。アーキテクチャ：{{architecture}}",
+    "CORE_FREQUENCY": "コア周波数",
+    "CPU_FREQUENCY": "CPU周波数",
+    "ALL_CORES": "全コア",
+    "CHECK_VERSION": "バージョン確認",
+    "CHECKING_VERSION": "確認中...",
+    "LAST_CHECK_TIME": "最終確認",
+    "JUST_NOW": "たった今",
+    "MINUTES_AGO": "{{minutes}}分前",
+    "HOURS_AGO": "{{hours}}時間前",
+    "DAYS_AGO": "{{days}}日前",
+    "CLICK_TO_CHECK": "クリックして最新版を確認"
 }

@@ -137,7 +137,7 @@ const CPUNumComponent: FC = () => {
           step={1}
           max={Backend.data.getCpuMaxNum()}
           min={1}
-          disabled={!Backend.data.HasCpuMaxNum()}
+          disabled={!Backend.data.hasCpuMaxNum()}
           showValue={true}
           onChangeEnd={(value: number) => {
             Settings.setCpuNum(value);
@@ -302,7 +302,7 @@ const CPUTDPComponent: FC = () => {
                 max={
                   enableCustomTDPRange
                     ? customTDPRangeMax
-                    : Backend.data.getTDPMax()
+                    : Backend.data.getTdpMax()
                 }
                 min={enableCustomTDPRange ? customTDPRangeMin : 3}
                 disabled={disabled}
@@ -354,7 +354,7 @@ const CPUGovernorComponent: FC = () => {
 
   const refresh = () => {
     setGovernor(Settings.appCPUGovernor());
-    if (Backend.data.HasAvailableGovernors()) {
+    if (Backend.data.hasAvailableGovernors()) {
       setAvailableGovernors(Backend.data.getAvailableGovernors());
     }
   };
@@ -378,7 +378,7 @@ const CPUGovernorComponent: FC = () => {
   }, []);
 
   if (
-    !Backend.data.HasAvailableGovernors() ||
+    !Backend.data.hasAvailableGovernors() ||
     availableGovernors.length === 0
   ) {
     return null;
@@ -413,13 +413,19 @@ const CPUGovernorComponent: FC = () => {
 
 export const CPUEPPComponent: FC = () => {
   const [epp, setEPP] = useState<string>(Settings.appEPPMode());
-  const [eppModes, setEPPModes] = useState<string[]>([]);
+  const [eppModes, setEPPModes] = useState<string[]>(
+    Backend.data.getEppModes()
+  );
 
   const refresh = () => {
     setEPP(Settings.appEPPMode());
-    if (Backend.data.hasEPPModes()) {
-      setEPPModes(Backend.data.getEPPModes());
-    }
+    const updateEPPModes = async () => {
+      await Backend.data.refreshEPPModes();
+      if (Backend.data.hasEppModes()) {
+        setEPPModes(Backend.data.getEppModes());
+      }
+    };
+    updateEPPModes();
   };
 
   // 初始化和监听设置变化
@@ -441,7 +447,7 @@ export const CPUEPPComponent: FC = () => {
     );
   }, []);
 
-  // if (!Backend.data.hasEPPModes() || eppModes.length === 0) {
+  // if (!Backend.data.hasEppModes() || eppModes.length === 0) {
   //   return null;
   // }
 
@@ -464,6 +470,180 @@ export const CPUEPPComponent: FC = () => {
           }}
         />
       </PanelSectionRow>
+    </div>
+  );
+};
+
+const CPUSchedExtComponent: FC = () => {
+  const [currentScheduler, setCurrentScheduler] = useState<string>(
+    Settings.appSchedExtScheduler()
+  );
+  const [availableSchedulers, setAvailableSchedulers] = useState<string[]>(
+    Backend.data.getAvailableSchedExtSchedulers()
+  );
+
+  const refresh = () => {
+    setCurrentScheduler(Settings.appSchedExtScheduler());
+    if (Backend.data.hasSchedExtSupport()) {
+      setAvailableSchedulers(Backend.data.getAvailableSchedExtSchedulers());
+    }
+  };
+
+  // 初始化和监听设置变化
+  useEffect(() => {
+    refresh();
+    PluginManager.listenUpdateComponent(
+      ComponentName.CPU_SCHED_EXT,
+      [
+        ComponentName.CPU_SCHED_EXT,
+        ComponentName.CPU_TDP,
+        ComponentName.CPU_BOOST,
+      ],
+      (_ComponentName, updateType) => {
+        if (updateType === UpdateType.UPDATE) {
+          refresh();
+        }
+      }
+    );
+  }, []);
+
+  // 条件渲染：只有在支持且有可用调度器时才显示
+  if (!Backend.data.hasSchedExtSupport() || availableSchedulers.length === 0) {
+    return null;
+  }
+
+  return (
+    <div>
+      <PanelSectionRow>
+        <DropdownItem
+          label={localizationManager.getString(localizeStrEnum.CPU_SCHED_EXT)}
+          description={localizationManager.getString(
+            localizeStrEnum.CPU_SCHED_EXT_DESC
+          )}
+          menuLabel={localizationManager.getString(
+            localizeStrEnum.CPU_SCHED_EXT
+          )}
+          rgOptions={availableSchedulers.map((sched) => ({
+            data: sched,
+            label: sched,
+          }))}
+          selectedOption={currentScheduler}
+          onChange={(value) => {
+            if (value.data != currentScheduler) {
+              Settings.setSchedExtScheduler(value.data);
+            }
+          }}
+        />
+      </PanelSectionRow>
+    </div>
+  );
+};
+
+const CPUFreqControlComponent: FC = () => {
+  const [freqControlEnable, setFreqControlEnable] = useState<boolean>(
+    Settings.appCpuFreqControlEnable()
+  );
+  const coreInfo = Backend.data.getCpuCoreInfo();
+
+  const refresh = () => {
+    setFreqControlEnable(Settings.appCpuFreqControlEnable());
+  };
+
+  useEffect(() => {
+    PluginManager.listenUpdateComponent(
+      ComponentName.CPU_FREQ_CONTROL,
+      [ComponentName.CPU_FREQ_CONTROL],
+      (_ComponentName, updateType) => {
+        if (updateType === UpdateType.UPDATE) {
+          refresh();
+        }
+      }
+    );
+  }, []);
+
+  // 处理频率变化，使用SlowSliderField的内置延迟
+  const handleFreqChange = (coreType: string, freq: number) => {
+    Settings.setCpuCoreFreq(coreType, freq * 1000); // 转换为kHz
+  };
+
+  // 频率格式化：向下取整到100MHz倍数
+  const roundTo100MHz = (freqKhz: number): number => {
+    return Math.floor(freqKhz / 100000) * 100;
+  };
+
+  // 验证频率范围有效性
+  const validateFreqRange = (typeInfo: any) => {
+    return (
+      typeInfo &&
+      typeInfo.min_freq_khz > 0 &&
+      typeInfo.max_freq_khz > typeInfo.min_freq_khz
+    );
+  };
+
+  // 生成架构信息描述
+  const getArchitectureInfo = (): string => {
+    return Object.entries(coreInfo.core_types)
+      .map(([type, info]) => `${info.count}×${type}`)
+      .join(" + ");
+  };
+
+  // 验证CPU信息有效性
+  if (
+    !Backend.data.hasCpuCoreInfo() ||
+    !coreInfo.core_types ||
+    Object.keys(coreInfo.core_types).length === 0
+  ) {
+    return null;
+  }
+
+  return (
+    <div>
+      <PanelSectionRow>
+        <ToggleField
+          label={localizationManager.getString(
+            localizeStrEnum.CPU_FREQ_CONTROL
+          )}
+          description={localizationManager.getString(
+            localizeStrEnum.CPU_FREQ_CONTROL_DESC,
+            {
+              architecture: getArchitectureInfo(),
+            }
+          )}
+          checked={freqControlEnable}
+          onChange={(value) => {
+            Settings.setCpuFreqControlEnable(value);
+          }}
+        />
+      </PanelSectionRow>
+
+      {freqControlEnable && (
+        <>
+          {/* 统一处理所有核心类型 */}
+          {Object.entries(coreInfo.core_types)
+            .filter(([_, typeInfo]) => validateFreqRange(typeInfo))
+            .map(([coreType, typeInfo]) => (
+              <div key={coreType}>
+                <PanelSectionRow>
+                  <SlowSliderField
+                    label={coreType}
+                    value={
+                      Settings.getCpuCoreFreq(coreType) / 1000 ||
+                      roundTo100MHz(typeInfo.max_freq_khz)
+                    }
+                    valueSuffix=" MHz"
+                    max={roundTo100MHz(typeInfo.max_freq_khz)}
+                    min={roundTo100MHz(typeInfo.min_freq_khz)}
+                    step={100}
+                    showValue={true}
+                    onChangeEnd={(value: number) =>
+                      handleFreqChange(coreType, value)
+                    }
+                  />
+                </PanelSectionRow>
+              </div>
+            ))}
+        </>
+      )}
     </div>
   );
 };
@@ -540,8 +720,10 @@ export const CPUComponent: FC<{
               <CPUBoostComponent />
               {isSpportSMT && <CPUSmtComponent />}
               <CPUGovernorComponent />
+              <CPUSchedExtComponent />
               <CPUNumComponent />
               <CPUPerformancePerfComponent />
+              <CPUFreqControlComponent />
             </>
           )}
         </PanelSection>

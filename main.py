@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import List
+from typing import Dict, List
 
 import decky
 
@@ -73,7 +73,7 @@ class Plugin:
             logger.error(e, exc_info=True)
             return 0
 
-    async def get_isSupportSMT(self):
+    async def supports_smt(self):
         try:
             return cpuManager.get_isSupportSMT()
         except Exception as e:
@@ -82,7 +82,7 @@ class Plugin:
 
     async def get_tdpMax(self):
         try:
-            return cpuManager.get_tdpMax()
+            return self.powerManager.get_tdpMax()
         except Exception as e:
             logger.error(e, exc_info=True)
             return 0
@@ -261,6 +261,27 @@ class Plugin:
             logger.error(e, exc_info=True)
             return False
 
+    async def set_cpu_freq_by_core_type(self, freq_config: Dict[str, int]):
+        try:
+            logger.info(f"设置按核心类型CPU频率: {freq_config}")
+            return cpuManager.set_cpu_freq_by_core_type(freq_config)
+        except Exception as e:
+            logger.error(f"按核心类型设置CPU频率失败: {e}", exc_info=True)
+            return False
+
+    async def get_cpu_core_info(self):
+        """获取CPU核心类型详细信息"""
+        try:
+            return cpuManager.get_cpu_core_info()
+        except Exception as e:
+            logger.error(f"获取CPU核心信息失败: {e}", exc_info=True)
+            return {
+                "is_heterogeneous": False,
+                "vendor": "Error",
+                "architecture_summary": "Failed to detect CPU information",
+                "core_types": {},
+            }
+
     async def receive_suspendEvent(self):
         try:
             return True
@@ -310,10 +331,13 @@ class Plugin:
 
     async def get_ryzenadj_info(self):
         return cpuManager.get_ryzenadj_info()
-    
+
     async def get_rapl_info(self):
         logger.info("Main get_rapl_info")
         return cpuManager.get_rapl_info()
+
+    async def get_power_info(self):
+        return self.powerManager.get_power_info()
 
     async def get_max_perf_pct(self):
         try:
@@ -366,7 +390,7 @@ class Plugin:
             logger.error(e, exc_info=True)
             return False
 
-    async def is_epp_supported(self):
+    async def supported_epp(self):
         """检查系统是否支持 EPP 功能。"""
         try:
             return cpuManager.is_epp_supported()
@@ -395,6 +419,52 @@ class Plugin:
         """设置 EPP 模式。"""
         try:
             return cpuManager.set_epp(mode)
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
+    async def supports_sched_ext(self):
+        """检查系统是否支持 sched_ext 功能。"""
+        try:
+            return self.powerManager.supports_sched_ext()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
+    async def get_sched_ext_list(self):
+        """获取可用的 sched_ext 调度器列表。"""
+        try:
+            # 先检查是否支持 sched_ext
+            if not self.powerManager.supports_sched_ext():
+                return []
+            return self.powerManager.get_sched_ext_list()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return []
+
+    async def get_current_sched_ext_scheduler(self):
+        """获取当前的 sched_ext 调度器。"""
+        try:
+            # 先检查是否支持 sched_ext
+            if not self.powerManager.supports_sched_ext():
+                return ""
+            result = self.powerManager.get_current_sched_ext_scheduler()
+            logger.info(f"获取当前 SCX 调度器: {result}")
+            return result
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return ""
+
+    async def set_sched_ext_scheduler(self, scheduler: str, param: str = ""):
+        """设置 sched_ext 调度器。
+
+        Args:
+            scheduler (str): 调度器名称
+            param (str, optional): 调度器参数，默认为空字符串
+        """
+        logger.debug(f"Main 设置 sched_ext 调度器为 {scheduler}, 参数: {param}")
+        try:
+            return self.powerManager.set_sched_ext(scheduler, param)
         except Exception as e:
             logger.error(e, exc_info=True)
             return False

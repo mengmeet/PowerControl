@@ -1,6 +1,8 @@
 import os
 from typing import Optional, Tuple
 
+from config import logger
+
 POWER_SUPPLY_PATH = "/sys/class/power_supply"
 CHARGE_CONTROL_END_THRESHOLD = "charge_control_end_threshold"
 CHARGE_BEHAVIOUR = "charge_behaviour"
@@ -23,6 +25,7 @@ def _find_battery_device() -> Optional[str]:
                         return device
         return None
     except (FileNotFoundError, IOError):
+        logger.error(f"Battery device not found: {POWER_SUPPLY_PATH}", exc_info=True)
         return None
 
 
@@ -56,6 +59,10 @@ def get_battery_info() -> Tuple[int, bool]:
             status = f.read().strip()
             is_charging = status == "Charging"
     except (FileNotFoundError, IOError):
+        logger.error(
+            f"Battery status path not found: {battery_path}/status",
+            exc_info=True,
+        )
         is_charging = False
 
     return percentage, is_charging
@@ -93,19 +100,23 @@ def support_charge_control_end_threshold() -> bool:
     battery_device = _find_battery_device()
     if not battery_device:
         return False
+    logger.info(f"Battery device: {battery_device}")
     threshold_path = os.path.join(
         POWER_SUPPLY_PATH, battery_device, CHARGE_CONTROL_END_THRESHOLD
     )
     # exists and writable
     if not os.path.exists(threshold_path):
+        logger.info(f"Charge control end threshold path not found: {threshold_path}")
         return False
     if not os.access(threshold_path, os.W_OK):
+        logger.info(f"Charge control end threshold path not writable: {threshold_path}")
         return False
     try:
         with open(threshold_path, "r") as f:
             _ = int(f.read().strip())
             return True
     except (FileNotFoundError, ValueError, IOError):
+        logger.info(f"Charge control end threshold path not readable: {threshold_path}")
         return False
 
 
@@ -151,6 +162,10 @@ def set_charge_control_end_threshold(threshold: int) -> bool:
             f.write(str(threshold))
             return True
     except (FileNotFoundError, ValueError, IOError):
+        logger.error(
+            f"Charge control end threshold path not writable: {charge_control_end_threshold_path}",
+            exc_info=True,
+        )
         return False
 
 
@@ -186,6 +201,10 @@ def get_charge_behaviour() -> str:
         with open(charge_behaviour_path, "r") as f:
             return f.read().strip()
     except (FileNotFoundError, ValueError, IOError):
+        logger.error(
+            f"Charge behaviour path not readable: {charge_behaviour_path}",
+            exc_info=True,
+        )
         return ""
 
 
@@ -206,6 +225,10 @@ def set_charge_behaviour(behavior: str) -> bool:
             f.write(str(behavior))
             return True
     except (FileNotFoundError, ValueError, IOError):
+        logger.error(
+            f"Charge behaviour path not writable: {charge_behaviour_path}",
+            exc_info=True,
+        )
         return False
 
 

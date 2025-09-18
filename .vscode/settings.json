@@ -8,5 +8,11 @@
   "yaml.schemas": {
     "./py_modules/fan_config/schema/ec.json": ["py_modules/fan_config/ec/*.yml"],
     "./py_modules/fan_config/schema/hwmon.json": ["py_modules/fan_config/hwmon/*.yml"],
-  }
+  },
+  "cursorpyright.analysis.extraPaths": [
+    "../decky-loader/backend/decky_loader/plugin/imports",
+    "../decky-loader/backend/decky_loader",
+    "./py_modules",
+    "./backend"
+  ]
 }

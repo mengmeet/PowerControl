@@ -78,5 +78,18 @@
     "CHARGE_LIMIT_DESC": "設置電池充電限制，延長電池壽命",
     "CHARGE_LIMIT_DESC_WITH_BYPASS": "手動旁路供電已開啟，充電限制暫時無效",
     "USE_OLD_UI": "使用舊版 UI",
-    "USE_OLD_UI_DESC": "使用舊的列表視圖而不是新的標籤視圖"
+    "USE_OLD_UI_DESC": "使用舊的列表視圖而不是新的標籤視圖",
+    "CPU_FREQ_CONTROL": "CPU頻率控制",
+    "CPU_FREQ_CONTROL_DESC": "限制CPU最大頻率以降低功耗和發熱。架構：{{architecture}}",
+    "CORE_FREQUENCY": "核心頻率",
+    "CPU_FREQUENCY": "CPU頻率",
+    "ALL_CORES": "所有核心",
+    "CHECK_VERSION": "檢查版本",
+    "CHECKING_VERSION": "檢查中...",
+    "LAST_CHECK_TIME": "最後檢查",
+    "JUST_NOW": "剛剛",
+    "MINUTES_AGO": "{{minutes}}分鐘前",
+    "HOURS_AGO": "{{hours}}小時前",
+    "DAYS_AGO": "{{days}}天前",
+    "CLICK_TO_CHECK": "點擊檢查最新版本"
 }

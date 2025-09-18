@@ -23,9 +23,9 @@ import {
   UpdateType,
   ACStateManager,
   EACState,
-  Backend,
   Logger,
 } from "../util";
+import { getPowerInfo } from "../util/backend";
 import { localizeStrEnum, localizationManager } from "../i18n";
 import { FaExclamationCircle } from "react-icons/fa";
 
@@ -362,27 +362,31 @@ export const PowerInfoModel: FC = ({
   const [info, setInfo] = useState<string>("");
   Logger.info(`fn:invoke PowerInfoModel: ${info}`);
 
-  const getPowerInfo = () => {
+  const fetchPowerInfo = () => {
     // if amd
-    if (Backend.data.getCpuVendor() === "AuthenticAMD") {
-      Logger.info(`fn:invoke getRyzenadjInfo`);
-      Backend.getRyzenadjInfo().then((info) => {
-        setInfo(info);
-      });
-    } else {
-      Logger.info(`fn:invoke getRAPLInfo`);
-      Backend.getRAPLInfo().then((info) => {
-        setInfo(info);
-      });
-    }
+    // if (Backend.data.getCpuVendor() === "AuthenticAMD") {
+    //   Logger.info(`fn:invoke getRyzenadjInfo`);
+    //   Backend.getRyzenadjInfo().then((info) => {
+    //     setInfo(info);
+    //   });
+    // } else {
+    //   Logger.info(`fn:invoke getRAPLInfo`);
+    //   Backend.getRAPLInfo().then((info) => {
+    //     setInfo(info);
+    //   });
+    // }
+    Logger.info(`fn:invoke getPowerInfo`);
+    getPowerInfo().then((info: string) => {
+      setInfo(info);
+    });
   };
 
   useEffect(() => {
-    getPowerInfo();
+    fetchPowerInfo();
 
     // 每5秒刷新一次
     const interval = setInterval(() => {
-      getPowerInfo();
+      fetchPowerInfo();
     }, 5000);
     return () => clearInterval(interval);
   }, []);

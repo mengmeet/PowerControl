@@ -17,6 +17,8 @@
     "CPU_GOVERNOR_DESC": "选择 CPU 频率调度器",
     "CPU_EPP": "能耗性能偏好",
     "CPU_EPP_DESC": "在节能和性能之间进行平衡",
+    "CPU_SCHED_EXT": "SCX 调度器",
+    "CPU_SCHED_EXT_DESC": "选择 CPU 的 sched_ext 调度器",
     "TDP":"热设计功耗 (TDP) 限制",
     "TDP_DESC":"限制处理器功耗以降低总功耗",
     "RYZENADJ_NOT_FOUND":"未检测到ryzenAdj",
@@ -80,5 +82,18 @@
     "CHARGE_LIMIT_DESC": "设置电池充电限制，延长电池寿命",
     "CHARGE_LIMIT_DESC_WITH_BYPASS": "手动旁路供电已开启，充电限制暂时无效",
     "USE_OLD_UI": "使用旧版 UI",
-    "USE_OLD_UI_DESC": "使用旧的列表视图而不是新的标签视图"
+    "USE_OLD_UI_DESC": "使用旧的列表视图而不是新的标签视图",
+    "CPU_FREQ_CONTROL": "CPU频率控制",
+    "CPU_FREQ_CONTROL_DESC": "限制CPU最大频率以降低功耗和发热。架构：{{architecture}}",
+    "CORE_FREQUENCY": "核心频率",
+    "CPU_FREQUENCY": "CPU频率",
+    "ALL_CORES": "所有核心",
+    "CHECK_VERSION": "检查版本",
+    "CHECKING_VERSION": "检查中...",
+    "LAST_CHECK_TIME": "最后检查",
+    "JUST_NOW": "刚刚",
+    "MINUTES_AGO": "{{minutes}}分钟前",
+    "HOURS_AGO": "{{hours}}小时前",
+    "DAYS_AGO": "{{days}}天前",
+    "CLICK_TO_CHECK": "点击检查最新版本"
 }

@@ -9,6 +9,7 @@ import {
   UpdateType,
 } from "./enum";
 import { Backend } from "./backend";
+import { receiveSuspendEvent } from "./backend";
 import { localizationManager } from "../i18n";
 import { Settings } from "./settings";
 import { EACState, AppOverviewExt, BatteryStateChange } from "./steamClient";
@@ -205,9 +206,9 @@ export class FanControl {
             var lineEnd = curvePoints!![0];
             if (
               FanControl.fanInfo[index].nowPoint.temperature!! >
-                lineStart.temperature!! &&
+              lineStart.temperature!! &&
               FanControl.fanInfo[index].nowPoint.temperature!! <=
-                lineEnd.temperature!!
+              lineEnd.temperature!!
             ) {
               FanControl.fanInfo[index].setPoint = calPointInLine(
                 lineStart,
@@ -225,9 +226,9 @@ export class FanControl {
                   : curvePoints!![pointIndex + 1];
               if (
                 FanControl.fanInfo[index].nowPoint.temperature!! >
-                  lineStart.temperature!! &&
+                lineStart.temperature!! &&
                 FanControl.fanInfo[index].nowPoint.temperature!! <=
-                  lineEnd.temperature!!
+                lineEnd.temperature!!
               ) {
                 FanControl.fanInfo[index].setPoint = calPointInLine(
                   lineStart,
@@ -244,9 +245,9 @@ export class FanControl {
             );
             if (
               FanControl.fanInfo[index].nowPoint.temperature!! >
-                lineStart.temperature!! &&
+              lineStart.temperature!! &&
               FanControl.fanInfo[index].nowPoint.temperature!! <=
-                lineEnd.temperature!!
+              lineEnd.temperature!!
             ) {
               FanControl.fanInfo[index].setPoint = calPointInLine(
                 lineStart,
@@ -276,7 +277,7 @@ export class FanControl {
       if (
         Math.abs(
           (FanControl.fanInfo[index].lastSetPoint.fanRPMpercent ?? 0) -
-            (FanControl.fanInfo[index].setPoint.fanRPMpercent ?? 0)
+          (FanControl.fanInfo[index].setPoint.fanRPMpercent ?? 0)
         ) >= 3
       ) {
         FanControl.fanInfo[index].lastSetPoint.fanRPMpercent =
@@ -398,13 +399,13 @@ export class PluginManager {
       try {
         await Timeout.withTimeout(
           () => Backend.applySettings(APPLYTYPE.SET_ALL),
-          5000,
+          10000,
           "Initial settings application timeout"
         );
         Logger.info("Initial settings application complete");
       } catch (e: any) {
         Logger.error(`Initial settings application failed: ${e.message}`);
-        Settings.resetToLocalStorage(false);
+        Settings.resetSettings(false);
         throw new Error(`Initial settings application failed: ${e.message}`);
       }
 
@@ -414,7 +415,8 @@ export class PluginManager {
           try {
             await new Promise((resolve) => setTimeout(resolve, 10000));
             if (Settings.ensureEnable()) {
-              await Backend.throwSuspendEvt();
+              console.log("throwSuspendEvt");
+              await receiveSuspendEvent();
             }
             await Timeout.withTimeout(
               () => Backend.applySettings(APPLYTYPE.SET_ALL),
@@ -481,11 +483,15 @@ export class PluginManager {
 
   public static unregister() {
     PluginManager.suspendEndHook?.unregister();
-    PluginManager.updateAllComponent(UpdateType.DISMOUNT);
-    ACStateManager?.unregister();
-    QAMPatch?.unpatch();
-    RunningApps?.unregister();
-    FanControl?.unregister();
+    try {
+      PluginManager.updateAllComponent(UpdateType.DISMOUNT);
+      ACStateManager?.unregister();
+      QAMPatch?.unpatch();
+      RunningApps?.unregister();
+      FanControl?.unregister();
+    } catch (e) {
+      Logger.error(`Error in unregister: ${e}`);
+    }
     Backend?.resetSettings();
     PluginManager.state = PluginState.QUIT;
   }
