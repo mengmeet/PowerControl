@@ -4,26 +4,18 @@ from typing import Dict, List
 
 import decky
 
-try:
-    import update
-    from conf_manager import confManager
-    from config import CPU_VENDOR, logger
-    from cpu import cpuManager
-    from fan import fanManager
-    from fuse_manager import FuseManager
-    from gpu import gpuManager
-    from power_manager import PowerManager
-    from sysInfo import sysInfoManager
+import update
+from conf_manager import confManager
+from cpu import cpuManager
+from config import CPU_VENDOR, logger
+from fan import fanManager
+from sysInfo import sysInfoManager
 
-    sys.path.append(f"{decky.DECKY_PLUGIN_DIR}/py_modules/site-packages")
-except Exception as e:
-    decky.logger.error(e, exc_info=True)
-
+sys.path.append(f"{decky.DECKY_PLUGIN_DIR}/py_modules/site-packages")
 
 class Plugin:
     def __init__(self):
         self.confManager = confManager
-        self.powerManager = PowerManager()
         # 使用单例模式，不再存储 fuseManager 实例
         # 而是每次通过 FuseManager.get_instance() 获取
 
@@ -41,15 +33,12 @@ class Plugin:
 
     async def _main(self):
         decky.logger.info("start _main")
-        self.powerManager.load()
         pass
 
     async def _unload(self):
         decky.logger.info("start _unload")
-        gpuManager.unload()
         # 使用单例模式获取实例并卸载
         # FuseManager.get_instance().unload()
-        self.powerManager.unload()
         logger.info("End PowerControl")
 
     async def get_settings(self):
@@ -58,56 +47,6 @@ class Plugin:
     async def set_settings(self, settings):
         self.confManager.setSettings(settings)
         return True
-
-    async def get_hasRyzenadj(self):
-        try:
-            return cpuManager.get_hasRyzenadj()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def get_cpuMaxNum(self):
-        try:
-            return cpuManager.get_cpuMaxNum()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return 0
-
-    async def supports_smt(self):
-        try:
-            return cpuManager.get_isSupportSMT()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def get_tdpMax(self):
-        try:
-            return self.powerManager.get_tdpMax()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return 0
-
-    async def get_cpu_vendor(self):
-        try:
-            return CPU_VENDOR
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return ""
-
-    async def get_gpuFreqRange(self):
-        try:
-            return gpuManager.get_gpuFreqRange()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return 0
-
-    # 弃用
-    async def get_cpu_AvailableFreq(self):
-        try:
-            return cpuManager.get_cpu_AvailableFreq()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return []
 
     async def get_language(self):
         try:
@@ -172,56 +111,6 @@ class Plugin:
             logger.error(e, exc_info=True)
             return False
 
-    async def set_gpuAuto(self, value: bool):
-        return False
-        try:
-            return gpuManager.set_gpuAuto(value)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def set_gpuAutoFreqRange(self, min: int, max: int):
-        return False
-        try:
-            return gpuManager.set_gpuAutoFreqRange(min, max)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def set_gpuFreq(self, value: int):
-        return False
-        try:
-            return gpuManager.set_gpuFreqFix(value)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def set_gpuFreqRange(self, value: int, value2: int):
-        return False
-        try:
-            return gpuManager.set_gpuFreqRange(value, value2)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def set_cpuTDP(self, value: int):
-        return False
-        try:
-            # return cpuManager.set_cpuTDP(value)
-            return self.powerManager.set_tdp(value)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def set_cpuTDP_unlimited(self):
-        return False
-        logger.info("Main set_cpuTDP_unlimited")
-        try:
-            return self.powerManager.set_tdp_unlimited()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
     async def is_intel(self):
         try:
             return cpuManager.is_intel()
@@ -229,83 +118,9 @@ class Plugin:
             logger.error(e, exc_info=True)
             return False
 
-    async def set_cpuOnline(self, value: int):
-        return False
-        try:
-            return cpuManager.set_cpuOnline(value)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def set_smt(self, value: bool):
-        return False
-        try:
-            return cpuManager.set_smt(value)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def set_cpuBoost(self, value: bool):
-        return False
-        try:
-            return cpuManager.set_cpuBoost(value)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def set_cpuFreq(self, value: int):
-        return False
-        try:
-            return cpuManager.set_cpuFreq(value)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def set_cpu_freq_by_core_type(self, freq_config: Dict[str, int]):
-        try:
-            logger.info(f"设置按核心类型CPU频率: {freq_config}")
-            return cpuManager.set_cpu_freq_by_core_type(freq_config)
-        except Exception as e:
-            logger.error(f"按核心类型设置CPU频率失败: {e}", exc_info=True)
-            return False
-
-    async def get_cpu_core_info(self):
-        """获取CPU核心类型详细信息"""
-        try:
-            return cpuManager.get_cpu_core_info()
-        except Exception as e:
-            logger.error(f"获取CPU核心信息失败: {e}", exc_info=True)
-            return {
-                "is_heterogeneous": False,
-                "vendor": "Error",
-                "architecture_summary": "Failed to detect CPU information",
-                "core_types": {},
-            }
-
     async def receive_suspendEvent(self):
         try:
             return True
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def fix_gpuFreqSlider(self):
-        try:
-            return gpuManager.fix_gpuFreqSlider()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def start_gpu_notify(self):
-        try:
-            return gpuManager.start_gpu_notify()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def stop_gpu_notify(self):
-        try:
-            return gpuManager.stop_gpu_notify()
         except Exception as e:
             logger.error(e, exc_info=True)
             return False
@@ -336,223 +151,6 @@ class Plugin:
         logger.info("Main get_rapl_info")
         return cpuManager.get_rapl_info()
 
-    async def get_power_info(self):
-        return self.powerManager.get_power_info()
-
-    async def get_max_perf_pct(self):
-        try:
-            return cpuManager.get_max_perf_pct()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return 0
-
-    async def set_max_perf_pct(self, value: int):
-        try:
-            return cpuManager.set_max_perf_pct(value)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def set_auto_cpumax_pct(self, value: bool):
-        try:
-            return cpuManager.set_auto_cpumax_pct(value)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def get_cpu_governor(self):
-        """获取当前 CPU 调度器"""
-        try:
-            return cpuManager.get_cpu_governor()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return ""
-
-    async def get_available_governors(self):
-        """获取所有可用的 CPU 调度器"""
-        try:
-            return cpuManager.get_available_governors()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return []
-
-    async def set_cpu_governor(self, governor: str):
-        return False
-        """设置 CPU 调度器
-
-        Args:
-            governor (str): 调度器名称
-        """
-        logger.debug(f"Main 设置 CPU 调度器为 {governor}")
-        try:
-            return cpuManager.set_cpu_governor(governor)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def supported_epp(self):
-        """检查系统是否支持 EPP 功能。"""
-        try:
-            return cpuManager.is_epp_supported()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def get_epp_modes(self):
-        """获取可用的 EPP 模式列表。"""
-        try:
-            return cpuManager.get_epp_modes()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return []
-
-    async def get_current_epp(self):
-        """获取当前的 EPP 模式。"""
-        try:
-            return cpuManager.get_current_epp()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return None
-
-    async def set_epp(self, mode: str):
-        return False
-        """设置 EPP 模式。"""
-        try:
-            return cpuManager.set_epp(mode)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def supports_sched_ext(self):
-        """检查系统是否支持 sched_ext 功能。"""
-        try:
-            return self.powerManager.supports_sched_ext()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def get_sched_ext_list(self):
-        """获取可用的 sched_ext 调度器列表。"""
-        try:
-            # 先检查是否支持 sched_ext
-            if not self.powerManager.supports_sched_ext():
-                return []
-            return self.powerManager.get_sched_ext_list()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return []
-
-    async def get_current_sched_ext_scheduler(self):
-        """获取当前的 sched_ext 调度器。"""
-        try:
-            # 先检查是否支持 sched_ext
-            if not self.powerManager.supports_sched_ext():
-                return ""
-            result = self.powerManager.get_current_sched_ext_scheduler()
-            logger.info(f"获取当前 SCX 调度器: {result}")
-            return result
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return ""
-
-    async def set_sched_ext_scheduler(self, scheduler: str, param: str = ""):
-        """设置 sched_ext 调度器。
-
-        Args:
-            scheduler (str): 调度器名称
-            param (str, optional): 调度器参数，默认为空字符串
-        """
-        logger.debug(f"Main 设置 sched_ext 调度器为 {scheduler}, 参数: {param}")
-        try:
-            return self.powerManager.set_sched_ext(scheduler, param)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def get_bypass_charge(self) -> bool | None:
-        return False
-        """获取 Bypass Charge 值。"""
-        try:
-            return self.powerManager.get_bypass_charge()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return None
-
-    async def set_bypass_charge(self, value: int):
-        return False
-        """设置旁路供电值。"""
-        logger.info(f"Main 设置旁路供电值为 {value}")
-        try:
-            return self.powerManager.set_bypass_charge(value)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def set_charge_limit(self, value: int):
-        return False
-        """设置充电限制电量"""
-        logger.debug(f"设置充电限制电量为 {value}")
-        try:
-            return self.powerManager.set_charge_limit(value)
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def supports_bypass_charge(self) -> bool:
-        return False
-        """判断设备是否支持旁路供电"""
-        try:
-            result = self.powerManager.supports_bypass_charge()
-            logger.info(f"当前设备支持旁路供电: {result}")
-            return result
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def supports_charge_limit(self) -> bool:
-        return False
-        """判断设备是否支持充电限制"""
-        try:
-            result = self.powerManager.supports_charge_limit()
-            logger.info(f"当前设备支持充电限制: {result}")
-            return result
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    async def software_charge_limit(self) -> bool:
-        return False
-        """判断设备是否支持软件充电限制"""
-        try:
-            result = self.powerManager.software_charge_limit()
-            logger.info(f"当前设备支持软件充电限制: {result}")
-            return result
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    # supports_reset_charge_limit
-    async def supports_reset_charge_limit(self) -> bool:
-        return False
-        """判断设备是否支持重置充电限制"""
-        try:
-            result = self.powerManager.supports_reset_charge_limit()
-            logger.info(f"当前设备支持重置充电限制: {result}")
-            return result
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
-    # reset_charge_limit
-    async def reset_charge_limit(self):
-        return False
-        """重置充电限制"""
-        try:
-            return self.powerManager.reset_charge_limit()
-        except Exception as e:
-            logger.error(e, exc_info=True)
-            return False
-
     async def log_info(self, message: str):
         try:
             return logger.info(f"Frontend: {message}")
@@ -579,38 +177,6 @@ class Plugin:
             return logger.debug(f"Frontend: {message}")
         except Exception as e:
             logger.error(e, exc_info=True)
-            return False
-
-    # 创建一个新的方法来控制 FUSE 挂载
-    async def toggle_native_tdp_slider(self, enabled: bool):
-        return False
-        """
-        启用或禁用原生 TDP 滑块
-
-        Args:
-            enabled: 是否启用
-
-        Returns:
-            操作是否成功
-        """
-        try:
-            settings = self.confManager.getSettings()
-            settings["enableNativeTDPSlider"] = enabled
-            self.confManager.setSettings(settings)
-
-            fuseManager = FuseManager.get_instance(power_manager=self.powerManager)
-            if enabled:
-                # 启用 FUSE
-                if not fuseManager.fuse_init():
-                    logger.error("Failed to initialize FUSE")
-                    return False
-            else:
-                # 禁用 FUSE
-                fuseManager.unload()
-
-            return True
-        except Exception as e:
-            logger.error(f"Error toggling native TDP slider: {e}", exc_info=True)
             return False
 
     async def check_file_exist(self, file_path: str) -> bool:

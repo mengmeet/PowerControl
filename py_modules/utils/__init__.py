@@ -1,45 +1,14 @@
+import decky
 import os
 import shutil
 from typing import List
 import signal
 from contextlib import contextmanager
 
-from config import RYZENADJ_PATH
-
-from .battery import (
-    get_battery_info,
-    get_battery_percentage,
-    get_charge_behaviour,
-    get_charge_control_end_threshold,
-    get_charge_type,
-    is_battery_charging,
-    set_charge_behaviour,
-    set_charge_control_end_threshold,
-    set_charge_type,
-    support_charge_behaviour,
-    support_charge_control_end_threshold,
-    support_charge_type,
-)
-from .gpu_fix import fix_gpuFreqSlider_AMD, fix_gpuFreqSlider_INTEL
-from .tdp import getMaxTDP
+RYZENADJ_PATH = "{}/bin/ryzenadj".format(decky.DECKY_PLUGIN_DIR)
 
 __all__ = [
-    "fix_gpuFreqSlider_AMD",
-    "fix_gpuFreqSlider_INTEL",
-    "getMaxTDP",
     "get_env",
-    "get_battery_info",
-    "get_battery_percentage",
-    "is_battery_charging",
-    "support_charge_control_end_threshold",
-    "set_charge_control_end_threshold",
-    "support_charge_behaviour",
-    "set_charge_behaviour",
-    "get_charge_behaviour",
-    "get_charge_control_end_threshold",
-    "support_charge_type",
-    "set_charge_type",
-    "get_charge_type",
     "version_compare",
     "get_ryzenadj_path",
 ]
@@ -121,31 +90,3 @@ def time_limit(seconds):
         yield
     finally:
         signal.alarm(0)
-
-
-def get_bios_settings():
-    import json
-    import subprocess
-    from config import logger
-
-    try:
-        cmd = "fwupdmgr get-bios-setting --json"
-        result = subprocess.run(
-            cmd,
-            shell=True,
-            check=True,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=2,
-            env=get_env(),
-        )
-
-        data = json.loads(result.stdout)
-        return data
-    except subprocess.TimeoutExpired:
-        logger.error("Timeout when getting BIOS settings")
-        return {"BiosSettings": []}
-    except Exception as e:
-        logger.error(f"Error get_bios_setting {e}")
-        return {"BiosSettings": []}

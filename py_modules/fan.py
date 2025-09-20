@@ -5,7 +5,6 @@ from typing import List
 from conf_manager import confManager
 from config import FAN_EC_CONFIG, FAN_HWMON_LIST, PRODUCT_NAME, PRODUCT_VERSION, logger
 from ec import EC
-from pfuse import umount_fuse_igpu
 
 
 class FanConfig:
@@ -340,11 +339,6 @@ class FanManager:
         hwmon_dirs = os.listdir(hwmon_path)
         logger.info(f"解析 HWMON 风扇配置, hwmon_dirs:{hwmon_dirs}")
         name_path_map = {}
-
-        try:
-            umount_fuse_igpu()
-        except Exception:
-            logger.error("umount_fuse_igpu error", exc_info=True)
 
         # 转化hwmon信息
         for dir in hwmon_dirs:
@@ -968,10 +962,10 @@ class FanManager:
                     logger.info(
                         f"""
 获取机型适配fan,
-    fan_name:{fan_name}, 
-    fan_max_rpm:{fan_max_rpm}, 
-    fan_hwmon_mode:{fan_hwmon_mode}, 
-    fan_pwm_write_max:{fan_pwm_write_max}, 
+    fan_name:{fan_name},
+    fan_max_rpm:{fan_max_rpm},
+    fan_hwmon_mode:{fan_hwmon_mode},
+    fan_pwm_write_max:{fan_pwm_write_max},
     fan_default_curve:{fan_default_curve}
 """
                     )

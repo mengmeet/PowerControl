@@ -1,7 +1,6 @@
 import glob
 import json
 import logging
-import os
 
 import decky
 import yaml
@@ -44,10 +43,7 @@ logger = setup_logger()
 DECKY_PLUGIN_DIR = decky.DECKY_PLUGIN_DIR
 DECKY_PLUGIN_PY_DIR = f"{DECKY_PLUGIN_DIR}/py_modules"
 SH_PATH = "{}/backend/sh_tools.sh".format(DECKY_PLUGIN_DIR)
-RYZENADJ_PATH = "{}/bin/ryzenadj".format(DECKY_PLUGIN_DIR)
-# AMD_GPU_DEVICE_PATH = glob.glob("/sys/class/drm/card?/device")[0]
-# AMD_GPUFREQ_PATH = "{}/pp_od_clk_voltage".format(AMD_GPU_DEVICE_PATH)
-# AMD_GPULEVEL_PATH = "{}/power_dpm_force_performance_level".format(AMD_GPU_DEVICE_PATH)
+
 PLATFORM_PROFILE_PATH = "/sys/firmware/acpi/platform_profile"
 PLATFORM_PROFILE_CHOICES_PATH = "/sys/firmware/acpi/platform_profile_choices"
 
@@ -65,42 +61,6 @@ API_URL = "https://api.github.com/repos/aarron-lee/PowerControl/releases/latest"
 
 CONFIG_KEY = "PowerControl"
 
-# 路径配置
-try:
-    for p in glob.glob("/sys/class/drm/card?"):
-        if os.path.exists(f"{p}/device/enable"):
-            with open(f"{p}/device/enable", "r") as f:
-                if f.read().strip() == "1":
-                    AMD_GPU_DEVICE_PATH = f"{p}/device"
-                    AMD_GPUFREQ_PATH = f"{AMD_GPU_DEVICE_PATH}/pp_od_clk_voltage"
-                    AMD_GPULEVEL_PATH = (
-                        f"{AMD_GPU_DEVICE_PATH}/power_dpm_force_performance_level"
-                    )
-
-                    # check if xe driver
-                    if os.path.exists(f"{p}/device/tile0/gt0/freq0/min_freq"):
-                        # xe driver paths for gt0 (graphics engine)
-                        INTEL_GPU_MIN_FREQ = f"{p}/device/tile0/gt0/freq0/min_freq"
-                        INTEL_GPU_MAX_FREQ = f"{p}/device/tile0/gt0/freq0/max_freq"
-                        INTEL_GPU_CUR_FREQ = f"{p}/device/tile0/gt0/freq0/cur_freq"
-                        INTEL_GPU_MAX_LIMIT = f"{p}/device/tile0/gt0/freq0/rp0_freq"
-                        INTEL_GPU_NORMAL_LIMIT = f"{p}/device/tile0/gt0/freq0/rpe_freq"
-                        INTEL_GPU_MIN_LIMIT = f"{p}/device/tile0/gt0/freq0/rpn_freq"
-
-                    else:
-                        # i915 driver paths
-                        INTEL_GPU_MIN_FREQ = f"{p}/gt_min_freq_mhz"
-                        INTEL_GPU_MAX_FREQ = f"{p}/gt_max_freq_mhz"
-                        INTEL_GPU_BOOST_FREQ = f"{p}/gt_boost_freq_mhz"
-
-                        # read only
-                        INTEL_GPU_MAX_LIMIT = f"{p}/gt_RP0_freq_mhz"
-                        INTEL_GPU_NORMAL_LIMIT = f"{p}/gt_RP1_freq_mhz"
-                        INTEL_GPU_MIN_LIMIT = f"{p}/gt_RPn_freq_mhz"
-                        INTEL_GPU_CUR_FREQ = f"{p}/gt_cur_freq_mhz"
-                    break
-except Exception as e:
-    logger.error(f"路径配置异常|{e}", exc_info=True)
 
 # 设备信息获取配置
 try:
@@ -124,76 +84,6 @@ except Exception as e:
 
 # 是否验证 yml 配置文件
 VERIFY_YML = False
-
-# TDP上限配置
-try:
-    TDP_LIMIT_CONFIG_PRODUCT = {
-        "AIR": 18,
-        "AIR 1S": 25,
-        "AIR 1S Limited": 20,
-        "AIR Pro": 20,
-        "AIR Plus": 30,
-        "AYANEO 2": 30,
-        "GEEK": 30,
-        "GEEK 1S": 30,
-        "AYANEO 2S": 30,
-        "ONEXPLAYER Mini": 30,
-        "NEXT": 35,
-        "ONEXPLAYER Mini Pro": 40,
-        "AOKZOE A1 AR07": 40,
-        "ONEXPLAYER 2 ARP23": 45,
-        "ONEXPLAYER F1": 35,
-        "ONEXPLAYER F1 EVA-01": 35,
-        "G1619-04": 45,  # GPD WINMAX2
-        "G1618-03": 28,  # GPD WIN3
-        "G1618-04": 45,  # GPD WIN4
-        "G1617-01": 30,  # GPD WIN mini
-        "ROG Ally RC71L_RC71L": 30,
-        "ROG Ally RC71L": 30,
-        "Jupiter": 20,
-        "V3": 45,
-        "Claw 8 AI+ A2VM": 30,
-        "Claw A1M": 43,
-        "83L3": 33,  # Legion GO S
-    }
-    TDP_LIMIT_CONFIG_CPU = {
-        "7735HS": 65,
-        "7735U": 40,
-        "7735": 45,
-        "5560U": 18,
-        "5700U": 28,
-        "5800U": 30,
-        "5825U": 30,
-        "6800U": 30,
-        "4800U": 25,
-        "4500U": 25,
-        "3050e": 12,
-        "Z1 Extreme": 30,
-        "Z2 Extreme": 35,
-        "Z GO": 30,
-        "7840HS": 65,
-        "7840U": 30,
-        "7640U": 30,
-        "7840": 45,
-        "7320U": 18,
-        "7520U": 18,
-        "8840U": 30,
-        "8840": 45,
-        "8850U": 30,
-        "8850": 45,
-        "238V": 37,
-        "256V": 37,
-        "228V": 37,
-        "266V": 37,
-        "258V": 37,
-        "268V": 37,
-        "236V": 37,
-        "226V": 37,
-        "288V": 37,
-    }
-except Exception as e:
-    logger.error(f"TDP配置异常|{e}")
-
 
 def load_yaml(file_path: str, chk_schema=None) -> dict:
     with open(file_path, "r") as f:
