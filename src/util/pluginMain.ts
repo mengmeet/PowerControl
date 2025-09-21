@@ -18,6 +18,7 @@ import { QAMPatch } from "./patch";
 import { addEventListener } from "@decky/api";
 import { Logger } from "./logger";
 import { Timeout } from "./timeout";
+import { SteamUtils } from ".";
 
 type ActiveAppChangedHandler = (newAppId: string, oldAppId: string) => void;
 type ComponentUpdateHandler = (
@@ -411,7 +412,7 @@ export class PluginManager {
 
       // 注册休眠恢复监听
       PluginManager.suspendEndHook =
-        SteamClient.System.RegisterForOnResumeFromSuspend(async () => {
+        SteamUtils.RegisterForOnResumeFromSuspend(async () => {
           try {
             await new Promise((resolve) => setTimeout(resolve, 10000));
             if (Settings.ensureEnable()) {

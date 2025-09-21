@@ -201,14 +201,14 @@ class TDPPatch {
         }
       );
 
-      //挂起结束时修改一次TDP
-      this.suspendEndHook = SteamClient.System.RegisterForOnResumeFromSuspend(
-        async () => {
-          setTimeout(() => {
-            this.applyTDP();
-          }, 1000);
-        }
-      );
+      const _applyTDP = async () => {
+        setTimeout(() => {
+          this.applyTDP();
+        }, 1000);
+      }
+
+      //挂起恢复时修改一次TDP
+      this.suspendEndHook = SteamUtils.RegisterForOnResumeFromSuspend(_applyTDP);
 
       //状态改变时tdp发生变化，则应用一次tdp
       this.stateChangeHook = SteamClient.System.Perf.RegisterForStateChanges(
@@ -222,9 +222,9 @@ class TDPPatch {
             //开关状态发生改变
             if (
               this.last_is_tdp_limit_enabled !=
-                this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled ||
+              this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled ||
               this.last_tdp_limit !=
-                this.perfStore?.msgSettingsPerApp?.tdp_limit
+              this.perfStore?.msgSettingsPerApp?.tdp_limit
             ) {
               console.log(
                 `QAM tdp limit change: ${this.last_tdp_limit} -> ${this.perfStore?.msgSettingsPerApp?.tdp_limit}`
@@ -396,9 +396,9 @@ class GPUPerformancePatch {
             if (this.applyCount) return;
             if (
               this.last_gpu_performance_level !=
-                this.perfStore.msgSettingsPerApp.gpu_performance_level ||
+              this.perfStore.msgSettingsPerApp.gpu_performance_level ||
               this.last_gpu_performance_manual_mhz !=
-                this.perfStore.msgSettingsPerApp.gpu_performance_manual_mhz
+              this.perfStore.msgSettingsPerApp.gpu_performance_manual_mhz
             ) {
               this.last_gpu_performance_manual_mhz =
                 this.perfStore.msgSettingsPerApp.gpu_performance_manual_mhz;
