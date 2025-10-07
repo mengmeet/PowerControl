@@ -107,6 +107,7 @@ const TabView: FC<{ show?: boolean }> = ({ show = true }) => {
             onShowTab={(tabID: string) => {
               updateCurrentTabRoute(tabID);
             }}
+            autoFocusContents={true}
             tabs={[
               {
                 title: <BsCpuFill size={20} style={{ display: "block" }} />,
