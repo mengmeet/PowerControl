@@ -263,9 +263,6 @@ class GPUManager:
 
     def get_gpuFreqRange(self):
         try:
-            # write "manual" to power_dpm_force_performance_level
-            if os.path.exists(AMD_GPULEVEL_PATH):
-                open(AMD_GPULEVEL_PATH, "w").write("manual")
             if os.path.exists(AMD_GPUFREQ_PATH):
                 freq_string = open(AMD_GPUFREQ_PATH, "r").read()
                 # 使用正则表达式提取频率信息
