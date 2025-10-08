@@ -92,6 +92,7 @@ export const startGpuNotify = callable<[], any>("start_gpu_notify");
 export const stopGpuNotify = callable<[], any>("stop_gpu_notify");
 export const checkFileExist = callable<[string], boolean>("check_file_exist");
 export const supportsNativeGpuSlider = callable<[], boolean>("supports_native_gpu_slider");
+export const supportsNativeTdpLimit = callable<[], boolean>("supports_native_tdp_limit");
 
 
 const defaultCpuCoreInfo: CPUCoreInfo = {
@@ -166,6 +167,7 @@ export class BackendData {
     supportsSoftwareChargeLimit: false as boolean,
     supportsSteamosManager: false as boolean,
     supportsNativeGpuSlider: false as boolean,
+    supportsNativeTdpLimit: false as boolean,
     schedExtSupport: false as boolean,
     availableSchedExtSchedulers: [] as string[],
     currentSchedExtScheduler: "" as string,
@@ -208,6 +210,7 @@ export class BackendData {
     supportsSoftwareChargeLimit: { callable: softwareChargeLimit },
     supportsSteamosManager: { callable: () => checkFileExist("/usr/bin/steamosctl") },
     supportsNativeGpuSlider: { callable: supportsNativeGpuSlider },
+    supportsNativeTdpLimit: { callable: supportsNativeTdpLimit },
     cpuCoreInfo: { callable: getCpuCoreInfo },
     currentGovernor: { callable: getCpuGovernor },
     latestVersion: { callable: getLatestVersion },

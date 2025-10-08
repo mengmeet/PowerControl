@@ -606,3 +606,11 @@ class Plugin:
         except Exception as e:
             logger.error(f"Error checking native GPU slider support: {e}", exc_info=True)
             return False
+
+    async def supports_native_tdp_limit(self) -> bool:
+        try:
+            from utils import check_native_tdp_limit_support
+            return check_native_tdp_limit_support()
+        except Exception as e:
+            logger.error(f"Error checking native TDP limit support: {e}", exc_info=True)
+            return False

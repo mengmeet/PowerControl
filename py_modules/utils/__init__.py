@@ -45,6 +45,7 @@ __all__ = [
     "version_compare",
     "get_ryzenadj_path",
     "check_native_gpu_slider_support",
+    "check_native_tdp_limit_support",
 ]
 
 
@@ -201,4 +202,55 @@ def check_native_gpu_slider_support():
         return False
     except Exception as e:
         logger.error(f"Error checking native GPU slider support: {e}")
+        return False
+
+
+def check_native_tdp_limit_support():
+    """
+    Check if steamosctl supports TDP limit control by running commands as decky user.
+    
+    Returns:
+        bool: True if both get-tdp-limit-max and get-tdp-limit-min commands succeed
+    """
+    from config import logger
+    
+    try:
+        logger.debug("Checking native TDP limit support via steamosctl...")
+        
+        # Define commands to run as decky user
+        cmd_max = ["sudo", "-u", decky.DECKY_USER, "steamosctl", "get-tdp-limit-max"]
+        cmd_min = ["sudo", "-u", decky.DECKY_USER, "steamosctl", "get-tdp-limit-min"]
+        
+        # Start both processes in parallel
+        process_max = subprocess.Popen(
+            cmd_max,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=get_env()
+        )
+        process_min = subprocess.Popen(
+            cmd_min,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=get_env()
+        )
+        
+        # Wait for both processes to complete with timeout
+        returncode_max = process_max.wait(timeout=2)
+        returncode_min = process_min.wait(timeout=2)
+        
+        logger.debug(f"steamosctl get-tdp-limit-max returncode: {returncode_max}")
+        logger.debug(f"steamosctl get-tdp-limit-min returncode: {returncode_min}")
+        
+        # Check if both commands succeeded
+        result = returncode_max == 0 and returncode_min == 0
+        logger.info(f"Native TDP limit support detected: {result}")
+        
+        return result
+        
+    except subprocess.TimeoutExpired:
+        logger.error("Timeout when checking steamosctl TDP limit support")
+        return False
+    except Exception as e:
+        logger.error(f"Error checking native TDP limit support: {e}")
         return False

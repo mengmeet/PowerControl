@@ -649,7 +649,13 @@ export class Settings {
     }
   }
 
-  static appEnableCustomTDPRange() {
+  static appEnableCustomTDPRange(): boolean {
+    // Check if native TDP limit is supported
+    if (Backend.data.getSupportsNativeTdpLimit()) {
+      // Update internal value but don't trigger save
+      this._instance.data.enableCustomTDPRange = false;
+      return false;
+    }
     return this._instance.data.enableCustomTDPRange;
   }
 
@@ -665,7 +671,14 @@ export class Settings {
     }
   }
 
-  static appCustomTDPRangeMax() {
+  static appCustomTDPRangeMax(): number {
+    // Check if native TDP limit is supported
+    if (Backend.data.getSupportsNativeTdpLimit()) {
+      const systemTdpMax = Backend.data.getTdpMax();
+      // Update internal value but don't trigger save
+      this._instance.data.customTDPRangeMax = systemTdpMax;
+      return systemTdpMax;
+    }
     return this._instance.data.customTDPRangeMax;
   }
 

@@ -716,7 +716,7 @@ export const CPUComponent: FC<{
           {(isTab || showCpuMenu) && (
             <>
               <CPUTDPComponent />
-              {cpuVendor != "GenuineIntel" && <CustomTDPComponent />}
+              {cpuVendor != "GenuineIntel" && !Backend.data.getSupportsNativeTdpLimit() && <CustomTDPComponent />}
               <CPUBoostComponent />
               {isSpportSMT && <CPUSmtComponent />}
               <CPUGovernorComponent />
