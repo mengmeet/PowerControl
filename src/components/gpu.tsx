@@ -395,21 +395,23 @@ const GPUModeComponent: FC = () => {
 
   return (
     <div>
-      <PanelSectionRow>
-        <ToggleField
-          label={localizationManager.getString(
-            localizeStrEnum.GPU_NATIVE_SLIDER
-          )}
-          description={localizationManager.getString(
-            localizeStrEnum.GPU_NATIVE_SLIDER_DESC
-          )}
-          checked={gpuSliderFix}
-          onChange={(fix) => {
-            setGPUSliderFix(fix);
-            Settings.setGPUSliderFix(fix);
-          }}
-        />
-      </PanelSectionRow>
+      {!Backend.data.getSupportsNativeGpuSlider() && (
+        <PanelSectionRow>
+          <ToggleField
+            label={localizationManager.getString(
+              localizeStrEnum.GPU_NATIVE_SLIDER
+            )}
+            description={localizationManager.getString(
+              localizeStrEnum.GPU_NATIVE_SLIDER_DESC
+            )}
+            checked={gpuSliderFix}
+            onChange={(fix) => {
+              setGPUSliderFix(fix);
+              Settings.setGPUSliderFix(fix);
+            }}
+          />
+        </PanelSectionRow>
+      )}
       {gpuSliderFix && <GPUModeNaviteComponent />}
       {!gpuSliderFix && <GPUModeLegacyComponent />}
     </div>

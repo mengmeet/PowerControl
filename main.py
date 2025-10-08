@@ -598,3 +598,11 @@ class Plugin:
         except Exception as e:
             logger.error(f"Error checking file exist: {e}", exc_info=True)
             return False
+
+    async def supports_native_gpu_slider(self) -> bool:
+        try:
+            from utils import check_native_gpu_slider_support
+            return check_native_gpu_slider_support()
+        except Exception as e:
+            logger.error(f"Error checking native GPU slider support: {e}", exc_info=True)
+            return False

@@ -3,7 +3,9 @@ import shutil
 from typing import List
 import signal
 from contextlib import contextmanager
+import subprocess
 
+import decky
 from config import RYZENADJ_PATH
 
 from .battery import (
@@ -42,6 +44,7 @@ __all__ = [
     "get_charge_type",
     "version_compare",
     "get_ryzenadj_path",
+    "check_native_gpu_slider_support",
 ]
 
 
@@ -125,7 +128,6 @@ def time_limit(seconds):
 
 def get_bios_settings():
     import json
-    import subprocess
     from config import logger
 
     try:
@@ -149,3 +151,54 @@ def get_bios_settings():
     except Exception as e:
         logger.error(f"Error get_bios_setting {e}")
         return {"BiosSettings": []}
+
+
+def check_native_gpu_slider_support():
+    """
+    Check if steamosctl supports manual GPU clock control by running commands as decky user.
+    
+    Returns:
+        bool: True if both get-manual-gpu-clock-max and get-manual-gpu-clock-min commands succeed
+    """
+    from config import logger
+    
+    try:
+        logger.debug("Checking native GPU slider support via steamosctl...")
+        
+        # Define commands to run as decky user
+        cmd_max = ["sudo", "-u", decky.DECKY_USER, "steamosctl", "get-manual-gpu-clock-max"]
+        cmd_min = ["sudo", "-u", decky.DECKY_USER, "steamosctl", "get-manual-gpu-clock-min"]
+        
+        # Start both processes in parallel
+        process_max = subprocess.Popen(
+            cmd_max,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=get_env()
+        )
+        process_min = subprocess.Popen(
+            cmd_min,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=get_env()
+        )
+        
+        # Wait for both processes to complete with timeout
+        returncode_max = process_max.wait(timeout=2)
+        returncode_min = process_min.wait(timeout=2)
+        
+        logger.debug(f"steamosctl get-manual-gpu-clock-max returncode: {returncode_max}")
+        logger.debug(f"steamosctl get-manual-gpu-clock-min returncode: {returncode_min}")
+        
+        # Check if both commands succeeded
+        result = returncode_max == 0 and returncode_min == 0
+        logger.info(f"Native GPU slider support detected: {result}")
+        
+        return result
+        
+    except subprocess.TimeoutExpired:
+        logger.error("Timeout when checking steamosctl GPU clock support")
+        return False
+    except Exception as e:
+        logger.error(f"Error checking native GPU slider support: {e}")
+        return False

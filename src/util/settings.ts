@@ -853,6 +853,10 @@ export class Settings {
   }
 
   static appGPUSliderFix(): boolean {
+    // Check if native GPU slider is supported
+    if (Backend.data.getSupportsNativeGpuSlider()) {
+      return false;
+    }
     return Settings.ensureApp().gpuSliderFix!!;
   }
 
