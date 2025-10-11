@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "@decky/api": "^1.1.2",
-    "i18next": "^25.5.3",
+    "i18next": "^25.6.0",
     "lodash": "^4.17.21",
     "react-icons": "^5.5.0",
     "typescript-json-serializer": "^6.0.1"
