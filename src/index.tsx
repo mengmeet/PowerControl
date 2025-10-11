@@ -98,7 +98,7 @@ const TabView: FC<{ show?: boolean }> = ({ show = true }) => {
             height: "95%",
             width: "300px",
             marginTop: "-12px",
-            position: "absolute",
+            position: "fixed",
             overflow: "visible",
           }}
         >
