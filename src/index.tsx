@@ -96,10 +96,10 @@ const TabView: FC<{ show?: boolean }> = ({ show = true }) => {
           className="main-tabs"
           style={{
             height: "95%",
-            width: "300px",
+            width: "calc(100vw - 50px)",
             marginTop: "-12px",
-            position: "fixed",
-            overflow: "visible",
+            position: "absolute",
+            contain: "layout style paint",
           }}
         >
           <Tabs
