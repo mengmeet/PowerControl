@@ -138,8 +138,9 @@ const SettingsPerAppComponent: FC = () => {
                   width={20}
                   height={20}
                   style={{
-                    paddingRight: "5px",
+                    marginRight: "5px",
                     display: override && overrideable ? "block" : "none",
+                    borderRadius: "4px",
                   }}
                 />
                 <div style={{ lineHeight: "20px", whiteSpace: "pre" }}>
