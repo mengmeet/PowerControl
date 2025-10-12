@@ -38,6 +38,7 @@
     "NOT_CONTROLLED":"Not Controlled",
     "FIXED":"Fixed",
     "CURVE":"Curve",
+    "AUTO":"Auto",
     "SNAP_GRIDLINE":"Snap To The Gridline Intersection",
     "FAN_SPEED_PERCENT":"Fan Speed Percentage",
     "SENSOR_TEMP":"Sensor Temperature",

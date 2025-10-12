@@ -38,6 +38,7 @@
     "NOT_CONTROLLED":"系统",
     "FIXED":"固定",
     "CURVE":"曲线",
+    "AUTO": "自动",
     "SNAP_GRIDLINE":"对齐到网格线交点",
     "FAN_SPEED_PERCENT":"风扇转速百分比",
     "SENSOR_TEMP":"传感器温度",

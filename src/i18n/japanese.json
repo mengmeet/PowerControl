@@ -34,6 +34,7 @@
     "NOT_CONTROLLED":"制御なし",
     "FIXED":"固定",
     "CURVE":"カーブ",
+    "AUTO": "自動",
     "SNAP_GRIDLINE":"グリッド線の交点にスナップ",
     "FAN_SPEED_PERCENT":"ファン速度パーセント",
     "SENSOR_TEMP":"センサー温度",

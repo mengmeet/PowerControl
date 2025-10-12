@@ -34,6 +34,7 @@
     "NOT_CONTROLLED":"Non contrôlé",
     "FIXED":"Fixe",
     "CURVE":"Courbe",
+    "AUTO": "Auto",
     "SNAP_GRIDLINE":"Aligner sur les intersections de la grille",
     "FAN_SPEED_PERCENT":"Vitesse du ventilateur (%)",
     "SENSOR_TEMP":"Température du capteur",
