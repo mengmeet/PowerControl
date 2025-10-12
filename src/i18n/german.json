@@ -34,6 +34,7 @@
     "NOT_CONTROLLED":"Nicht gesteuert",
     "FIXED":"Fest",
     "CURVE":"Kurve",
+    "AUTO": "Automatisch",
     "SNAP_GRIDLINE":"An Gitterlinien ausrichten",
     "FAN_SPEED_PERCENT":"Lüftergeschwindigkeit (%)",
     "SENSOR_TEMP":"Sensortemperatur",

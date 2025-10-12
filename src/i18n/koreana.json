@@ -34,6 +34,7 @@
     "NOT_CONTROLLED":"제어 안 함",
     "FIXED":"고정",
     "CURVE":"곡선",
+    "AUTO": "자동",
     "SNAP_GRIDLINE":"그리드 선 교차점에 스냅",
     "FAN_SPEED_PERCENT":"팬 속도 백분율",
     "SENSOR_TEMP":"센서 온도",

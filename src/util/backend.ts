@@ -660,8 +660,7 @@ export class Backend {
       //写入转速后再写入控制位
       switch (fanMode) {
         case FANMODE.NOCONTROL:
-          // console.log(`不控制 index= ${index}`);
-          await setFanAuto(index, true);
+        // console.log(`不控制 index= ${index}`);
           break;
         case FANMODE.FIX:
         case FANMODE.CURVE:
@@ -681,6 +680,9 @@ export class Backend {
               fanSetting?.curvePoints?.map((point) => point?.fanRPMpercent ?? 0) ?? []
             );
           }
+          break;
+        case FANMODE.AUTO:
+          await setFanAuto(index, true);
           break;
         default:
           console.error(`出现意外的FanMode = ${fanMode}`);

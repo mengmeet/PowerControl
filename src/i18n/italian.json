@@ -34,6 +34,7 @@
     "NOT_CONTROLLED":"Non controllato",
     "FIXED":"Fisso",
     "CURVE":"Curva",
+    "AUTO": "Auto",
     "SNAP_GRIDLINE":"Aggancia alle intersezioni della griglia",
     "FAN_SPEED_PERCENT":"Velocità ventola (%)",
     "SENSOR_TEMP":"Temperatura sensore",

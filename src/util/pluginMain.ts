@@ -177,7 +177,8 @@ export class FanControl {
       });
       const fanMode = fanSetting?.fanMode;
       switch (fanMode) {
-        case FANMODE.NOCONTROL: {
+        case FANMODE.NOCONTROL:
+        case FANMODE.AUTO: {
           FanControl.fanInfo[index].setPoint.fanRPMpercent = 0;
           FanControl.fanInfo[index].setPoint.temperature = -10;
           break;

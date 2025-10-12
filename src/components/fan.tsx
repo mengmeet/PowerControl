@@ -269,7 +269,8 @@ const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
     }
     ctx.stroke();*/
     switch (Settings.appFanSettings()?.[fanIndex]?.fanMode) {
-      case FANMODE.NOCONTROL: {
+      case FANMODE.NOCONTROL:
+      case FANMODE.AUTO: {
         drawNoControlMode();
         break;
       }
@@ -612,7 +613,8 @@ function FANCretateProfileModelComponent({
     }
     ctx.stroke();
     switch (fanMode) {
-      case FANMODE.NOCONTROL: {
+      case FANMODE.NOCONTROL:
+      case FANMODE.AUTO: {
         break;
       }
       case FANMODE.FIX: {
@@ -744,7 +746,8 @@ function FANCretateProfileModelComponent({
 
   function onPointerShortPress(shortPressPos: FanPosition): void {
     switch (fanMode) {
-      case FANMODE.NOCONTROL: {
+      case FANMODE.NOCONTROL:
+      case FANMODE.AUTO: {
       }
       case FANMODE.FIX: {
         var percent = shortPressPos.fanRPMpercent!!;
@@ -792,7 +795,8 @@ function FANCretateProfileModelComponent({
 
   function onPointerLongPress(longPressPos: FanPosition): void {
     switch (fanMode) {
-      case FANMODE.NOCONTROL: {
+      case FANMODE.NOCONTROL:
+      case FANMODE.AUTO: {
         break;
       }
       case FANMODE.FIX: {
@@ -846,7 +850,8 @@ function FANCretateProfileModelComponent({
 
   function onPointerDragDown(dragDownPos: FanPosition): boolean {
     switch (fanMode) {
-      case FANMODE.NOCONTROL: {
+      case FANMODE.NOCONTROL:
+      case FANMODE.AUTO: {
         return false;
       }
       case FANMODE.FIX: {
@@ -870,7 +875,8 @@ function FANCretateProfileModelComponent({
 
   function onPointerDraging(fanClickPos: FanPosition): void {
     switch (fanMode) {
-      case FANMODE.NOCONTROL: {
+      case FANMODE.NOCONTROL:
+      case FANMODE.AUTO: {
       }
       case FANMODE.FIX: {
         setFixSpeed(fanClickPos.fanRPMpercent!!);
@@ -1070,6 +1076,10 @@ function FANCretateProfileModelComponent({
     {
       label: `${localizationManager.getString(localizeStrEnum.CURVE)}`,
       value: FANMODE.CURVE,
+    },
+    {
+      label: `${localizationManager.getString(localizeStrEnum.AUTO)}`,
+      value: FANMODE.AUTO,
     },
   ];
 

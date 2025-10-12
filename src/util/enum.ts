@@ -9,6 +9,7 @@ export enum FANMODE {
   NOCONTROL = 0, //不控制
   FIX = 1, //固定
   CURVE = 2, //曲线
+  AUTO = 3, //自动
 }
 
 export enum FAN_PWM_MODE {
