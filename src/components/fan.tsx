@@ -46,6 +46,13 @@ const textColor = "#FFFFFF";
 const lineColor = "#1E90FF";
 const setPointColor = "#00BFFF";
 
+// Canvas dimensions for the two fan components
+// 两个风扇组件的画布尺寸
+const CANVAS_WIDTH_SMALL = 250;  // For first fan component / 第一个风扇组件
+const CANVAS_HEIGHT_SMALL = 250;
+const CANVAS_WIDTH_LARGE = 300;  // For fan curve editor / 风扇曲线编辑器
+const CANVAS_HEIGHT_LARGE = 300;
+
 //选择配置文件下拉框
 const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   const fanWriteMode = Backend.data.getFanPwmMode(fanIndex);
@@ -241,8 +248,16 @@ const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   const refreshCanvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    const width: number = ctx.canvas.width;
-    const height: number = ctx.canvas.height;
+    
+    // High DPI support for crisp rendering
+    // 高 DPI 支持以实现清晰渲染
+    const dpr = window.devicePixelRatio || 1;
+    const width = CANVAS_WIDTH_SMALL;
+    const height = CANVAS_HEIGHT_SMALL;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
+    
     const lineDistance = 1 / (totalLines + 1);
     ctx.clearRect(0, 0, width, height);
     //网格绘制
@@ -287,8 +302,10 @@ const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   const drawNoControlMode = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    const width: number = ctx.canvas.width;
-    const height: number = ctx.canvas.height;
+    
+    const width = CANVAS_WIDTH_SMALL;
+    const height = CANVAS_HEIGHT_SMALL;
+    
     ctx.beginPath();
     ctx.fillStyle = setPointColor;
     ctx.textAlign = "left";
@@ -327,8 +344,10 @@ const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   const drawFixMode = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    const width: number = ctx.canvas.width;
-    const height: number = ctx.canvas.height;
+    
+    const width = CANVAS_WIDTH_SMALL;
+    const height = CANVAS_HEIGHT_SMALL;
+    
     const anchorPoint = new FanPosition(
       FanPosition.tempMax / 2,
       Settings.appFanSettings()?.[fanIndex].fixSpeed!!
@@ -387,8 +406,10 @@ const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   const drawCurveMode = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    const width: number = ctx.canvas.width;
-    const height: number = ctx.canvas.height;
+    
+    const width = CANVAS_WIDTH_SMALL;
+    const height = CANVAS_HEIGHT_SMALL;
+    
     curvePoints.current = curvePoints.current.sort(
       (a: FanPosition, b: FanPosition) => {
         return a.temperature == b.temperature
@@ -586,8 +607,16 @@ function FANCretateProfileModelComponent({
   const refreshCanvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    const width: number = ctx.canvas.width;
-    const height: number = ctx.canvas.height;
+    
+    // High DPI support for crisp rendering
+    // 高 DPI 支持以实现清晰渲染
+    const dpr = window.devicePixelRatio || 1;
+    const width = CANVAS_WIDTH_LARGE;
+    const height = CANVAS_HEIGHT_LARGE;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
+    
     const lineDistance = 1 / (totalLines + 1);
     ctx.clearRect(0, 0, width, height);
     //网格绘制
@@ -630,8 +659,10 @@ function FANCretateProfileModelComponent({
   const drawFixMode = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    const width: number = ctx.canvas.width;
-    const height: number = ctx.canvas.height;
+    
+    const width = CANVAS_WIDTH_LARGE;
+    const height = CANVAS_HEIGHT_LARGE;
+    
     const anchorPoint = new FanPosition(
       FanPosition.tempMax / 2,
       fixSpeed
@@ -654,8 +685,10 @@ function FANCretateProfileModelComponent({
   const drawCurveMode = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    const width: number = ctx.canvas.width;
-    const height: number = ctx.canvas.height;
+    
+    const width = CANVAS_WIDTH_LARGE;
+    const height = CANVAS_HEIGHT_LARGE;
+    
     curvePoints.current = curvePoints.current.sort(
       (a: FanPosition, b: FanPosition) => {
         return a.temperature == b.temperature

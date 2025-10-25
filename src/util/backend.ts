@@ -13,6 +13,7 @@ import { JsonSerializer } from "typescript-json-serializer";
 import { callable } from "@decky/api";
 import { Logger } from "./logger";
 import { CPUCoreInfo, CPUCoreTypeInfo, FanConfig } from "../types";
+import { getVersionCache, setVersionCache } from "./versionCache";
 const serializer = new JsonSerializer();
 
 type InitCallable = () => Promise<(typeof BackendData.DEFAULTS)[keyof typeof BackendData.DEFAULTS]>;
@@ -221,12 +222,36 @@ export class BackendData {
 
   // 主初始化方法
   public async init() {
+    // Check version cache first to avoid excessive API requests
+    // 优先检查版本缓存以避免过度的 API 请求
+    const versionCache = getVersionCache();
+    if (versionCache) {
+      console.info("Using cached version data");
+      this.set('currentVersion', versionCache.currentVersion);
+      this.set('latestVersion', versionCache.latestVersion);
+    }
+
     // 并行执行所有基础初始化
-    const tasks = Object.entries(this.initConfig).map(([key, config]) =>
-      this.initField(key, config)
-    );
+    const tasks = Object.entries(this.initConfig).map(([key, config]) => {
+      // Skip version fields if already loaded from cache
+      // 如果已从缓存加载版本字段，则跳过
+      if (versionCache && (key === 'currentVersion' || key === 'latestVersion')) {
+        return Promise.resolve();
+      }
+      return this.initField(key, config);
+    });
 
     await Promise.allSettled(tasks);
+
+    // If no cache, fetch versions and save to cache
+    // 如果没有缓存，获取版本并保存到缓存
+    if (!versionCache) {
+      const currentVer = this.get<string>('currentVersion', '');
+      const latestVer = this.get<string>('latestVersion', '');
+      if (currentVer && latestVer) {
+        setVersionCache(currentVer, latestVer);
+      }
+    }
   }
 
   // 极简的字段初始化方法
