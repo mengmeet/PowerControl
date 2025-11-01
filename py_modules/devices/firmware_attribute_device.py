@@ -10,7 +10,7 @@ SPL_SUFFIX = "ppt_pl1_spl"
 SLOW_SUFFIX = "ppt_pl2_sppt"
 FAST_SUFFIX = "ppt_pl3_fppt"
 
-SUGGESTED_DEFAULT = ["custom", "performance"]
+SUGGESTED_DEFAULT = ["custom", "balanced-performance", "performance"]
 
 
 class FirmwareAttributeDevice(PowerStationDevice):

@@ -5,7 +5,7 @@ from config import logger
 from ec import EC
 from utils import version_compare
 
-from ..power_device import PowerDevice
+from ..firmware_attribute_device import FirmwareAttributeDevice
 
 EC_BYPASS_CHARGE_ADDR = 0x1E
 EC_BYPASS_CHARGE_OPEN = 0x55
@@ -15,7 +15,7 @@ EC_DATA_PORT = 0x4F
 
 
 # from https://github.com/Valkirie/HandheldCompanion/blob/main/HandheldCompanion/Devices/AYANEO/AYANEODeviceCEc.cs
-class AyaneoDevice(PowerDevice):
+class AyaneoDevice(FirmwareAttributeDevice):
     def __init__(self) -> None:
         super().__init__()
         self.ec_comm_port = EC_COMM_PORT

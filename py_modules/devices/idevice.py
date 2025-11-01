@@ -57,9 +57,9 @@ class IDevice(ABC):
 
                         cls._instance = AyaneoKun()
                     case _:
-                        from . import PowerStationDevice
+                        from . import FirmwareAttributeDevice
 
-                        cls._instance = PowerStationDevice()
+                        cls._instance = FirmwareAttributeDevice()
             case "ASUSTeK COMPUTER INC.":
                 from . import AsusDevice
 
@@ -84,9 +84,9 @@ class IDevice(ABC):
 
                 cls._instance = LenovoDevice()
             case _:
-                from . import PowerStationDevice
+                from . import FirmwareAttributeDevice
 
-                cls._instance = PowerStationDevice()
+                cls._instance = FirmwareAttributeDevice()
 
         return cls._instance
 
