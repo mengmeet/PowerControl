@@ -16,6 +16,7 @@ from .msi.msi_claw_a1m import MsiClawA1M
 from .msi.msi_device import MsiDevice
 from .power_device import PowerDevice
 from .power_station_device import PowerStationDevice
+from .firmware_attribute_device import FirmwareAttributeDevice
 
 __all__ = [
     "AyaneoAir",
@@ -36,4 +37,5 @@ __all__ = [
     "AsusDevice",
     "LenovoDevice",
     "PowerStationDevice",
+    "FirmwareAttributeDevice",
 ]
