@@ -13,6 +13,7 @@ def getMaxTDP(default: int = 15) -> int:
     Returns:
         int: 最大TDP值（瓦特）
     """
+    logger.info("getMaxTDP by config, default: {}".format(default))
     try:
         # 根据机器型号或者CPU型号返回tdp最大值
         if PRODUCT_NAME in TDP_LIMIT_CONFIG_PRODUCT:
@@ -24,7 +25,7 @@ def getMaxTDP(default: int = 15) -> int:
                     break
                 else:
                     cpu_tdpMax = default
-        logger.info("getMaxTDP {}".format(cpu_tdpMax))
+        logger.info("getMaxTDP by config: {}".format(cpu_tdpMax))
         return cpu_tdpMax
     except Exception:
         logger.error("Failed to get max TDP value", exc_info=True)

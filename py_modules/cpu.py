@@ -358,6 +358,7 @@ class CPUManager:
         """
         self.cpu_tdpMax = getMaxTDP(0)
         if self.cpu_tdpMax == 0:
+            logger.info("get_tdpMax by config: 0, get from hardware")
             if self.is_intel():
                 self.cpu_tdpMax = self.get_cpuTDP_Intel()
             elif self.is_amd():
@@ -365,8 +366,8 @@ class CPUManager:
             else:
                 self.cpu_tdpMax = 0
 
-    # def get_tdpMax(self) -> int:
-    #     return self.__get_tdpMax()
+        logger.info(f"get_tdpMax: {self.cpu_tdpMax}")
+        return self.cpu_tdpMax
 
     def get_cpuTDP_Intel(self) -> int:
         """获取Intel CPU最大TDP值。
@@ -374,13 +375,15 @@ class CPUManager:
         Returns:
             int: Intel CPU最大TDP值
         """
+        logger.info("get tdpMax by intel rapl path")
         _, __, rapl_max = self.__get_intel_rapl_path()
         if rapl_max == "":
             logger.error("Failed to get Intel CPU TDP: RAPL path not found")
-            return 0
+            return getMaxTDP(15)
         with open(rapl_max, "r") as file:
             tdp = int(file.read().strip())
-            return tdp / 1000000
+            logger.info(f"get_cpuTDP_Intel: {tdp/1000000}")
+            return int(tdp / 1000000)
 
     def get_cpuTDP_AMD(self) -> int:
         """获取AMD CPU最大TDP值。
@@ -388,6 +391,7 @@ class CPUManager:
         Returns:
             int: AMD CPU最大TDP值
         """
+        logger.info("get tdpMax by amd ryzenadj")
         # 使用 ryzenadj 设置 200w 的 stapm-limit， 然后使用 ryzenadj -i 获取实际设置的 STAPM LIMIT， 保留整数
         try:
             subprocess.run(["ryzenadj", "-a", "200000"], check=True)
@@ -410,11 +414,11 @@ class CPUManager:
                         arrays = line.split("|")
                         # float arrays[2] to int
                         tdp = int(float(arrays[2]))
-                        logger.info(f">>>>>>>>> get_cpuTDP_AMD {tdp}")
+                        logger.info(f"get_cpuTDP_AMD: {tdp}")
                         return tdp
         except Exception as e:
-            logger.error(e)
-            return getMaxTDP()
+            logger.error(f"get_cpuTDP_AMD: failed to get tdp {e}", exc_info=True)
+            return getMaxTDP(15)
 
     # 弃用
     def get_cpu_AvailableFreq(self) -> List[int]:
