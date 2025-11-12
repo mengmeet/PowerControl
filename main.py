@@ -82,7 +82,10 @@ class Plugin:
 
     async def get_tdpMax(self):
         try:
-            return self.powerManager.get_tdpMax()
+            logger.info("Main get_tdpMax")
+            tdpMax = self.powerManager.get_tdpMax()
+            logger.info(f"Main get_tdpMax: {tdpMax}")
+            return tdpMax
         except Exception as e:
             logger.error(e, exc_info=True)
             return 0
@@ -602,14 +605,18 @@ class Plugin:
     async def supports_native_gpu_slider(self) -> bool:
         try:
             from utils import check_native_gpu_slider_support
+
             return check_native_gpu_slider_support()
         except Exception as e:
-            logger.error(f"Error checking native GPU slider support: {e}", exc_info=True)
+            logger.error(
+                f"Error checking native GPU slider support: {e}", exc_info=True
+            )
             return False
 
     async def supports_native_tdp_limit(self) -> bool:
         try:
             from utils import check_native_tdp_limit_support
+
             return check_native_tdp_limit_support()
         except Exception as e:
             logger.error(f"Error checking native TDP limit support: {e}", exc_info=True)

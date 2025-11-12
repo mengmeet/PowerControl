@@ -2,8 +2,8 @@ import os
 from time import sleep
 
 from config import logger
-from .power_station_device import PowerStationDevice
 
+from .power_station_device import PowerStationDevice
 
 PREFIX = "/sys/class/firmware-attributes"
 SPL_SUFFIX = "ppt_pl1_spl"
@@ -78,20 +78,23 @@ class FirmwareAttributeDevice(PowerStationDevice):
         return power_info_str
 
     def get_tdpMax(self) -> int:
+        logger.info("FirmwareAttributeDevice get_tdpMax")
         if not self.check_init():
+            logger.info("FirmwareAttributeDevice get_tdpMax: not check_init")
             return super().get_tdpMax()
         max_tdp = self._get_max_tdp()
         if max_tdp is None:
+            logger.info("FirmwareAttributeDevice get_tdpMax: max_tdp is None")
             logger.error("Failed to get TDP max, use fallback method")
             return super().get_tdpMax()
-        logger.info(f">>>> TDP max: {max_tdp}")
+        logger.info(f"FirmwareAttributeDevice get_tdpMax: {max_tdp}")
         return max_tdp
 
     def set_tdp(self, tdp: int) -> None:
         logger.info(f"Setting TDP to {tdp}")
         if not self.supports_attribute_tdp():
             logger.info("Device does not support attribute TDP, use fallback method")
-            return self.fallback_set_tdp(tdp)
+            return super().set_tdp(tdp)
         base_path = f"{PREFIX}/{self.attribute}/attributes"
         if not self.check_init():
             return
@@ -104,7 +107,7 @@ class FirmwareAttributeDevice(PowerStationDevice):
             max_tdp = self._get_max_tdp()
             if min_tdp is not None and tdp < min_tdp:
                 logger.info(f"TDP is too low, min: {min_tdp}, use default method")
-                return self.fallback_set_tdp(tdp)
+                return super().set_tdp(tdp)
             if max_tdp is not None and tdp > max_tdp:
                 logger.info(f"TDP is too high, max: {max_tdp}, set to max")
                 tdp = max_tdp
@@ -154,7 +157,7 @@ class FirmwareAttributeDevice(PowerStationDevice):
                     with open(f"{base_path}/{FAST_SUFFIX}/current_value", "w") as f:
                         f.write(stapm_max)
             else:
-                self.fallback_set_tdp_unlimited()
+                super().set_tdp_unlimited()
         except Exception as e:
             logger.error(f"Failed to set TDP unlimited: {e}", exc_info=True)
 
@@ -177,14 +180,6 @@ class FirmwareAttributeDevice(PowerStationDevice):
             with open(f"{base_path}/{SPL_SUFFIX}/max_value", "r") as f:
                 max_tdp = int(f.read())
         return max_tdp
-
-    def fallback_set_tdp(self, tdp: int) -> None:
-        logger.info("Device does not support attribute TDP, use fallback method")
-        return super().set_tdp(tdp)
-
-    def fallback_set_tdp_unlimited(self) -> None:
-        logger.info("Device does not support attribute TDP, use fallback method")
-        return super().set_tdp_unlimited()
 
     def set_profile(self) -> None:
         if not self.check_init():

@@ -35,7 +35,8 @@ class AsusDevice(FirmwareAttributeDevice):
             self._set_slow(tdp)
             self._set_fast(tdp)
         else:
-            super().fallback_set_tdp(tdp)
+            # Call parent's set_tdp which will continue the fallback chain
+            super().set_tdp(tdp)
 
     def _set_stapm(self, stapm: int) -> None:
         logger.debug(f"Setting STAPM to {stapm}")

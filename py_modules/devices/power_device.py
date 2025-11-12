@@ -171,10 +171,13 @@ class PowerDevice(IDevice):
             return ""
 
     def get_tdpMax(self) -> int:
+        logger.info("PowerDevice get_tdpMax")
         if self._cpuManager is None:
-            logger.error("Failed to get TDP: cpuManager is None")
+            logger.error("PowerDevice get_tdpMax: cpuManager is None")
             return 15
-        return self._cpuManager.get_tdpMax()
+        tdpMax = self._cpuManager.get_tdpMax()
+        logger.info(f"PowerDevice get_tdpMax: {tdpMax}")
+        return tdpMax
 
     # ------ sched_ext ------ #
 

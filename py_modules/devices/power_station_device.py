@@ -1,12 +1,13 @@
-import subprocess
-import shutil
-import time
 import re
-from typing import Optional, List, Tuple
+import shutil
+import subprocess
+import time
+from typing import List, Optional, Tuple
 
 from config import logger
-from .power_device import PowerDevice
 from utils import get_env  # Import environment variable cleanup function
+
+from .power_device import PowerDevice
 
 # PowerStation DBus service information
 DBUS_SERVICE_NAME = "org.shadowblip.PowerStation"
@@ -28,6 +29,7 @@ class PowerStationDevice(PowerDevice):
         self._card_path_timestamp: float = 0
         self._last_error_time: float = 0
         self._error_cooldown: float = 10.0  # Error cooldown time
+        self._support_power_station: bool = None
 
     def _check_busctl_available(self) -> bool:
         """
@@ -84,13 +86,18 @@ class PowerStationDevice(PowerDevice):
         Returns:
             bool: True if busctl is available and PowerStation service is running
         """
+
+        if self._support_power_station is not None:
+            return self._support_power_station
+
         # Error cooldown mechanism
         current_time = time.time()
         if current_time - self._last_error_time < self._error_cooldown:
             return False
 
         try:
-            return self._check_dbus_service()
+            self._support_power_station = self._check_dbus_service()
+            return self._support_power_station
         except Exception as e:
             logger.debug(f"PowerStation service check failed: {e}")
             self._last_error_time = current_time
@@ -191,7 +198,7 @@ class PowerStationDevice(PowerDevice):
             str: String containing current TDP, min/max TDP info
         """
         if not self.supports_power_station():
-            return self.fallback_get_power_info()
+            return super().get_power_info()
 
         try:
             current_tdp = self._get_tdp_property("TDP")
@@ -207,7 +214,7 @@ class PowerStationDevice(PowerDevice):
             )
         except Exception as e:
             logger.error(f"Failed to get PowerStation power info: {e}")
-            return self.fallback_get_power_info()
+            return super().get_power_info()
 
     def get_tdpMax(self) -> int:
         """
@@ -216,15 +223,21 @@ class PowerStationDevice(PowerDevice):
         Returns:
             int: Maximum TDP value (watts)
         """
+        logger.info("PowerStationDevice get_tdpMax")
         if not self.supports_power_station():
-            return self.fallback_get_tdpMax()
+            logger.info("PowerStationDevice get_tdpMax: not supports_power_station")
+            return super().get_tdpMax()
 
         try:
             max_tdp = self._get_tdp_property("MaxTdp")
+            logger.info(f"PowerStationDevice get_tdpMax: {max_tdp}")
             return int(max_tdp)
         except Exception as e:
-            logger.error(f"Failed to get max TDP from PowerStation: {e}")
-            return self.fallback_get_tdpMax()
+            logger.error(
+                f"PowerStationDevice get_tdpMax: failed to get max TDP {e}",
+                exc_info=True,
+            )
+            return super().get_tdpMax()
 
     def _find_gpu_card_path(self) -> str:
         """
@@ -359,7 +372,11 @@ class PowerStationDevice(PowerDevice):
             tdp (int): Target TDP value (watts)
         """
         if not self.supports_power_station():
-            return self.fallback_set_tdp(tdp)
+            try:
+                return super().set_tdp(tdp)
+            except Exception as e:
+                logger.error(f"Failed to set TDP: {e}", exc_info=True)
+                return
 
         try:
             # Validate TDP range
@@ -382,7 +399,7 @@ class PowerStationDevice(PowerDevice):
 
         except Exception as e:
             logger.error(f"Failed to set PowerStation TDP: {e}")
-            self.fallback_set_tdp(tdp)
+            super().set_tdp(tdp)
 
     def _get_tdp_property(self, property_name: str) -> float:
         """
@@ -451,7 +468,7 @@ class PowerStationDevice(PowerDevice):
         Set TDP to maximum value (unlimited)
         """
         if not self.supports_power_station():
-            return self.fallback_set_tdp_unlimited()
+            return super().set_tdp_unlimited()
 
         try:
             max_tdp = int(self._get_tdp_property("MaxTdp"))
@@ -459,27 +476,7 @@ class PowerStationDevice(PowerDevice):
             logger.info(f"Set PowerStation TDP to unlimited ({max_tdp}W)")
         except Exception as e:
             logger.error(f"Failed to set unlimited TDP: {e}")
-            self.fallback_set_tdp_unlimited()
-
-    def fallback_get_power_info(self) -> str:
-        """Fallback method when PowerStation is not available"""
-        logger.info("Using fallback method for get_power_info")
-        return super().get_power_info()
-
-    def fallback_get_tdpMax(self) -> int:
-        """Fallback method when PowerStation is not available"""
-        logger.info("Using fallback method for get_tdpMax")
-        return super().get_tdpMax()
-
-    def fallback_set_tdp(self, tdp: int) -> None:
-        """Fallback method when PowerStation is not available"""
-        logger.info("Using fallback method for set_tdp")
-        return super().set_tdp(tdp)
-
-    def fallback_set_tdp_unlimited(self) -> None:
-        """Fallback method when PowerStation is not available"""
-        logger.info("Using fallback method for set_tdp_unlimited")
-        return super().set_tdp_unlimited()
+            super().set_tdp_unlimited()
 
     def _handle_command_error(self, error: Exception, operation: str) -> None:
         """
