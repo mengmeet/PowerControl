@@ -146,11 +146,16 @@ class PowerDevice(IDevice):
 
     # ------ TDP ------ #
 
-    def set_tdp(self, tdp: int) -> None:
+    def _do_set_tdp(self, tdp: int) -> None:
         if self._cpuManager is None:
             logger.error("Failed to set TDP: cpuManager is None")
             return
         self._cpuManager.set_cpuTDP(tdp)
+
+    def run_before_set_tdp(self) -> None:
+        # Default implementation: do nothing
+        # Subclasses can override this if they need pre-TDP setup
+        pass
 
     def set_tdp_unlimited(self) -> None:
         if self._cpuManager is None:

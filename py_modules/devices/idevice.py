@@ -143,8 +143,20 @@ class IDevice(ABC):
     def set_sched_ext(self, value: str, param: str) -> None:
         pass
 
-    @abstractmethod
     def set_tdp(self, tdp: int) -> bool:
+        """
+        Template method that ensures run_before_set_tdp is called before setting TDP.
+        Subclasses should override _do_set_tdp instead of this method.
+        """
+        self.run_before_set_tdp()
+        return self._do_set_tdp(tdp)
+
+    @abstractmethod
+    def _do_set_tdp(self, tdp: int) -> bool:
+        """
+        Actual TDP setting implementation.
+        This should be implemented by subclasses instead of set_tdp.
+        """
         pass
 
     @abstractmethod
@@ -157,4 +169,12 @@ class IDevice(ABC):
 
     @abstractmethod
     def get_power_info(self) -> str:
+        pass
+
+    @abstractmethod
+    def run_before_set_tdp(self) -> None:
+        """
+        Hook method called before setting TDP.
+        Subclasses can override this to perform pre-TDP setup.
+        """
         pass

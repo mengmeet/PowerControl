@@ -90,11 +90,11 @@ class FirmwareAttributeDevice(PowerStationDevice):
         logger.info(f"FirmwareAttributeDevice get_tdpMax: {max_tdp}")
         return max_tdp
 
-    def set_tdp(self, tdp: int) -> None:
+    def _do_set_tdp(self, tdp: int) -> None:
         logger.info(f"Setting TDP to {tdp}")
         if not self.supports_attribute_tdp():
             logger.info("Device does not support attribute TDP, use fallback method")
-            return super().set_tdp(tdp)
+            return super()._do_set_tdp(tdp)
         base_path = f"{PREFIX}/{self.attribute}/attributes"
         if not self.check_init():
             return
@@ -107,7 +107,7 @@ class FirmwareAttributeDevice(PowerStationDevice):
             max_tdp = self._get_max_tdp()
             if min_tdp is not None and tdp < min_tdp:
                 logger.info(f"TDP is too low, min: {min_tdp}, use default method")
-                return super().set_tdp(tdp)
+                return super()._do_set_tdp(tdp)
             if max_tdp is not None and tdp > max_tdp:
                 logger.info(f"TDP is too high, max: {max_tdp}, set to max")
                 tdp = max_tdp

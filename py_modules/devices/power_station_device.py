@@ -364,7 +364,7 @@ class PowerStationDevice(PowerDevice):
 
         return None
 
-    def set_tdp(self, tdp: int) -> None:
+    def _do_set_tdp(self, tdp: int) -> None:
         """
         Set TDP value
 
@@ -373,7 +373,7 @@ class PowerStationDevice(PowerDevice):
         """
         if not self.supports_power_station():
             try:
-                return super().set_tdp(tdp)
+                return super()._do_set_tdp(tdp)
             except Exception as e:
                 logger.error(f"Failed to set TDP: {e}", exc_info=True)
                 return
@@ -399,7 +399,7 @@ class PowerStationDevice(PowerDevice):
 
         except Exception as e:
             logger.error(f"Failed to set PowerStation TDP: {e}")
-            super().set_tdp(tdp)
+            super()._do_set_tdp(tdp)
 
     def _get_tdp_property(self, property_name: str) -> float:
         """

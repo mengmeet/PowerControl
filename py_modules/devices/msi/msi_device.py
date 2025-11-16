@@ -42,6 +42,7 @@ class MsiDevice(FirmwareAttributeDevice):
         self.shift_mode_path = SHIFT_MODE_PATH
         self.availble_shift_modes_path = AVAILBLE_SHIFT_MODES_PATH
         self.init_attribute(ATTRIBUTE_NAME, PLATFORM_PROFILE_NAME)
+        self.shift_mode_write(SM_SPORT_NAME)
 
     def _shift_mode_sysfs(self, mode_name: str) -> None:
         # read available shift modes
@@ -65,18 +66,20 @@ class MsiDevice(FirmwareAttributeDevice):
             f.write(mode_name)
 
     def _shift_mode_ec(self, mode_name: str) -> None:
+        logger.debug(f"start to write shift mode EC {mode_name}")
         # check if mode is available
         if mode_name not in self.shift_mode_dict:
             logger.error(f"Mode {mode_name} is not available")
             return
-
+        logger.debug(f"mode {mode_name} is available")
         # current mode
         current_mode = self._ec_read(self.ec_shift_mode_addr)
         if current_mode == self.shift_mode_dict[mode_name]:
+            logger.debug(f"current mode {current_mode} is the same as {mode_name}")
             return
-
+        
         # write mode
-        logger.info(f"Writing shift mode EC {mode_name}")
+        logger.debug(f"Writing shift mode EC {mode_name}")
         self._ec_write(self.ec_shift_mode_addr, self.shift_mode_dict[mode_name])
 
     def shift_mode_write(self, mode_name: str) -> None:

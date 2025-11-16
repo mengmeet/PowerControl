@@ -25,18 +25,18 @@ class AsusDevice(FirmwareAttributeDevice):
         super().__init__()
         self.init_attribute(ATTRIBUTE_NAME, PLATFORM_PROFILE_NAME)
 
-    def set_tdp(self, tdp: int) -> None:
+    def _do_set_tdp(self, tdp: int) -> None:
         logger.debug(f"Setting TDP to {tdp}")
         if self.supports_attribute_tdp():
-            super().set_tdp(tdp)
+            super()._do_set_tdp(tdp)
         elif self._supports_wmi_tdp():
             logger.debug(f"Setting TDP to {tdp} by ASUS WMI")
             self._set_stapm(tdp)
             self._set_slow(tdp)
             self._set_fast(tdp)
         else:
-            # Call parent's set_tdp which will continue the fallback chain
-            super().set_tdp(tdp)
+            # Call parent's _do_set_tdp which will continue the fallback chain
+            super()._do_set_tdp(tdp)
 
     def _set_stapm(self, stapm: int) -> None:
         logger.debug(f"Setting STAPM to {stapm}")
