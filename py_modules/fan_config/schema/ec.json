@@ -67,6 +67,10 @@
           "type": "number",
           "description": "风扇ecRam写入转速地址"
         },
+        "ram_rpmwrite_secondary_offset": {
+          "type": "number",
+          "description": "风扇ecRam写入转速地址(次要)"
+        },
         "ram_rpmread_offset": {
           "type": "number",
           "description": "风扇ecRam读取转速地址"
