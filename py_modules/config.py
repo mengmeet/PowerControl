@@ -3,9 +3,10 @@ import json
 import logging
 import os
 
-import decky
 import yaml
 from logging_handler import SystemdHandler
+
+import decky
 
 # 日志配置
 LOG_LOCATION = "/tmp/PowerControl_py.log"
@@ -147,6 +148,7 @@ try:
         "G1619-04": 45,  # GPD WINMAX2
         "G1618-03": 28,  # GPD WIN3
         "G1618-04": 45,  # GPD WIN4
+        "G1618-05": 85,  # GPD WIN5
         "G1617-01": 30,  # GPD WIN mini
         "ROG Ally RC71L_RC71L": 30,
         "ROG Ally RC71L": 30,
@@ -190,6 +192,8 @@ try:
         "236V": 37,
         "226V": 37,
         "288V": 37,
+        "HX 370": 54,
+        "AI MAX+ 395": 120,
     }
 except Exception as e:
     logger.error(f"TDP配置异常|{e}")
