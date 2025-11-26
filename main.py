@@ -42,7 +42,6 @@ class Plugin:
     async def _main(self):
         decky.logger.info("start _main")
         self.powerManager.load()
-        pass
 
     async def _unload(self):
         decky.logger.info("start _unload")
@@ -324,6 +323,29 @@ class Plugin:
 
     async def get_ryzenadj_info(self):
         return cpuManager.get_ryzenadj_info()
+
+    async def check_ryzenadj_coall(self) -> bool:
+        """检测并缓存 RyzenAdj 降压支持情况"""
+        try:
+            result = cpuManager.check_ryzenadj_coall_support()
+            # 保存检测结果到配置
+            settings = self.confManager.getSettings()
+            settings['supportsRyzenadjCoall'] = result
+            self.confManager.setSettings(settings)
+            logger.info(f"RyzenAdj 降压支持检测完成: {result}")
+            return result
+        except Exception as e:
+            logger.error(f"检测降压支持失败: {e}", exc_info=True)
+            return False
+
+    async def set_ryzenadj_undervolt(self, enable: bool, value: int) -> bool:
+        """设置 RyzenAdj 降压值"""
+        try:
+            logger.info(f"Main 设置降压: enable={enable}, value={value}")
+            return self.powerManager.set_ryzenadj_undervolt(enable, value)
+        except Exception as e:
+            logger.error(f"设置降压失败: {e}", exc_info=True)
+            return False
 
     async def get_rapl_info(self):
         logger.info("Main get_rapl_info")

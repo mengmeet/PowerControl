@@ -184,6 +184,35 @@ class PowerDevice(IDevice):
         logger.info(f"PowerDevice get_tdpMax: {tdpMax}")
         return tdpMax
 
+    # ------ RyzenAdj Undervolt ------ #
+
+    def supports_ryzenadj_undervolt(self) -> bool:
+        """
+        检查设备是否支持 RyzenAdj 降压
+        
+        Returns:
+            bool: 如果支持返回 True，否则返回 False
+        """
+        if self._cpuManager is None:
+            return False
+        return self._cpuManager.check_ryzenadj_coall_support()
+
+    def set_ryzenadj_undervolt(self, enable: bool, value: int) -> bool:
+        """
+        设置 RyzenAdj 降压
+        
+        Args:
+            enable (bool): 是否启用降压
+            value (int): 降压值 (0-30)
+        
+        Returns:
+            bool: 设置是否成功
+        """
+        if self._cpuManager is None:
+            logger.error("Failed to set undervolt: cpuManager is None")
+            return False
+        return self._cpuManager.apply_ryzenadj_undervolt(enable, value)
+
     # ------ sched_ext ------ #
 
     def supports_sched_ext(self) -> bool:

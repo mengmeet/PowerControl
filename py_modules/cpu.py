@@ -1207,6 +1207,98 @@ class CPUManager:
             logger.error(e)
             return f"get_ryzenadj_info error:\n{e}"
 
+    def set_ryzenadj_undervolt(self, value: int) -> bool:
+        """设置 RyzenAdj CPU 降压值。
+
+        Args:
+            value (int): 降压值 (0-30)
+
+        Returns:
+            bool: True 如果设置成功，否则 False
+        """
+        if self.is_intel():
+            logger.warning("Intel 平台不支持 RyzenAdj 降压")
+            return False
+
+        if not (0 <= value <= 30):
+            logger.error(f"降压值 {value} 超出范围 (0-30)")
+            return False
+
+        try:
+            baseline = 0x100000
+            sys_ryzenadj_path = get_ryzenadj_path()
+            command = f"{sys_ryzenadj_path} --set-coall={hex(baseline - value)}"
+
+            logger.info(f"设置 RyzenAdj 降压: {command}")
+
+            process = subprocess.run(
+                command,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                env=get_env(),
+            )
+
+            stdout, stderr = process.stdout, process.stderr
+
+            if process.returncode == 0:
+                logger.info(f"降压设置成功: value={value}, hex={hex(baseline - value)}")
+                return True
+            else:
+                logger.error(f"降压设置失败: {stderr}")
+                return False
+
+        except Exception as e:
+            logger.error(f"设置降压异常: {e}", exc_info=True)
+            return False
+
+    def check_ryzenadj_coall_support(self) -> bool:
+        """检测设备是否支持 RyzenAdj 降压功能。
+
+        Returns:
+            bool: True 如果支持降压，否则 False
+        """
+        if self.is_intel():
+            logger.info("Intel 平台不支持 RyzenAdj 降压")
+            return False
+
+        try:
+            # 尝试设置 0 值来测试是否支持
+            logger.info("检测 RyzenAdj 降压支持情况...")
+            result = self.set_ryzenadj_undervolt(0)
+            logger.info(f"降压支持检测结果: {result}")
+            return result
+        except Exception as e:
+            logger.error(f"检测降压支持时发生异常: {e}", exc_info=True)
+            return False
+
+    def apply_ryzenadj_undervolt(self, enable: bool, value: int) -> bool:
+        """应用 RyzenAdj 降压设置。
+        
+        Args:
+            enable (bool): 是否启用降压
+            value (int): 降压值 (0-30)
+        
+        Returns:
+            bool: True 如果应用成功或未启用降压，否则 False
+        """
+        try:
+            if not enable:
+                logger.debug("降压功能未启用，设置为 0")
+                return self.set_ryzenadj_undervolt(0)
+            
+            if not isinstance(value, int) or not (0 <= value <= 30):
+                logger.warning(f"降压值无效: {value}，跳过应用")
+                return True
+            
+            logger.info(f"应用降压设置: enabled={enable}, value={value}")
+            return self.set_ryzenadj_undervolt(value)
+        
+        except Exception as e:
+            logger.error(f"应用降压设置时发生异常: {e}", exc_info=True)
+            return False
+
     def get_rapl_info(self) -> str:
         """获取RAPL信息。
 

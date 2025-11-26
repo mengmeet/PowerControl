@@ -648,6 +648,86 @@ const CPUFreqControlComponent: FC = () => {
   );
 };
 
+const CPURyzenadjUndervoltComponent: FC = () => {
+  const [enabled, setEnabled] = useState<boolean>(
+    Settings.appEnableRyzenadjUndervolt()
+  );
+  const [value, setValue] = useState<number>(
+    Settings.appRyzenadjUndervoltValue()
+  );
+  const [isAMD] = useState<boolean>(
+    Backend.data.getCpuVendor() === "AuthenticAMD"
+  );
+  const [supported, setSupported] = useState<boolean>(
+    Backend.data.getSupportsRyzenadjCoall()
+  );
+
+  const refresh = () => {
+    setEnabled(Settings.appEnableRyzenadjUndervolt());
+    setValue(Settings.appRyzenadjUndervoltValue());
+  };
+
+  useEffect(() => {
+    // Update supported state based on Backend.data
+    setSupported(Backend.data.getSupportsRyzenadjCoall());
+
+    PluginManager.listenUpdateComponent(
+      ComponentName.CPU_RYZENADJ_UNDERVOLT,
+      [ComponentName.CPU_RYZENADJ_UNDERVOLT],
+      (_ComponentName, updateType) => {
+        if (updateType === UpdateType.UPDATE) {
+          refresh();
+        }
+      }
+    );
+  }, [isAMD]);
+
+  // Don't show component if not AMD or not supported
+  if (!isAMD || !supported) {
+    return null;
+  }
+
+  return (
+    <div>
+      <PanelSectionRow>
+        <ToggleField
+          label={localizationManager.getString(
+            localizeStrEnum.RYZENADJ_UNDERVOLT_ENABLE
+          )}
+          description={localizationManager.getString(
+            localizeStrEnum.RYZENADJ_UNDERVOLT_ENABLE_DESC
+          )}
+          checked={enabled}
+          onChange={(val) => {
+            Settings.setEnableRyzenadjUndervolt(val);
+          }}
+        />
+      </PanelSectionRow>
+
+      {enabled && (
+        <PanelSectionRow>
+          <SlowSliderField
+            label={localizationManager.getString(
+              localizeStrEnum.RYZENADJ_UNDERVOLT_VALUE
+            )}
+            description={localizationManager.getString(
+              localizeStrEnum.RYZENADJ_UNDERVOLT_VALUE_DESC
+            )}
+            value={value}
+            step={1}
+            max={30}
+            min={0}
+            showValue={true}
+            onChangeEnd={(val: number) => {
+              Settings.setRyzenadjUndervoltValue(val);
+            }}
+          />
+        </PanelSectionRow>
+      )}
+    </div>
+  );
+};
+
 export const CPUComponent: FC<{
   isTab?: boolean;
 }> = ({ isTab = false }) => {
@@ -724,6 +804,7 @@ export const CPUComponent: FC<{
               <CPUNumComponent />
               <CPUPerformancePerfComponent />
               <CPUFreqControlComponent />
+              <CPURyzenadjUndervoltComponent />
             </>
           )}
         </PanelSection>

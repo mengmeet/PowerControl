@@ -63,6 +63,10 @@ export class AppSetting {
   cpuCoreFreqConfig?: Record<string, number>;
   @JsonProperty()
   schedExtScheduler?: string;
+  @JsonProperty()
+  enableRyzenadjUndervolt?: boolean;
+  @JsonProperty()
+  ryzenadjUndervoltValue?: number;
 
   constructor() {
     this.smt = true;
@@ -97,6 +101,8 @@ export class AppSetting {
     this.cpuFreqControlEnable = false; // 默认关闭CPU频率控制
     this.cpuCoreFreqConfig = {}; // 默认空的核心频率配置
     this.schedExtScheduler = "";
+    this.enableRyzenadjUndervolt = false;
+    this.ryzenadjUndervoltValue = 0;
   }
   deepCopy(copyTarget: AppSetting) {
     // this.overwrite=copyTarget.overwrite;
@@ -122,6 +128,8 @@ export class AppSetting {
       ? { ...copyTarget.cpuCoreFreqConfig }
       : {};
     this.schedExtScheduler = copyTarget.schedExtScheduler;
+    this.enableRyzenadjUndervolt = copyTarget.enableRyzenadjUndervolt;
+    this.ryzenadjUndervoltValue = copyTarget.ryzenadjUndervoltValue;
   }
 }
 
@@ -1248,5 +1256,49 @@ export class Settings {
       APPLYTYPE.SET_EPP,
       callback
     );
+  }
+
+  // 获取 RyzenAdj 降压开关状态
+  public static appEnableRyzenadjUndervolt(): boolean {
+    return this.ensureApp().enableRyzenadjUndervolt || false;
+  }
+
+  // 设置 RyzenAdj 降压开关
+  public static setEnableRyzenadjUndervolt(value: boolean) {
+    const app = this.ensureApp();
+    if (app.enableRyzenadjUndervolt !== value) {
+      app.enableRyzenadjUndervolt = value;
+      this.saveSettings();
+
+      // Apply through specific handler
+      Backend.applySettings(APPLYTYPE.SET_CPU_RYZENADJ_UNDERVOLT);
+
+      PluginManager.updateComponent(
+        ComponentName.CPU_RYZENADJ_UNDERVOLT,
+        UpdateType.UPDATE
+      );
+    }
+  }
+
+  // 获取 RyzenAdj 降压值
+  public static appRyzenadjUndervoltValue(): number {
+    return this.ensureApp().ryzenadjUndervoltValue || 0;
+  }
+
+  // 设置 RyzenAdj 降压值
+  public static setRyzenadjUndervoltValue(value: number) {
+    const app = this.ensureApp();
+    if (app.ryzenadjUndervoltValue !== value) {
+      app.ryzenadjUndervoltValue = value;
+      this.saveSettings();
+
+      // Apply through specific handler
+      Backend.applySettings(APPLYTYPE.SET_CPU_RYZENADJ_UNDERVOLT);
+
+      PluginManager.updateComponent(
+        ComponentName.CPU_RYZENADJ_UNDERVOLT,
+        UpdateType.UPDATE
+      );
+    }
   }
 }

@@ -70,6 +70,8 @@ export const getLatestVersion = callable<[], string>("get_latest_version");
 export const updateLatest = callable<[], any>("update_latest");
 export const fixGpuFreqSlider = callable<[], any>("fix_gpuFreqSlider");
 export const getRyzenadjInfo = callable<[], string>("get_ryzenadj_info");
+export const checkRyzenadjCoall = callable<[], boolean>("check_ryzenadj_coall");
+export const setRyzenadjUndervolt = callable<[boolean, number], boolean>("set_ryzenadj_undervolt");
 export const getRaplInfo = callable<[], string>("get_rapl_info");
 export const getPowerInfo = callable<[], string>("get_power_info");
 export const setSettings = callable<[any], void>("set_settings");
@@ -172,7 +174,8 @@ export class BackendData {
     schedExtSupport: false as boolean,
     availableSchedExtSchedulers: [] as string[],
     currentSchedExtScheduler: "" as string,
-    supportsSMT: false as boolean
+    supportsSMT: false as boolean,
+    supportsRyzenadjCoall: false as boolean
   } as const;
 
   private getDefaultValue(key: string) {
@@ -217,7 +220,8 @@ export class BackendData {
     latestVersion: { callable: getLatestVersion },
     schedExtSupport: { callable: supportsSchedExt },
     availableSchedExtSchedulers: { callable: getSchedExtList },
-    currentSchedExtScheduler: { callable: getCurrentSchedExtScheduler }
+    currentSchedExtScheduler: { callable: getCurrentSchedExtScheduler },
+    supportsRyzenadjCoall: { callable: checkRyzenadjCoall }
   };
 
   // 主初始化方法
@@ -465,6 +469,7 @@ export class Backend {
           Backend.handleEPP,
           Backend.handleCpuMaxPerfPct,
           Backend.handleSchedExtScheduler,
+          Backend.handleRyzenadjUndervolt,
         ];
         await Promise.all(cpuHandlers.map((handler) => handler()));
 
@@ -768,6 +773,13 @@ export class Backend {
     }
   }
 
+  private static async handleRyzenadjUndervolt(): Promise<void> {
+    const enable = Settings.appEnableRyzenadjUndervolt();
+    const value = Settings.appRyzenadjUndervoltValue();
+    Logger.info(`handleRyzenadjUndervolt: enable=${enable}, value=${value}`);
+    await setRyzenadjUndervolt(enable, value);
+  }
+
   private static settingsHandlers: Map<APPLYTYPE, () => Promise<void>> =
     new Map([
       [APPLYTYPE.SET_CPUCORE, Backend.handleCPUNum],
@@ -777,6 +789,7 @@ export class Backend {
       [APPLYTYPE.SET_EPP, Backend.handleEPP],
       [APPLYTYPE.SET_CPU_SCHED_EXT, Backend.handleSchedExtScheduler],
       [APPLYTYPE.SET_CPU_FREQ_CONTROL, Backend.handleCPUFreqControl],
+      [APPLYTYPE.SET_CPU_RYZENADJ_UNDERVOLT, Backend.handleRyzenadjUndervolt],
       [APPLYTYPE.SET_GPUMODE, Backend.handleGPUMode],
       [APPLYTYPE.SET_GPUSLIDERFIX, Backend.handleGPUSliderFix],
       [APPLYTYPE.SET_TDP, Backend.handleTDP],
