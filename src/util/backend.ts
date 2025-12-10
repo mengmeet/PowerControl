@@ -673,6 +673,11 @@ export class Backend {
       return;
     }
 
+    // Check global fan control switch
+    if (!Settings.appFanControlEnabled()) {
+      return;
+    }
+
     const fanSettings = Settings.appFanSettings();
     for (let index = 0; index < fanSettings.length; index++) {
       const fanSetting = Settings.appFanSettings()?.[index];
@@ -689,9 +694,6 @@ export class Backend {
 
       //写入转速后再写入控制位
       switch (fanMode) {
-        case FANMODE.NOCONTROL:
-        // console.log(`不控制 index= ${index}`);
-          break;
         case FANMODE.FIX:
         case FANMODE.CURVE:
           // console.log(`${fanMode == FANMODE.FIX ? '直线' : '曲线'} index= ${index}`);

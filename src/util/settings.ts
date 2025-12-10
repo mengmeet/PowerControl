@@ -67,6 +67,8 @@ export class AppSetting {
   enableRyzenadjUndervolt?: boolean;
   @JsonProperty()
   ryzenadjUndervoltValue?: number;
+  @JsonProperty()
+  fanControlEnabled?: boolean;
 
   constructor() {
     this.smt = true;
@@ -103,6 +105,7 @@ export class AppSetting {
     this.schedExtScheduler = "";
     this.enableRyzenadjUndervolt = false;
     this.ryzenadjUndervoltValue = 0;
+    this.fanControlEnabled = false;
   }
   deepCopy(copyTarget: AppSetting) {
     // this.overwrite=copyTarget.overwrite;
@@ -130,6 +133,7 @@ export class AppSetting {
     this.schedExtScheduler = copyTarget.schedExtScheduler;
     this.enableRyzenadjUndervolt = copyTarget.enableRyzenadjUndervolt;
     this.ryzenadjUndervoltValue = copyTarget.ryzenadjUndervoltValue;
+    this.fanControlEnabled = copyTarget.fanControlEnabled;
   }
 }
 
@@ -138,7 +142,7 @@ export class FanSetting {
   @JsonProperty()
   snapToGrid?: boolean = false;
   @JsonProperty()
-  fanMode?: FANMODE = FANMODE.NOCONTROL;
+  fanMode?: FANMODE = FANMODE.AUTO;
   @JsonProperty()
   fixSpeed?: number = 50;
   @JsonProperty({ type: FanPosition, dataStructure: "array" })
@@ -897,6 +901,21 @@ export class Settings {
       this._instance.settingChangeEvent.dispatchEvent(
         new Event("GPU_FREQ_Change")
       );
+    }
+  }
+
+  //风扇控制开关状态
+  static appFanControlEnabled(): boolean {
+    return Settings.ensureApp().fanControlEnabled ?? false;
+  }
+
+  //设置风扇控制开关状态
+  static setFanControlEnabled(enabled: boolean) {
+    if (Settings.ensureApp().fanControlEnabled != enabled) {
+      Settings.ensureApp().fanControlEnabled = enabled;
+      Settings.saveSettings();
+      Backend.applySettings(APPLYTYPE.SET_FAN_ALL);
+      PluginManager.updateComponent(ComponentName.FAN_ALL, UpdateType.UPDATE);
     }
   }
 

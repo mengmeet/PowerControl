@@ -12,6 +12,7 @@ import {
   DropdownItem,
   ButtonItem,
   NotchLabel,
+  ToggleField,
 } from "@decky/ui";
 import { useEffect, useState, useRef, FC } from "react";
 import {
@@ -54,169 +55,223 @@ const CANVAS_HEIGHT_SMALL = 250;
 const CANVAS_WIDTH_LARGE = 300;  // For fan curve editor / 风扇曲线编辑器
 const CANVAS_HEIGHT_LARGE = 300;
 
-//选择配置文件下拉框
-const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
-  const fanWriteMode = Backend.data.getFanPwmMode(fanIndex);
-  const defaultFanSetting = Backend.data.getDefaultFanSetting(fanIndex);
+//风扇控制总开关
+const FANControlToggleComponent: FC = () => {
+  const [enabled, setEnabled] = useState<boolean>(Settings.appFanControlEnabled());
 
-  //@ts-ignore
-  const [items, setItems] = useState<DropdownOption[]>(
-    Object.entries(Settings.getFanSettings())
+  useEffect(() => {
+    PluginManager.listenUpdateComponent(
+      ComponentName.FAN_ALL,
+      [ComponentName.FAN_ALL],
+      () => {
+        setEnabled(Settings.appFanControlEnabled());
+      }
+    );
+  }, []);
+
+  return (
+    <PanelSectionRow>
+      <ToggleField
+        label={localizationManager.getString(localizeStrEnum.FAN_CONTROL_ENABLE)}
+        description={localizationManager.getString(
+          localizeStrEnum.FAN_CONTROL_ENABLE_DESC
+        )}
+        checked={enabled}
+        onChange={(value: boolean) => {
+          Settings.setFanControlEnabled(value);
+        }}
+      />
+    </PanelSectionRow>
+  );
+};
+
+//配置使用下拉框
+const FANUseProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
+  const fanWriteMode = Backend.data.getFanPwmMode(fanIndex);
+
+  const buildItems = () => {
+    const profiles = Object.entries(Settings.getFanSettings())
       .filter(([_, fanSetting]) => {
         // 多文件不同值写入模式下，不显示固定转速配置
         if (fanWriteMode == FAN_PWM_MODE.MULTI_DIFF) {
           return fanSetting.fanMode != FANMODE.FIX;
-        } else {
-          return true;
         }
+        return true;
       })
-      .map(([profileName, fanSetting]) => {
-        var useOption = {
-          label: localizationManager.getString(localizeStrEnum.USE),
-          data: {
-            profileName: profileName,
-            type: FANPROFILEACTION.USE,
-            setting: fanSetting,
-          },
-        };
-        if (profileName == Settings.appFanSettingNameList()?.[fanIndex]) {
-          useOption = {
-            label: localizationManager.getString(localizeStrEnum.CANCEL),
-            data: {
-              profileName: profileName,
-              type: FANPROFILEACTION.CANCEL,
-              setting: fanSetting,
-            },
-          };
-        }
-        return {
-          label: profileName,
-          options: [
-            useOption,
-            {
-              label: localizationManager.getString(localizeStrEnum.EDIT),
-              data: {
-                profileName: profileName,
-                type: FANPROFILEACTION.EDIT,
-                setting: fanSetting,
-              },
-            },
-            {
-              label: localizationManager.getString(localizeStrEnum.DELETE),
-              data: {
-                profileName: profileName,
-                type: FANPROFILEACTION.DELETE,
-                setting: fanSetting,
-              },
-            },
-          ],
-        };
-      })
-  );
-  //@ts-ignore
+      .map(([profileName]) => ({
+        label: profileName,
+        data: profileName,
+      }));
+
+    return [
+      {
+        label: localizationManager.getString(localizeStrEnum.SYSTEM_AUTO),
+        data: undefined,
+      },
+      ...profiles,
+    ];
+  };
+
+  const [items, setItems] = useState<DropdownOption[]>(buildItems());
   const [selectedItem, setSelectedItem] = useState<DropdownOption | undefined>(
-    items.find((item) => {
-      return item.label == Settings.appFanSettingNameList()?.[fanIndex];
-    })
+    items.find((item) => item.data == Settings.appFanSettingNameList()?.[fanIndex])
   );
 
+  useEffect(() => {
+    PluginManager.listenUpdateComponent(
+      ComponentName.FAN_ALL,
+      [ComponentName.FAN_ALL],
+      () => {
+        const newItems = buildItems();
+        setItems(newItems);
+        setSelectedItem(
+          newItems.find(
+            (item) => item.data == Settings.appFanSettingNameList()?.[fanIndex]
+          )
+        );
+      }
+    );
+  }, [fanIndex]);
+
   return (
-    <div>
-      <PanelSectionRow>
-        <DropdownItem
-          rgOptions={[
-            ...items,
-            {
-              data: FANPROFILEACTION.ADD,
-              label: (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "start",
-                    gap: "1em",
-                  }}
-                >
-                  <FiPlusCircle />
-                  <span>
-                    {localizationManager.getString(
-                      localizeStrEnum.CREATE_FAN_PROFILE_TIP
-                    )}
-                  </span>
-                </div>
-              ),
-            },
-          ]}
-          strDefaultLabel={
-            selectedItem
-              ? selectedItem.label?.toString()
-              : items.length == 0
-                ? localizationManager.getString(
-                  localizeStrEnum.CREATE_FAN_PROFILE_TIP
-                )
-                : localizationManager.getString(
-                  localizeStrEnum.SELECT_FAN_PROFILE_TIP
-                )
+    <PanelSectionRow>
+      <DropdownItem
+        label={localizationManager.getString(localizeStrEnum.CURRENT_PROFILE)}
+        rgOptions={items}
+        strDefaultLabel={
+          selectedItem?.label?.toString() ??
+          localizationManager.getString(localizeStrEnum.SYSTEM_AUTO)
+        }
+        selectedOption={selectedItem?.data}
+        bottomSeparator={"none"}
+        onChange={(item: DropdownOption) => {
+          Settings.setAppFanSettingName(item.data, fanIndex);
+          setSelectedItem(item);
+        }}
+      />
+    </PanelSectionRow>
+  );
+};
+
+//配置管理下拉框
+const FANManageProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
+  const fanWriteMode = Backend.data.getFanPwmMode(fanIndex);
+  const defaultFanSetting = Backend.data.getDefaultFanSetting(fanIndex);
+
+  const buildItems = () => {
+    return Object.entries(Settings.getFanSettings()).map(([profileName, fanSetting]) => ({
+      label: profileName,
+      options: [
+        {
+          label: localizationManager.getString(localizeStrEnum.EDIT),
+          data: {
+            profileName: profileName,
+            type: FANPROFILEACTION.EDIT,
+            setting: fanSetting,
+          },
+        },
+        {
+          label: localizationManager.getString(localizeStrEnum.DELETE),
+          data: {
+            profileName: profileName,
+            type: FANPROFILEACTION.DELETE,
+            setting: fanSetting,
+          },
+        },
+      ],
+    }));
+  };
+
+  const [items, setItems] = useState<DropdownOption[]>(buildItems());
+
+  useEffect(() => {
+    PluginManager.listenUpdateComponent(
+      ComponentName.FAN_ALL,
+      [ComponentName.FAN_ALL],
+      () => {
+        setItems(buildItems());
+      }
+    );
+  }, [fanIndex]);
+
+  return (
+    <PanelSectionRow>
+      <DropdownItem
+        label={localizationManager.getString(localizeStrEnum.MANAGE_PROFILES)}
+        rgOptions={[
+          ...items,
+          {
+            data: FANPROFILEACTION.ADD,
+            label: (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "start",
+                  gap: "1em",
+                }}
+              >
+                <FiPlusCircle />
+                <span>
+                  {localizationManager.getString(
+                    localizeStrEnum.CREATE_FAN_PROFILE_TIP
+                  )}
+                </span>
+              </div>
+            ),
+          },
+        ]}
+        strDefaultLabel={localizationManager.getString(
+          localizeStrEnum.MANAGE_PROFILES
+        )}
+        selectedOption={undefined}
+        bottomSeparator={"none"}
+        onChange={(item: DropdownOption) => {
+          if (item.data == FANPROFILEACTION.ADD) {
+            showModal(
+              <FANCretateProfileModelComponent
+                fanProfileName={""}
+                fanSetting={null as any}
+                closeModal={() => { }}
+                fixedCountMode={fanWriteMode == FAN_PWM_MODE.MULTI_DIFF}
+                defaultSetting={
+                  fanWriteMode == FAN_PWM_MODE.MULTI_DIFF
+                    ? defaultFanSetting
+                    : undefined
+                }
+              />
+            );
+            return;
           }
-          selectedOption={selectedItem}
-          bottomSeparator={"none"}
-          onChange={(item: DropdownOption) => {
-            if (item.data == FANPROFILEACTION.ADD) {
-              console.log("add fan profile>>>>>>>>.");
-              showModal(
-                <FANCretateProfileModelComponent
-                  fanProfileName={item.data.profileName}
-                  fanSetting={Settings.getFanSetting(item.data.profileName)}
-                  closeModal={() => {
-                    console.log("close modal>>>>>>>>.");
-                  }}
-                  fixedCountMode={fanWriteMode == FAN_PWM_MODE.MULTI_DIFF}
-                  defaultSetting={
-                    fanWriteMode == FAN_PWM_MODE.MULTI_DIFF
-                      ? defaultFanSetting
-                      : undefined
+
+          if (item.data.type == FANPROFILEACTION.DELETE) {
+            Settings.removeFanSetting(item.data.profileName);
+          } else if (item.data.type == FANPROFILEACTION.EDIT) {
+            showModal(
+              <FANCretateProfileModelComponent
+                fanProfileName={item.data.profileName}
+                fanSetting={Settings.getFanSetting(item.data.profileName)}
+                closeModal={() => {
+                  if (fanWriteMode == FAN_PWM_MODE.MULTI_DIFF) {
+                    Settings.setAppFanSettingName(
+                      item.data.profileName,
+                      fanIndex,
+                      true
+                    );
                   }
-                />
-              );
-              return;
-            }
-            //setSelectedItem(item);
-            if (item.data.type == FANPROFILEACTION.USE) {
-              // 应用风扇配置
-              Settings.setAppFanSettingName(item.data.profileName, fanIndex);
-            } else if (item.data.type == FANPROFILEACTION.DELETE) {
-              Settings.removeFanSetting(item.data.profileName);
-            } else if (item.data.type == FANPROFILEACTION.EDIT) {
-              showModal(
-                <FANCretateProfileModelComponent
-                  fanProfileName={item.data.profileName}
-                  fanSetting={Settings.getFanSetting(item.data.profileName)}
-                  closeModal={() => {
-                    // 关闭时重新应用风扇配置
-                    console.log("close modal>>>>>>>>.");
-                    if (fanWriteMode == FAN_PWM_MODE.MULTI_DIFF) {
-                      Settings.setAppFanSettingName(
-                        item.data.profileName,
-                        fanIndex,
-                        true
-                      );
-                    }
-                  }}
-                  fixedCountMode={fanWriteMode == FAN_PWM_MODE.MULTI_DIFF}
-                  defaultSetting={
-                    fanWriteMode == FAN_PWM_MODE.MULTI_DIFF
-                      ? defaultFanSetting
-                      : undefined
-                  }
-                />
-              );
-            } else if (item.data.type == FANPROFILEACTION.CANCEL) {
-              Settings.setAppFanSettingName(undefined, fanIndex);
-            }
-          }}
-        />
-      </PanelSectionRow>
-    </div>
+                }}
+                fixedCountMode={fanWriteMode == FAN_PWM_MODE.MULTI_DIFF}
+                defaultSetting={
+                  fanWriteMode == FAN_PWM_MODE.MULTI_DIFF
+                    ? defaultFanSetting
+                    : undefined
+                }
+              />
+            );
+          }
+        }}
+      />
+    </PanelSectionRow>
   );
 };
 
@@ -285,7 +340,6 @@ const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
     }
     ctx.stroke();*/
     switch (Settings.appFanSettings()?.[fanIndex]?.fanMode) {
-      case FANMODE.NOCONTROL:
       case FANMODE.AUTO: {
         drawNoControlMode();
         break;
@@ -595,7 +649,7 @@ function FANCretateProfileModelComponent({
   //@ts-ignore
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [fanMode, setFanMode] = useState(
-    fanSetting?.fanMode ?? defaultSetting?.fanMode ?? FANMODE.NOCONTROL
+    fanSetting?.fanMode ?? defaultSetting?.fanMode ?? FANMODE.AUTO
   );
   const [fixSpeed, setFixSpeed] = useState(
     fanSetting?.fixSpeed ?? defaultSetting?.fixSpeed ?? 50
@@ -643,7 +697,6 @@ function FANCretateProfileModelComponent({
     }
     ctx.stroke();
     switch (fanMode) {
-      case FANMODE.NOCONTROL:
       case FANMODE.AUTO: {
         break;
       }
@@ -780,7 +833,6 @@ function FANCretateProfileModelComponent({
 
   function onPointerShortPress(shortPressPos: FanPosition): void {
     switch (fanMode) {
-      case FANMODE.NOCONTROL:
       case FANMODE.AUTO: {
       }
       case FANMODE.FIX: {
@@ -829,7 +881,6 @@ function FANCretateProfileModelComponent({
 
   function onPointerLongPress(longPressPos: FanPosition): void {
     switch (fanMode) {
-      case FANMODE.NOCONTROL:
       case FANMODE.AUTO: {
         break;
       }
@@ -884,7 +935,6 @@ function FANCretateProfileModelComponent({
 
   function onPointerDragDown(dragDownPos: FanPosition): boolean {
     switch (fanMode) {
-      case FANMODE.NOCONTROL:
       case FANMODE.AUTO: {
         return false;
       }
@@ -909,7 +959,6 @@ function FANCretateProfileModelComponent({
 
   function onPointerDraging(fanClickPos: FanPosition): void {
     switch (fanMode) {
-      case FANMODE.NOCONTROL:
       case FANMODE.AUTO: {
       }
       case FANMODE.FIX: {
@@ -1094,10 +1143,6 @@ function FANCretateProfileModelComponent({
   };
 
   const notchList: { label: string; value: FANMODE }[] = [
-    {
-      label: `${localizationManager.getString(localizeStrEnum.NOT_CONTROLLED)}`,
-      value: FANMODE.NOCONTROL,
-    },
     // if fixedCountMode is true, hide fixed mode
     ...(fixedCountMode
       ? []
@@ -1404,6 +1449,7 @@ export const FANComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
   const [index, setIndex] = useState<number>(0);
   const fanEnable = useRef<boolean>(FanControl.fanIsEnable);
   const fanCount = useRef<number>(Backend.data.getFanCount());
+  const [fanControlEnabled, setFanControlEnabled] = useState<boolean>(Settings.appFanControlEnabled());
   const hide = (ishide: boolean) => {
     setShow(!ishide);
   };
@@ -1427,6 +1473,10 @@ export const FANComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
           }
           case UpdateType.SHOW: {
             hide(false);
+            break;
+          }
+          case UpdateType.UPDATE: {
+            setFanControlEnabled(Settings.appFanControlEnabled());
             break;
           }
         }
@@ -1457,47 +1507,55 @@ export const FANComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
           )}
           {(showFanMenu || isTab) && (
             <>
-              {fanCount.current == 1 && (
+              <FANControlToggleComponent />
+
+              {fanControlEnabled && (
                 <>
-                  <FANSelectProfileComponent fanIndex={0} />
-                  <FANDisplayComponent fanIndex={0} />
-                  <FANRPMComponent fanIndex={0} />
-                </>
-              )}
-              {fanCount.current > 1 && (
-                <>
-                  <PanelSectionRow>
-                    <SliderField
-                      value={index}
-                      min={0}
-                      max={fanCount.current - 1}
-                      step={1}
-                      notchCount={fanCount.current}
-                      notchLabels={Backend.data
-                        .getFanConfigs()
-                        .map((config, index) => {
-                          return {
-                            notchIndex: index,
-                            label: config.fan_name,
-                            value: index,
-                          };
-                        })}
-                      onChange={(value) => {
-                        setIndex(value);
-                      }}
-                    ></SliderField>
-                  </PanelSectionRow>
-                  {Backend.data.getFanConfigs().map((_config, configIndex) => {
-                    return (
-                      index == configIndex && (
-                        <>
-                          <FANSelectProfileComponent fanIndex={index} />
-                          <FANDisplayComponent fanIndex={index} />
-                          <FANRPMComponent fanIndex={index} />
-                        </>
-                      )
-                    );
-                  })}
+                  {fanCount.current == 1 && (
+                    <>
+                      <FANUseProfileComponent fanIndex={0} />
+                      <FANManageProfileComponent fanIndex={0} />
+                      <FANDisplayComponent fanIndex={0} />
+                      <FANRPMComponent fanIndex={0} />
+                    </>
+                  )}
+                  {fanCount.current > 1 && (
+                    <>
+                      <PanelSectionRow>
+                        <SliderField
+                          value={index}
+                          min={0}
+                          max={fanCount.current - 1}
+                          step={1}
+                          notchCount={fanCount.current}
+                          notchLabels={Backend.data
+                            .getFanConfigs()
+                            .map((config, index) => {
+                              return {
+                                notchIndex: index,
+                                label: config.fan_name,
+                                value: index,
+                              };
+                            })}
+                          onChange={(value) => {
+                            setIndex(value);
+                          }}
+                        ></SliderField>
+                      </PanelSectionRow>
+                      {Backend.data.getFanConfigs().map((_config, configIndex) => {
+                        return (
+                          index == configIndex && (
+                            <>
+                              <FANUseProfileComponent fanIndex={index} />
+                              <FANManageProfileComponent fanIndex={index} />
+                              <FANDisplayComponent fanIndex={index} />
+                              <FANRPMComponent fanIndex={index} />
+                            </>
+                          )
+                        );
+                      })}
+                    </>
+                  )}
                 </>
               )}
             </>
