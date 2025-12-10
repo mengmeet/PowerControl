@@ -55,36 +55,6 @@ const CANVAS_HEIGHT_SMALL = 250;
 const CANVAS_WIDTH_LARGE = 300;  // For fan curve editor / 风扇曲线编辑器
 const CANVAS_HEIGHT_LARGE = 300;
 
-//风扇控制总开关
-const FANControlToggleComponent: FC = () => {
-  const [enabled, setEnabled] = useState<boolean>(Settings.appFanControlEnabled());
-
-  useEffect(() => {
-    PluginManager.listenUpdateComponent(
-      ComponentName.FAN_ALL,
-      [ComponentName.FAN_ALL],
-      () => {
-        setEnabled(Settings.appFanControlEnabled());
-      }
-    );
-  }, []);
-
-  return (
-    <PanelSectionRow>
-      <ToggleField
-        label={localizationManager.getString(localizeStrEnum.FAN_CONTROL_ENABLE)}
-        description={localizationManager.getString(
-          localizeStrEnum.FAN_CONTROL_ENABLE_DESC
-        )}
-        checked={enabled}
-        onChange={(value: boolean) => {
-          Settings.setFanControlEnabled(value);
-        }}
-      />
-    </PanelSectionRow>
-  );
-};
-
 //配置使用下拉框
 const FANUseProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   const fanWriteMode = Backend.data.getFanPwmMode(fanIndex);
@@ -1460,6 +1430,11 @@ export const FANComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
     Settings.showFanMenu = show;
   };
 
+  const updateFanControlEnabled = (enabled: boolean) => {
+    setFanControlEnabled(enabled);
+    Settings.setFanControlEnabled(enabled);
+  };
+
   //listen Settings
   useEffect(() => {
     PluginManager.listenUpdateComponent(
@@ -1507,7 +1482,18 @@ export const FANComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
           )}
           {(showFanMenu || isTab) && (
             <>
-              <FANControlToggleComponent />
+              <PanelSectionRow>
+                <ToggleField
+                  label={localizationManager.getString(localizeStrEnum.FAN_CONTROL_ENABLE)}
+                  description={localizationManager.getString(
+                    localizeStrEnum.FAN_CONTROL_ENABLE_DESC
+                  )}
+                  checked={fanControlEnabled}
+                  onChange={(value: boolean) => {
+                    updateFanControlEnabled(value);
+                  }}
+                />
+              </PanelSectionRow>
 
               {fanControlEnabled && (
                 <>
