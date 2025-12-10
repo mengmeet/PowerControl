@@ -138,14 +138,14 @@ export class FanSetting {
   @JsonProperty()
   snapToGrid?: boolean = false;
   @JsonProperty()
-  fanMode?: number = FANMODE.NOCONTROL;
+  fanMode?: FANMODE = FANMODE.NOCONTROL;
   @JsonProperty()
   fixSpeed?: number = 50;
   @JsonProperty({ type: FanPosition, dataStructure: "array" })
   curvePoints?: FanPosition[] = [];
   constructor(
     snapToGrid: boolean,
-    fanMode: number,
+    fanMode: FANMODE,
     fixSpeed: number,
     curvePoints: FanPosition[]
   ) {

@@ -6,10 +6,10 @@ export enum GPUMODE {
   AUTO = "AUTO", //自动频率
 }
 export enum FANMODE {
-  NOCONTROL = 0, //不控制
-  FIX = 1, //固定
-  CURVE = 2, //曲线
-  AUTO = 3, //自动
+  NOCONTROL = "NOCONTROL", //不控制
+  FIX = "FIX", //固定
+  CURVE = "CURVE", //曲线
+  AUTO = "AUTO", //自动
 }
 
 export enum FAN_PWM_MODE {

@@ -11,6 +11,7 @@ import {
   Focusable,
   DropdownItem,
   ButtonItem,
+  NotchLabel,
 } from "@decky/ui";
 import { useEffect, useState, useRef, FC } from "react";
 import {
@@ -150,10 +151,10 @@ const FANSelectProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
             selectedItem
               ? selectedItem.label?.toString()
               : items.length == 0
-              ? localizationManager.getString(
+                ? localizationManager.getString(
                   localizeStrEnum.CREATE_FAN_PROFILE_TIP
                 )
-              : localizationManager.getString(
+                : localizationManager.getString(
                   localizeStrEnum.SELECT_FAN_PROFILE_TIP
                 )
           }
@@ -248,7 +249,7 @@ const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   const refreshCanvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    
+
     // High DPI support for crisp rendering
     // 高 DPI 支持以实现清晰渲染
     const dpr = window.devicePixelRatio || 1;
@@ -257,7 +258,7 @@ const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
-    
+
     const lineDistance = 1 / (totalLines + 1);
     ctx.clearRect(0, 0, width, height);
     //网格绘制
@@ -302,10 +303,10 @@ const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   const drawNoControlMode = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    
+
     const width = CANVAS_WIDTH_SMALL;
     const height = CANVAS_HEIGHT_SMALL;
-    
+
     ctx.beginPath();
     ctx.fillStyle = setPointColor;
     ctx.textAlign = "left";
@@ -344,10 +345,10 @@ const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   const drawFixMode = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    
+
     const width = CANVAS_WIDTH_SMALL;
     const height = CANVAS_HEIGHT_SMALL;
-    
+
     const anchorPoint = new FanPosition(
       FanPosition.tempMax / 2,
       Settings.appFanSettings()?.[fanIndex].fixSpeed!!
@@ -406,10 +407,10 @@ const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   const drawCurveMode = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    
+
     const width = CANVAS_WIDTH_SMALL;
     const height = CANVAS_HEIGHT_SMALL;
-    
+
     curvePoints.current = curvePoints.current.sort(
       (a: FanPosition, b: FanPosition) => {
         return a.temperature == b.temperature
@@ -607,7 +608,7 @@ function FANCretateProfileModelComponent({
   const refreshCanvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    
+
     // High DPI support for crisp rendering
     // 高 DPI 支持以实现清晰渲染
     const dpr = window.devicePixelRatio || 1;
@@ -616,7 +617,7 @@ function FANCretateProfileModelComponent({
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     ctx.scale(dpr, dpr);
-    
+
     const lineDistance = 1 / (totalLines + 1);
     ctx.clearRect(0, 0, width, height);
     //网格绘制
@@ -659,10 +660,10 @@ function FANCretateProfileModelComponent({
   const drawFixMode = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    
+
     const width = CANVAS_WIDTH_LARGE;
     const height = CANVAS_HEIGHT_LARGE;
-    
+
     const anchorPoint = new FanPosition(
       FanPosition.tempMax / 2,
       fixSpeed
@@ -685,10 +686,10 @@ function FANCretateProfileModelComponent({
   const drawCurveMode = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    
+
     const width = CANVAS_WIDTH_LARGE;
     const height = CANVAS_HEIGHT_LARGE;
-    
+
     curvePoints.current = curvePoints.current.sort(
       (a: FanPosition, b: FanPosition) => {
         return a.temperature == b.temperature
@@ -1092,7 +1093,7 @@ function FANCretateProfileModelComponent({
     );
   };
 
-  const notchList = [
+  const notchList: { label: string; value: FANMODE }[] = [
     {
       label: `${localizationManager.getString(localizeStrEnum.NOT_CONTROLLED)}`,
       value: FANMODE.NOCONTROL,
@@ -1101,11 +1102,11 @@ function FANCretateProfileModelComponent({
     ...(fixedCountMode
       ? []
       : [
-          {
-            label: `${localizationManager.getString(localizeStrEnum.FIXED)}`,
-            value: FANMODE.FIX,
-          },
-        ]),
+        {
+          label: `${localizationManager.getString(localizeStrEnum.FIXED)}`,
+          value: FANMODE.FIX,
+        },
+      ]),
     {
       label: `${localizationManager.getString(localizeStrEnum.CURVE)}`,
       value: FANMODE.CURVE,
@@ -1116,15 +1117,22 @@ function FANCretateProfileModelComponent({
     },
   ];
 
+  const getNotchIndexFromMode = (mode: FANMODE) => {
+    return notchList.findIndex((item) => item.value === mode);
+  };
+
   // notchList to {notchIndex, label, value}
-  const notchListWithIndex = notchList.map((item, index) => ({
-    ...item,
-    notchIndex: index,
-  }));
+  const notchListWithIndex: NotchLabel[] =
+    notchList.map((item, index) => ({
+      notchIndex: index,
+      label: item.label,
+      value: index,
+    }));
 
   const getModeFromNotchIndex = (notchIndex: number) => {
-    return notchListWithIndex[notchIndex].value;
+    return notchList[notchIndex].value;
   };
+
 
   return (
     <div>
@@ -1226,14 +1234,14 @@ function FANCretateProfileModelComponent({
             <PanelSection>
               <SliderField
                 label={localizationManager.getString(localizeStrEnum.FAN_MODE)}
-                value={fanMode}
+                value={getNotchIndexFromMode(fanMode)}
                 step={1}
                 max={notchList.length - 1}
                 min={0}
                 notchCount={notchList.length}
                 notchLabels={notchListWithIndex}
-                onChange={(value: number) => {
-                  setFanMode(getModeFromNotchIndex(value));
+                onChange={(index: number) => {
+                  setFanMode(getModeFromNotchIndex(index));
                 }}
               />
               {fanMode == FANMODE.FIX && (
