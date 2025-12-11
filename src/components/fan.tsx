@@ -1144,11 +1144,6 @@ function FANCretateProfileModelComponent({
     return notchList[notchIndex].value;
   };
 
-  if (notchList.length == 1) {
-    setFanMode(notchList[0].value);
-  }
-
-
   return (
     <div>
       <style>
@@ -1247,7 +1242,7 @@ function FANCretateProfileModelComponent({
             }}
           >
             <PanelSection>
-              {notchList.length > 1 && <SliderField
+              {notchList.length > 1 && (<SliderField
                 label={localizationManager.getString(localizeStrEnum.FAN_MODE)}
                 value={getNotchIndexFromMode(fanMode)}
                 step={1}
@@ -1258,7 +1253,8 @@ function FANCretateProfileModelComponent({
                 onChange={(index: number) => {
                   setFanMode(getModeFromNotchIndex(index));
                 }}
-              />}
+              />
+              )}
               {fanMode == FANMODE.FIX && (
                 <SliderField
                   label={localizationManager.getString(
