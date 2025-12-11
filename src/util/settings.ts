@@ -911,9 +911,17 @@ export class Settings {
 
   //设置风扇控制开关状态
   static setFanControlEnabled(enabled: boolean) {
+    const wasEnabled = Settings.ensureApp().fanControlEnabled ?? false;
+    
     if (Settings.ensureApp().fanControlEnabled != enabled) {
       Settings.ensureApp().fanControlEnabled = enabled;
       Settings.saveSettings();
+      
+      // When switching from enabled to disabled, reset all fans to auto once
+      if (wasEnabled && !enabled) {
+        Backend.resetFanSettings();
+      }
+      
       Backend.applySettings(APPLYTYPE.SET_FAN_ALL);
       PluginManager.updateComponent(ComponentName.FAN_ALL, UpdateType.UPDATE);
     }
