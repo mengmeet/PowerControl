@@ -41,6 +41,9 @@ class FanConfig:
         self.ram_pwm_write_secondary_offset = (
             None  # 风扇写入转速ecRam地址(次要,用于第二风扇)
         )
+        self.ram_manual_secondary_offset = (
+            None  # 风扇手动控制ecRam地址(次要,用于第二风扇)
+        )
         self.ram_pwm_read_offset = None  # 风扇读取转速ecRam地址
         self.ram_pwm_read_length = 0  # 风扇实际转速值长度 0为需要通过计算获得转速
 
@@ -271,6 +274,12 @@ class FanManager:
                 fc.ram_pwm_write_secondary_offset = (
                     ec_info["ram_rpmwrite_secondary_offset"]
                     if "ram_rpmwrite_secondary_offset" in ec_info
+                    else None
+                )
+                # 风扇手动控制ecRam地址(次要,用于第二风扇)
+                fc.ram_manual_secondary_offset = (
+                    ec_info["ram_manual_secondary_offset"]
+                    if "ram_manual_secondary_offset" in ec_info
                     else None
                 )
                 # 风扇读取转速ecRam地址
@@ -698,6 +707,7 @@ class FanManager:
     def __set_fanAuto_ECRAM(self, fc: FanConfig, value: bool):
         try:
             manual_offset = fc.ram_manual_offset
+            manual_secondary_offset = fc.ram_manual_secondary_offset
             reg_addr = fc.ram_reg_addr
             reg_data = fc.ram_reg_data
             auto_value = fc.hwmon_auto_val
@@ -708,10 +718,20 @@ class FanManager:
             ):  # 手动模式且控制位地址和写风扇转速的地址一样，跳过控制位写入，防止覆盖风扇转速
                 return False
             fanIsManual = auto_value if value else manual_value
+
+            # 写入主要控制位
             EC.RamWrite(reg_addr, reg_data, manual_offset, fanIsManual)
             logger.debug(
                 f"写入ECRAM数据 写入EC地址:{hex(manual_offset)} 写入风扇是否控制:{fanIsManual}"
             )
+
+            # 如果有次要控制位地址(第二个风扇)，也写入次要控制位
+            if manual_secondary_offset is not None:
+                EC.RamWrite(reg_addr, reg_data, manual_secondary_offset, fanIsManual)
+                logger.debug(
+                    f"写入ECRAM数据(次要) 写入EC地址:{hex(manual_secondary_offset)} 写入风扇是否控制:{fanIsManual}"
+                )
+
             return True
         except Exception as e:
             logger.error(f"使用ECRAM写入风扇状态异常:{e}", exc_info=True)
