@@ -135,10 +135,15 @@ export const FanCanvas: FC<FanCanvasProps> = (canvas) => {
 
   const { ...option } = canvas;
 
+  // touch-action: none is required to prevent browser from intercepting pointer events
+  // for default touch behaviors (scrolling, zooming, etc.), which would interrupt dragging.
+  // Without this, dragging a point would stop after a short distance because the browser
+  // takes over the pointer events to handle scrolling.
+  // touch-action: none 用于阻止浏览器拦截指针事件来执行默认触摸行为（滚动、缩放等），
+  // 否则拖动节点时会因为浏览器接管指针事件来处理滚动而导致拖动中断。
   return (
     <canvas
       ref={canvasRef}
-      //onClick={(e: any) => onClickCanvas(e)}
       onPointerDown={(e: any) => {
         onPointerDown(e);
       }}
@@ -152,6 +157,7 @@ export const FanCanvas: FC<FanCanvasProps> = (canvas) => {
         onPointerLeave(e);
       }}
       {...option}
+      style={{ ...option.style, touchAction: 'none' }}
     />
   );
 };
