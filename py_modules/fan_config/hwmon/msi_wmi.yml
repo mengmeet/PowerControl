@@ -11,7 +11,8 @@ fans:
 
     pwm_write:
       pwm_write_max:
-        default: 255 # 100%
+        # default: 255 # 100%
+        default: 220 # 130%
       curve_path: # 曲线写入路径
         temp_write:
           - pwm1_auto_point1_temp
@@ -60,8 +61,9 @@ fans:
 
     pwm_write:
       pwm_write_max:
-        default: 170 # 100%
+        # default: 170 # 100%
         # Claw 8 AI+ A2VM: 255 # 150%
+        default: 220 # 130%
       curve_path: # 曲线写入路径
         temp_write:
           - pwm2_auto_point1_temp
