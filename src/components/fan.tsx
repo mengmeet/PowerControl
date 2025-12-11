@@ -1126,10 +1126,6 @@ function FANCretateProfileModelComponent({
       label: `${localizationManager.getString(localizeStrEnum.CURVE)}`,
       value: FANMODE.CURVE,
     },
-    {
-      label: `${localizationManager.getString(localizeStrEnum.AUTO)}`,
-      value: FANMODE.AUTO,
-    },
   ];
 
   const getNotchIndexFromMode = (mode: FANMODE) => {
