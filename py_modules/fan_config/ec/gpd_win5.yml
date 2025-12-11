@@ -5,6 +5,7 @@ fans:
   - ram_reg_addr: 0x4E
     ram_reg_data: 0x4F
     ram_manual_offset: 0x47A
+    ram_manual_secondary_offset: 0x47B
     ram_rpmwrite_offset: 0x47A
     ram_rpmwrite_secondary_offset: 0x47B
     ram_rpmread_offset: 0x478
