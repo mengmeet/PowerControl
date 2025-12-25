@@ -50,17 +50,40 @@ class CPUTopology:
         return sorted(self.cores.keys())
 
     def get_physical_core_ids(self) -> List[int]:
-        """获取所有物理核心ID（替代cps_ids）"""
-        return sorted(set(core.core_id for core in self.cores.values()))
+        """获取所有物理核心ID（替代cps_ids）
+        
+        Note: 过滤掉 core_id 为 -1 的异常核心
+        """
+        valid_ids = set()
+        invalid_logical_ids = []
+        for core in self.cores.values():
+            if core.core_id >= 0:
+                valid_ids.add(core.core_id)
+            else:
+                invalid_logical_ids.append(core.logical_id)
+        
+        if invalid_logical_ids:
+            from config import logger
+            logger.warning(
+                f"检测到异常逻辑核心 (core_id=-1): {sorted(invalid_logical_ids)}, "
+                f"这些核心将被排除在物理核心计数之外"
+            )
+        
+        return sorted(valid_ids)
 
     def get_physical_core_count(self) -> int:
         """获取物理核心数量（替代cpu_maxNum）"""
         return len(self.get_physical_core_ids())
 
     def get_logical_ids_by_physical_core(self) -> Dict[int, List[int]]:
-        """按物理核心分组逻辑CPU（用于SMT处理）"""
+        """按物理核心分组逻辑CPU（用于SMT处理）
+        
+        Note: 过滤掉 core_id 为 -1 的异常核心
+        """
         result = {}
         for logical_id, core in self.cores.items():
+            if core.core_id < 0:
+                continue  # 跳过异常核心
             if core.core_id not in result:
                 result[core.core_id] = []
             result[core.core_id].append(logical_id)
@@ -394,13 +417,14 @@ class CPUManager:
         logger.info("get tdpMax by amd ryzenadj")
         # 使用 ryzenadj 设置 200w 的 stapm-limit， 然后使用 ryzenadj -i 获取实际设置的 STAPM LIMIT， 保留整数
         try:
-            subprocess.run(["ryzenadj", "-a", "200000"], check=True)
+            subprocess.run(["ryzenadj", "-a", "200000"], check=True, timeout=3, env=get_env())
             process = subprocess.run(
                 ["ryzenadj", "-i"],
                 check=True,
                 text=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                timeout=3,
                 env=get_env(),
             )
             stdout, stderr = process.stdout, process.stderr
@@ -416,6 +440,9 @@ class CPUManager:
                         tdp = int(float(arrays[2]))
                         logger.info(f"get_cpuTDP_AMD: {tdp}")
                         return tdp
+        except subprocess.TimeoutExpired:
+            logger.error("get_cpuTDP_AMD: ryzenadj command timeout")
+            return getMaxTDP(15)
         except Exception as e:
             logger.error(f"get_cpuTDP_AMD: failed to get tdp {e}", exc_info=True)
             return getMaxTDP(15)
@@ -615,6 +642,7 @@ class CPUManager:
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
+                    timeout=3,
                     env=get_env(),
                 )
                 stdout, stderr = process.stdout, process.stderr
@@ -629,6 +657,8 @@ class CPUManager:
                     f"Failed to set AMD CPU TDP: value less than 3W (value={value})"
                 )
                 return False
+        except subprocess.TimeoutExpired:
+            logger.error(f"Failed to set AMD CPU TDP: timeout (value={value})")
         except Exception:
             logger.error(f"Failed to set AMD CPU TDP: value={value}", exc_info=True)
             return False
@@ -749,6 +779,7 @@ class CPUManager:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
+                timeout=3,
                 env=get_env(),
             )
             stdout, stderr = process.stdout, process.stderr
@@ -1000,8 +1031,10 @@ class CPUManager:
             if os.path.exists(path):
                 with open(path, "r") as f:
                     return int(f.read().strip())
-        except:
-            pass
+            else:
+                logger.debug(f"sysfs path does not exist: {path}")
+        except Exception as e:
+            logger.debug(f"Failed to read sysfs int from {path}: {e}")
         return -1
 
     def _populate_topology_relationships(self, topology: CPUTopology):
@@ -1199,6 +1232,7 @@ class CPUManager:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
+                timeout=3,
                 env=get_env(),
             )
             stdout, stderr = process.stdout, process.stderr
@@ -1207,6 +1241,9 @@ class CPUManager:
                 return f"get_ryzenadj_info error:\n{stderr}"
             else:
                 return stdout
+        except subprocess.TimeoutExpired:
+            logger.error("get_ryzenadj_info timeout")
+            return "get_ryzenadj_info error: timeout"
         except Exception as e:
             logger.error(e)
             return f"get_ryzenadj_info error:\n{e}"
@@ -1241,6 +1278,7 @@ class CPUManager:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
+                timeout=3,
                 env=get_env(),
             )
 
@@ -1253,6 +1291,9 @@ class CPUManager:
                 logger.error(f"降压设置失败: {stderr}")
                 return False
 
+        except subprocess.TimeoutExpired:
+            logger.error("设置降压超时")
+            return False
         except Exception as e:
             logger.error(f"设置降压异常: {e}", exc_info=True)
             return False

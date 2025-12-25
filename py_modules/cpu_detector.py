@@ -192,7 +192,7 @@ class CPUDetector:
                 "-s",
                 "0",
             ]
-            result = subprocess.run(cmd, capture_output=True, text=True, env=get_env())
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=3, env=get_env())
 
             if result.returncode == 0:
                 lines = result.stdout.split("\n")

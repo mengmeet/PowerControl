@@ -215,7 +215,7 @@ def check_native_tdp_limit_support():
     from config import logger
     
     try:
-        logger.debug("Checking native TDP limit support via steamosctl...")
+        logger.info("Checking native TDP limit support via steamosctl...")
         
         # Define commands to run as decky user
         cmd_max = ["sudo", "-u", decky.DECKY_USER, "steamosctl", "get-tdp-limit-max"]

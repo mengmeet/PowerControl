@@ -343,7 +343,7 @@ export class PluginManager {
       try {
         await Timeout.withTimeout(
           () => Settings.loadSettings(),
-          3000,
+          5000,
           "Settings loading timeout"
         );
         Logger.info("Settings loaded");
@@ -355,7 +355,7 @@ export class PluginManager {
       try {
         await Timeout.withTimeout(
           () => Backend.init(),
-          3000,
+          10000,
           "Backend initialization timeout"
         );
         Logger.info("Backend initialization complete");
@@ -397,18 +397,18 @@ export class PluginManager {
         throw new Error(`System state initialization failed: ${e.message}`);
       }
 
-      try {
-        await Timeout.withTimeout(
-          () => Backend.applySettings(APPLYTYPE.SET_ALL),
-          10000,
-          "Initial settings application timeout"
-        );
-        Logger.info("Initial settings application complete");
-      } catch (e: any) {
-        Logger.error(`Initial settings application failed: ${e.message}`);
-        Settings.resetSettings(false);
-        throw new Error(`Initial settings application failed: ${e.message}`);
-      }
+      // try {
+      //   await Timeout.withTimeout(
+      //     () => Backend.applySettings(APPLYTYPE.SET_ALL),
+      //     10000,
+      //     "Initial settings application timeout"
+      //   );
+      //   Logger.info("Initial settings application complete");
+      // } catch (e: any) {
+      //   Logger.error(`Initial settings application failed: ${e.message}`);
+      //   Settings.resetSettings(false);
+      //   throw new Error(`Initial settings application failed: ${e.message}`);
+      // }
 
       // 注册休眠恢复监听
       PluginManager.suspendEndHook =

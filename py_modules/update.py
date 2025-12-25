@@ -99,11 +99,16 @@ def get_version():
 def get_latest_version():
     gcontext = ssl.SSLContext()
 
-    response = urllib.request.urlopen(API_URL, context=gcontext)
-    json_data = json.load(response)
+    try:
+        # 5 seconds timeout for network request
+        response = urllib.request.urlopen(API_URL, context=gcontext, timeout=5)
+        json_data = json.load(response)
 
-    tag = json_data.get("tag_name")
-    # if tag is a v* tag, remove the v
-    if tag.startswith("v"):
-        tag = tag[1:]
-    return tag
+        tag = json_data.get("tag_name")
+        # if tag is a v* tag, remove the v
+        if tag.startswith("v"):
+            tag = tag[1:]
+        return tag
+    except Exception as e:
+        logger.error(f"get_latest_version failed: {e}")
+        return ""

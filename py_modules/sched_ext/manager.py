@@ -111,7 +111,7 @@ class SchedExtManager:
                         "-executable",
                     ]
                     result = subprocess.run(
-                        cmd, capture_output=True, text=True, env=get_env()
+                        cmd, capture_output=True, text=True, timeout=3, env=get_env()
                     )
                     if result.returncode == 0:
                         for line in result.stdout.splitlines():
@@ -119,6 +119,8 @@ class SchedExtManager:
                                 sched_name = os.path.basename(line)
                                 if sched_name not in schedulers:
                                     schedulers.append(sched_name)
+                except subprocess.TimeoutExpired:
+                    logger.warning("find command timeout when searching for sched_ext schedulers")
                 except Exception:
                     pass
 

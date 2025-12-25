@@ -112,6 +112,25 @@ export class BackendData {
   private loadedFlags = new Set<string>();
   private errors = new Map<string, Error>();
 
+  // timeout wrapper for initialization
+  private withTimeout<T>(promise: Promise<T>, timeoutMs: number, key: string): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error(`[${key}] Timeout after ${timeoutMs}ms`));
+      }, timeoutMs);
+
+      promise
+        .then((result) => {
+          clearTimeout(timer);
+          resolve(result);
+        })
+        .catch((error) => {
+          clearTimeout(timer);
+          reject(error);
+        });
+    });
+  }
+
   // 通用的获取方法
   private get<T>(key: string, defaultValue?: T): T {
     return this.data.get(key) ?? defaultValue;
@@ -208,6 +227,8 @@ export class BackendData {
     eppModes: { callable: getEppModes },
     currentEpp: { callable: getCurrentEpp },
     cpuVendor: { callable: getCpuVendor },
+    cpuCoreInfo: { callable: getCpuCoreInfo },
+    latestVersion: { callable: getLatestVersion },
     supportsBypassCharge: { callable: supportsBypassCharge },
     supportsChargeLimit: { callable: supportsChargeLimit },
     supportsResetChargeLimit: { callable: supportsResetChargeLimit },
@@ -215,9 +236,7 @@ export class BackendData {
     supportsSteamosManager: { callable: () => checkFileExist("/usr/bin/steamosctl") },
     supportsNativeGpuSlider: { callable: supportsNativeGpuSlider },
     supportsNativeTdpLimit: { callable: supportsNativeTdpLimit },
-    cpuCoreInfo: { callable: getCpuCoreInfo },
     currentGovernor: { callable: getCpuGovernor },
-    latestVersion: { callable: getLatestVersion },
     schedExtSupport: { callable: supportsSchedExt },
     availableSchedExtSchedulers: { callable: getSchedExtList },
     currentSchedExtScheduler: { callable: getCurrentSchedExtScheduler },
@@ -239,7 +258,7 @@ export class BackendData {
     const tasks = Object.entries(this.initConfig).map(([key, config]) => {
       // Skip version fields if already loaded from cache
       // 如果已从缓存加载版本字段，则跳过
-      if (versionCache && (key === 'currentVersion' || key === 'latestVersion')) {
+      if (versionCache && (key === 'latestVersion')) {
         return Promise.resolve();
       }
       return this.initField(key, config);
@@ -260,12 +279,19 @@ export class BackendData {
 
   // 极简的字段初始化方法
   private async initField(key: string, config: InitConfigItem) {
+    const startTime = Date.now();
+    console.log(`[BackendData] 开始初始化: ${key}`);
+
     try {
-      const result = await config.callable();
+      // timeout
+      const result = await this.withTimeout(config.callable(), 8000, key);
       this.set(key, result);
+      console.log(`[BackendData] 初始化成功: ${key}, 耗时: ${Date.now() - startTime}ms`);
     } catch (error) {
-      console.error(`初始化 ${key} 失败:`, error);
-      logError(`初始化 ${key} 失败: ${error}`);
+      const elapsed = Date.now() - startTime;
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error(`[BackendData] 初始化 ${key} 失败 (耗时: ${elapsed}ms):`, errorMsg);
+      logError(`初始化 ${key} 失败 (耗时: ${elapsed}ms): ${errorMsg}`);
       this.set(key, this.getDefaultValue(key), error as Error);
     }
   }
@@ -839,7 +865,7 @@ export class Backend {
         serializer.deserializeObject(res, SettingsData) ?? new SettingsData()
       );
     } catch (error) {
-      console.error("getSettings error", error);
+      Logger.error(`getSettings error: ${error}`);
       return new SettingsData();
     }
   }
