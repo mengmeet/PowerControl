@@ -643,7 +643,7 @@ class CPUManager:
             bool: True如果设置成功，否则False
         """
         try:
-            logger.debug(f"set_cpuOnline {value} (总物理核心数: {self.cpu_maxNum})")
+            logger.info(f"set_cpuOnline {value} (总物理核心数: {self.cpu_maxNum})")
             self.enable_cpu_num = value
 
             # 使用新的拓扑方法，更加准确
@@ -653,6 +653,10 @@ class CPUManager:
             core_ids = sorted(cpu_topology_by_core.keys())
             cores_to_keep = core_ids[: self.enable_cpu_num]
             cores_to_offline = core_ids[self.enable_cpu_num :]
+
+            if len(cores_to_keep) == 0:
+                logger.error(f"set_cpuOnline error: cores_to_keep is empty")
+                return False
 
             logger.info(f"保留核心: {cores_to_keep}")
             logger.info(f"关闭核心: {cores_to_offline}")

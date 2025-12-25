@@ -500,6 +500,7 @@ export class Backend {
   private static async handleCPUNum(): Promise<void> {
     const cpuNum = Settings.appCpuNum();
     const smt = Settings.appSmt();
+    Logger.info(`handleCPUNum: cpuNum = ${cpuNum}, smt = ${smt}`);
     if (cpuNum) {
       await setSmt(smt);
       await setCpuOnline(cpuNum);
@@ -809,8 +810,11 @@ export class Backend {
 
   public static resetSettings = () => {
     console.log("重置所有设置");
+    Logger.info(`Backend.data = ${JSON.stringify(Backend.data)}`);
     setSmt(true);
-    setCpuOnline(Backend.data.getCpuMaxNum());
+    if (Backend.data && Backend.data.hasCpuMaxNum()) {
+      setCpuOnline(Backend.data!.getCpuMaxNum());
+    }
     setCpuBoost(true);
     // setCpuTDP(Backend.data.getTdpMax());
     Logger.info("resetSettings: applyTDPUnlimited");
