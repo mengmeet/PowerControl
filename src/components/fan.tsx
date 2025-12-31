@@ -619,7 +619,7 @@ function FANCretateProfileModelComponent({
   //@ts-ignore
   const [snapToGrid, setSnapToGrid] = useState(true);
   const [fanMode, setFanMode] = useState(
-    fanSetting?.fanMode ?? defaultSetting?.fanMode ?? FANMODE.AUTO
+    fanSetting?.fanMode ?? defaultSetting?.fanMode ?? (fixedCountMode ? FANMODE.CURVE : FANMODE.FIX)
   );
   const [fixSpeed, setFixSpeed] = useState(
     fanSetting?.fixSpeed ?? defaultSetting?.fixSpeed ?? 50
