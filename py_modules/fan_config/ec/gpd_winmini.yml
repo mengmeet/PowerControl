@@ -3,17 +3,20 @@
 product_name:
   - G1617-01
   - G1617-02
-fans:
-  - ram_reg_addr: 0x4E
-    ram_reg_data: 0x4F
-    ram_manual_offset: 0x47A
-    ram_rpmwrite_offset: 0x47A
-    ram_rpmread_offset: 0x478
-    ram_rpmread_length: 2
 
-    manual_offset: 0x7a
-    rpmwrite_offset: 0x7a
-    rpmread_offset: 0x78
+fans:
+  - ecio:
+      manual_offset: 0x7a
+      rpmwrite_offset: 0x7a
+      rpmread_offset: 0x78
+
+    ecram:
+      reg_addr: 0x4E
+      reg_data: 0x4F
+      manual_offset: 0x47A
+      rpmwrite_offset: 0x47A
+      rpmread_offset: 0x478
+      rpmread_length: 2
 
     rpm_write_max: 244
     rpm_value_max: 6700

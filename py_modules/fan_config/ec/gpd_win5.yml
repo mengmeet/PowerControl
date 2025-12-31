@@ -1,15 +1,16 @@
-
 product_name:
-  - G1618-05 # Win5
+  - G1618-05  # Win5
+
 fans:
-  - ram_reg_addr: 0x4E
-    ram_reg_data: 0x4F
-    ram_manual_offset: 0x47A
-    ram_manual_secondary_offset: 0x47B
-    ram_rpmwrite_offset: 0x47A
-    ram_rpmwrite_secondary_offset: 0x47B
-    ram_rpmread_offset: 0x478
-    ram_rpmread_length: 2
+  - ecram:
+      reg_addr: 0x4E
+      reg_data: 0x4F
+      manual_offset: 0x47A
+      manual_secondary_offset: 0x47B
+      rpmwrite_offset: 0x47A
+      rpmwrite_secondary_offset: 0x47B
+      rpmread_offset: 0x478
+      rpmread_length: 2
 
     rpm_write_max: 244
     rpm_value_max: 6200

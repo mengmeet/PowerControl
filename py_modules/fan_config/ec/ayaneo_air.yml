@@ -3,17 +3,20 @@ product_name:
   - AIR Pro
   - AIR 1S
   - AIR 1S Limited
+
 fans:
-  - manual_offset: 0x4a
-    rpmwrite_offset: 0x4b
-    rpmread_offset: 0x76
+  - ecio:
+      manual_offset: 0x4a
+      rpmwrite_offset: 0x4b
+      rpmread_offset: 0x76
 
-    ram_reg_addr: 0x4E
-    ram_reg_data: 0x4F
-    ram_manual_offset: 0x44a
-    ram_rpmwrite_offset: 0x44b
-    ram_rpmread_offset: 0x1809
-    ram_rpmread_length: 0
+    ecram:
+      reg_addr: 0x4E
+      reg_data: 0x4F
+      manual_offset: 0x44a
+      rpmwrite_offset: 0x44b
+      rpmread_offset: 0x1809
+      rpmread_length: 0
 
-    rpm_write_max: 255
+    rpm_write_max: 100
     rpm_value_max: 5811

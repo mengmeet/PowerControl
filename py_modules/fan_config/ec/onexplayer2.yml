@@ -5,17 +5,20 @@ product_name:
   - ONEXPLAYER X1
   - ONEXPLAYER X1 A
   - ONEXPLAYER X1 mini
-fans:
-  - manual_offset: 0x4a
-    rpmwrite_offset: 0x4b
-    rpmread_offset: 0x58
 
-    ram_reg_addr: 0x4E
-    ram_reg_data: 0x4F
-    ram_manual_offset: 0x44a
-    ram_rpmwrite_offset: 0x44b
-    ram_rpmread_offset: 0x1809
-    ram_rpmread_length: 0
+fans:
+  - ecio:
+      manual_offset: 0x4a
+      rpmwrite_offset: 0x4b
+      rpmread_offset: 0x58
+
+    ecram:
+      reg_addr: 0x4E
+      reg_data: 0x4F
+      manual_offset: 0x44a
+      rpmwrite_offset: 0x44b
+      rpmread_offset: 0x1809
+      rpmread_length: 0
 
     rpm_write_max: 184
     rpm_value_max: 5000

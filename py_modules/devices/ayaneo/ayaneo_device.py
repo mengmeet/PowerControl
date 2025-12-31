@@ -37,19 +37,22 @@ class AyaneoDevice(FirmwareAttributeDevice):
         ]
 
     def supports_bypass_charge(self) -> bool:
+        # If bypass charge EC version requirement is not configured, return False
+        if self.ec_version_of_bypass_charge is None:
+            return False
+
         ec_version = self._get_ec_version()
-        # 格式化输出EC版本号
+        # Format EC version for logging
         ec_version_hex = [hex(v) for v in ec_version]
         logger.info(
             f"EC version (decimal): {ec_version}, EC version (hex): {ec_version_hex}"
         )
         compare_result = version_compare(ec_version, self.ec_version_of_bypass_charge)
 
-        if self.ec_version_of_bypass_charge is not None:
-            logger.info(f"Required EC version: {self.ec_version_of_bypass_charge}")
-            logger.info(f"Version comparison result: {compare_result}")
+        logger.info(f"Required EC version: {self.ec_version_of_bypass_charge}")
+        logger.info(f"Version comparison result: {compare_result}")
 
-        return self.ec_version_of_bypass_charge is not None and compare_result >= 0
+        return compare_result >= 0
 
     def supports_charge_limit(self) -> bool:
         return self.supports_bypass_charge()

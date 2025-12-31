@@ -1,12 +1,14 @@
 product_name:
   - G1618-04
+
 fans:
-  - ram_reg_addr: 0x2E
-    ram_reg_data: 0x2F
-    ram_manual_offset: 0xC311
-    ram_rpmwrite_offset: 0xC311
-    ram_rpmread_offset: 0x880
-    ram_rpmread_length: 2
+  - ecram:
+      reg_addr: 0x2E
+      reg_data: 0x2F
+      manual_offset: 0xC311
+      rpmwrite_offset: 0xC311
+      rpmread_offset: 0x880
+      rpmread_length: 2
 
     rpm_write_max: 127
     rpm_value_max: 4968

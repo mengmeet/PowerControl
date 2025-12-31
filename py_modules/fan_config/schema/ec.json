@@ -26,7 +26,7 @@
         "fans": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Fans"
+            "$ref": "#/definitions/Fan"
           },
           "minItems": 1,
           "description": "风扇配置信息"
@@ -34,61 +34,25 @@
       },
       "required": ["product_name", "fans"]
     },
-    "Fans": {
-      "title": "Fans",
+    "Fan": {
+      "title": "Fan",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "manual_offset": {
-          "type": "number",
-          "description": "风扇自动控制ec地址"
+        "ecio": {
+          "$ref": "#/definitions/ECIO",
+          "description": "ECIO访问方式配置"
         },
-        "rpmwrite_offset": {
-          "type": "number",
-          "description": "风扇写入转速ec地址"
-        },
-        "rpmread_offset": {
-          "type": "number",
-          "description": "风扇读取转速ec地址"
-        },
-        "ram_reg_addr": {
-          "type": "number",
-          "description": "风扇ecRam寄存器地址"
-        },
-        "ram_reg_data": {
-          "type": "number",
-          "description": "风扇ecRam寄存器数据"
-        },
-        "ram_manual_offset": {
-          "type": "number",
-          "description": "风扇ecRam手动控制地址"
-        },
-        "ram_manual_secondary_offset": {
-          "type": "number",
-          "description": "风扇ecRam手动控制地址(次要)"
-        },
-        "ram_rpmwrite_offset": {
-          "type": "number",
-          "description": "风扇ecRam写入转速地址"
-        },
-        "ram_rpmwrite_secondary_offset": {
-          "type": "number",
-          "description": "风扇ecRam写入转速地址(次要)"
-        },
-        "ram_rpmread_offset": {
-          "type": "number",
-          "description": "风扇ecRam读取转速地址"
-        },
-        "ram_rpmread_length": {
-          "type": "number",
-          "description": "风扇ecRam读取转速数据长度, 0为需要通过计算获得转速"
+        "ecram": {
+          "$ref": "#/definitions/ECRAM",
+          "description": "ECRAM访问方式配置"
         },
         "rpm_write_max": {
-          "type": "number",
-          "description": "风扇最大转速ec写入值"
+          "$ref": "#/definitions/ValueOrPerProduct",
+          "description": "风扇最大转速写入值"
         },
         "rpm_value_max": {
-          "type": "number",
+          "$ref": "#/definitions/ValueOrPerProduct",
           "description": "风扇最大转速值"
         },
         "enable_manual_value": {
@@ -97,10 +61,96 @@
         },
         "enable_auto_value": {
           "type": "number",
-          "description": "风扇自动控制写入值 , 默认 0"
+          "description": "风扇自动控制写入值, 默认 0"
         }
       },
       "required": []
+    },
+    "ECIO": {
+      "title": "ECIO",
+      "type": "object",
+      "additionalProperties": false,
+      "description": "ECIO访问方式配置",
+      "properties": {
+        "manual_offset": {
+          "type": "number",
+          "description": "风扇自动控制ECIO地址"
+        },
+        "rpmwrite_offset": {
+          "type": "number",
+          "description": "风扇写入转速ECIO地址"
+        },
+        "rpmread_offset": {
+          "type": "number",
+          "description": "风扇读取转速ECIO地址"
+        }
+      },
+      "required": []
+    },
+    "ECRAM": {
+      "title": "ECRAM",
+      "type": "object",
+      "additionalProperties": false,
+      "description": "ECRAM访问方式配置",
+      "properties": {
+        "reg_addr": {
+          "type": "number",
+          "description": "ECRAM寄存器地址"
+        },
+        "reg_data": {
+          "type": "number",
+          "description": "ECRAM寄存器数据"
+        },
+        "manual_offset": {
+          "type": "number",
+          "description": "风扇手动控制ECRAM地址"
+        },
+        "manual_secondary_offset": {
+          "type": "number",
+          "description": "风扇手动控制ECRAM地址(次要, 用于第二风扇)"
+        },
+        "rpmwrite_offset": {
+          "type": "number",
+          "description": "风扇写入转速ECRAM地址"
+        },
+        "rpmwrite_secondary_offset": {
+          "type": "number",
+          "description": "风扇写入转速ECRAM地址(次要, 用于第二风扇)"
+        },
+        "rpmread_offset": {
+          "type": "number",
+          "description": "风扇读取转速ECRAM地址"
+        },
+        "rpmread_length": {
+          "type": "number",
+          "description": "风扇读取转速数据长度, 0为需要通过计算获得转速"
+        }
+      },
+      "required": []
+    },
+    "ValueOrPerProduct": {
+      "title": "ValueOrPerProduct",
+      "description": "支持直接数值或按机型配置",
+      "oneOf": [
+        {
+          "type": "number",
+          "description": "所有机型使用相同的值"
+        },
+        {
+          "type": "object",
+          "description": "按机型配置不同的值",
+          "properties": {
+            "default": {
+              "type": "number",
+              "description": "默认值(必须)"
+            }
+          },
+          "required": ["default"],
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      ]
     }
   }
 }

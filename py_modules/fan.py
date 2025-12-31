@@ -229,6 +229,18 @@ class FanManager:
                 except Exception:
                     logger.error(f"获取风扇({hwmon_name})hwmon信息失败:", exc_info=True)
 
+    # 获取配置值，支持直接数值或按机型字典格式
+    def __get_value_for_product(self, config_value, default=0):
+        """获取配置值，支持直接数值或按机型字典格式"""
+        if config_value is None:
+            return default
+        if isinstance(config_value, dict):
+            # 字典格式：优先使用机型特定值，否则使用default
+            return config_value.get(PRODUCT_NAME, config_value.get("default", default))
+        else:
+            # 直接数值
+            return config_value
+
     # 解析处理 EC 风扇配置
     def __parse_fan_configuration_EC(self):
         logger.info("开始获取风扇ec信息")
@@ -238,73 +250,35 @@ class FanManager:
             try:
                 fc = FanConfig()
 
-                # EC配置变量
-                fc.manual_offset = (
-                    ec_info["manual_offset"] if "manual_offset" in ec_info else None
-                )  # 风扇自动控制ec地址
-                fc.pwm_write_offset = (
-                    ec_info["rpmwrite_offset"] if "rpmwrite_offset" in ec_info else None
-                )  # 风扇写入转速ec地址
-                fc.pwm_read_offset = (
-                    ec_info["rpmread_offset"] if "rpmread_offset" in ec_info else None
-                )  # 风扇读取转速ec地址
+                # 解析 ECIO 配置（新的分层结构）
+                ecio_config = ec_info.get("ecio", {})
+                fc.manual_offset = ecio_config.get("manual_offset")
+                fc.pwm_write_offset = ecio_config.get("rpmwrite_offset")
+                fc.pwm_read_offset = ecio_config.get("rpmread_offset")
 
-                # ECRAM配置变量
-                # 风扇ecRam寄存器地址
-                fc.ram_reg_addr = (
-                    ec_info["ram_reg_addr"] if "ram_reg_addr" in ec_info else None
+                # 解析 ECRAM 配置（新的分层结构）
+                ecram_config = ec_info.get("ecram", {})
+                fc.ram_reg_addr = ecram_config.get("reg_addr")
+                fc.ram_reg_data = ecram_config.get("reg_data")
+                fc.ram_manual_offset = ecram_config.get("manual_offset")
+                fc.ram_pwm_write_offset = ecram_config.get("rpmwrite_offset")
+                fc.ram_pwm_write_secondary_offset = ecram_config.get(
+                    "rpmwrite_secondary_offset"
                 )
-                # 风扇ecRam寄存器数据
-                fc.ram_reg_data = (
-                    ec_info["ram_reg_data"] if "ram_reg_data" in ec_info else None
+                fc.ram_manual_secondary_offset = ecram_config.get(
+                    "manual_secondary_offset"
                 )
-                # 风扇自动控制ecRam地址
-                fc.ram_manual_offset = (
-                    ec_info["ram_manual_offset"]
-                    if "ram_manual_offset" in ec_info
-                    else None
+                fc.ram_pwm_read_offset = ecram_config.get("rpmread_offset")
+                fc.ram_pwm_read_length = ecram_config.get("rpmread_length", 0)
+
+                # 公共配置（支持按机型配置不同值）
+                fc.pwm_write_max = self.__get_value_for_product(
+                    ec_info.get("rpm_write_max"), 0
                 )
-                # 风扇写入转速ecRam地址
-                fc.ram_pwm_write_offset = (
-                    ec_info["ram_rpmwrite_offset"]
-                    if "ram_rpmwrite_offset" in ec_info
-                    else None
-                )
-                # 风扇写入转速ecRam地址(次要,用于第二风扇)
-                fc.ram_pwm_write_secondary_offset = (
-                    ec_info["ram_rpmwrite_secondary_offset"]
-                    if "ram_rpmwrite_secondary_offset" in ec_info
-                    else None
-                )
-                # 风扇手动控制ecRam地址(次要,用于第二风扇)
-                fc.ram_manual_secondary_offset = (
-                    ec_info["ram_manual_secondary_offset"]
-                    if "ram_manual_secondary_offset" in ec_info
-                    else None
-                )
-                # 风扇读取转速ecRam地址
-                fc.ram_pwm_read_offset = (
-                    ec_info["ram_rpmread_offset"]
-                    if "ram_rpmread_offset" in ec_info
-                    else None
-                )
-                # 风扇实际转速值长度 0为需要通过计算获得转速
-                fc.ram_pwm_read_length = (
-                    ec_info["ram_rpmread_length"]
-                    if "ram_rpmread_length" in ec_info
-                    else 0
+                fc.fan_value_max = self.__get_value_for_product(
+                    ec_info.get("rpm_value_max"), 0
                 )
 
-                # 其他变量
-                # 风扇最大转速写入值
-                fc.pwm_write_max = (
-                    ec_info["rpm_write_max"] if "rpm_write_max" in ec_info else 0
-                )
-
-                # 风扇最大转速读取数值
-                fc.fan_value_max = (
-                    ec_info["rpm_value_max"] if "rpm_value_max" in ec_info else 0
-                )
                 max_value_from_settings = self.fansSettings.getSetting(
                     f"fan{len(self.fan_config_list)}_max"
                 )
@@ -320,16 +294,8 @@ class FanManager:
                     else fc.fan_value_max
                 )
                 logger.info(f"fan_config.FAN_RPMVALUE_MAX:{fc.pwm_value_max}")
-                fc.hwmon_manual_val = (
-                    ec_info["enable_manual_value"]
-                    if "enable_manual_value" in ec_info
-                    else 1
-                )
-                fc.hwmon_auto_val = (
-                    ec_info["enable_auto_value"]
-                    if "enable_auto_value" in ec_info
-                    else 0
-                )
+                fc.hwmon_manual_val = ec_info.get("enable_manual_value", 1)
+                fc.hwmon_auto_val = ec_info.get("enable_auto_value", 0)
                 fc.temp_mode = 0
 
                 # 判断是否配置好ec(控制地址、读和写至少各有一种方法,最大写入和最大读取必须有配置数值)
@@ -547,13 +513,13 @@ class FanManager:
             if fc.is_found_hwmon and fc.hwmon_mode == 0:
                 return self.__get_fanIsAuto_HWMON(fc)
 
-            # ECRAM 读取
-            if fc.ram_manual_offset:
-                return self.__get_fanIsAuto_ECRAM(fc)
-
             # ECIO 读取
             if fc.manual_offset:
                 return self.__get_fanIsAuto_ECIO(fc)
+
+            # ECRAM 读取
+            if fc.ram_manual_offset:
+                return self.__get_fanIsAuto_ECRAM(fc)
 
             return False
         except Exception:
@@ -623,13 +589,13 @@ class FanManager:
             if fc.is_found_hwmon:
                 self.__set_fanAuto_HWMON(fc, value)
 
-            # ECRAM 写入
-            if fc.ram_manual_offset:
-                return self.__set_fanAuto_ECRAM(fc, value)
-
             # ECIO 写入
             if fc.manual_offset:
                 return self.__set_fanAuto_ECIO(fc, value)
+
+            # ECRAM 写入
+            if fc.ram_manual_offset:
+                return self.__set_fanAuto_ECRAM(fc, value)
 
             return False
         except Exception:
@@ -770,11 +736,13 @@ class FanManager:
             if fc.is_found_hwmon:
                 return self.__set_fanPercent_HWMON(fc, value)
 
-            if fc.ram_pwm_write_offset:
-                return self.__set_fanPercent_ECRAM(fc, value)
-
+            # ECIO 写入
             if fc.pwm_write_offset:
                 return self.__set_fanPercent_ECIO(fc, value)
+
+            # ECRAM 写入
+            if fc.ram_pwm_write_offset:
+                return self.__set_fanPercent_ECRAM(fc, value)
 
             return False
         except Exception:
