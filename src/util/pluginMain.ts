@@ -330,18 +330,6 @@ export class PluginManager {
 
       try {
         await Timeout.withTimeout(
-          () => localizationManager.init(),
-          1000,
-          "Localization initialization timeout"
-        );
-        Logger.info("Localization initialization complete");
-      } catch (e: any) {
-        Logger.error(`Localization initialization failed: ${e.message}`);
-        throw new Error(`Localization initialization failed: ${e.message}`);
-      }
-
-      try {
-        await Timeout.withTimeout(
           () => Settings.loadSettings(),
           5000,
           "Settings loading timeout"
@@ -371,6 +359,18 @@ export class PluginManager {
       } catch (e: any) {
         Logger.error(`Component registration failed: ${e.message}`);
         throw new Error(`Component registration failed: ${e.message}`);
+      }
+
+      try {
+        await Timeout.withTimeout(
+          () => localizationManager.init(),
+          3000,
+          "Localization initialization timeout"
+        );
+        Logger.info("Localization initialization complete");
+      } catch (e: any) {
+        Logger.error(`Localization initialization failed: ${e.message}`);
+        throw new Error(`Localization initialization failed: ${e.message}`);
       }
 
       // 注册应用切换监听
