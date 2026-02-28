@@ -107,5 +107,7 @@
     "DAYS_AGO": "{{days}}天前",
     "CLICK_TO_CHECK": "点击检查最新版本",
     "SETTINGS_POLLING": "设置保护",
-    "SETTINGS_POLLING_DESC": "定期重新应用设置，防止被其他工具覆盖"
+    "SETTINGS_POLLING_DESC": "定期重新应用设置，防止被其他工具覆盖",
+    "CORE_SELECTION": "核心选择",
+    "CORE_SELECTION_DESC": "自由选择启用或禁用的CPU逻辑核心。CPU0 无法关闭"
 }

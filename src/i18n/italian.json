@@ -103,5 +103,7 @@
     "DAYS_AGO": "{{days}} giorni fa",
     "CLICK_TO_CHECK": "Clicca per controllare gli aggiornamenti",
     "SETTINGS_POLLING": "Protezione impostazioni",
-    "SETTINGS_POLLING_DESC": "Riapplica periodicamente le impostazioni per evitare la sovrascrittura da parte di altri strumenti"
+    "SETTINGS_POLLING_DESC": "Riapplica periodicamente le impostazioni per evitare la sovrascrittura da parte di altri strumenti",
+    "CORE_SELECTION": "Selezione Core",
+    "CORE_SELECTION_DESC": "Attiva o disattiva singolarmente i core logici della CPU. CPU0 non può essere disattivato"
 }

@@ -103,5 +103,7 @@
     "DAYS_AGO": "{{days}}일 전",
     "CLICK_TO_CHECK": "클릭하여 최신 버전 확인",
     "SETTINGS_POLLING": "설정 보호",
-    "SETTINGS_POLLING_DESC": "설정을 주기적으로 다시 적용하여 다른 도구에 의한 덮어쓰기를 방지합니다"
+    "SETTINGS_POLLING_DESC": "설정을 주기적으로 다시 적용하여 다른 도구에 의한 덮어쓰기를 방지합니다",
+    "CORE_SELECTION": "코어 선택",
+    "CORE_SELECTION_DESC": "CPU 논리 코어를 개별적으로 활성화/비활성화. CPU0은 비활성화할 수 없습니다"
 }

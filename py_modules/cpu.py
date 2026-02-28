@@ -1839,6 +1839,103 @@ class CPUManager:
 
         return (min_freq if min_freq > 0 else 0, max_freq if max_freq > 0 else 0)
 
+    def set_cpu_online_list(self, online_list: List[int]) -> bool:
+        """按指定的逻辑核心列表设置在线状态
+
+        Args:
+            online_list: 需要在线的逻辑核心ID列表
+
+        Returns:
+            bool: True如果设置成功，否则False
+        """
+        try:
+            online_set = set(online_list)
+            # cpu0 always stays online
+            online_set.add(0)
+
+            if len(online_set) == 0:
+                logger.error("set_cpu_online_list: online_list is empty")
+                return False
+
+            all_logical_ids = self.cpu_topology.get_all_logical_ids()
+            logger.info(
+                f"set_cpu_online_list: online={sorted(online_set)}, "
+                f"total={len(all_logical_ids)}"
+            )
+
+            for logical_id in all_logical_ids:
+                if logical_id in online_set:
+                    self.online_cpu(logical_id)
+                else:
+                    self.offline_cpu(logical_id)
+
+            self.enable_cpu_num = len(online_set)
+            return True
+        except Exception:
+            logger.error(
+                "Failed to set CPU online list", exc_info=True
+            )
+            return False
+
+    def get_cpu_topology_for_ui(self) -> Dict:
+        """返回前端核心选择 UI 所需的拓扑数据
+
+        Returns:
+            Dict: {
+                "cores": [{
+                    "logical_id": int,
+                    "core_id": int,
+                    "core_type": str,
+                    "is_smt_thread": bool,
+                    "can_offline": bool
+                }, ...],
+                "core_types": [str, ...],
+                "is_heterogeneous": bool
+            }
+        """
+        result = {
+            "cores": [],
+            "core_types": [],
+            "is_heterogeneous": self.is_heterogeneous_cpu(),
+        }
+
+        if not self.cpu_topology:
+            return result
+
+        logical_by_core = self.cpu_topology.get_logical_ids_by_physical_core()
+
+        core_type_mapping = {}
+        if hasattr(self, "hw_analysis") and self.hw_analysis:
+            core_type_mapping = self.hw_analysis.get("core_type_mapping", {})
+
+        core_type_order = list(core_type_mapping.keys()) if core_type_mapping else []
+        result["core_types"] = core_type_order
+
+        logical_to_core_type = {}
+        for core_type, cpu_list in core_type_mapping.items():
+            for cpu_id in cpu_list:
+                logical_to_core_type[cpu_id] = core_type
+
+        primary_threads = set()
+        for core_id, logical_ids in logical_by_core.items():
+            if logical_ids:
+                primary_threads.add(min(logical_ids))
+
+        for logical_id, core_info in sorted(self.cpu_topology.cores.items()):
+            core_type = logical_to_core_type.get(logical_id, "Unknown")
+            is_smt = logical_id not in primary_threads
+            can_offline = logical_id != 0
+
+            result["cores"].append({
+                "logical_id": logical_id,
+                "core_id": core_info.core_id,
+                "core_type": core_type,
+                "is_smt_thread": is_smt,
+                "can_offline": can_offline,
+            })
+
+        return result
+
     def get_cpu_core_info(self) -> Dict:
         """获取CPU核心类型详细信息
 

@@ -103,5 +103,7 @@
     "DAYS_AGO": "преди {{days}} дни",
     "CLICK_TO_CHECK": "Кликнете за проверка на обновления",
     "SETTINGS_POLLING": "Settings Protection",
-    "SETTINGS_POLLING_DESC": "Periodically re-apply settings to prevent override by other tools"
+    "SETTINGS_POLLING_DESC": "Periodically re-apply settings to prevent override by other tools",
+    "CORE_SELECTION": "Core Selection",
+    "CORE_SELECTION_DESC": "Select which CPU cores to enable/disable individually. CPU0 cannot be disabled"
 }

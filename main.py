@@ -274,6 +274,27 @@ class Plugin:
                 "core_types": {},
             }
 
+    async def get_cpu_topology_for_ui(self):
+        """获取CPU拓扑信息（供前端核心选择UI使用）"""
+        try:
+            return cpuManager.get_cpu_topology_for_ui()
+        except Exception as e:
+            logger.error(f"获取CPU拓扑信息失败: {e}", exc_info=True)
+            return {
+                "cores": [],
+                "core_types": [],
+                "is_heterogeneous": False,
+            }
+
+    async def set_cpu_online_list(self, online_list: list):
+        """按逻辑核心列表设置CPU在线状态"""
+        try:
+            logger.info(f"设置CPU在线列表: {online_list}")
+            return cpuManager.set_cpu_online_list(online_list)
+        except Exception as e:
+            logger.error(f"设置CPU在线列表失败: {e}", exc_info=True)
+            return False
+
     async def receive_suspendEvent(self):
         try:
             return True

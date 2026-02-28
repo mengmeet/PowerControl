@@ -4,8 +4,10 @@ import {
   ToggleField,
   DropdownItem,
   ButtonItem,
+  Focusable,
+  Field,
 } from "@decky/ui";
-import { useEffect, useState, FC, useMemo } from "react";
+import { useEffect, useState, FC, useMemo, useCallback } from "react";
 import {
   Settings,
   Backend,
@@ -17,7 +19,8 @@ import {
 import { localizeStrEnum, localizationManager } from "../i18n";
 import { SlowSliderField } from "./SlowSliderField";
 import { CustomTDPComponent } from ".";
-import { RiArrowDownSFill, RiArrowUpSFill } from "react-icons/ri";
+import { RiArrowDownSFill, RiArrowUpSFill, RiLockFill } from "react-icons/ri";
+import { CPULogicalCoreUI, CPUTopologyForUI } from "../types";
 
 const CPUBoostComponent: FC = () => {
   const [cpuboost, setCPUBoost] = useState<boolean>(Settings.appCpuboost());
@@ -728,6 +731,224 @@ const CPURyzenadjUndervoltComponent: FC = () => {
   );
 };
 
+const CELL_SIZE = 32;
+const CELL_GAP = 8;
+const CELL_ROW_GAP = 4;
+
+const CoreCell: FC<{
+  key?: React.Key;
+  core: CPULogicalCoreUI;
+  isOnline: boolean;
+  onToggle: (logicalId: number) => void;
+}> = ({ core, isOnline, onToggle }) => {
+  const locked = !core.can_offline && isOnline;
+
+  return (
+    // @ts-ignore
+    <Focusable
+      onActivate={() => {
+        if (!locked) onToggle(core.logical_id);
+      }}
+      noFocusRing={true}
+      focusClassName="core-cell-focused"
+      style={{
+        width: `${CELL_SIZE}px`,
+        height: `${CELL_SIZE}px`,
+        minWidth: `${CELL_SIZE}px`,
+        flexShrink: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: "4px",
+        fontSize: "11px",
+        fontWeight: "bold",
+        cursor: locked ? "not-allowed" : "pointer",
+        border: core.is_smt_thread ? "2px dashed" : "2px solid",
+        borderColor: locked
+          ? "rgba(180, 160, 60, 0.8)"
+          : isOnline
+            ? "rgba(59, 130, 246, 0.8)"
+            : "rgba(100, 100, 100, 0.5)",
+        backgroundColor: locked
+          ? "rgba(180, 160, 60, 0.25)"
+          : isOnline
+            ? "rgba(59, 130, 246, 0.35)"
+            : "rgba(60, 60, 60, 0.3)",
+        color: locked ? "#c8b840" : isOnline ? "#e0e0e0" : "#666",
+        opacity: core.is_smt_thread ? 0.8 : 1,
+        transition: "all 0.15s ease",
+        position: "relative",
+      }}
+      onClick={() => {
+        if (!locked) onToggle(core.logical_id);
+      }}
+    >
+      {locked ? <RiLockFill size={14} /> : core.logical_id}
+    </Focusable>
+  );
+};
+
+const CPUCoreSelectionComponent: FC = () => {
+  const [enabled, setEnabled] = useState<boolean>(
+    Settings.appCoreSelectionEnabled()
+  );
+  const topology: CPUTopologyForUI = Backend.data.getCpuTopologyForUI();
+  const [selection, setSelection] = useState<Set<number>>(() => {
+    const saved = Settings.appCpuCoreSelection();
+    if (saved.length > 0) return new Set(saved);
+    return new Set(topology.cores.map((c) => c.logical_id));
+  });
+
+  const refresh = useCallback(() => {
+    setEnabled(Settings.appCoreSelectionEnabled());
+    const saved = Settings.appCpuCoreSelection();
+    if (saved.length > 0) {
+      setSelection(new Set(saved));
+    }
+  }, []);
+
+  useEffect(() => {
+    PluginManager.listenUpdateComponent(
+      ComponentName.CPU_CORE_SELECTION,
+      [ComponentName.CPU_CORE_SELECTION],
+      (_ComponentName, updateType) => {
+        if (updateType === UpdateType.UPDATE) {
+          refresh();
+        }
+      }
+    );
+  }, []);
+
+  const coresByType = useMemo(() => {
+    const grouped: Record<string, {
+      primary: CPULogicalCoreUI[];
+      smt: CPULogicalCoreUI[];
+    }> = {};
+
+    for (const coreType of topology.core_types) {
+      grouped[coreType] = { primary: [], smt: [] };
+    }
+    if (!grouped["Unknown"]) {
+      grouped["Unknown"] = { primary: [], smt: [] };
+    }
+
+    for (const core of topology.cores) {
+      const type = core.core_type in grouped ? core.core_type : "Unknown";
+      if (core.is_smt_thread) {
+        grouped[type].smt.push(core);
+      } else {
+        grouped[type].primary.push(core);
+      }
+    }
+
+    return Object.entries(grouped).filter(
+      ([_, group]) => group.primary.length > 0 || group.smt.length > 0
+    );
+  }, [topology]);
+
+  const handleToggle = useCallback(
+    (logicalId: number) => {
+      setSelection((prev) => {
+        const next = new Set(prev);
+        if (next.has(logicalId)) {
+          next.delete(logicalId);
+          next.add(0);
+        } else {
+          next.add(logicalId);
+        }
+        if (next.size === 0) next.add(0);
+        const arr = Array.from(next).sort((a, b) => a - b);
+        Settings.setCpuCoreSelection(arr);
+        return next;
+      });
+    },
+    []
+  );
+
+  if (!topology.cores.length) return null;
+
+  const gridStyle: React.CSSProperties = {
+    display: "flex",
+    flexWrap: "wrap",
+    columnGap: `${CELL_GAP}px`,
+    rowGap: `${CELL_ROW_GAP}px`,
+    padding: `${CELL_GAP}px 0`,
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: "11px",
+    color: "#888",
+    marginTop: "8px",
+    marginBottom: "2px",
+  };
+
+  return (
+    <div>
+      <PanelSectionRow>
+        <ToggleField
+          label={localizationManager.getString(localizeStrEnum.CORE_SELECTION)}
+          description={localizationManager.getString(
+            localizeStrEnum.CORE_SELECTION_DESC
+          )}
+          checked={enabled}
+          onChange={(val) => {
+            Settings.setCoreSelectionEnabled(val);
+          }}
+        />
+      </PanelSectionRow>
+
+      {enabled && (
+        <>
+          <style>{`
+            .core-cell-focused {
+              transform: scale(1.15);
+              outline: 2px solid #fff !important;
+              outline-offset: 1px;
+              box-shadow: 0 0 8px rgba(255, 255, 255, 0.7) !important;
+              z-index: 1;
+            }
+          `}</style>
+          <Field childrenLayout="below" highlightOnFocus={false}>
+            {coresByType.map(([coreType, group]) => (
+              <div key={coreType}>
+                {topology.core_types.length > 1 && (
+                  <div style={labelStyle}>{coreType}</div>
+                )}
+                {/* @ts-ignore */}
+                <Focusable style={gridStyle}>
+                  {group.primary.map((core) => (
+                    <CoreCell
+                      key={core.logical_id}
+                      core={core}
+                      isOnline={selection.has(core.logical_id)}
+                      onToggle={handleToggle}
+                    />
+                  ))}
+                </Focusable>
+                {group.smt.length > 0 && (
+                  <>
+                    {/* @ts-ignore */}
+                    <Focusable style={gridStyle}>
+                      {group.smt.map((core) => (
+                        <CoreCell
+                          key={core.logical_id}
+                          core={core}
+                          isOnline={selection.has(core.logical_id)}
+                          onToggle={handleToggle}
+                        />
+                      ))}
+                    </Focusable>
+                  </>
+                )}
+              </div>
+            ))}
+          </Field>
+        </>
+      )}
+    </div>
+  );
+};
+
 export const CPUComponent: FC<{
   isTab?: boolean;
 }> = ({ isTab = false }) => {
@@ -745,6 +966,9 @@ export const CPUComponent: FC<{
   const [cpuVendor, setCpuVendor] = useState<string>(
     Backend.data.getCpuVendor()
   );
+  const [coreSelectionEnabled, setCoreSelectionEnabled] = useState<boolean>(
+    Settings.appCoreSelectionEnabled()
+  );
   useEffect(() => {
     setIsSpportSMT(Settings.appIsSupportSMT());
     setCpuVendor(Backend.data.getCpuVendor());
@@ -753,7 +977,7 @@ export const CPUComponent: FC<{
   const hide = (ishide: boolean) => {
     setShow(!ishide);
   };
-  //listen Settings
+
   useEffect(() => {
     PluginManager.listenUpdateComponent(
       ComponentName.CPU_ALL,
@@ -768,6 +992,15 @@ export const CPUComponent: FC<{
             hide(false);
             break;
           }
+        }
+      }
+    );
+    PluginManager.listenUpdateComponent(
+      ComponentName.CPU_NUM,
+      [ComponentName.CPU_CORE_SELECTION],
+      (_ComponentName, updateType) => {
+        if (updateType === UpdateType.UPDATE) {
+          setCoreSelectionEnabled(Settings.appCoreSelectionEnabled());
         }
       }
     );
@@ -798,10 +1031,11 @@ export const CPUComponent: FC<{
               <CPUTDPComponent />
               {cpuVendor != "GenuineIntel" && !Backend.data.getSupportsNativeTdpLimit() && <CustomTDPComponent />}
               <CPUBoostComponent />
-              {isSpportSMT && <CPUSmtComponent />}
+              {!coreSelectionEnabled && isSpportSMT && <CPUSmtComponent />}
               <CPUGovernorComponent />
               <CPUSchedExtComponent />
-              <CPUNumComponent />
+              {!coreSelectionEnabled && <CPUNumComponent />}
+              <CPUCoreSelectionComponent />
               <CPUPerformancePerfComponent />
               <CPUFreqControlComponent />
               <CPURyzenadjUndervoltComponent />
