@@ -103,5 +103,7 @@
     "DAYS_AGO": "vor {{days}} Tagen",
     "CLICK_TO_CHECK": "Klicken um nach Updates zu suchen",
     "SETTINGS_POLLING": "Einstellungsschutz",
-    "SETTINGS_POLLING_DESC": "Einstellungen regelmäßig erneut anwenden, um Überschreibung durch andere Tools zu verhindern"
+    "SETTINGS_POLLING_DESC": "Einstellungen regelmäßig erneut anwenden, um Überschreibung durch andere Tools zu verhindern",
+    "CORE_SELECTION": "Kernauswahl",
+    "CORE_SELECTION_DESC": "CPU-Kerne einzeln aktivieren oder deaktivieren. CPU0 kann nicht deaktiviert werden"
 }

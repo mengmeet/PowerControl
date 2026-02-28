@@ -12,7 +12,7 @@ import {
 import { JsonSerializer } from "typescript-json-serializer";
 import { callable } from "@decky/api";
 import { Logger } from "./logger";
-import { CPUCoreInfo, CPUCoreTypeInfo, FanConfig } from "../types";
+import { CPUCoreInfo, CPUCoreTypeInfo, CPUTopologyForUI, FanConfig } from "../types";
 import { getVersionCache, setVersionCache } from "./versionCache";
 const serializer = new JsonSerializer();
 
@@ -96,6 +96,8 @@ export const stopGpuNotify = callable<[], any>("stop_gpu_notify");
 export const checkFileExist = callable<[string], boolean>("check_file_exist");
 export const supportsNativeGpuSlider = callable<[], boolean>("supports_native_gpu_slider");
 export const supportsNativeTdpLimit = callable<[], boolean>("supports_native_tdp_limit");
+export const getCpuTopologyForUI = callable<[], CPUTopologyForUI>("get_cpu_topology_for_ui");
+export const setCpuOnlineList = callable<[number[]], boolean>("set_cpu_online_list");
 
 
 const defaultCpuCoreInfo: CPUCoreInfo = {
@@ -103,6 +105,12 @@ const defaultCpuCoreInfo: CPUCoreInfo = {
   vendor: "Unknown",
   architecture_summary: "Traditional Architecture",
   core_types: {} as Record<string, CPUCoreTypeInfo>
+};
+
+const defaultCpuTopologyForUI: CPUTopologyForUI = {
+  cores: [],
+  core_types: [],
+  is_heterogeneous: false,
 };
 
 
@@ -194,7 +202,8 @@ export class BackendData {
     availableSchedExtSchedulers: [] as string[],
     currentSchedExtScheduler: "" as string,
     supportsSMT: false as boolean,
-    supportsRyzenadjCoall: false as boolean
+    supportsRyzenadjCoall: false as boolean,
+    cpuTopologyForUI: defaultCpuTopologyForUI
   } as const;
 
   private getDefaultValue(key: string) {
@@ -240,7 +249,8 @@ export class BackendData {
     schedExtSupport: { callable: supportsSchedExt },
     availableSchedExtSchedulers: { callable: getSchedExtList },
     currentSchedExtScheduler: { callable: getCurrentSchedExtScheduler },
-    supportsRyzenadjCoall: { callable: checkRyzenadjCoall }
+    supportsRyzenadjCoall: { callable: checkRyzenadjCoall },
+    cpuTopologyForUI: { callable: getCpuTopologyForUI }
   };
 
   // 主初始化方法
@@ -524,12 +534,24 @@ export class Backend {
   }
 
   private static async handleCPUNum(): Promise<void> {
+    if (Settings.appCoreSelectionEnabled()) {
+      await Backend.handleCoreSelection();
+      return;
+    }
     const cpuNum = Settings.appCpuNum();
     const smt = Settings.appSmt();
     Logger.info(`handleCPUNum: cpuNum = ${cpuNum}, smt = ${smt}`);
     if (cpuNum) {
       await setSmt(smt);
       await setCpuOnline(cpuNum);
+    }
+  }
+
+  private static async handleCoreSelection(): Promise<void> {
+    const selection = Settings.appCpuCoreSelection();
+    Logger.info(`handleCoreSelection: selection = ${JSON.stringify(selection)}`);
+    if (selection.length > 0) {
+      await setCpuOnlineList(selection);
     }
   }
 
@@ -826,6 +848,7 @@ export class Backend {
       [APPLYTYPE.SET_POWER_BATTERY, Backend.handleChargeLimit],
       [APPLYTYPE.SET_FAN_ALL, Backend.handleFanControl],
       [APPLYTYPE.SET_FANMODE, Backend.handleFanControl],
+      [APPLYTYPE.SET_CPU_CORE_SELECTION, Backend.handleCoreSelection],
     ]);
 
   public static resetFanSettings = () => {

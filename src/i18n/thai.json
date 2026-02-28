@@ -103,5 +103,7 @@
     "DAYS_AGO": "{{days}} วันที่แล้ว",
     "CLICK_TO_CHECK": "คลิกเพื่อตรวจสอบอัปเดต",
     "SETTINGS_POLLING": "Settings Protection",
-    "SETTINGS_POLLING_DESC": "Periodically re-apply settings to prevent override by other tools"
+    "SETTINGS_POLLING_DESC": "Periodically re-apply settings to prevent override by other tools",
+    "CORE_SELECTION": "Core Selection",
+    "CORE_SELECTION_DESC": "Select which CPU cores to enable/disable individually. CPU0 cannot be disabled"
 }

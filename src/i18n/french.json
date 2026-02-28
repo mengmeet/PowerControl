@@ -103,5 +103,7 @@
     "DAYS_AGO": "il y a {{days}} jours",
     "CLICK_TO_CHECK": "Cliquer pour vérifier les mises à jour",
     "SETTINGS_POLLING": "Protection des paramètres",
-    "SETTINGS_POLLING_DESC": "Réappliquer périodiquement les paramètres pour empêcher leur remplacement par d'autres outils"
+    "SETTINGS_POLLING_DESC": "Réappliquer périodiquement les paramètres pour empêcher leur remplacement par d'autres outils",
+    "CORE_SELECTION": "Sélection des cœurs",
+    "CORE_SELECTION_DESC": "Activer ou désactiver individuellement les cœurs logiques du CPU. CPU0 ne peut pas être désactivé"
 }

@@ -69,6 +69,10 @@ export class AppSetting {
   ryzenadjUndervoltValue?: number;
   @JsonProperty()
   fanControlEnabled?: boolean;
+  @JsonProperty()
+  coreSelectionEnabled?: boolean;
+  @JsonProperty()
+  cpuCoreSelection?: number[];
 
   constructor() {
     this.smt = true;
@@ -106,6 +110,8 @@ export class AppSetting {
     this.enableRyzenadjUndervolt = false;
     this.ryzenadjUndervoltValue = 0;
     this.fanControlEnabled = false;
+    this.coreSelectionEnabled = false;
+    this.cpuCoreSelection = [];
   }
   deepCopy(copyTarget: AppSetting) {
     // this.overwrite=copyTarget.overwrite;
@@ -134,6 +140,10 @@ export class AppSetting {
     this.enableRyzenadjUndervolt = copyTarget.enableRyzenadjUndervolt;
     this.ryzenadjUndervoltValue = copyTarget.ryzenadjUndervoltValue;
     this.fanControlEnabled = copyTarget.fanControlEnabled;
+    this.coreSelectionEnabled = copyTarget.coreSelectionEnabled;
+    this.cpuCoreSelection = copyTarget.cpuCoreSelection
+      ? [...copyTarget.cpuCoreSelection]
+      : [];
   }
 }
 
@@ -1351,5 +1361,46 @@ export class Settings {
         UpdateType.UPDATE
       );
     }
+  }
+
+  public static appCoreSelectionEnabled(): boolean {
+    return this.ensureApp().coreSelectionEnabled || false;
+  }
+
+  public static setCoreSelectionEnabled(enabled: boolean) {
+    const app = this.ensureApp();
+    if (app.coreSelectionEnabled !== enabled) {
+      app.coreSelectionEnabled = enabled;
+      if (!enabled) {
+        app.cpuCoreSelection = [];
+      }
+      this.saveSettings();
+      Backend.applySettings(
+        enabled
+          ? APPLYTYPE.SET_CPU_CORE_SELECTION
+          : APPLYTYPE.SET_CPUCORE
+      );
+      PluginManager.updateComponent(
+        ComponentName.CPU_CORE_SELECTION,
+        UpdateType.UPDATE
+      );
+      PluginManager.updateComponent(ComponentName.CPU_SMT, UpdateType.UPDATE);
+      PluginManager.updateComponent(ComponentName.CPU_NUM, UpdateType.UPDATE);
+    }
+  }
+
+  public static appCpuCoreSelection(): number[] {
+    return this.ensureApp().cpuCoreSelection || [];
+  }
+
+  public static setCpuCoreSelection(selection: number[]) {
+    const app = this.ensureApp();
+    app.cpuCoreSelection = selection;
+    this.saveSettings();
+    Backend.applySettings(APPLYTYPE.SET_CPU_CORE_SELECTION);
+    PluginManager.updateComponent(
+      ComponentName.CPU_CORE_SELECTION,
+      UpdateType.UPDATE
+    );
   }
 }

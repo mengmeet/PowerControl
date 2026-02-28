@@ -103,5 +103,7 @@
     "DAYS_AGO": "{{days}}日前",
     "CLICK_TO_CHECK": "クリックして最新版を確認",
     "SETTINGS_POLLING": "設定保護",
-    "SETTINGS_POLLING_DESC": "設定を定期的に再適用し、他のツールによる上書きを防止します"
+    "SETTINGS_POLLING_DESC": "設定を定期的に再適用し、他のツールによる上書きを防止します",
+    "CORE_SELECTION": "コア選択",
+    "CORE_SELECTION_DESC": "CPUの論理コアを個別に有効/無効にする。CPU0は無効にできません"
 }
