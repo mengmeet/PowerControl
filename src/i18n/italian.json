@@ -101,5 +101,7 @@
     "MINUTES_AGO": "{{minutes}} minuti fa",
     "HOURS_AGO": "{{hours}} ore fa",
     "DAYS_AGO": "{{days}} giorni fa",
-    "CLICK_TO_CHECK": "Clicca per controllare gli aggiornamenti"
+    "CLICK_TO_CHECK": "Clicca per controllare gli aggiornamenti",
+    "SETTINGS_POLLING": "Protezione impostazioni",
+    "SETTINGS_POLLING_DESC": "Riapplica periodicamente le impostazioni per evitare la sovrascrittura da parte di altri strumenti"
 }

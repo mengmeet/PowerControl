@@ -101,5 +101,7 @@
     "MINUTES_AGO": "преди {{minutes}} минути",
     "HOURS_AGO": "преди {{hours}} часа",
     "DAYS_AGO": "преди {{days}} дни",
-    "CLICK_TO_CHECK": "Кликнете за проверка на обновления"
+    "CLICK_TO_CHECK": "Кликнете за проверка на обновления",
+    "SETTINGS_POLLING": "Settings Protection",
+    "SETTINGS_POLLING_DESC": "Periodically re-apply settings to prevent override by other tools"
 }

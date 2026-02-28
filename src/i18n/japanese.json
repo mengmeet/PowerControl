@@ -101,5 +101,7 @@
     "MINUTES_AGO": "{{minutes}}分前",
     "HOURS_AGO": "{{hours}}時間前",
     "DAYS_AGO": "{{days}}日前",
-    "CLICK_TO_CHECK": "クリックして最新版を確認"
+    "CLICK_TO_CHECK": "クリックして最新版を確認",
+    "SETTINGS_POLLING": "設定保護",
+    "SETTINGS_POLLING_DESC": "設定を定期的に再適用し、他のツールによる上書きを防止します"
 }

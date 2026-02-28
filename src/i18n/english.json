@@ -105,5 +105,7 @@
     "MINUTES_AGO": "{{minutes}} minutes ago",
     "HOURS_AGO": "{{hours}} hours ago",
     "DAYS_AGO": "{{days}} days ago",
-    "CLICK_TO_CHECK": "Click to check for updates"
+    "CLICK_TO_CHECK": "Click to check for updates",
+    "SETTINGS_POLLING": "Settings Protection",
+    "SETTINGS_POLLING_DESC": "Periodically re-apply settings to prevent override by other tools"
 }

@@ -101,5 +101,7 @@
     "MINUTES_AGO": "il y a {{minutes}} minutes",
     "HOURS_AGO": "il y a {{hours}} heures",
     "DAYS_AGO": "il y a {{days}} jours",
-    "CLICK_TO_CHECK": "Cliquer pour vérifier les mises à jour"
+    "CLICK_TO_CHECK": "Cliquer pour vérifier les mises à jour",
+    "SETTINGS_POLLING": "Protection des paramètres",
+    "SETTINGS_POLLING_DESC": "Réappliquer périodiquement les paramètres pour empêcher leur remplacement par d'autres outils"
 }
