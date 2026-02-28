@@ -306,6 +306,8 @@ export class FanControl {
   }
 }
 
+const POLLING_INTERVAL_MS = 5000;
+
 export class PluginManager {
   private static state: PluginState;
   private static errorMessage: string = "";
@@ -314,6 +316,7 @@ export class PluginManager {
     Map<ComponentName, ComponentUpdateHandler>
   > = new Map();
   private static suspendEndHook: any;
+  private static pollingIntervalId: ReturnType<typeof setInterval> | null = null;
 
   public static getErrorMessage(): string {
     return this.errorMessage;
@@ -430,6 +433,11 @@ export class PluginManager {
         });
       Logger.info("Suspend resume handler registered");
 
+      if (Settings.appPollingEnabled()) {
+        PluginManager.startPolling();
+      }
+      Logger.info("Polling state initialized");
+
       // 监听后端事件
       addEventListener("QAM_setTDP", (tdp: number) => {
         try {
@@ -482,8 +490,28 @@ export class PluginManager {
     return PluginManager.state == PluginState.ERROR;
   }
 
+  public static startPolling() {
+    if (this.pollingIntervalId != null) return;
+    Logger.info("Settings polling started");
+    this.pollingIntervalId = setInterval(() => {
+      if (!Settings.ensureEnable()) return;
+      Backend.applySettings(APPLYTYPE.SET_ALL).catch((e) => {
+        Logger.error(`Polling applySettings failed: ${e}`);
+      });
+    }, POLLING_INTERVAL_MS);
+  }
+
+  public static stopPolling() {
+    if (this.pollingIntervalId != null) {
+      clearInterval(this.pollingIntervalId);
+      this.pollingIntervalId = null;
+      Logger.info("Settings polling stopped");
+    }
+  }
+
   public static unregister() {
     PluginManager.suspendEndHook?.unregister();
+    PluginManager.stopPolling();
     try {
       PluginManager.updateAllComponent(UpdateType.DISMOUNT);
       ACStateManager?.unregister();

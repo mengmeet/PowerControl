@@ -259,6 +259,45 @@ const SettingsPerAcStateComponent: FC = () => {
   );
 };
 
+const SettingsPollingComponent: FC = () => {
+  const [enabled, setEnabled] = useState<boolean>(Settings.appPollingEnabled());
+  const [show, setShow] = useState<boolean>(Settings.ensureEnable());
+
+  useEffect(() => {
+    PluginManager.listenUpdateComponent(
+      ComponentName.SETTINGS_POLLING,
+      [ComponentName.SETTINGS_POLLING],
+      (_ComponentName, updateType: string) => {
+        if (updateType === UpdateType.UPDATE) {
+          setEnabled(Settings.appPollingEnabled());
+          setShow(Settings.ensureEnable());
+        } else if (updateType === UpdateType.SHOW) {
+          setShow(true);
+        } else if (updateType === UpdateType.HIDE) {
+          setShow(false);
+        }
+      }
+    );
+  }, []);
+
+  if (!show) return null;
+
+  return (
+    <PanelSectionRow>
+      <ToggleField
+        label={localizationManager.getString(localizeStrEnum.SETTINGS_POLLING)}
+        description={localizationManager.getString(
+          localizeStrEnum.SETTINGS_POLLING_DESC
+        )}
+        checked={enabled}
+        onChange={(value) => {
+          Settings.setPollingEnabled(value);
+        }}
+      />
+    </PanelSectionRow>
+  );
+};
+
 export const SettingsComponent: FC<{
   isTab?: boolean;
 }> = ({ isTab = false }) => {
@@ -296,6 +335,7 @@ export const SettingsComponent: FC<{
             <SettingsEnableComponent />
             <SettingsPerAppComponent />
             <SettingsPerAcStateComponent />
+            <SettingsPollingComponent />
           </>
         )}
       </PanelSection>

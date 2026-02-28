@@ -101,5 +101,7 @@
     "MINUTES_AGO": "{{minutes}}分鐘前",
     "HOURS_AGO": "{{hours}}小時前",
     "DAYS_AGO": "{{days}}天前",
-    "CLICK_TO_CHECK": "點擊檢查最新版本"
+    "CLICK_TO_CHECK": "點擊檢查最新版本",
+    "SETTINGS_POLLING": "設定保護",
+    "SETTINGS_POLLING_DESC": "定期重新套用設定，防止被其他工具覆蓋"
 }

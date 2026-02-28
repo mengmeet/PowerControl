@@ -101,5 +101,7 @@
     "MINUTES_AGO": "{{minutes}} นาทีที่แล้ว",
     "HOURS_AGO": "{{hours}} ชั่วโมงที่แล้ว",
     "DAYS_AGO": "{{days}} วันที่แล้ว",
-    "CLICK_TO_CHECK": "คลิกเพื่อตรวจสอบอัปเดต"
+    "CLICK_TO_CHECK": "คลิกเพื่อตรวจสอบอัปเดต",
+    "SETTINGS_POLLING": "Settings Protection",
+    "SETTINGS_POLLING_DESC": "Periodically re-apply settings to prevent override by other tools"
 }

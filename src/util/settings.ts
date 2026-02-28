@@ -245,6 +245,9 @@ export class SettingsData {
   @JsonProperty()
   public useOldUI: boolean = true; // 是否使用旧的 UI
 
+  @JsonProperty()
+  public pollingEnabled: boolean = false;
+
   @JsonProperty({ type: AppSettingData, dataStructure: "dictionary" })
   public perApp: { [appId: string]: AppSettingData } = {};
 
@@ -297,6 +300,7 @@ export class SettingsData {
     this.showPowerMenu = copyTarget.showPowerMenu;
     this.currentTabRoute = copyTarget.currentTabRoute;
     this.useOldUI = copyTarget.useOldUI;
+    this.pollingEnabled = copyTarget.pollingEnabled;
   }
 }
 
@@ -1324,6 +1328,26 @@ export class Settings {
 
       PluginManager.updateComponent(
         ComponentName.CPU_RYZENADJ_UNDERVOLT,
+        UpdateType.UPDATE
+      );
+    }
+  }
+
+  public static appPollingEnabled(): boolean {
+    return this._instance.data.pollingEnabled;
+  }
+
+  public static setPollingEnabled(enabled: boolean) {
+    if (this._instance.data.pollingEnabled !== enabled) {
+      this._instance.data.pollingEnabled = enabled;
+      this.saveSettings();
+      if (enabled) {
+        PluginManager.startPolling();
+      } else {
+        PluginManager.stopPolling();
+      }
+      PluginManager.updateComponent(
+        ComponentName.SETTINGS_POLLING,
         UpdateType.UPDATE
       );
     }

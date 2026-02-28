@@ -101,5 +101,7 @@
     "MINUTES_AGO": "{{minutes}}분 전",
     "HOURS_AGO": "{{hours}}시간 전",
     "DAYS_AGO": "{{days}}일 전",
-    "CLICK_TO_CHECK": "클릭하여 최신 버전 확인"
+    "CLICK_TO_CHECK": "클릭하여 최신 버전 확인",
+    "SETTINGS_POLLING": "설정 보호",
+    "SETTINGS_POLLING_DESC": "설정을 주기적으로 다시 적용하여 다른 도구에 의한 덮어쓰기를 방지합니다"
 }
