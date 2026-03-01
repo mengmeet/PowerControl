@@ -1,0 +1,12 @@
+# https://github.com/srsholmes/onexplayer-apex-bazzite-fixes/blob/main/decky-plugin/py_modules/fan_control.py
+product_name:
+  - ONEXPLAYER APEX
+
+fans:
+  - ecio:
+      manual_offset: 0x4a
+      rpmwrite_offset: 0x4b
+      rpmread_offset: 0x78
+
+    rpm_write_max: 184
+    rpm_value_max: 5000
