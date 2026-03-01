@@ -1,6 +1,6 @@
 {
   "name": "PowerControl",
-  "author": "yxx",
+  "author": "yxx, honjow",
   "flags": ["root"],
   "api_version": 1,
   "publish": {
