@@ -20,4 +20,4 @@ fans:
     rpm_write_max:
       default: 255
       "ONEXPLAYER mini A07": 100
-    rpm_value_max: 4968
+    rpm_value_max: 5000
