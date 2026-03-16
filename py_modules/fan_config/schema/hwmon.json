@@ -43,6 +43,13 @@
           },
           "description": "黑名单, 匹配 /sys/devices/virtual/dmi/id/product_name. 不使用该配置"
         },
+        "black_list_rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BlackListRule"
+          },
+          "description": "黑名单规则, 支持 product_name 和 product_version 的组合匹配"
+        },
         "temp_mode": {
           "type": "number",
           "enum": [0, 1],
@@ -185,6 +192,47 @@
         }
       },
       "required": ["temp_write", "pwm_write"]
+    },
+    "BlackListRule": {
+      "title": "BlackListRule",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "product_name": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "description": "匹配 /sys/devices/virtual/dmi/id/product_name"
+        },
+        "product_version": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "description": "匹配 /sys/devices/virtual/dmi/id/product_version"
+        },
+        "match": {
+          "type": "string",
+          "enum": ["exact", "contains", "regex"],
+          "description": "匹配方式, 默认 exact"
+        }
+      },
+      "required": []
     }
   }
 }

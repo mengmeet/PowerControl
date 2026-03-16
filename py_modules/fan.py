@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from typing import List
 
 from conf_manager import confManager
@@ -26,6 +27,7 @@ class FanConfig:
         self.hwmon_curve_paths = []  # 风扇曲线写入路径
 
         self.hwmon_black_list = []  # 风扇hwmon黑名单
+        self.hwmon_black_list_rules = []  # 风扇hwmon黑名单规则
 
         # EC配置变量
         self.is_ec_configured = False  # 是否配置好风扇ec
@@ -119,6 +121,14 @@ class FanManager:
                         if (
                             "black_list" in hwmon_config
                             and hwmon_config["black_list"] is not None
+                        )
+                        else []
+                    )
+                    fc.hwmon_black_list_rules = (
+                        hwmon_config["black_list_rules"]
+                        if (
+                            "black_list_rules" in hwmon_config
+                            and hwmon_config["black_list_rules"] is not None
                         )
                         else []
                     )
@@ -228,6 +238,75 @@ class FanManager:
                     self.fan_config_list.append(fc)
                 except Exception:
                     logger.error(f"获取风扇({hwmon_name})hwmon信息失败:", exc_info=True)
+
+    def __match_hwmon_black_list_value(self, target_value, rule_value, match_mode):
+        def _match_string(single_rule_value: str):
+            if match_mode == "contains":
+                return single_rule_value in target_value
+            if match_mode == "regex":
+                try:
+                    return re.search(single_rule_value, target_value) is not None
+                except re.error:
+                    logger.error(
+                        f"Invalid hwmon black_list_rules regex: {single_rule_value}",
+                        exc_info=True,
+                    )
+                    return False
+            return target_value == single_rule_value
+
+        if isinstance(rule_value, str):
+            return _match_string(rule_value)
+        if isinstance(rule_value, list):
+            return any(
+                isinstance(single_rule_value, str)
+                and _match_string(single_rule_value)
+                for single_rule_value in rule_value
+            )
+        return False
+
+    def __is_hwmon_blacklisted(self, fan_config: FanConfig):
+        if PRODUCT_NAME in fan_config.hwmon_black_list:
+            logger.info(
+                f"hwmon black_list matched: product_name={PRODUCT_NAME}, hwmon={fan_config.hwmon_name}"
+            )
+            return True
+
+        for rule in fan_config.hwmon_black_list_rules:
+            if not isinstance(rule, dict):
+                continue
+
+            match_mode = rule.get("match", "exact")
+            if not isinstance(match_mode, str):
+                match_mode = "exact"
+            match_mode = match_mode.lower()
+            if match_mode not in ("exact", "contains", "regex"):
+                logger.error(
+                    f"Invalid hwmon black_list_rules match mode: {match_mode}, fallback to exact"
+                )
+                match_mode = "exact"
+
+            has_match_item = False
+            is_matched = True
+
+            if "product_name" in rule:
+                has_match_item = True
+                is_matched = is_matched and self.__match_hwmon_black_list_value(
+                    PRODUCT_NAME, rule["product_name"], match_mode
+                )
+
+            if "product_version" in rule:
+                has_match_item = True
+                is_matched = is_matched and self.__match_hwmon_black_list_value(
+                    PRODUCT_VERSION, rule["product_version"], match_mode
+                )
+
+            if has_match_item and is_matched:
+                logger.info(
+                    f"hwmon black_list_rules matched: product_name={PRODUCT_NAME}, product_version={PRODUCT_VERSION}, hwmon={fan_config.hwmon_name}, rule={rule}"
+                )
+                return True
+
+        return False
 
     # 获取配置值，支持直接数值或按机型字典格式
     def __get_value_for_product(self, config_value, default=0):
@@ -361,9 +440,7 @@ class FanManager:
 
         # self.fan_config_list 筛选, 去除黑名单
         self.fan_config_list = list(
-            filter(
-                lambda x: PRODUCT_NAME not in x.hwmon_black_list, self.fan_config_list
-            )
+            filter(lambda x: not self.__is_hwmon_blacklisted(x), self.fan_config_list)
         )
         # self.fan_config_list = [
         #     config

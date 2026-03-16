@@ -5,9 +5,12 @@ fans:
   - fan_name: Fan
     pwm_mode: 0
     black_list:
-      - G1618-04
       - G1618-05
       # - G1617-01
+    black_list_rules:
+      - product_name: G1618-04
+        product_version:
+          - Version 1.0
 
     pwm_enable:
       manual_value: 1
