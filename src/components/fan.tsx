@@ -127,6 +127,7 @@ const FANUseProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
 const FANManageProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   const fanWriteMode = Backend.data.getFanPwmMode(fanIndex);
   const defaultFanSetting = Backend.data.getDefaultFanSetting(fanIndex);
+  const fixedTemps = Backend.data.getFanFixedTemps(fanIndex);
 
   const buildItems = () => {
     return Object.entries(Settings.getFanSettings()).map(([profileName, fanSetting]) => ({
@@ -209,6 +210,7 @@ const FANManageProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
                     ? defaultFanSetting
                     : undefined
                 }
+                fixedTemps={fixedTemps}
               />
             );
             return;
@@ -236,6 +238,7 @@ const FANManageProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
                     ? defaultFanSetting
                     : undefined
                 }
+                fixedTemps={fixedTemps}
               />
             );
           }
@@ -597,12 +600,14 @@ function FANCretateProfileModelComponent({
   closeModal,
   fixedCountMode,
   defaultSetting,
+  fixedTemps,
 }: {
   fanProfileName: string;
   fanSetting: FanSetting;
   closeModal: () => void;
   fixedCountMode: boolean;
   defaultSetting?: FanSetting;
+  fixedTemps?: number[];
 }) {
   const canvasRef: any = useRef(null);
   const curvePoints: any = useRef(
@@ -721,6 +726,20 @@ function FANCretateProfileModelComponent({
       }
     );
 
+    // Draw fixed temperature guide lines
+    if (fixedTemps) {
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(255, 165, 0, 0.2)";
+      ctx.setLineDash([4, 4]);
+      for (const temp of fixedTemps) {
+        const x = (temp / FanPosition.tempMax) * width;
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
     //绘制线段
     ctx.beginPath();
     ctx.moveTo(0, height);
@@ -791,7 +810,9 @@ function FANCretateProfileModelComponent({
 
   useEffect(() => {
     if (selectedPoint.current) {
-      selectedPoint.current.temperature = selPointTemp;
+      if (!fixedTemps) {
+        selectedPoint.current.temperature = selPointTemp;
+      }
       selectedPoint.current.fanRPMpercent = selPointSpeed;
       refreshCanvas();
     }
@@ -936,7 +957,9 @@ function FANCretateProfileModelComponent({
         break;
       }
       case FANMODE.CURVE: {
-        dragPoint.current.temperature = fanClickPos.temperature;
+        if (!fixedTemps) {
+          dragPoint.current.temperature = fanClickPos.temperature;
+        }
         dragPoint.current.fanRPMpercent = fanClickPos.fanRPMpercent;
         selectedPoint.current = dragPoint.current;
         setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
@@ -1341,12 +1364,14 @@ function FANCretateProfileModelComponent({
                   valueSuffix={"°C"}
                   showValue={true}
                   layout={"inline"}
-                  disabled={!selectedPoint.current}
+                  disabled={!selectedPoint.current || !!fixedTemps}
                   step={1}
                   max={FanPosition.tempMax}
                   min={0}
                   onChange={(value: number) => {
-                    setSelPointTemp(value);
+                    if (!fixedTemps) {
+                      setSelPointTemp(value);
+                    }
                   }}
                 />
               )}

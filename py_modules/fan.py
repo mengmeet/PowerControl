@@ -25,6 +25,7 @@ class FanConfig:
 
         self.hwmon_default_curve = []  # 风扇默认曲线
         self.hwmon_curve_paths = []  # 风扇曲线写入路径
+        self.fixed_temps = []  # 固定温度点 (firmware-imposed, e.g. [10,20,...,100])
 
         self.hwmon_black_list = []  # 风扇hwmon黑名单
         self.hwmon_black_list_rules = []  # 风扇hwmon黑名单规则
@@ -167,6 +168,15 @@ class FanManager:
                                 }
                             )
 
+                    # Parse fixed_temps from config
+                    fixed_temps_conf = (
+                        fan_pwm_write["fixed_temps"]
+                        if "fixed_temps" in fan_pwm_write
+                        and isinstance(fan_pwm_write["fixed_temps"], list)
+                        else []
+                    )
+                    fc.fixed_temps = fixed_temps_conf
+
                     if fc.hwmon_mode == 0:
                         fc.hwmon_pwm_path = (
                             name_path_map[hwmon_name]
@@ -185,6 +195,7 @@ class FanManager:
                         curve_temp_path = (
                             curve_path["temp_write"]
                             if curve_path is not None and "temp_write" in curve_path
+                            and isinstance(curve_path["temp_write"], list)
                             else []
                         )
                         curve_pwm_path = (
@@ -192,37 +203,51 @@ class FanManager:
                             if curve_path is not None and "pwm_write" in curve_path
                             else []
                         )
-                        for i in range(min(len(curve_temp_path), len(curve_pwm_path))):
-                            point_info = {
-                                "pwm_write": name_path_map[hwmon_name]
-                                + "/"
-                                + curve_pwm_path[i],
-                                "temp_write": name_path_map[hwmon_name]
-                                + "/"
-                                + curve_temp_path[i],
-                            }
-                            if os.path.exists(
-                                point_info["pwm_write"]
-                            ) and os.path.exists(point_info["temp_write"]):
-                                fc.hwmon_curve_paths.append(point_info)
+                        point_count = (
+                            len(curve_pwm_path) if not curve_temp_path
+                            else min(len(curve_temp_path), len(curve_pwm_path))
+                        )
+                        for i in range(point_count):
+                            pwm_full_path = (
+                                name_path_map[hwmon_name] + "/" + curve_pwm_path[i]
+                            )
+                            temp_full_path = (
+                                name_path_map[hwmon_name] + "/" + curve_temp_path[i]
+                                if i < len(curve_temp_path)
+                                else None
+                            )
+                            if not os.path.exists(pwm_full_path):
+                                continue
+                            if temp_full_path is not None and not os.path.exists(temp_full_path):
+                                continue
+                            fc.hwmon_curve_paths.append({
+                                "pwm_write": pwm_full_path,
+                                "temp_write": temp_full_path,
+                            })
 
-                    # 读取风扇转速的路径
-                    fan_pwm_input = hwmon_config["pwm_input"]
-                    fan_hwmon_label_input = (
-                        fan_pwm_input["hwmon_label"]
-                        if "hwmon_label" in fan_pwm_input
-                        else hwmon_name
-                    )
-                    fc.hwmon_input_path = (
-                        name_path_map[fan_hwmon_label_input]
-                        + "/"
-                        + fan_pwm_input["pwm_read_path"]
-                    )
-                    fc.fan_value_max = (
-                        fan_pwm_input["pwm_read_max"]
-                        if "pwm_read_max" in fan_pwm_input
-                        else 0
-                    )
+                    # 读取风扇转速的路径 (optional)
+                    fan_pwm_input = hwmon_config.get("pwm_input")
+                    if fan_pwm_input:
+                        fan_hwmon_label_input = (
+                            fan_pwm_input["hwmon_label"]
+                            if "hwmon_label" in fan_pwm_input
+                            else hwmon_name
+                        )
+                        fc.hwmon_input_path = (
+                            name_path_map[fan_hwmon_label_input]
+                            + "/"
+                            + fan_pwm_input["pwm_read_path"]
+                            if "pwm_read_path" in fan_pwm_input
+                            else None
+                        )
+                        fc.fan_value_max = (
+                            fan_pwm_input["pwm_read_max"]
+                            if "pwm_read_max" in fan_pwm_input
+                            else 0
+                        )
+                    else:
+                        fc.hwmon_input_path = None
+                        fc.fan_value_max = 0
                     max_value_from_settings = self.fansSettings.getSetting(
                         f"fan{len(self.fan_config_list)}_max"
                     )
@@ -527,10 +552,9 @@ class FanManager:
     def __get_fanRPM_HWMON(self, fc: FanConfig):
         try:
             hwmon_input_path = fc.hwmon_input_path
+            if hwmon_input_path is None:
+                return 0
             fanRPM = int(open(hwmon_input_path).read().strip())
-            # logger.debug(
-            #     f"使用hwmon数据 当前机型:{PRODUCT_NAME} hwmon地址:{hwmon_input_path} 风扇转速:{fanRPM}"
-            # )
             return fanRPM
         except Exception:
             logger.error("使用hwmon获取风扇转速异常:", exc_info=True)
@@ -750,10 +774,11 @@ class FanManager:
                     fanWriteValue = hwmon_default_curve[index]["pwm_value"]
                     pwm_path = point["pwm_write"]
                     open(pwm_path, "w").write(str(fanWriteValue))
-                    # 写入温度
-                    temp = hwmon_default_curve[index]["temp_value"]
+                    # 写入温度 (skip if read-only / None)
                     temp_path = point["temp_write"]
-                    open(temp_path, "w").write(str(temp))
+                    if temp_path is not None:
+                        temp = hwmon_default_curve[index]["temp_value"]
+                        open(temp_path, "w").write(str(temp))
                     logger.debug(
                         f"写入hwmon数据 写入hwmon转速地址:{pwm_path} 风扇转速写入值:{fanWriteValue} 温度地址:{temp_path} 温度大小:{temp}"
                     )
@@ -885,10 +910,11 @@ class FanManager:
                         # 写入转速
                         pwm_path = point["pwm_write"]
                         open(pwm_path, "w").write(str(fanWriteValue))
-                        # 写入温度
+                        # 写入温度 (skip if read-only / None)
                         temp = temp + addTemp
                         temp_path = point["temp_write"]
-                        open(temp_path, "w").write(str(temp))
+                        if temp_path is not None:
+                            open(temp_path, "w").write(str(temp))
                         logger.debug(
                             f"写入hwmon数据 写入hwmon转速地址:{pwm_path} 风扇转速百分比{value} 风扇最大值{rpm_write_max} 风扇转速写入值:{fanWriteValue} 温度地址:{temp_path} 温度大小:{temp}"
                         )
@@ -946,6 +972,33 @@ class FanManager:
             logger.error("使用ECIO写入风扇转速异常:", exc_info=True)
             return False
 
+    def _interpolate_to_fixed_temps(
+        self, temp_list: List[int], pwm_list: List[int], fixed_temps: List[int]
+    ):
+        """Interpolate user curve points to match fixed temperature points."""
+        if not temp_list or not pwm_list:
+            return list(fixed_temps), [0] * len(fixed_temps)
+
+        points = sorted(zip(temp_list, pwm_list), key=lambda p: p[0])
+        result_pwm = []
+        for target_temp in fixed_temps:
+            if target_temp <= points[0][0]:
+                result_pwm.append(points[0][1])
+            elif target_temp >= points[-1][0]:
+                result_pwm.append(points[-1][1])
+            else:
+                for i in range(len(points) - 1):
+                    if points[i][0] <= target_temp <= points[i + 1][0]:
+                        t0, p0 = points[i]
+                        t1, p1 = points[i + 1]
+                        if t1 == t0:
+                            result_pwm.append(p0)
+                        else:
+                            ratio = (target_temp - t0) / (t1 - t0)
+                            result_pwm.append(int(p0 + ratio * (p1 - p0)))
+                        break
+        return list(fixed_temps), result_pwm
+
     def set_fanCurve(self, index: int, temp_list: List[int], pwm_list: List[int]):
         try:
             logger.info(f"[FanDebug] set_fanCurve fan[{index}] temps={temp_list} pwms={pwm_list}")
@@ -957,6 +1010,14 @@ class FanManager:
 
             fc = self.fan_config_list[index]
             hwmon_mode = fc.hwmon_mode
+
+            if fc.fixed_temps:
+                temp_list, pwm_list = self._interpolate_to_fixed_temps(
+                    temp_list, pwm_list, fc.fixed_temps
+                )
+                logger.info(
+                    f"[FanDebug] interpolated to fixed_temps: temps={temp_list} pwms={pwm_list}"
+                )
 
             if hwmon_mode == 2 and fc.is_found_hwmon:
                 if fc.hwmon_enable_path:
@@ -989,15 +1050,17 @@ class FanManager:
             enable_path = fc.hwmon_enable_path
 
             if mode == 2:
-                for i in range(min(len(temp_list), len(pwm_list))):
+                for i in range(min(len(temp_list), len(pwm_list), len(hwmon_curve_paths))):
                     pwm_path = hwmon_curve_paths[i]["pwm_write"]
                     temp_path = hwmon_curve_paths[i]["temp_write"]
                     fanWritePwmValue = max(
                         min(int(pwm_list[i] / 100 * rpm_write_max), rpm_write_max), 0
                     )
-                    fanWriteTempValue = max(min(int(temp_list[i]), rpm_write_max), 0)
                     open(pwm_path, "w").write(str(fanWritePwmValue))
-                    open(temp_path, "w").write(str(fanWriteTempValue))
+                    fanWriteTempValue = None
+                    if temp_path is not None:
+                        fanWriteTempValue = max(min(int(temp_list[i]), rpm_write_max), 0)
+                        open(temp_path, "w").write(str(fanWriteTempValue))
                     logger.debug(
                         f"hwmon写入数据, pwm_path:{pwm_path}, pwm_value:{fanWritePwmValue}; temp_path:{temp_path}, temp_value:{fanWriteTempValue}"
                     )
@@ -1097,6 +1160,7 @@ class FanManager:
                             "fan_hwmon_mode": fan_hwmon_mode,
                             "fan_default_curve": fan_default_curve,
                             "fan_pwm_write_max": fan_pwm_write_max,
+                            "fan_fixed_temps": config.fixed_temps,
                         }
                     )
                 return config_list
