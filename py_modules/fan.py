@@ -494,9 +494,22 @@ class FanManager:
 
             fc = self.fan_config_list[index]
 
+            # Detect external pwm_enable resets (e.g. by ASUS firmware)
+            if fc.is_found_hwmon and fc.hwmon_enable_path and fc.hwmon_mode == 2:
+                try:
+                    cur = open(fc.hwmon_enable_path).read().strip()
+                    prev = getattr(fc, '_last_logged_enable', None)
+                    if prev is not None and prev != cur:
+                        logger.info(f"[FanDebug] pwm_enable changed: fan[{index}] {prev}->{cur}")
+                    fc._last_logged_enable = cur
+                except Exception:
+                    pass
+
             # HWMON 读取
             if fc.is_found_hwmon:
-                return self.__get_fanRPM_HWMON(fc)
+                rpm = self.__get_fanRPM_HWMON(fc)
+                fc.latest_fanRPM = rpm
+                return rpm
 
             # ECIO 读取
             if fc.pwm_read_offset:
@@ -652,7 +665,7 @@ class FanManager:
             return False
 
     def set_fanAuto(self, index: int, value: bool):
-        logger.debug(f"设置风扇自动模式 index:{index} value:{value}")
+        logger.info(f"[FanDebug] set_fanAuto fan[{index}] auto={value}")
         try:
             if index > len(self.fan_config_list) - 1:
                 logger.error(
@@ -661,6 +674,13 @@ class FanManager:
                 return False
 
             fc = self.fan_config_list[index]
+
+            if fc.is_found_hwmon and fc.hwmon_enable_path:
+                try:
+                    cur = open(fc.hwmon_enable_path).read().strip()
+                    logger.info(f"[FanDebug] set_fanAuto: pwm_enable={cur} -> auto={value}")
+                except Exception:
+                    pass
 
             # HWMON 写入
             if fc.is_found_hwmon:
@@ -928,9 +948,7 @@ class FanManager:
 
     def set_fanCurve(self, index: int, temp_list: List[int], pwm_list: List[int]):
         try:
-            logger.debug(
-                f"set_fanCurve {index}, temp_list:{temp_list}, pwm_list:{pwm_list}"
-            )
+            logger.info(f"[FanDebug] set_fanCurve fan[{index}] temps={temp_list} pwms={pwm_list}")
             if index > len(self.fan_config_list) - 1:
                 logger.error(
                     f"风扇下标越界 index:{index} len:{len(self.fan_config_list)}"
@@ -941,7 +959,19 @@ class FanManager:
             hwmon_mode = fc.hwmon_mode
 
             if hwmon_mode == 2 and fc.is_found_hwmon:
-                return self.__set_fanCurve_HWMON(fc, temp_list, pwm_list)
+                if fc.hwmon_enable_path:
+                    try:
+                        before = open(fc.hwmon_enable_path).read().strip()
+                    except Exception:
+                        before = "?"
+                result = self.__set_fanCurve_HWMON(fc, temp_list, pwm_list)
+                if fc.hwmon_enable_path:
+                    try:
+                        after = open(fc.hwmon_enable_path).read().strip()
+                        logger.info(f"[FanDebug] set_fanCurve: pwm_enable {before}->{after} result={result}")
+                    except Exception:
+                        pass
+                return result
 
             return False
         except Exception as e:

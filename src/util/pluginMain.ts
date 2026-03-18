@@ -267,13 +267,13 @@ export class FanControl {
     for (var index = 0; index < fanSettings.length; index++) {
       const fanPwmMode = Backend.data.getFanPwmMode(index);
       if (fanPwmMode == FAN_PWM_MODE.MULTI_DIFF) {
+        // MULTI_DIFF skips periodic RPM polling - only event-driven updates
         continue;
       }
       if (!fanSettings?.[index]) {
         FanControl.fanInfo[index].setPoint.temperature = 0;
         FanControl.fanInfo[index].setPoint.fanRPMpercent = -10;
       }
-      //console.log("判断转速变化 index=",index,"lastRPM=",FanControl.fanInfo[index].lastSetPoint.fanRPMpercent,"nowRPM=",FanControl.fanInfo[index].setPoint.fanRPMpercent,"result=",(Math.abs((FanControl.fanInfo[index].lastSetPoint.fanRPMpercent??0) - (FanControl.fanInfo[index].setPoint.fanRPMpercent??0))>=3))
       //转速变化超过3%才进行设置
       if (
         Math.abs(
@@ -378,7 +378,7 @@ export class PluginManager {
 
       // 注册应用切换监听
       RunningApps.listenActiveChange((newAppId, oldAppId) => {
-        Logger.debug(`App changed: newAppId=${newAppId} oldAppId=${oldAppId}`);
+        Logger.info(`[FanDebug] App changed: new=${newAppId} old=${oldAppId}`);
         if (Settings.ensureEnable()) {
           Backend.applySettings(APPLYTYPE.SET_ALL).catch((e) => {
             Logger.error(`Error while applying settings: ${e.message}`);
@@ -417,9 +417,10 @@ export class PluginManager {
       PluginManager.suspendEndHook =
         SteamUtils.RegisterForOnResumeFromSuspend(async () => {
           try {
+            Logger.info(`[FanDebug] Suspend resume: waiting 10s`);
             await new Promise((resolve) => setTimeout(resolve, 10000));
             if (Settings.ensureEnable()) {
-              console.log("throwSuspendEvt");
+              Logger.info(`[FanDebug] Suspend resume: reapplying settings`);
               await receiveSuspendEvent();
             }
             await Timeout.withTimeout(

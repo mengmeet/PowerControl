@@ -479,7 +479,7 @@ export class Backend {
   public static async applySettings(applyTarget: APPLYTYPE) {
     try {
       const currentEnable = Settings.ensureEnable();
-      Logger.info(`applySettings: currentEnable = ${currentEnable}, lastEnable = ${Backend.lastEnable}`);
+      Logger.info(`applySettings: target=${applyTarget} enabled=${currentEnable}`);
       if (!currentEnable) {
         if (currentEnable !== Backend.lastEnable) {
           Backend.resetSettings();
@@ -722,18 +722,19 @@ export class Backend {
       return;
     }
 
-    // Check global fan control switch
     if (!Settings.appFanControlEnabled()) {
       return;
     }
 
     const fanSettings = Settings.appFanSettings();
+    const fanProfileNames = Settings.appFanSettingNameList();
+    Logger.info(`[FanDebug] handleFanControl: fanCount=${fanSettings.length}, profiles=${JSON.stringify(fanProfileNames)}`);
+
     for (let index = 0; index < fanSettings.length; index++) {
       const fanSetting = Settings.appFanSettings()?.[index];
-      //没有配置时转自动
       if (!fanSetting) {
+        Logger.info(`[FanDebug] fan[${index}] no config -> auto`);
         await setFanAuto(index, true);
-        // console.log(`没有配置 index= ${index}`);
         continue;
       }
 
@@ -741,32 +742,30 @@ export class Backend {
       const fanRPMPercent = FanControl.fanInfo[index].setPoint.fanRPMpercent;
       const fanWriteMode = Backend.data.getFanPwmMode(index);
 
-      //写入转速后再写入控制位
       switch (fanMode) {
         case FANMODE.FIX:
         case FANMODE.CURVE:
-          // console.log(`${fanMode == FANMODE.FIX ? '直线' : '曲线'} index= ${index}`);
           if (fanWriteMode != FAN_PWM_MODE.MULTI_DIFF) {
             if (!fanRPMPercent) {
-              console.error(`风扇转速百分比未设置: index=${index}`);
+              Logger.info(`[FanDebug] fan[${index}] skip: rpmPercent falsy (${fanRPMPercent})`);
               continue;
             }
+            Logger.info(`[FanDebug] fan[${index}] ${fanMode} -> setPercent(${fanRPMPercent})`);
             await setFanAuto(index, false);
             await setFanPercent(index, fanRPMPercent);
           } else {
-            console.log(`直接写入曲线数据`);
-            await setFanCurve(
-              index,
-              fanSetting?.curvePoints?.map((point) => point?.temperature ?? 0) ?? [],
-              fanSetting?.curvePoints?.map((point) => point?.fanRPMpercent ?? 0) ?? []
-            );
+            const tempList = fanSetting?.curvePoints?.map((point) => point?.temperature ?? 0) ?? [];
+            const pwmList = fanSetting?.curvePoints?.map((point) => point?.fanRPMpercent ?? 0) ?? [];
+            Logger.info(`[FanDebug] fan[${index}] ${fanMode} MULTI_DIFF -> setCurve(${tempList.length} points)`);
+            await setFanCurve(index, tempList, pwmList);
           }
           break;
         case FANMODE.AUTO:
+          Logger.info(`[FanDebug] fan[${index}] auto`);
           await setFanAuto(index, true);
           break;
         default:
-          console.error(`出现意外的FanMode = ${fanMode}`);
+          Logger.info(`[FanDebug] fan[${index}] unknown mode=${fanMode} -> auto`);
           await setFanAuto(index, true);
       }
     }
