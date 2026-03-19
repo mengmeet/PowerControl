@@ -551,10 +551,15 @@ const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
 
 //FANRPM模块
 const FANRPMComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
+  const canReadRPM = Backend.data.getFanMAXPRM(fanIndex) > 0;
   const [fanrpm, setFanRPM] = useState<number>(0);
+  const [fanPercent, setFanPercent] = useState<number>(0);
   const [temperature, setTemperature] = useState<number | undefined>(undefined);
   const refresh = async () => {
     setFanRPM(FanControl.fanInfo[fanIndex].fanRPM);
+    setFanPercent(
+      Math.trunc(FanControl.fanInfo[fanIndex].setPoint.fanRPMpercent ?? 0)
+    );
     const temperature = FanControl.fanInfo[fanIndex].nowPoint.temperature;
     if (temperature != undefined && temperature != 0) {
       setTemperature(Math.trunc(temperature));
@@ -571,14 +576,28 @@ const FANRPMComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   }, []);
   return (
     <>
-      <PanelSectionRow>
-        <Field
-          focusable={true}
-          label={localizationManager.getString(localizeStrEnum.FAN_SPEED)}
-        >
-          {fanrpm + " RPM"}
-        </Field>
-      </PanelSectionRow>
+      {canReadRPM && (
+        <PanelSectionRow>
+          <Field
+            focusable={true}
+            label={localizationManager.getString(localizeStrEnum.FAN_SPEED)}
+          >
+            {fanrpm + " RPM"}
+          </Field>
+        </PanelSectionRow>
+      )}
+      {!canReadRPM && fanPercent > 0 && (
+        <PanelSectionRow>
+          <Field
+            focusable={true}
+            label={localizationManager.getString(
+              localizeStrEnum.FAN_SPEED_PERCENT
+            )}
+          >
+            {fanPercent + " %"}
+          </Field>
+        </PanelSectionRow>
+      )}
       {temperature && (
         <PanelSectionRow>
           <Field
