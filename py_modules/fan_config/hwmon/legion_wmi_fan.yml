@@ -1,0 +1,53 @@
+hwmon_name: legion_wmi_fan
+
+fans:
+  - fan_name: Fan
+    pwm_mode: 2
+
+    pwm_enable:
+      manual_value: 1
+      auto_value: 2
+      pwm_enable_path: pwm1_enable
+
+    pwm_write:
+      pwm_write_max:
+        default: 255
+      fixed_temps: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+      curve_path:
+        temp_write: []
+        pwm_write:
+          - pwm1_auto_point1_pwm
+          - pwm1_auto_point2_pwm
+          - pwm1_auto_point3_pwm
+          - pwm1_auto_point4_pwm
+          - pwm1_auto_point5_pwm
+          - pwm1_auto_point6_pwm
+          - pwm1_auto_point7_pwm
+          - pwm1_auto_point8_pwm
+          - pwm1_auto_point9_pwm
+          - pwm1_auto_point10_pwm
+      default_curve:
+        temp:
+          - 10
+          - 20
+          - 30
+          - 40
+          - 50
+          - 60
+          - 70
+          - 80
+          - 90
+          - 100
+        pwm:
+          - 112
+          - 122
+          - 140
+          - 153
+          - 181
+          - 201
+          - 222
+          - 222
+          - 255
+          - 255
+
+    temp_mode: 0

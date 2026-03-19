@@ -377,6 +377,17 @@ export class BackendData {
     return 0;
   }
 
+  public getFanFixedTemps(index: number): number[] | undefined {
+    const fanConfigs = this.get<any[]>('fanConfigs', []);
+    if (this.has('fanConfigs')) {
+      const temps = fanConfigs?.[index]?.fan_fixed_temps;
+      if (temps instanceof Array && temps.length > 0) {
+        return temps;
+      }
+    }
+    return undefined;
+  }
+
   public getFanHwmonDefaultCurve(
     index: number
   ): { speedValue: number; tempValue: number }[] {

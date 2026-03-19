@@ -79,6 +79,10 @@ const TabView: FC<{ show?: boolean }> = ({ show = true }) => {
     return supportChargeLimit || isSupportSoftwareChargeLimit;
   }, [supportChargeLimit, isSupportSoftwareChargeLimit]);
 
+  const showFanTab = useMemo(() => {
+    return Backend.data.getFanCount() > 0;
+  }, []);
+
   return (
     <>
       <style>
@@ -121,11 +125,17 @@ const TabView: FC<{ show?: boolean }> = ({ show = true }) => {
                 content: <TabGpu />,
                 id: "gpu",
               },
-              {
-                title: <FaFan size={20} style={{ display: "block" }} />,
-                content: <TabFans />,
-                id: "fans",
-              },
+              ...(showFanTab
+                ? [
+                    {
+                      title: (
+                        <FaFan size={20} style={{ display: "block" }} />
+                      ),
+                      content: <TabFans />,
+                      id: "fans",
+                    },
+                  ]
+                : []),
               ...(showPowerTab
                 ? [
                     {

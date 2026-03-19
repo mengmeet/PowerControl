@@ -167,8 +167,9 @@ export class FanControl {
     Backend.data.getFanConfigs()?.forEach(async (_config, index) => {
       await Backend.data.getFanRPM(index).then((value) => {
         FanControl.fanInfo[index].fanRPM = value;
+        const maxRPM = Backend.data.getFanMAXPRM(index);
         FanControl.fanInfo[index].nowPoint.fanRPMpercent =
-          (value / Backend.data.getFanMAXPRM(index)) * 100;
+          maxRPM > 0 ? (value / maxRPM) * 100 : 0;
       });
     });
     Settings.appFanSettings()?.forEach(async (fanSetting, index) => {

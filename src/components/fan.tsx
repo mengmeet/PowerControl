@@ -127,6 +127,7 @@ const FANUseProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
 const FANManageProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   const fanWriteMode = Backend.data.getFanPwmMode(fanIndex);
   const defaultFanSetting = Backend.data.getDefaultFanSetting(fanIndex);
+  const fixedTemps = Backend.data.getFanFixedTemps(fanIndex);
 
   const buildItems = () => {
     return Object.entries(Settings.getFanSettings()).map(([profileName, fanSetting]) => ({
@@ -209,6 +210,7 @@ const FANManageProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
                     ? defaultFanSetting
                     : undefined
                 }
+                fixedTemps={fixedTemps}
               />
             );
             return;
@@ -236,6 +238,7 @@ const FANManageProfileComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
                     ? defaultFanSetting
                     : undefined
                 }
+                fixedTemps={fixedTemps}
               />
             );
           }
@@ -548,10 +551,15 @@ const FANDisplayComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
 
 //FANRPM模块
 const FANRPMComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
+  const canReadRPM = Backend.data.getFanMAXPRM(fanIndex) > 0;
   const [fanrpm, setFanRPM] = useState<number>(0);
+  const [fanPercent, setFanPercent] = useState<number>(0);
   const [temperature, setTemperature] = useState<number | undefined>(undefined);
   const refresh = async () => {
     setFanRPM(FanControl.fanInfo[fanIndex].fanRPM);
+    setFanPercent(
+      Math.trunc(FanControl.fanInfo[fanIndex].setPoint.fanRPMpercent ?? 0)
+    );
     const temperature = FanControl.fanInfo[fanIndex].nowPoint.temperature;
     if (temperature != undefined && temperature != 0) {
       setTemperature(Math.trunc(temperature));
@@ -568,14 +576,28 @@ const FANRPMComponent: FC<{ fanIndex: number }> = ({ fanIndex }) => {
   }, []);
   return (
     <>
-      <PanelSectionRow>
-        <Field
-          focusable={true}
-          label={localizationManager.getString(localizeStrEnum.FAN_SPEED)}
-        >
-          {fanrpm + " RPM"}
-        </Field>
-      </PanelSectionRow>
+      {canReadRPM && (
+        <PanelSectionRow>
+          <Field
+            focusable={true}
+            label={localizationManager.getString(localizeStrEnum.FAN_SPEED)}
+          >
+            {fanrpm + " RPM"}
+          </Field>
+        </PanelSectionRow>
+      )}
+      {!canReadRPM && fanPercent > 0 && (
+        <PanelSectionRow>
+          <Field
+            focusable={true}
+            label={localizationManager.getString(
+              localizeStrEnum.FAN_SPEED_PERCENT
+            )}
+          >
+            {fanPercent + " %"}
+          </Field>
+        </PanelSectionRow>
+      )}
       {temperature && (
         <PanelSectionRow>
           <Field
@@ -597,12 +619,14 @@ function FANCretateProfileModelComponent({
   closeModal,
   fixedCountMode,
   defaultSetting,
+  fixedTemps,
 }: {
   fanProfileName: string;
   fanSetting: FanSetting;
   closeModal: () => void;
   fixedCountMode: boolean;
   defaultSetting?: FanSetting;
+  fixedTemps?: number[];
 }) {
   const canvasRef: any = useRef(null);
   const curvePoints: any = useRef(
@@ -721,6 +745,20 @@ function FANCretateProfileModelComponent({
       }
     );
 
+    // Draw fixed temperature guide lines
+    if (fixedTemps) {
+      ctx.beginPath();
+      ctx.strokeStyle = "rgba(255, 165, 0, 0.2)";
+      ctx.setLineDash([4, 4]);
+      for (const temp of fixedTemps) {
+        const x = (temp / FanPosition.tempMax) * width;
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
     //绘制线段
     ctx.beginPath();
     ctx.moveTo(0, height);
@@ -791,7 +829,9 @@ function FANCretateProfileModelComponent({
 
   useEffect(() => {
     if (selectedPoint.current) {
-      selectedPoint.current.temperature = selPointTemp;
+      if (!fixedTemps) {
+        selectedPoint.current.temperature = selPointTemp;
+      }
       selectedPoint.current.fanRPMpercent = selPointSpeed;
       refreshCanvas();
     }
@@ -936,7 +976,9 @@ function FANCretateProfileModelComponent({
         break;
       }
       case FANMODE.CURVE: {
-        dragPoint.current.temperature = fanClickPos.temperature;
+        if (!fixedTemps) {
+          dragPoint.current.temperature = fanClickPos.temperature;
+        }
         dragPoint.current.fanRPMpercent = fanClickPos.fanRPMpercent;
         selectedPoint.current = dragPoint.current;
         setSelPointTemp(Math.trunc(selectedPoint.current.temperature));
@@ -1341,12 +1383,14 @@ function FANCretateProfileModelComponent({
                   valueSuffix={"°C"}
                   showValue={true}
                   layout={"inline"}
-                  disabled={!selectedPoint.current}
+                  disabled={!selectedPoint.current || !!fixedTemps}
                   step={1}
                   max={FanPosition.tempMax}
                   min={0}
                   onChange={(value: number) => {
-                    setSelPointTemp(value);
+                    if (!fixedTemps) {
+                      setSelPointTemp(value);
+                    }
                   }}
                 />
               )}
@@ -1457,7 +1501,7 @@ export const FANComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
   //<FANSelectProfileComponent/>
   return (
     <div style={!isTab ? {} : { marginLeft: "-10px", marginRight: "-10px" }}>
-      {show && fanEnable.current && fanCount.current >= 0 && (
+      {show && fanEnable.current && fanCount.current > 0 && (
         <PanelSection title="FAN">
           {!isTab && (
             <PanelSectionRow>

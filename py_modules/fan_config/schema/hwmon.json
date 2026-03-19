@@ -112,7 +112,7 @@
           "description": "读取数值最大值"
         }
       },
-      "required": ["pwm_read_path", "pwm_read_max"]
+      "required": []
     },
     "PWMWrite": {
       "title": "PWMWrite",
@@ -138,6 +138,13 @@
         "curve_path": {
           "$ref": "#/definitions/PWMWriteCurvePath",
           "description": "曲线路径"
+        },
+        "fixed_temps": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "固定温度点列表(固件限制温度不可更改时使用, 如 [10,20,...,100])"
         }
       },
       "required": []
@@ -181,7 +188,7 @@
           "items": {
             "type": "string"
           },
-          "description": "温度路径数组"
+          "description": "温度路径数组(可为空数组, 表示温度只读)"
         },
         "pwm_write": {
           "type": "array",
@@ -191,7 +198,7 @@
           "description": "PWM路径数组"
         }
       },
-      "required": ["temp_write", "pwm_write"]
+      "required": ["pwm_write"]
     },
     "BlackListRule": {
       "title": "BlackListRule",
