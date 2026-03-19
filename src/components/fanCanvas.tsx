@@ -135,29 +135,31 @@ export const FanCanvas: FC<FanCanvasProps> = (canvas) => {
 
   const { ...option } = canvas;
 
-  // touch-action: none is required to prevent browser from intercepting pointer events
-  // for default touch behaviors (scrolling, zooming, etc.), which would interrupt dragging.
-  // Without this, dragging a point would stop after a short distance because the browser
-  // takes over the pointer events to handle scrolling.
-  // touch-action: none 用于阻止浏览器拦截指针事件来执行默认触摸行为（滚动、缩放等），
-  // 否则拖动节点时会因为浏览器接管指针事件来处理滚动而导致拖动中断。
+  const isInteractive = !!(
+    canvas.onPointerShortPress ||
+    canvas.onPointerLongPress ||
+    canvas.onPointerDragDown ||
+    canvas.onPointerDraging
+  );
+
+  // touch-action: none 仅用于交互式画布（曲线编辑器），阻止浏览器拦截指针事件来处理滚动。
+  // 展示用画布应允许触摸事件透传，以便 QAM 界面正常滚动。
   return (
     <canvas
       ref={canvasRef}
-      onPointerDown={(e: any) => {
-        onPointerDown(e);
-      }}
-      onPointerMove={(e: any) => {
-        onPointerMove(e);
-      }}
-      onPointerUp={(e: any) => {
-        onPointerUp(e);
-      }}
-      onPointerLeave={(e: any) => {
-        onPointerLeave(e);
-      }}
+      {...(isInteractive
+        ? {
+            onPointerDown: (e: any) => onPointerDown(e),
+            onPointerMove: (e: any) => onPointerMove(e),
+            onPointerUp: (e: any) => onPointerUp(e),
+            onPointerLeave: (e: any) => onPointerLeave(e),
+          }
+        : {})}
       {...option}
-      style={{ ...option.style, touchAction: 'none' }}
+      style={{
+        ...option.style,
+        ...(isInteractive ? { touchAction: 'none' } : { pointerEvents: 'none' }),
+      }}
     />
   );
 };
