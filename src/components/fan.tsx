@@ -1482,7 +1482,7 @@ export const FANComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
   //<FANSelectProfileComponent/>
   return (
     <div style={!isTab ? {} : { marginLeft: "-10px", marginRight: "-10px" }}>
-      {show && fanEnable.current && fanCount.current >= 0 && (
+      {show && fanEnable.current && fanCount.current > 0 && (
         <PanelSection title="FAN">
           {!isTab && (
             <PanelSectionRow>
