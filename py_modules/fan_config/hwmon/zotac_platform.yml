@@ -2,38 +2,17 @@ hwmon_name: zotac_platform
 
 fans:
   - fan_name: Fan
-    pwm_mode: 2
+    pwm_mode: 0
 
     pwm_enable:
-      manual_value: 3
+      manual_value: 1
       auto_value: 2
       pwm_enable_path: pwm1_enable
 
     pwm_write:
       pwm_write_max:
-        default: 100
-      fixed_temps: [10, 20, 30, 40, 50, 60, 70, 80, 90]
-      curve_path:
-        temp_write:
-          - pwm1_auto_point1_temp
-          - pwm1_auto_point2_temp
-          - pwm1_auto_point3_temp
-          - pwm1_auto_point4_temp
-          - pwm1_auto_point5_temp
-          - pwm1_auto_point6_temp
-          - pwm1_auto_point7_temp
-          - pwm1_auto_point8_temp
-          - pwm1_auto_point9_temp
-        pwm_write:
-          - pwm1_auto_point1_pwm
-          - pwm1_auto_point2_pwm
-          - pwm1_auto_point3_pwm
-          - pwm1_auto_point4_pwm
-          - pwm1_auto_point5_pwm
-          - pwm1_auto_point6_pwm
-          - pwm1_auto_point7_pwm
-          - pwm1_auto_point8_pwm
-          - pwm1_auto_point9_pwm
+        default: 255
+      pwm_write_path: pwm1
       default_curve:
         temp:
           - 10
@@ -46,15 +25,15 @@ fans:
           - 80
           - 90
         pwm:
-          - 20
-          - 30
-          - 40
-          - 50
-          - 60
-          - 70
-          - 80
-          - 90
-          - 100
+          - 51
+          - 77
+          - 102
+          - 128
+          - 153
+          - 179
+          - 204
+          - 230
+          - 255
 
     pwm_input:
       pwm_read_path: fan1_input
