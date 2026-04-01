@@ -1,5 +1,6 @@
 import os
 from time import sleep
+from typing import Optional
 
 from config import logger
 
@@ -18,15 +19,52 @@ class FirmwareAttributeDevice(PowerStationDevice):
         super().__init__()
         self.attribute = None
         self.profile_name = None
+        self._attribute_available: bool = True
 
     def init_attribute(self, attribute: str, profile_name: str) -> None:
         self.attribute = attribute
         self.profile_name = profile_name
 
+    def _mark_attribute_unavailable(self, reason: str) -> None:
+        if self._attribute_available:
+            logger.warning(
+                f"Firmware attribute sysfs became unavailable: {reason}, "
+                "falling back to PowerStationDevice"
+            )
+            self._attribute_available = False
+
+    def _read_sysfs(self, path: str) -> Optional[str]:
+        """Read a sysfs file, returning None and marking unavailable on driver error."""
+        try:
+            with open(path, "r") as f:
+                return f.read().strip()
+        except OSError as e:
+            self._mark_attribute_unavailable(f"read {path}: {e}")
+            return None
+
+    def _write_sysfs(self, path: str, value: str) -> bool:
+        """Write to a sysfs file, returning False and marking unavailable on driver error."""
+        try:
+            with open(path, "w") as f:
+                f.write(value)
+            return True
+        except OSError as e:
+            self._mark_attribute_unavailable(f"write {path}: {e}")
+            return False
+
     def supports_attribute_tdp(self) -> bool:
         if not self.check_init():
             return False
-        return os.path.exists(f"{PREFIX}/{self.attribute}/attributes/{SPL_SUFFIX}")
+        if not self._attribute_available:
+            return False
+        spl_path = f"{PREFIX}/{self.attribute}/attributes/{SPL_SUFFIX}"
+        if not os.path.exists(spl_path):
+            return False
+        # Validate the driver is actually working by reading min_value
+        min_path = f"{spl_path}/min_value"
+        if os.path.exists(min_path) and self._read_sysfs(min_path) is None:
+            return False
+        return True
 
     def check_init(self) -> bool:
         if self.attribute is not None and self.profile_name is not None:
@@ -35,57 +73,48 @@ class FirmwareAttributeDevice(PowerStationDevice):
         return False
 
     def get_power_info(self) -> str:
-        power_info = {}
-        pl1_current_path = (
-            f"{PREFIX}/{self.attribute}/attributes/{SPL_SUFFIX}/current_value"
-        )
-        pl2_current_path = (
-            f"{PREFIX}/{self.attribute}/attributes/{SLOW_SUFFIX}/current_value"
-        )
-        pl3_current_path = (
-            f"{PREFIX}/{self.attribute}/attributes/{FAST_SUFFIX}/current_value"
-        )
-        pl1_max_path = f"{PREFIX}/{self.attribute}/attributes/{SPL_SUFFIX}/max_value"
-        pl2_max_path = f"{PREFIX}/{self.attribute}/attributes/{SLOW_SUFFIX}/max_value"
-        pl3_max_path = f"{PREFIX}/{self.attribute}/attributes/{FAST_SUFFIX}/max_value"
-        pl1_min_path = f"{PREFIX}/{self.attribute}/attributes/{SPL_SUFFIX}/min_value"
-        pl2_min_path = f"{PREFIX}/{self.attribute}/attributes/{SLOW_SUFFIX}/min_value"
-        pl3_min_path = f"{PREFIX}/{self.attribute}/attributes/{FAST_SUFFIX}/min_value"
+        if not self._attribute_available:
+            return super().get_power_info()
 
+        base_path = f"{PREFIX}/{self.attribute}/attributes"
         path_dict = {
-            "SPL_PL1_CURRENT": pl1_current_path,
-            "SLOW_PL2_CURRENT": pl2_current_path,
-            "FAST_PL3_CURRENT": pl3_current_path,
-            "SPL_PL1_MAX": pl1_max_path,
-            "SLOW_PL2_MAX": pl2_max_path,
-            "FAST_PL3_MAX": pl3_max_path,
-            "SPL_PL1_MIN": pl1_min_path,
-            "SLOW_PL2_MIN": pl2_min_path,
-            "FAST_PL3_MIN": pl3_min_path,
+            "SPL_PL1_CURRENT": f"{base_path}/{SPL_SUFFIX}/current_value",
+            "SLOW_PL2_CURRENT": f"{base_path}/{SLOW_SUFFIX}/current_value",
+            "FAST_PL3_CURRENT": f"{base_path}/{FAST_SUFFIX}/current_value",
+            "SPL_PL1_MAX": f"{base_path}/{SPL_SUFFIX}/max_value",
+            "SLOW_PL2_MAX": f"{base_path}/{SLOW_SUFFIX}/max_value",
+            "FAST_PL3_MAX": f"{base_path}/{FAST_SUFFIX}/max_value",
+            "SPL_PL1_MIN": f"{base_path}/{SPL_SUFFIX}/min_value",
+            "SLOW_PL2_MIN": f"{base_path}/{SLOW_SUFFIX}/min_value",
+            "FAST_PL3_MIN": f"{base_path}/{FAST_SUFFIX}/min_value",
         }
 
-        for key, value in path_dict.items():
-            if os.path.exists(value):
-                with open(value, "r") as f:
-                    power_info[key] = f.read().strip()
+        power_info = {}
+        for key, path in path_dict.items():
+            if os.path.exists(path):
+                val = self._read_sysfs(path)
+                if val is None:
+                    # Driver error detected, fall back entirely
+                    return super().get_power_info()
+                power_info[key] = val
+
+        if not power_info:
+            return super().get_power_info()
 
         power_info_str = ""
         for key, value in power_info.items():
             power_info_str += f"{key}: {value}\n"
         logger.info(f"power_info_str: {power_info_str}")
-        if power_info_str == "":
-            return super().get_power_info()
         return power_info_str
 
     def get_tdpMax(self) -> int:
         logger.info("FirmwareAttributeDevice get_tdpMax")
-        if not self.check_init():
-            logger.info("FirmwareAttributeDevice get_tdpMax: not check_init")
+        if not self._attribute_available or not self.check_init():
+            logger.info("FirmwareAttributeDevice get_tdpMax: fallback to parent")
             return super().get_tdpMax()
         max_tdp = self._get_max_tdp()
         if max_tdp is None:
-            logger.info("FirmwareAttributeDevice get_tdpMax: max_tdp is None")
-            logger.error("Failed to get TDP max, use fallback method")
+            logger.info("FirmwareAttributeDevice get_tdpMax: max_tdp is None, fallback")
             return super().get_tdpMax()
         logger.info(f"FirmwareAttributeDevice get_tdpMax: {max_tdp}")
         return max_tdp
@@ -105,81 +134,87 @@ class FirmwareAttributeDevice(PowerStationDevice):
             self.set_profile()
             min_tdp = self._get_min_tdp()
             max_tdp = self._get_max_tdp()
+            if not self._attribute_available:
+                logger.info("Attribute became unavailable during TDP read, fallback")
+                return super()._do_set_tdp(tdp)
             if min_tdp is not None and tdp < min_tdp:
                 logger.info(f"TDP is too low, min: {min_tdp}, use default method")
                 return super()._do_set_tdp(tdp)
             if max_tdp is not None and tdp > max_tdp:
                 logger.info(f"TDP is too high, max: {max_tdp}, set to max")
                 tdp = max_tdp
-            if os.path.exists(f"{base_path}/{SPL_SUFFIX}/current_value"):
-                with open(f"{base_path}/{SPL_SUFFIX}/current_value", "w") as f:
-                    f.write(str(tdp))
-                sleep(0.1)
-            if os.path.exists(f"{base_path}/{SLOW_SUFFIX}/current_value"):
-                with open(f"{base_path}/{SLOW_SUFFIX}/current_value", "w") as f:
-                    f.write(str(tdp))
-                sleep(0.1)
-            if os.path.exists(f"{base_path}/{FAST_SUFFIX}/current_value"):
-                with open(f"{base_path}/{FAST_SUFFIX}/current_value", "w") as f:
-                    f.write(str(tdp))
-                sleep(0.1)
+            for suffix in [SPL_SUFFIX, SLOW_SUFFIX, FAST_SUFFIX]:
+                path = f"{base_path}/{suffix}/current_value"
+                if os.path.exists(path):
+                    if not self._write_sysfs(path, str(tdp)):
+                        logger.info("Attribute write failed, fallback to parent")
+                        return super()._do_set_tdp(tdp)
+                    sleep(0.1)
         except Exception as e:
             logger.error(f"Failed to set TDP: {e}", exc_info=True)
+            self._mark_attribute_unavailable(str(e))
+            super()._do_set_tdp(tdp)
 
     def set_tdp_unlimited(self) -> None:
         logger.info("Setting TDP unlimited")
-        try:
-            if self.supports_attribute_tdp():
-                fast_max = 0
-                slow_max = 0
-                stapm_max = 0
-                base_path = f"{PREFIX}/{self.attribute}/attributes"
-                if os.path.exists(f"{base_path}/{SPL_SUFFIX}/max_value"):
-                    with open(f"{base_path}/{SPL_SUFFIX}/max_value", "r") as f:
-                        fast_max = f.read().strip()
-                if os.path.exists(f"{base_path}/{SLOW_SUFFIX}/max_value"):
-                    with open(f"{base_path}/{SLOW_SUFFIX}/max_value", "r") as f:
-                        slow_max = f.read().strip()
-                if os.path.exists(f"{base_path}/{FAST_SUFFIX}/max_value"):
-                    with open(f"{base_path}/{FAST_SUFFIX}/max_value", "r") as f:
-                        stapm_max = f.read().strip()
+        if not self.supports_attribute_tdp():
+            return super().set_tdp_unlimited()
 
-                if int(fast_max) > 0:
-                    logger.info(f"Setting TDP max to {fast_max} for fast")
-                    with open(f"{base_path}/{SPL_SUFFIX}/current_value", "w") as f:
-                        f.write(fast_max)
-                if int(slow_max) > 0:
-                    logger.info(f"Setting TDP max to {slow_max} for slow")
-                    with open(f"{base_path}/{SLOW_SUFFIX}/current_value", "w") as f:
-                        f.write(slow_max)
-                if int(stapm_max) > 0:
-                    logger.info(f"Setting TDP max to {stapm_max} for stapm")
-                    with open(f"{base_path}/{FAST_SUFFIX}/current_value", "w") as f:
-                        f.write(stapm_max)
-            else:
-                super().set_tdp_unlimited()
+        try:
+            base_path = f"{PREFIX}/{self.attribute}/attributes"
+            suffixes = [
+                (SPL_SUFFIX, "SPL"),
+                (SLOW_SUFFIX, "SLOW"),
+                (FAST_SUFFIX, "FAST"),
+            ]
+            for suffix, label in suffixes:
+                max_path = f"{base_path}/{suffix}/max_value"
+                cur_path = f"{base_path}/{suffix}/current_value"
+                if not os.path.exists(max_path):
+                    continue
+                max_val = self._read_sysfs(max_path)
+                if max_val is None:
+                    logger.info("Attribute read failed during unlimited, fallback")
+                    return super().set_tdp_unlimited()
+                if int(max_val) > 0:
+                    logger.info(f"Setting TDP max to {max_val} for {label}")
+                    if not self._write_sysfs(cur_path, max_val):
+                        logger.info("Attribute write failed during unlimited, fallback")
+                        return super().set_tdp_unlimited()
         except Exception as e:
             logger.error(f"Failed to set TDP unlimited: {e}", exc_info=True)
+            self._mark_attribute_unavailable(str(e))
+            super().set_tdp_unlimited()
 
-    def _get_min_tdp(self) -> int:
+    def _get_min_tdp(self) -> Optional[int]:
         if not self.check_init():
             return None
-        min_tdp = None
-        base_path = f"{PREFIX}/{self.attribute}/attributes"
-        if os.path.exists(f"{base_path}/{SPL_SUFFIX}/min_value"):
-            with open(f"{base_path}/{SPL_SUFFIX}/min_value", "r") as f:
-                min_tdp = int(f.read())
-        return min_tdp
+        path = f"{PREFIX}/{self.attribute}/attributes/{SPL_SUFFIX}/min_value"
+        if not os.path.exists(path):
+            return None
+        val = self._read_sysfs(path)
+        if val is None:
+            return None
+        try:
+            return int(val)
+        except ValueError:
+            logger.error(f"Invalid min_tdp value: {val}")
+            return None
 
-    def _get_max_tdp(self) -> int:
+    def _get_max_tdp(self) -> Optional[int]:
         if not self.check_init():
             return None
-        max_tdp = None
-        base_path = f"{PREFIX}/{self.attribute}/attributes"
-        if os.path.exists(f"{base_path}/{SPL_SUFFIX}/max_value"):
-            with open(f"{base_path}/{SPL_SUFFIX}/max_value", "r") as f:
-                max_tdp = int(f.read())
-        return max_tdp
+        path = f"{PREFIX}/{self.attribute}/attributes/{SPL_SUFFIX}/max_value"
+        if not os.path.exists(path):
+            return None
+        val = self._read_sysfs(path)
+        if val is None:
+            return None
+        try:
+            return int(val)
+        except ValueError:
+            logger.error(f"Invalid max_tdp value: {val}")
+            return None
 
     def set_profile(self) -> None:
         if not self.check_init():
