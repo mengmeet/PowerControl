@@ -101,6 +101,7 @@ const TabView: FC<{ show?: boolean }> = ({ show = true }) => {
           style={{
             height: "95%",
             width: "calc(100vw - 50px)",
+            maxWidth: "100%",
             marginTop: "-12px",
             position: "absolute",
             contain: "layout style paint",
