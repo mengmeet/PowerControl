@@ -216,7 +216,7 @@ export const PowerComponent: FC<{ isTab?: boolean }> = ({ isTab = false }) => {
   }, [supportChargeLimit, isSupportSoftwareChargeLimit]);
 
   return (
-    <div style={!isTab ? {} : { marginLeft: "-10px", marginRight: "-10px" }}>
+    <div style={!isTab ? {} : { marginLeft: "-2.8vw", marginRight: "-2.8vw" }}>
       {show && (
         <PanelSection title="Power">
           {!isTab && (
