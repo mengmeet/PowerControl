@@ -276,14 +276,12 @@ export class BackendData {
 
     await Promise.allSettled(tasks);
 
-    // If no cache, fetch versions and save to cache
-    // 如果没有缓存，获取版本并保存到缓存
-    if (!versionCache) {
-      const currentVer = this.get<string>('currentVersion', '');
-      const latestVer = this.get<string>('latestVersion', '');
-      if (currentVer && latestVer) {
-        setVersionCache(currentVer, latestVer);
-      }
+    // Always update the version cache after init so that the UI
+    // picks up the correct currentVersion (e.g. after an OTA update).
+    const currentVer = this.get<string>('currentVersion', '');
+    const latestVer = this.get<string>('latestVersion', '');
+    if (currentVer && latestVer) {
+      setVersionCache(currentVer, latestVer);
     }
   }
 
