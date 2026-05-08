@@ -10,9 +10,9 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 import sysInfo
-from config import CPU_VENDOR, RYZENADJ_PATH, SH_PATH, logger
+from config import CPU_VENDOR, SH_PATH, logger
 from cpu_detector import create_cpu_detector
-from utils import get_env, get_ryzenadj_path, getMaxTDP
+from utils import get_env, getMaxTDP, get_ryzenadj_candidates, run_ryzenadj
 
 
 @dataclass
@@ -332,13 +332,9 @@ class CPUManager:
             bool: True如果ryzenadj可用，否则False
         """
         try:
-            # 查看ryzenadj路径是否有该文件
-            if os.path.exists(RYZENADJ_PATH) or os.path.exists("/usr/bin/ryzenadj"):
-                logger.info("get_hasRyzenadj {}".format(True))
-                return True
-            else:
-                logger.info("get_hasRyzenadj {}".format(False))
-                return False
+            has_ryzenadj = len(get_ryzenadj_candidates()) > 0
+            logger.info("get_hasRyzenadj {}".format(has_ryzenadj))
+            return has_ryzenadj
         except Exception:
             logger.error("Failed to check ryzenadj tool", exc_info=True)
             return False
@@ -417,16 +413,8 @@ class CPUManager:
         logger.info("get tdpMax by amd ryzenadj")
         # 使用 ryzenadj 设置 200w 的 stapm-limit， 然后使用 ryzenadj -i 获取实际设置的 STAPM LIMIT， 保留整数
         try:
-            subprocess.run(["ryzenadj", "-a", "200000"], check=True, timeout=3, env=get_env())
-            process = subprocess.run(
-                ["ryzenadj", "-i"],
-                check=True,
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=3,
-                env=get_env(),
-            )
+            run_ryzenadj(["-a", "200000"])
+            process = run_ryzenadj(["-i"])
             stdout, stderr = process.stdout, process.stderr
             if stderr:
                 logger.error(stderr)
@@ -626,25 +614,24 @@ class CPUManager:
         try:
             if value >= 3:
                 tdp = value * 1000
-                sys_ryzenadj_path = get_ryzenadj_path()
-
                 stapm_limit = tdp
                 fast_minit = tdp
                 slow_limit = tdp
                 tctl_temp = 90
 
-                command = f"{sys_ryzenadj_path} -a {stapm_limit} -b {fast_minit} -c {slow_limit} -f {tctl_temp}"
-                command_args = command.split()
-                logger.debug(f"set_cpuTDP command: {command}")
+                command_args = [
+                    "-a",
+                    str(stapm_limit),
+                    "-b",
+                    str(fast_minit),
+                    "-c",
+                    str(slow_limit),
+                    "-f",
+                    str(tctl_temp),
+                ]
+                logger.debug(f"set_cpuTDP command: ryzenadj {' '.join(command_args)}")
                 logger.debug(f"set_cpuTDP {value}")
-                process = subprocess.run(
-                    command_args,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    timeout=3,
-                    env=get_env(),
-                )
+                process = run_ryzenadj(command_args)
                 stdout, stderr = process.stdout, process.stderr
                 logger.debug(f"set_cpuTDP result:\n{stdout}")
                 if stderr:
@@ -1224,17 +1211,7 @@ class CPUManager:
             str: Ryzenadj信息
         """
         try:
-            sys_ryzenadj_path = get_ryzenadj_path()
-            command = f"{sys_ryzenadj_path} -i"
-            process = subprocess.run(
-                command,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                timeout=3,
-                env=get_env(),
-            )
+            process = run_ryzenadj(["-i"])
             stdout, stderr = process.stdout, process.stderr
             if stderr and stdout == "":
                 logger.error(f"get_ryzenadj_info error:\n{stderr}")
@@ -1267,20 +1244,11 @@ class CPUManager:
 
         try:
             baseline = 0x100000
-            sys_ryzenadj_path = get_ryzenadj_path()
-            command = f"{sys_ryzenadj_path} --set-coall={hex(baseline - value)}"
+            command_args = [f"--set-coall={hex(baseline - value)}"]
 
-            logger.info(f"设置 RyzenAdj 降压: {command}")
+            logger.info(f"设置 RyzenAdj 降压: ryzenadj {' '.join(command_args)}")
 
-            process = subprocess.run(
-                command,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                timeout=3,
-                env=get_env(),
-            )
+            process = run_ryzenadj(command_args)
 
             stdout, stderr = process.stdout, process.stderr
 

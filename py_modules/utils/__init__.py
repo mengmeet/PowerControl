@@ -6,7 +6,7 @@ from contextlib import contextmanager
 import subprocess
 
 import decky
-from config import RYZENADJ_PATH
+from config import RYZENADJ_PATH, logger
 
 from .battery import (
     get_battery_info,
@@ -43,7 +43,9 @@ __all__ = [
     "set_charge_type",
     "get_charge_type",
     "version_compare",
+    "get_ryzenadj_candidates",
     "get_ryzenadj_path",
+    "run_ryzenadj",
     "check_native_gpu_slider_support",
     "check_native_tdp_limit_support",
 ]
@@ -55,16 +57,16 @@ def get_env():
     return env
 
 
-def get_ryzenadj_path(prefer_plugin=True):
+def get_ryzenadj_candidates(prefer_plugin=False):
     """
-    Get the path to ryzenadj executable.
+    Get available ryzenadj executable candidates.
 
     Args:
         prefer_plugin (bool): If True, prefer plugin's ryzenadj over system version.
-                             If False (default), prefer system version over plugin.
+                              If False, prefer system version over plugin.
 
     Returns:
-        str: Path to ryzenadj executable
+        list[str]: Available ryzenadj executable paths in preference order.
     """
     plugin_path = (
         RYZENADJ_PATH
@@ -73,10 +75,78 @@ def get_ryzenadj_path(prefer_plugin=True):
     )
     system_path = shutil.which("ryzenadj")
 
-    if prefer_plugin:
-        return plugin_path or system_path or RYZENADJ_PATH
-    else:
-        return system_path or plugin_path or RYZENADJ_PATH
+    candidates = (
+        [plugin_path, system_path] if prefer_plugin else [system_path, plugin_path]
+    )
+    return [path for path in candidates if path]
+
+
+def get_ryzenadj_path(prefer_plugin=False):
+    """
+    Get the path to ryzenadj executable.
+
+    Args:
+        prefer_plugin (bool): If True, prefer plugin's ryzenadj over system version.
+                              If False (default), prefer system version over plugin.
+
+    Returns:
+        str: Path to ryzenadj executable
+    """
+    candidates = get_ryzenadj_candidates(prefer_plugin=prefer_plugin)
+    return candidates[0] if candidates else RYZENADJ_PATH
+
+
+def run_ryzenadj(args, timeout=3, prefer_plugin=False):
+    """
+    Run ryzenadj with a consistent path policy and fallback behavior.
+
+    Args:
+        args (list[str]): Command line arguments passed to ryzenadj.
+        timeout (int): Command timeout in seconds.
+        prefer_plugin (bool): If True, prefer plugin's ryzenadj over system version.
+
+    Returns:
+        subprocess.CompletedProcess: The successful process result.
+
+    Raises:
+        RuntimeError: If all available ryzenadj candidates fail.
+    """
+    last_error = "ryzenadj executable not found"
+
+    for ryzenadj_path in get_ryzenadj_candidates(prefer_plugin=prefer_plugin):
+        command = [ryzenadj_path, *[str(arg) for arg in args]]
+        try:
+            logger.debug(f"run_ryzenadj command: {' '.join(command)}")
+            process = subprocess.run(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=timeout,
+                env=get_env(),
+            )
+
+            if process.returncode == 0:
+                logger.debug(f"run_ryzenadj success: {ryzenadj_path}")
+                return process
+
+            last_error = process.stderr or process.stdout or (
+                f"exit code {process.returncode}"
+            )
+            logger.warning(
+                f"run_ryzenadj failed with {ryzenadj_path}: {last_error}"
+            )
+        except subprocess.TimeoutExpired:
+            last_error = "timeout"
+            logger.warning(f"run_ryzenadj timeout with {ryzenadj_path}")
+        except Exception as e:
+            last_error = str(e)
+            logger.warning(
+                f"run_ryzenadj exception with {ryzenadj_path}: {e}",
+                exc_info=True,
+            )
+
+    raise RuntimeError(f"All ryzenadj candidates failed: {last_error}")
 
 
 # 版本号对比 数组参数

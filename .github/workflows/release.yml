@@ -19,7 +19,7 @@ jobs:
     steps:
       - name: set git global safe directory
         run: |
-          pacman -Syu git npm tree zip unzip upx --noconfirm
+          pacman -Syu git npm tree zip unzip --noconfirm
           git config --global --add safe.directory $(realpath .)
 
       - uses: actions/checkout@v4
@@ -29,14 +29,30 @@ jobs:
       # - name: update submodules
       #   run: git submodule update --init --recursive
 
+      - name: build static libpci
+        run: |
+          pacman -S base-devel binutils cmake curl tar --noconfirm --needed --overwrite='*'
+          curl -fL -o /tmp/pciutils.tar.gz https://mj.ucw.cz/download/linux/pci/pciutils-3.14.0.tar.gz
+          mkdir -p /tmp/pciutils /tmp/pci-static
+          tar -xzf /tmp/pciutils.tar.gz -C /tmp/pciutils --strip-components=1
+          make -C /tmp/pciutils \
+            SHARED=no \
+            ZLIB=no \
+            DNS=no \
+            LIBKMOD=no \
+            HWDB=no \
+            PREFIX=/tmp/pci-static \
+            install-lib
+
       - name: build RyzenAdj
         run: |
-          pacman -S base-devel pciutils cmake --noconfirm --needed --overwrite='*'
           cd submodule/RyzenAdj
+          sed -i 's|set(OS_LINK_LIBRARY pci)|include_directories(/tmp/pci-static/include)\nset(OS_LINK_LIBRARY /tmp/pci-static/lib/libpci.a)|' CMakeLists.txt
           mkdir build && cd build
           cmake -DCMAKE_BUILD_TYPE=Release ..
-          make
-          upx -9 ryzenadj
+          make ryzenadj
+          ldd ryzenadj || true
+          readelf -d ryzenadj || true
           cp -f ryzenadj ../../../bin
 
       # - name: build python-fuse
