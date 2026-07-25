@@ -119,6 +119,18 @@ class FirmwareAttributeDevice(PowerStationDevice):
         logger.info(f"FirmwareAttributeDevice get_tdpMax: {max_tdp}")
         return max_tdp
 
+    def get_tdpMin(self) -> int:
+        logger.info("FirmwareAttributeDevice get_tdpMin")
+        if not self._attribute_available or not self.check_init():
+            logger.info("FirmwareAttributeDevice get_tdpMin: fallback to parent")
+            return super().get_tdpMin()
+        min_tdp = self._get_min_tdp()
+        if min_tdp is None:
+            logger.info("FirmwareAttributeDevice get_tdpMin: min_tdp is None, fallback")
+            return super().get_tdpMin()
+        logger.info(f"FirmwareAttributeDevice get_tdpMin: {min_tdp}")
+        return min_tdp
+
     def _do_set_tdp(self, tdp: int) -> None:
         logger.info(f"Setting TDP to {tdp}")
         if not self.supports_attribute_tdp():
@@ -138,8 +150,10 @@ class FirmwareAttributeDevice(PowerStationDevice):
                 logger.info("Attribute became unavailable during TDP read, fallback")
                 return super()._do_set_tdp(tdp)
             if min_tdp is not None and tdp < min_tdp:
-                logger.info(f"TDP is too low, min: {min_tdp}, use default method")
-                return super()._do_set_tdp(tdp)
+                # Stay on the FA path. Falling through to PowerStation/RAPL with a
+                # value below FA min previously clamped to 0W on unlisted devices.
+                logger.info(f"TDP {tdp}W below FA min {min_tdp}W, clamping to min")
+                tdp = min_tdp
             if max_tdp is not None and tdp > max_tdp:
                 logger.info(f"TDP is too high, max: {max_tdp}, set to max")
                 tdp = max_tdp

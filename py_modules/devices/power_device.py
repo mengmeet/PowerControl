@@ -184,6 +184,10 @@ class PowerDevice(IDevice):
         logger.info(f"PowerDevice get_tdpMax: {tdpMax}")
         return tdpMax
 
+    def get_tdpMin(self) -> int:
+        # RAPL/ryzenadj fallbacks do not expose a reliable platform minimum.
+        return 3
+
     # ------ RyzenAdj Undervolt ------ #
 
     def supports_ryzenadj_undervolt(self) -> bool:

@@ -89,6 +89,16 @@ class Plugin:
             logger.error(e, exc_info=True)
             return 0
 
+    async def get_tdpMin(self):
+        try:
+            logger.info("Main get_tdpMin")
+            tdpMin = self.powerManager.get_tdpMin()
+            logger.info(f"Main get_tdpMin: {tdpMin}")
+            return tdpMin
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return 3
+
     async def get_cpu_vendor(self):
         try:
             return CPU_VENDOR

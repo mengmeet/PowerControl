@@ -103,6 +103,27 @@ class PowerStationDevice(PowerDevice):
             self._last_error_time = current_time
             return False
 
+    def _has_valid_power_station_tdp_range(self) -> bool:
+        """Return True when PowerStation advertises a usable MinTdp/MaxTdp range.
+
+        Unlisted devices often report MinTdp=MaxTdp=0, which previously caused
+        PowerControl to clamp requested TDP to 0W before falling back to RAPL.
+        """
+        try:
+            min_tdp = int(self._get_tdp_property("MinTdp"))
+            max_tdp = int(self._get_tdp_property("MaxTdp"))
+        except Exception as e:
+            logger.warning(f"PowerStation TDP range unavailable: {e}")
+            return False
+
+        if max_tdp <= 0 or min_tdp > max_tdp:
+            logger.warning(
+                f"PowerStation TDP range invalid [{min_tdp}W, {max_tdp}W], "
+                "skipping PowerStation TDP path"
+            )
+            return False
+        return True
+
     def _parse_busctl_property(self, output: str) -> Optional[float]:
         """
         Parse busctl get-property output
@@ -224,8 +245,8 @@ class PowerStationDevice(PowerDevice):
             int: Maximum TDP value (watts)
         """
         logger.info("PowerStationDevice get_tdpMax")
-        if not self.supports_power_station():
-            logger.info("PowerStationDevice get_tdpMax: not supports_power_station")
+        if not self.supports_power_station() or not self._has_valid_power_station_tdp_range():
+            logger.info("PowerStationDevice get_tdpMax: fallback to parent")
             return super().get_tdpMax()
 
         try:
@@ -238,6 +259,29 @@ class PowerStationDevice(PowerDevice):
                 exc_info=True,
             )
             return super().get_tdpMax()
+
+    def get_tdpMin(self) -> int:
+        """
+        Get minimum TDP value
+
+        Returns:
+            int: Minimum TDP value (watts)
+        """
+        logger.info("PowerStationDevice get_tdpMin")
+        if not self.supports_power_station() or not self._has_valid_power_station_tdp_range():
+            logger.info("PowerStationDevice get_tdpMin: fallback to parent")
+            return super().get_tdpMin()
+
+        try:
+            min_tdp = int(self._get_tdp_property("MinTdp"))
+            logger.info(f"PowerStationDevice get_tdpMin: {min_tdp}")
+            return min_tdp
+        except Exception as e:
+            logger.error(
+                f"PowerStationDevice get_tdpMin: failed to get min TDP {e}",
+                exc_info=True,
+            )
+            return super().get_tdpMin()
 
     def _find_gpu_card_path(self) -> str:
         """
@@ -371,7 +415,7 @@ class PowerStationDevice(PowerDevice):
         Args:
             tdp (int): Target TDP value (watts)
         """
-        if not self.supports_power_station():
+        if not self.supports_power_station() or not self._has_valid_power_station_tdp_range():
             try:
                 return super()._do_set_tdp(tdp)
             except Exception as e:
@@ -467,7 +511,7 @@ class PowerStationDevice(PowerDevice):
         """
         Set TDP to maximum value (unlimited)
         """
-        if not self.supports_power_station():
+        if not self.supports_power_station() or not self._has_valid_power_station_tdp_range():
             return super().set_tdp_unlimited()
 
         try:

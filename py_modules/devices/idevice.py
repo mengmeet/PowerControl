@@ -66,8 +66,8 @@ class IDevice(ABC):
                 cls._instance = AsusDevice()
             case "Micro-Star International Co., Ltd.":
                 match BOARD_NAME:
-                    # Claw 8
-                    case "MS-1T52":
+                    # Claw 8 / Claw 8 EX
+                    case "MS-1T52" | "MS-1T91":
                         from . import MsiClaw8
 
                         cls._instance = MsiClaw8()
@@ -165,6 +165,10 @@ class IDevice(ABC):
 
     @abstractmethod
     def get_tdpMax(self) -> int:
+        pass
+
+    @abstractmethod
+    def get_tdpMin(self) -> int:
         pass
 
     @abstractmethod

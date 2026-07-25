@@ -307,7 +307,13 @@ const CPUTDPComponent: FC = () => {
                     ? customTDPRangeMax
                     : Backend.data.getTdpMax()
                 }
-                min={enableCustomTDPRange ? customTDPRangeMin : 3}
+                min={
+                  enableCustomTDPRange
+                    ? customTDPRangeMin
+                    : Backend.data.getTdpMin() !== 0
+                      ? Backend.data.getTdpMin()
+                      : 3
+                }
                 disabled={disabled}
                 showValue={true}
                 onChangeEnd={(value: number) => {

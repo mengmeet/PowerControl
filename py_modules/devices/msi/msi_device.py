@@ -114,6 +114,11 @@ class MsiDevice(FirmwareAttributeDevice):
 
     def run_before_set_tdp(self):
         try:
+            # FA TDP path switches to custom/performance via set_profile().
+            # Forcing sport/comfort EC shift first fights User/custom mode on
+            # msi-wmi-platform devices such as Claw 8 EX.
+            if self.supports_attribute_tdp():
+                return
             self.shift_mode_write(SM_SPORT_NAME)
         except Exception as e:
             logger.error(f"Failed to run before set tdp: {e}")

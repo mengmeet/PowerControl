@@ -574,6 +574,9 @@ class CPUManager:
         try:
             # 遍历 /sys/class/powercap/intel-rapl/*/ 如果 name 是 package-0 则是cpu
             logger.debug("set_cpuTDP_Intel {}".format(value))
+            if value < 1:
+                logger.error(f"Refusing to set Intel RAPL TDP below 1W: {value}")
+                return False
             tdp = int(value * 1000000)
             tdp_short = int((value + 2) * 1000000)
             # tdp_short = tdp

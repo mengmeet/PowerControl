@@ -32,6 +32,7 @@ type ProxyMethods<T> = {
 // Backend API callable functions
 export const getCpuMaxNum = callable<[], number>("get_cpuMaxNum");
 export const getTdpMax = callable<[], number>("get_tdpMax");
+export const getTdpMin = callable<[], number>("get_tdpMin");
 export const getGpuFreqRange = callable<[], number[]>("get_gpuFreqRange");
 export const getFanConfigList = callable<[], FanConfig[]>("get_fanConfigList");
 export const supportsSMT = callable<[], boolean>("supports_smt");
@@ -177,6 +178,7 @@ export class BackendData {
   public static readonly DEFAULTS = {
     cpuMaxNum: 0 as number,
     tdpMax: 0 as number,
+    tdpMin: 0 as number,
     gpuMin: 0 as number,
     gpuMax: 0 as number,
     fanConfigs: [] as FanConfig[],
@@ -214,6 +216,7 @@ export class BackendData {
   private initConfig: { [K in keyof typeof BackendData.DEFAULTS]: InitConfigItem } = {
     cpuMaxNum: { callable: getCpuMaxNum },
     tdpMax: { callable: getTdpMax },
+    tdpMin: { callable: getTdpMin },
     gpuMin: {
       callable: async () => {
         const [min] = await this.getGpuFreqRangeOnce();
@@ -683,7 +686,9 @@ export class Backend {
         await QAMPatch.setTDPRange(customTDPRangeMin, customTDPRangeMax);
       } else {
         await QAMPatch.setTDPRange(
-          DEFAULT_TDP_MIN,
+          Backend.data.getTdpMin() !== 0
+            ? Backend.data.getTdpMin()
+            : DEFAULT_TDP_MIN,
           Backend.data.getTdpMax() !== 0
             ? Backend.data.getTdpMax()
             : DEFAULT_TDP_MAX
@@ -698,9 +703,13 @@ export class Backend {
     const customTDPRangeMin = Settings.appCustomTDPRangeMin();
     const tdp = Settings.appTDP();
     const tdpEnable = Settings.appTDPEnable();
+    const systemTdpMin =
+      Backend.data.getTdpMin() !== 0 ? Backend.data.getTdpMin() : DEFAULT_TDP_MIN;
+    const systemTdpMax =
+      Backend.data.getTdpMax() !== 0 ? Backend.data.getTdpMax() : DEFAULT_TDP_MAX;
     const _tdp = enableCustomTDPRange
       ? Math.min(customTDPRangeMax, Math.max(customTDPRangeMin, tdp))
-      : tdp;
+      : Math.min(systemTdpMax, Math.max(systemTdpMin, tdp));
 
     Logger.info(`handleTDP: ${Settings.appTDPEnable()}`);
     Logger.info(`tdpEnable = ${tdpEnable}, lastTDPEnable = ${Backend.lastTDPEnable}`);

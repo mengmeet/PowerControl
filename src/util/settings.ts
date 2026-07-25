@@ -759,12 +759,11 @@ export class Settings {
   }
 
   static getTDPMin() {
-    // if (this._instance.data.enableCustomTDPRange) {
-    //   return this._instance.data.customTDPRangeMin;
-    // } else {
-    //   return 3;
-    // }
-    return DEFAULT_TDP_MIN;
+    if (this._instance.data.enableCustomTDPRange) {
+      return this.appCustomTDPRangeMin();
+    }
+    const systemTdpMin = Backend.data.getTdpMin();
+    return systemTdpMin !== 0 ? systemTdpMin : DEFAULT_TDP_MIN;
   }
 
   static saveTDPFromQAM(tdp: number, tdpEnable: boolean) {
