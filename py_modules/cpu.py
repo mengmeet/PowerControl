@@ -649,6 +649,7 @@ class CPUManager:
                 return False
         except subprocess.TimeoutExpired:
             logger.error(f"Failed to set AMD CPU TDP: timeout (value={value})")
+            return False
         except Exception:
             logger.error(f"Failed to set AMD CPU TDP: value={value}", exc_info=True)
             return False

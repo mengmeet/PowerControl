@@ -72,9 +72,10 @@ class FirmwareAttributeDevice(PowerStationDevice):
         logger.error("Attribute or profile name is not set")
         return False
 
-    def get_power_info(self) -> str:
-        if not self._attribute_available:
-            return super().get_power_info()
+    def _get_power_info_via_fa(self) -> Optional[str]:
+        """Return firmware-attributes power info, or None if unavailable."""
+        if not self._attribute_available or not self.check_init():
+            return None
 
         base_path = f"{PREFIX}/{self.attribute}/attributes"
         path_dict = {
@@ -94,18 +95,23 @@ class FirmwareAttributeDevice(PowerStationDevice):
             if os.path.exists(path):
                 val = self._read_sysfs(path)
                 if val is None:
-                    # Driver error detected, fall back entirely
-                    return super().get_power_info()
+                    return None
                 power_info[key] = val
 
         if not power_info:
-            return super().get_power_info()
+            return None
 
         power_info_str = ""
         for key, value in power_info.items():
             power_info_str += f"{key}: {value}\n"
         logger.info(f"power_info_str: {power_info_str}")
         return power_info_str
+
+    def get_power_info(self) -> str:
+        info = self._get_power_info_via_fa()
+        if info is not None:
+            return info
+        return super().get_power_info()
 
     def get_tdpMax(self) -> int:
         logger.info("FirmwareAttributeDevice get_tdpMax")
@@ -131,49 +137,60 @@ class FirmwareAttributeDevice(PowerStationDevice):
         logger.info(f"FirmwareAttributeDevice get_tdpMin: {min_tdp}")
         return min_tdp
 
-    def _do_set_tdp(self, tdp: int) -> None:
-        logger.info(f"Setting TDP to {tdp}")
+    def _set_tdp_via_fa(self, tdp: int) -> bool:
+        """Write TDP via firmware-attributes only. Returns False on failure (no fallback)."""
+        logger.info(f"Setting TDP to {tdp} via firmware-attributes")
         if not self.supports_attribute_tdp():
-            logger.info("Device does not support attribute TDP, use fallback method")
-            return super()._do_set_tdp(tdp)
+            logger.error("firmware-attributes TDP not supported")
+            return False
         base_path = f"{PREFIX}/{self.attribute}/attributes"
         if not self.check_init():
-            return
+            return False
         if not os.path.exists(base_path):
             logger.error(f"Attribute {self.attribute} not found")
-            return
+            return False
         try:
             self.set_profile()
             min_tdp = self._get_min_tdp()
             max_tdp = self._get_max_tdp()
             if not self._attribute_available:
-                logger.info("Attribute became unavailable during TDP read, fallback")
-                return super()._do_set_tdp(tdp)
+                logger.error("Attribute became unavailable during TDP read")
+                return False
             if min_tdp is not None and tdp < min_tdp:
-                # Stay on the FA path. Falling through to PowerStation/RAPL with a
-                # value below FA min previously clamped to 0W on unlisted devices.
                 logger.info(f"TDP {tdp}W below FA min {min_tdp}W, clamping to min")
                 tdp = min_tdp
             if max_tdp is not None and tdp > max_tdp:
                 logger.info(f"TDP is too high, max: {max_tdp}, set to max")
                 tdp = max_tdp
+            wrote = False
             for suffix in [SPL_SUFFIX, SLOW_SUFFIX, FAST_SUFFIX]:
                 path = f"{base_path}/{suffix}/current_value"
                 if os.path.exists(path):
                     if not self._write_sysfs(path, str(tdp)):
-                        logger.info("Attribute write failed, fallback to parent")
-                        return super()._do_set_tdp(tdp)
+                        logger.error("Attribute write failed")
+                        return False
+                    wrote = True
                     sleep(0.1)
+            return wrote
         except Exception as e:
-            logger.error(f"Failed to set TDP: {e}", exc_info=True)
+            logger.error(f"Failed to set TDP via firmware-attributes: {e}", exc_info=True)
             self._mark_attribute_unavailable(str(e))
-            super()._do_set_tdp(tdp)
+            return False
 
-    def set_tdp_unlimited(self) -> None:
-        logger.info("Setting TDP unlimited")
+    def _do_set_tdp(self, tdp: int) -> None:
+        logger.info(f"Setting TDP to {tdp}")
         if not self.supports_attribute_tdp():
-            return super().set_tdp_unlimited()
+            logger.info("Device does not support attribute TDP, use fallback method")
+            return super()._do_set_tdp(tdp)
+        if self._set_tdp_via_fa(tdp):
+            return
+        logger.info("Attribute TDP failed, fallback to parent")
+        return super()._do_set_tdp(tdp)
 
+    def _set_tdp_unlimited_via_fa(self) -> bool:
+        logger.info("Setting TDP unlimited via firmware-attributes")
+        if not self.supports_attribute_tdp():
+            return False
         try:
             base_path = f"{PREFIX}/{self.attribute}/attributes"
             suffixes = [
@@ -181,6 +198,7 @@ class FirmwareAttributeDevice(PowerStationDevice):
                 (SLOW_SUFFIX, "SLOW"),
                 (FAST_SUFFIX, "FAST"),
             ]
+            wrote = False
             for suffix, label in suffixes:
                 max_path = f"{base_path}/{suffix}/max_value"
                 cur_path = f"{base_path}/{suffix}/current_value"
@@ -188,17 +206,31 @@ class FirmwareAttributeDevice(PowerStationDevice):
                     continue
                 max_val = self._read_sysfs(max_path)
                 if max_val is None:
-                    logger.info("Attribute read failed during unlimited, fallback")
-                    return super().set_tdp_unlimited()
+                    logger.error("Attribute read failed during unlimited")
+                    return False
                 if int(max_val) > 0:
                     logger.info(f"Setting TDP max to {max_val} for {label}")
                     if not self._write_sysfs(cur_path, max_val):
-                        logger.info("Attribute write failed during unlimited, fallback")
-                        return super().set_tdp_unlimited()
+                        logger.error("Attribute write failed during unlimited")
+                        return False
+                    wrote = True
+            return wrote
         except Exception as e:
-            logger.error(f"Failed to set TDP unlimited: {e}", exc_info=True)
+            logger.error(
+                f"Failed to set TDP unlimited via firmware-attributes: {e}",
+                exc_info=True,
+            )
             self._mark_attribute_unavailable(str(e))
-            super().set_tdp_unlimited()
+            return False
+
+    def _set_tdp_unlimited_auto(self) -> None:
+        logger.info("Setting TDP unlimited")
+        if not self.supports_attribute_tdp():
+            return super()._set_tdp_unlimited_auto()
+        if self._set_tdp_unlimited_via_fa():
+            return
+        logger.info("Attribute unlimited failed, fallback to parent")
+        return super()._set_tdp_unlimited_auto()
 
     def _get_min_tdp(self) -> Optional[int]:
         if not self.check_init():

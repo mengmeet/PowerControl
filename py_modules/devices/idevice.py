@@ -147,20 +147,22 @@ class IDevice(ABC):
         """
         Template method that ensures run_before_set_tdp is called before setting TDP.
         Subclasses should override _do_set_tdp instead of this method.
+        PowerDevice overrides this to honor tdpBackend preference.
         """
         self.run_before_set_tdp()
-        return self._do_set_tdp(tdp)
+        result = self._do_set_tdp(tdp)
+        return True if result is None else bool(result)
 
     @abstractmethod
-    def _do_set_tdp(self, tdp: int) -> bool:
+    def _do_set_tdp(self, tdp: int):
         """
-        Actual TDP setting implementation.
+        Actual TDP setting implementation for auto fallback chain.
         This should be implemented by subclasses instead of set_tdp.
         """
         pass
 
     @abstractmethod
-    def set_tdp_unlimited(self) -> bool:
+    def set_tdp_unlimited(self):
         pass
 
     @abstractmethod

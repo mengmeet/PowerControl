@@ -439,7 +439,7 @@ export const PowerInfoModel: FC = ({
           <PanelSectionRow>
             <DialogButton
               onClick={() => {
-                getPowerInfo();
+                fetchPowerInfo();
               }}
             >
               Reload

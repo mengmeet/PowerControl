@@ -385,6 +385,26 @@ class Plugin:
     async def get_power_info(self):
         return self.powerManager.get_power_info()
 
+    async def get_tdp_backends(self):
+        try:
+            return self.powerManager.get_tdp_backends()
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return {
+                "available": [{"id": "auto", "available": True}],
+                "current": "auto",
+                "effective": "auto",
+                "active": "cpu",
+                "vendorHint": "unknown",
+            }
+
+    async def set_tdp_backend(self, backend_id: str):
+        try:
+            return self.powerManager.set_tdp_backend(backend_id)
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            return False
+
     async def get_max_perf_pct(self):
         try:
             return cpuManager.get_max_perf_pct()

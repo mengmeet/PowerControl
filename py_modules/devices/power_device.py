@@ -146,34 +146,76 @@ class PowerDevice(IDevice):
 
     # ------ TDP ------ #
 
-    def _do_set_tdp(self, tdp: int) -> None:
+    def set_tdp(self, tdp: int) -> bool:
+        """Dispatch by preference: auto keeps the fallback chain; forced has no fallback."""
+        from tdp_backend import AUTO, apply_set_tdp, get_preference, preference_is_usable
+
+        self.run_before_set_tdp()
+        pref = get_preference()
+        if pref == AUTO or not preference_is_usable(self, pref):
+            result = self._do_set_tdp(tdp)
+            return True if result is None else bool(result)
+        return apply_set_tdp(self, pref, tdp)
+
+    def _set_tdp_via_cpu(self, tdp: int) -> bool:
         if self._cpuManager is None:
-            logger.error("Failed to set TDP: cpuManager is None")
-            return
-        self._cpuManager.set_cpuTDP(tdp)
+            logger.error("Failed to set TDP via cpu: cpuManager is None")
+            return False
+        try:
+            return bool(self._cpuManager.set_cpuTDP(tdp))
+        except Exception as e:
+            logger.error(f"Failed to set TDP via cpu: {e}", exc_info=True)
+            return False
+
+    def _do_set_tdp(self, tdp: int) -> None:
+        self._set_tdp_via_cpu(tdp)
 
     def run_before_set_tdp(self) -> None:
         # Default implementation: do nothing
         # Subclasses can override this if they need pre-TDP setup
         pass
 
-    def set_tdp_unlimited(self) -> None:
-        if self._cpuManager is None:
-            logger.error("Failed to set TDP: cpuManager is None")
-            return
-        self._cpuManager.set_cpuTDP_unlimited()
+    def set_tdp_unlimited(self) -> bool:
+        from tdp_backend import (
+            AUTO,
+            apply_set_tdp_unlimited,
+            get_preference,
+            preference_is_usable,
+        )
 
-    def get_power_info(self) -> str:
+        pref = get_preference()
+        if pref == AUTO or not preference_is_usable(self, pref):
+            self._set_tdp_unlimited_auto()
+            return True
+        return apply_set_tdp_unlimited(self, pref)
+
+    def _set_tdp_unlimited_via_cpu(self) -> bool:
         if self._cpuManager is None:
-            logger.error("Failed to get power info: cpuManager is None")
+            logger.error("Failed to set TDP unlimited via cpu: cpuManager is None")
+            return False
+        try:
+            return bool(self._cpuManager.set_cpuTDP_unlimited())
+        except Exception as e:
+            logger.error(f"Failed to set TDP unlimited via cpu: {e}", exc_info=True)
+            return False
+
+    def _set_tdp_unlimited_auto(self) -> None:
+        self._set_tdp_unlimited_via_cpu()
+
+    def _get_power_info_via_cpu(self) -> str:
+        if self._cpuManager is None:
+            logger.error("Failed to get power info via cpu: cpuManager is None")
             return ""
         if self._cpuManager.is_intel():
             return self._cpuManager.get_rapl_info()
         elif self._cpuManager.is_amd():
             return self._cpuManager.get_ryzenadj_info()
         else:
-            logger.error("Failed to get power info: unknown CPU_VENDOR")
+            logger.error("Failed to get power info via cpu: unknown CPU_VENDOR")
             return ""
+
+    def get_power_info(self) -> str:
+        return self._get_power_info_via_cpu()
 
     def get_tdpMax(self) -> int:
         logger.info("PowerDevice get_tdpMax")

@@ -75,6 +75,23 @@ export const checkRyzenadjCoall = callable<[], boolean>("check_ryzenadj_coall");
 export const setRyzenadjUndervolt = callable<[boolean, number], boolean>("set_ryzenadj_undervolt");
 export const getRaplInfo = callable<[], string>("get_rapl_info");
 export const getPowerInfo = callable<[], string>("get_power_info");
+
+export type TdpBackendInfo = {
+  id: string;
+  available: boolean;
+  vendorHint?: string;
+};
+
+export type TdpBackendsResponse = {
+  available: TdpBackendInfo[];
+  current: string;
+  effective: string;
+  active: string;
+  vendorHint: string;
+};
+
+export const getTdpBackends = callable<[], TdpBackendsResponse>("get_tdp_backends");
+export const setTdpBackend = callable<[string], boolean>("set_tdp_backend");
 export const setSettings = callable<[any], void>("set_settings");
 export const getSettings = callable<[], string>("get_settings");
 export const getMaxPerfPct = callable<[], number>("get_max_perf_pct");
@@ -337,6 +354,11 @@ export class BackendData {
   public async refreshEPPModes(): Promise<void> {
     await this.initField('eppModes', this.initConfig.eppModes);
     await this.initField('currentEpp', this.initConfig.currentEpp);
+  }
+
+  public async refreshTdpRange(): Promise<void> {
+    await this.initField("tdpMax", this.initConfig.tdpMax);
+    await this.initField("tdpMin", this.initConfig.tdpMin);
   }
 
   public getFanMAXPRM(index: number) {

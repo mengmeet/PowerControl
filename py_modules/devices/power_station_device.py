@@ -211,22 +211,15 @@ class PowerStationDevice(PowerDevice):
 
         return False
 
-    def get_power_info(self) -> str:
-        """
-        Get power information
-
-        Returns:
-            str: String containing current TDP, min/max TDP info
-        """
+    def _get_power_info_via_power_station(self) -> Optional[str]:
+        """Return PowerStation power info, or None if unavailable."""
         if not self.supports_power_station():
-            return super().get_power_info()
-
+            return None
         try:
             current_tdp = self._get_tdp_property("TDP")
             min_tdp = self._get_tdp_property("MinTdp")
             max_tdp = self._get_tdp_property("MaxTdp")
             max_boost = self._get_tdp_property("MaxBoost")
-
             return (
                 f"PowerStation TDP Info:\n"
                 f"Current TDP: {current_tdp:.0f}W\n"
@@ -235,7 +228,19 @@ class PowerStationDevice(PowerDevice):
             )
         except Exception as e:
             logger.error(f"Failed to get PowerStation power info: {e}")
-            return super().get_power_info()
+            return None
+
+    def get_power_info(self) -> str:
+        """
+        Get power information
+
+        Returns:
+            str: String containing current TDP, min/max TDP info
+        """
+        info = self._get_power_info_via_power_station()
+        if info is not None:
+            return info
+        return super().get_power_info()
 
     def get_tdpMax(self) -> int:
         """
@@ -408,6 +413,29 @@ class PowerStationDevice(PowerDevice):
 
         return None
 
+    def _set_tdp_via_power_station(self, tdp: int) -> bool:
+        """Write TDP via PowerStation only. Returns False on failure (no fallback)."""
+        if not self.supports_power_station() or not self._has_valid_power_station_tdp_range():
+            logger.error("PowerStation TDP not available")
+            return False
+        try:
+            min_tdp = int(self._get_tdp_property("MinTdp"))
+            max_tdp = int(self._get_tdp_property("MaxTdp"))
+
+            if not (min_tdp <= tdp <= max_tdp):
+                logger.warning(f"TDP {tdp}W is outside range [{min_tdp}W, {max_tdp}W]")
+                tdp = max(min_tdp, min(max_tdp, tdp))
+                logger.info(f"Clamped TDP to {tdp}W")
+
+            self._set_tdp_property("TDP", float(tdp))
+            max_boost = self._get_tdp_property("MaxBoost")
+            self._set_tdp_property("Boost", max_boost)
+            logger.info(f"Successfully set PowerStation TDP to {tdp}W")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to set PowerStation TDP: {e}")
+            return False
+
     def _do_set_tdp(self, tdp: int) -> None:
         """
         Set TDP value
@@ -422,28 +450,9 @@ class PowerStationDevice(PowerDevice):
                 logger.error(f"Failed to set TDP: {e}", exc_info=True)
                 return
 
-        try:
-            # Validate TDP range
-            min_tdp = int(self._get_tdp_property("MinTdp"))
-            max_tdp = int(self._get_tdp_property("MaxTdp"))
-
-            if not (min_tdp <= tdp <= max_tdp):
-                logger.warning(f"TDP {tdp}W is outside range [{min_tdp}W, {max_tdp}W]")
-                tdp = max(min_tdp, min(max_tdp, tdp))
-                logger.info(f"Clamped TDP to {tdp}W")
-
-            # Set TDP
-            self._set_tdp_property("TDP", float(tdp))
-
-            # Set max boost
-            max_boost = self._get_tdp_property("MaxBoost")
-            self._set_tdp_property("Boost", max_boost)
-
-            logger.info(f"Successfully set PowerStation TDP to {tdp}W")
-
-        except Exception as e:
-            logger.error(f"Failed to set PowerStation TDP: {e}")
-            super()._do_set_tdp(tdp)
+        if self._set_tdp_via_power_station(tdp):
+            return
+        super()._do_set_tdp(tdp)
 
     def _get_tdp_property(self, property_name: str) -> float:
         """
@@ -507,20 +516,29 @@ class PowerStationDevice(PowerDevice):
 
         raise Exception(f"Failed to set {property_name} to {value}: {output}")
 
-    def set_tdp_unlimited(self) -> None:
-        """
-        Set TDP to maximum value (unlimited)
-        """
+    def _set_tdp_unlimited_via_power_station(self) -> bool:
         if not self.supports_power_station() or not self._has_valid_power_station_tdp_range():
-            return super().set_tdp_unlimited()
-
+            return False
         try:
             max_tdp = int(self._get_tdp_property("MaxTdp"))
-            self.set_tdp(max_tdp)
-            logger.info(f"Set PowerStation TDP to unlimited ({max_tdp}W)")
+            ok = self._set_tdp_via_power_station(max_tdp)
+            if ok:
+                logger.info(f"Set PowerStation TDP to unlimited ({max_tdp}W)")
+            return ok
         except Exception as e:
-            logger.error(f"Failed to set unlimited TDP: {e}")
-            super().set_tdp_unlimited()
+            logger.error(f"Failed to set unlimited TDP via PowerStation: {e}")
+            return False
+
+    def _set_tdp_unlimited_auto(self) -> None:
+        """
+        Set TDP to maximum value (unlimited) using auto fallback chain.
+        """
+        if not self.supports_power_station() or not self._has_valid_power_station_tdp_range():
+            return super()._set_tdp_unlimited_auto()
+
+        if self._set_tdp_unlimited_via_power_station():
+            return
+        super()._set_tdp_unlimited_auto()
 
     def _handle_command_error(self, error: Exception, operation: str) -> None:
         """

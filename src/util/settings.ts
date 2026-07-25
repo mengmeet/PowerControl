@@ -4,7 +4,7 @@ import {
   JsonSerializer,
 } from "typescript-json-serializer";
 import { APPLYTYPE, ComponentName, FANMODE, GPUMODE, UpdateType } from "./enum";
-import { Backend } from "./backend";
+import { Backend, setTdpBackend } from "./backend";
 import { setCpuFreqByCoreType } from "./backend";
 import { FanPosition } from "./position";
 import {
@@ -235,6 +235,9 @@ export class SettingsData {
   public enableNativeTDPSlider: boolean = false;
 
   @JsonProperty()
+  public tdpBackend: string = "auto";
+
+  @JsonProperty()
   public showSettingMenu: boolean = true;
 
   @JsonProperty()
@@ -275,6 +278,7 @@ export class SettingsData {
     this.customTDPRangeMax = copyTarget.customTDPRangeMax;
     // this.forceShowTDP = copyTarget.forceShowTDP;
     this.enableNativeTDPSlider = copyTarget.enableNativeTDPSlider;
+    this.tdpBackend = copyTarget.tdpBackend ?? "auto";
     this.bypassCharge = copyTarget.bypassCharge;
     this.chargeLimit = copyTarget.chargeLimit;
     this.enableChargeLimit = copyTarget.enableChargeLimit;
@@ -736,6 +740,43 @@ export class Settings {
   //     );
   //   }
   // }
+
+  static appTDPBackend(): string {
+    return this._instance.data.tdpBackend || "auto";
+  }
+
+  static setTDPBackend(tdpBackend: string) {
+    if (this._instance.data.tdpBackend == tdpBackend) {
+      return;
+    }
+    // Single write path: persist via set_tdp_backend only, then sync local state.
+    // Avoid saveSettings + set_preference RMW race that can clobber other fields.
+    setTdpBackend(tdpBackend)
+      .then(async (ok) => {
+        if (!ok) {
+          console.error(`setTdpBackend rejected: ${tdpBackend}`);
+          PluginManager.updateComponent(
+            ComponentName.CPU_TDP,
+            UpdateType.UPDATE
+          );
+          return;
+        }
+        this._instance.data.tdpBackend = tdpBackend;
+        await Backend.data.refreshTdpRange();
+        Backend.applySettings(APPLYTYPE.SET_TDP);
+        PluginManager.updateComponent(
+          ComponentName.CPU_TDP,
+          UpdateType.UPDATE
+        );
+      })
+      .catch((e) => {
+        console.error(`setTdpBackend failed: ${e}`);
+        PluginManager.updateComponent(
+          ComponentName.CPU_TDP,
+          UpdateType.UPDATE
+        );
+      });
+  }
 
   static appTDPEnable() {
     return Settings.ensureApp().tdpEnable ?? true;

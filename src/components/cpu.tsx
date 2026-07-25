@@ -16,6 +16,7 @@ import {
   UpdateType,
   GPUMODE,
 } from "../util";
+import { getTdpBackends } from "../util/backend";
 import { localizeStrEnum, localizationManager } from "../i18n";
 import { SlowSliderField } from "./SlowSliderField";
 import { CustomTDPComponent } from ".";
@@ -240,6 +241,10 @@ const CPUTDPComponent: FC = () => {
   const [enableNativeTDPSlider, setEnableNativeTDPSlider] = useState<boolean>(
     Settings.appEnableNativeTDPSlider()
   );
+  const [tdpBackend, setTdpBackend] = useState<string>(Settings.appTDPBackend());
+  const [tdpBackendOptions, setTdpBackendOptions] = useState<
+    { data: string; label: string }[]
+  >([{ data: "auto", label: localizationManager.getString(localizeStrEnum.AUTO) }]);
 
   // const [cpuVendor, _] = useState<string>(Backend.data.getCpuVendor());
   // const cpuVendor = useMemo(() => {
@@ -250,6 +255,60 @@ const CPUTDPComponent: FC = () => {
     return Backend.data.getSupportsSteamosManager();
   }, []);
 
+  const backendLabel = useCallback(
+    (id: string, vendorHint?: string) => {
+      switch (id) {
+        case "auto":
+          return localizationManager.getString(localizeStrEnum.AUTO);
+        case "firmware_attributes":
+          return localizationManager.getString(
+            localizeStrEnum.TDP_BACKEND_SYSTEM
+          );
+        case "asus_wmi":
+          return localizationManager.getString(
+            localizeStrEnum.TDP_BACKEND_SYSTEM_LEGACY
+          );
+        case "power_station":
+          return localizationManager.getString(
+            localizeStrEnum.TDP_BACKEND_POWER_STATION
+          );
+        case "cpu":
+          return vendorHint === "intel"
+            ? localizationManager.getString(localizeStrEnum.TDP_BACKEND_RAPL)
+            : localizationManager.getString(
+                localizeStrEnum.TDP_BACKEND_RYZENADJ
+              );
+        default:
+          return id;
+      }
+    },
+    []
+  );
+
+  const loadTdpBackends = useCallback(async () => {
+    try {
+      const res = await getTdpBackends();
+      const vendorHint = res.vendorHint;
+      const options = (res.available || [])
+        .filter((item) => item.available)
+        .map((item) => ({
+          data: item.id,
+          label: backendLabel(item.id, item.vendorHint || vendorHint),
+        }));
+      if (!options.some((opt) => opt.data === "auto")) {
+        options.unshift({
+          data: "auto",
+          label: backendLabel("auto"),
+        });
+      }
+      setTdpBackendOptions(options);
+      const current = res.current || Settings.appTDPBackend() || "auto";
+      setTdpBackend(current);
+    } catch (e) {
+      console.error(`loadTdpBackends failed: ${e}`);
+    }
+  }, [backendLabel]);
+
   const refresh = () => {
     setTDPEnable(Settings.appTDPEnable());
     setDisable(Settings.appGPUMode() == GPUMODE.AUTO);
@@ -258,6 +317,7 @@ const CPUTDPComponent: FC = () => {
     setCustomTDPRangeMin(Settings.appCustomTDPRangeMin());
     // setForceShow(Settings.appForceShowTDP());
     setEnableNativeTDPSlider(Settings.appEnableNativeTDPSlider());
+    setTdpBackend(Settings.appTDPBackend());
 
     if (enableCustomTDPRange) {
       setTDP(Math.min(Settings.appTDP(), customTDPRangeMax));
@@ -266,6 +326,7 @@ const CPUTDPComponent: FC = () => {
     }
   };
   useEffect(() => {
+    loadTdpBackends();
     PluginManager.listenUpdateComponent(
       ComponentName.CPU_TDP,
       [
@@ -332,6 +393,25 @@ const CPUTDPComponent: FC = () => {
               disabled={disabled}
               onChange={(value) => {
                 Settings.setTDPEnable(value);
+              }}
+            />
+          </PanelSectionRow>
+          <PanelSectionRow>
+            <DropdownItem
+              label={localizationManager.getString(
+                localizeStrEnum.TDP_BACKEND
+              )}
+              description={localizationManager.getString(
+                localizeStrEnum.TDP_BACKEND_DESC
+              )}
+              menuLabel={localizationManager.getString(
+                localizeStrEnum.TDP_BACKEND
+              )}
+              rgOptions={tdpBackendOptions}
+              selectedOption={tdpBackend}
+              disabled={disabled}
+              onChange={(item) => {
+                Settings.setTDPBackend(item.data as string);
               }}
             />
           </PanelSectionRow>
