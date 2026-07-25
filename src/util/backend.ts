@@ -712,6 +712,11 @@ export class Backend {
     }
 
     if (!tdpEnable) {
+      // Keep Steam QAM in sync so it does not re-apply the previous cap on
+      // game launch / state changes after the plugin limit is turned off.
+      QAMPatch.setTDPEanble(false);
+      // Unlock once on disable. While off, do not keep writing max TDP — that
+      // would fight Steam or other TDP tools that should own the value.
       if (tdpEnable !== Backend.lastTDPEnable) {
         Logger.info(`tdpEnable is false, applyTDPUnlimited`);
         await setCpuTDPUnlimited();
@@ -720,6 +725,7 @@ export class Backend {
       return;
     }
 
+    QAMPatch.setTDPEanble(true);
     Logger.info(`applyTDP: ${_tdp}`);
     await setCpuTDP(_tdp);
     Backend.lastTDPEnable = tdpEnable;

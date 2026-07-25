@@ -38,6 +38,25 @@ class AsusDevice(FirmwareAttributeDevice):
             # Call parent's _do_set_tdp which will continue the fallback chain
             super()._do_set_tdp(tdp)
 
+    def set_tdp_unlimited(self) -> None:
+        """Clear TDP cap using the same interface that applied the limit.
+
+        Legacy ASUS WMI can set TDP via ppt_* files, but the parent unlimited
+        path only touches firmware-attributes / PowerStation / RyzenAdj. Without
+        writing WMI max values, the previous WMI cap remains active.
+        """
+        logger.info("AsusDevice Setting TDP unlimited")
+        if self.supports_attribute_tdp():
+            super().set_tdp_unlimited()
+        elif self._supports_wmi_tdp():
+            max_tdp = self.get_tdpMax()
+            logger.debug(f"Setting TDP unlimited to {max_tdp} by ASUS WMI")
+            self._set_stapm(max_tdp)
+            self._set_slow(max_tdp)
+            self._set_fast(max_tdp)
+        else:
+            super().set_tdp_unlimited()
+
     def _set_stapm(self, stapm: int) -> None:
         logger.debug(f"Setting STAPM to {stapm}")
         if os.path.exists(STAPM_WMI_PATH):

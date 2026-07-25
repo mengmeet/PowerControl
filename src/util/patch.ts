@@ -1,6 +1,6 @@
 import { findModuleChild, afterPatch } from "@decky/ui";
 import { Backend } from "./backend";
-import { setCpuTDP, setGpuFreq } from "./backend";
+import { setCpuTDP, setCpuTDPUnlimited, setGpuFreq } from "./backend";
 import { GPUMODE, GPUPerformanceLevel, Patch } from "./enum";
 import { Settings } from "./settings";
 import { BatteryStateChange, SteamUtils } from ".";
@@ -90,15 +90,16 @@ class TDPPatch {
     this.perfStoreClass = perfStoreClass;
     this.perfStore = perfStoreClass.Get();
   }
-  private applyTDP = () => {
+  private applyTDP = (wasEnabled?: boolean) => {
     if (this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled) {
       // console.log(
       //   `qam applyTDP: ${this.perfStore?.msgSettingsPerApp?.tdp_limit}`
       // );
       setCpuTDP(this.perfStore?.msgSettingsPerApp?.tdp_limit);
-    } else {
-      // console.log(`qam applyTDP: ${Settings.getTDPMax()}`);
-      // Backend.applyTDP(Settings.getTDPMax());
+    } else if (wasEnabled) {
+      // Unlock once on the disable edge only. While off, leave TDP alone so
+      // Steam or other tools can control it without us rewriting max.
+      setCpuTDPUnlimited();
     }
   };
 
@@ -113,7 +114,7 @@ class TDPPatch {
 
   public setTDPEanble(isEnable: boolean) {
     if (
-      this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled &&
+      this.perfStore?.msgSettingsPerApp &&
       this.perfStore.msgSettingsPerApp.is_tdp_limit_enabled !== isEnable
     ) {
       this.perfStore.msgSettingsPerApp.is_tdp_limit_enabled = isEnable;
@@ -260,12 +261,13 @@ class TDPPatch {
                 );
               }
 
+              const wasEnabled = this.last_is_tdp_limit_enabled;
               this.last_is_tdp_limit_enabled =
                 this.perfStore?.msgSettingsPerApp?.is_tdp_limit_enabled;
               this.last_tdp_limit =
                 this.perfStore?.msgSettingsPerApp?.tdp_limit;
 
-              this.applyTDP();
+              this.applyTDP(wasEnabled);
             }
 
             // 使用按游戏设置的配置文件开关，变化时应用设置到插件的开关上
