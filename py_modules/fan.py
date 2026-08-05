@@ -450,10 +450,12 @@ class FanManager:
             # if(name == "k10temp" or name == "acpitz"):
             #     self.FAN_CPUTEMP_PATH = path + "/temp1_input"
 
-            # 优先读取 k10temp
+            # Prefer k10temp; acpitz falls back (new kernels may use acpitz_N)
             if not self.cpu_temp_path and name == "k10temp":
                 self.cpu_temp_path = path + "/temp1_input"
-            if not self.cpu_temp_path and name == "acpitz":
+            if not self.cpu_temp_path and (
+                name == "acpitz" or name.startswith("acpitz_")
+            ):
                 self.cpu_temp_path = path + "/temp1_input"
 
         logger.info(
