@@ -710,7 +710,7 @@ class FanManager:
 
             # HWMON 写入
             if fc.is_found_hwmon:
-                self.__set_fanAuto_HWMON(fc, value)
+                return self.__set_fanAuto_HWMON(fc, value)
 
             # ECIO 写入
             if fc.manual_offset:
@@ -789,7 +789,7 @@ class FanManager:
                     f"写入hwmon数据 写入hwmon地址:{pwm_enable_path} 写入风扇是否控制:{fanIsManual}"
                 )
                 return True
-            return False
+            return True
         except Exception:
             logger.error("使用hwmon写入风扇状态异常:", exc_info=True)
             return False
