@@ -7,9 +7,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - "main"
-    tags:
-      - "v*.*.*"
+      - "release/v3.16.0"
 
 jobs:
   build_plugin:
@@ -19,12 +17,19 @@ jobs:
     steps:
       - name: set git global safe directory
         run: |
-          pacman -Syu git npm tree zip unzip --noconfirm
+          pacman -Syu git npm tree zip unzip python --noconfirm
           git config --global --add safe.directory $(realpath .)
 
       - uses: actions/checkout@v4
         with:
           submodules: true
+          ref: 8881a4248841e999de4fa417f6f391683d7268a0
+
+      - name: Verify version and Intel RAPL regression tests
+        run: |
+          python -c 'import json; assert json.load(open("package.json"))["version"] == "3.16.0"'
+          python -m py_compile py_modules/cpu.py tests/test_intel_rapl.py
+          python -m unittest discover -s tests -p "test_intel_rapl.py" -v
 
       # - name: update submodules
       #   run: git submodule update --init --recursive
@@ -89,6 +94,15 @@ jobs:
         run: |
           tar -tzvf PowerControl.tar.gz
           unzip -l PowerControl.zip
+      - name: Verify packaged versions
+        run: |
+          python - <<'PY'
+          import json, tarfile, zipfile
+          with tarfile.open("PowerControl.tar.gz") as archive:
+              assert json.load(archive.extractfile("PowerControl/package.json"))["version"] == "3.16.0"
+          with zipfile.ZipFile("PowerControl.zip") as archive:
+              assert json.loads(archive.read("PowerControl/package.json"))["version"] == "3.16.0"
+          PY
       - name: Publish Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -98,7 +112,7 @@ jobs:
             PowerControl.zip
 
   publish:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.ref == 'refs/heads/release/v3.16.0'
     runs-on: ubuntu-latest
     needs: build_plugin
     steps:
@@ -117,9 +131,11 @@ jobs:
           files: |
             /tmp/artifacts/PowerControl/PowerControl.tar.gz
             /tmp/artifacts/PowerControl/PowerControl.zip
-          tag_name: ${{ github.ref_name }}
+          tag_name: v3.16.0
+          target_commitish: 8881a4248841e999de4fa417f6f391683d7268a0
+          fail_on_unmatched_files: true
           draft: false
           generate_release_notes: true
-          prerelease: contains(github.ref, 'pre')
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
