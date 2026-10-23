@@ -143,6 +143,7 @@ try:
         "ONEXPLAYER Mini Pro": 40,
         "AOKZOE A1 AR07": 40,
         "ONEXPLAYER 2 ARP23": 45,
+        "ONEXPLAYER 3": 45,
         "ONEXPLAYER F1": 35,
         "ONEXPLAYER F1 EVA-01": 35,
         "G1619-04": 45,  # GPD WINMAX2
