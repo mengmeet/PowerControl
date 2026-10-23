@@ -571,7 +571,7 @@ class CPUManager:
             value (int): TDP值（瓦特）
 
         Returns:
-            bool: True如果设置成功，否则False
+            bool: True if at least one complete RAPL bank was updated; otherwise False.
         """
         try:
             # 遍历 /sys/class/powercap/intel-rapl/*/ 如果 name 是 package-0 则是cpu
@@ -589,19 +589,33 @@ class CPUManager:
             ):
                 logger.error("Failed to set Intel CPU TDP: RAPL path not found")
                 return False
-            for long_path, short_path in (
-                (rapl_long, rapl_short),
-                (legacy_rapl_long, legacy_rapl_short),
+            # A locked or unavailable bank must not prevent updating the other.
+            # Success means at least one complete bank was written, not all banks.
+            updated_bank = False
+            for bank, long_path, short_path in (
+                ("MMIO", rapl_long, rapl_short),
+                ("MSR", legacy_rapl_long, legacy_rapl_short),
             ):
                 if long_path == "" or short_path == "":
                     continue
-                with open(long_path, "w") as file:
-                    logger.debug(f"set_cpuTDP_Intel {long_path} {tdp}")
-                    file.write(str(tdp))
-                with open(short_path, "w") as file:
-                    logger.debug(f"set_cpuTDP_Intel {short_path} {tdp_short}")
-                    file.write(str(tdp_short))
-            return True
+                try:
+                    for path, limit in ((long_path, tdp), (short_path, tdp_short)):
+                        data = str(limit)
+                        with open(path, "w") as file:
+                            logger.debug(f"set_cpuTDP_Intel {path} {limit}")
+                            if file.write(data) != len(data):
+                                raise OSError(f"Incomplete RAPL write: {path}")
+                    # Buffered sysfs writes can fail on close, so count only
+                    # after both context managers have exited successfully.
+                    updated_bank = True
+                except Exception:
+                    logger.warning(
+                        f"Failed to set Intel {bank} power limits: value={value}",
+                        exc_info=True,
+                    )
+            if not updated_bank:
+                logger.error("Failed to set Intel CPU TDP: no bank fully updated")
+            return updated_bank
 
         except Exception:
             logger.error(f"Failed to set Intel CPU TDP: value={value}", exc_info=True)

@@ -1,0 +1,33 @@
+name: Python regression tests
+
+on:
+  push:
+    paths:
+      - "py_modules/cpu.py"
+      - "tests/test_intel_rapl.py"
+      - ".github/workflows/python-tests.yml"
+  pull_request:
+    paths:
+      - "py_modules/cpu.py"
+      - "tests/test_intel_rapl.py"
+      - ".github/workflows/python-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  intel-rapl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check Python syntax
+        run: python -m py_compile py_modules/cpu.py tests/test_intel_rapl.py
+      - name: Test Intel RAPL writes without hardware
+        run: python -m unittest discover -s tests -p "test_intel_rapl.py" -v
