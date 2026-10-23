@@ -458,6 +458,10 @@ class FanManager:
             ):
                 self.cpu_temp_path = path + "/temp1_input"
 
+        # ONEXPLAYER 3: use coretemp (CPU package) instead of ACPI ambient sensor
+        if PRODUCT_NAME == "ONEXPLAYER 3" and "coretemp" in name_path_map:
+            self.cpu_temp_path = name_path_map["coretemp"] + "/temp1_input"
+
         logger.info(
             f">>> name_path_map {json.dumps(name_path_map, indent=4, ensure_ascii=False)}"
         )
